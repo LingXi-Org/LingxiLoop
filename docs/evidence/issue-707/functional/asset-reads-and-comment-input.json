@@ -1,0 +1,41 @@
+{
+  "kind": "受控同源HTTP功能诊断",
+  "regressionBefore": {
+    "previewCommentUndo": {
+      "expected": "abc",
+      "actual": "abcd",
+      "failed": true
+    },
+    "slidesInFlightPhysicalReads": {
+      "expected": 1,
+      "actual": 4,
+      "failed": true
+    }
+  },
+  "after": {
+    "chrome154": [
+      "Design与Slides同图并发请求均为1、图片解码成功、无文档写入",
+      "预览评论原生撤销、退格、删除通过；稳定画板与节点锚点通过",
+      "预览保存503重试、外层根节点撤销与粘贴隔离、加载模块取消通过"
+    ],
+    "chrome140": [
+      "Slides同图并发请求为1、图片解码成功、无文档写入",
+      "预览评论原生撤销、退格、删除通过；稳定画板与节点锚点通过"
+    ]
+  },
+  "bounds": {
+    "owner": "单个编辑器实例",
+    "inFlightEntries": 32,
+    "completedBlobCache": false,
+    "thumbnailCacheEntries": 128,
+    "thumbnailCacheBytes": 2097152,
+    "thumbnailDecodeConcurrency": 2,
+    "lastConsumerCancellation": true,
+    "failedReadRetry": true,
+    "separateDocumentAndVersionKeys": true,
+    "separateEditorScopes": true
+  },
+  "performanceQualified": false,
+  "realAuthorizationQualified": false,
+  "note": "不把受控请求计数作为真实冷启动、内存或十组AB/BA性能证据；图片编码与可见区域策略未改变。"
+}

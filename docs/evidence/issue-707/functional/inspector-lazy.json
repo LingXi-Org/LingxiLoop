@@ -1,0 +1,207 @@
+{
+  "scope": "相同原生操作与共享草稿链路的按需加载重构，受控HTTP；未新增模型能力，不计真实性能资格。",
+  "extractedJsxCharacters": 19853,
+  "extractedJsxUtf8Bytes": 20935,
+  "scriptTransferReduction": "尚未测量；源码字符数不是传输字节",
+  "qualified": false,
+  "runs": [
+    {
+      "browserMajor": "154",
+      "mode": "design",
+      "case": "normal",
+      "receipt": {
+        "kind": "isolated-lazy-inspector-field",
+        "lazyUntilOpened": true,
+        "fieldDraftSaved": true,
+        "sharedUndo": true,
+        "reopenedValue": true,
+        "cachedReentry": true,
+        "focusRestored": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "mode": "design",
+      "case": "failed",
+      "receipt": {
+        "kind": "isolated-inspector-module-error",
+        "lazyUntilOpened": true,
+        "chineseFailure": true,
+        "editorRetained": true,
+        "focusRestored": true,
+        "refreshRecovered": true,
+        "noWrites": true,
+        "expectedNetworkErrors": [
+          "Failed to load resource: net::ERR_FAILED"
+        ],
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "mode": "design",
+      "case": "cancel",
+      "receipt": {
+        "kind": "isolated-inspector-load-cancellation",
+        "lazyUntilOpened": true,
+        "closeWhileLoading": true,
+        "lateModuleDoesNotReopen": true,
+        "cachedReentry": true,
+        "focusRestored": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "mode": "design",
+      "case": "normal",
+      "receipt": {
+        "kind": "isolated-lazy-inspector-field",
+        "lazyUntilOpened": true,
+        "fieldDraftSaved": true,
+        "sharedUndo": true,
+        "reopenedValue": true,
+        "cachedReentry": true,
+        "focusRestored": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "mode": "design",
+      "case": "failed",
+      "receipt": {
+        "kind": "isolated-inspector-module-error",
+        "lazyUntilOpened": true,
+        "chineseFailure": true,
+        "editorRetained": true,
+        "focusRestored": true,
+        "refreshRecovered": true,
+        "noWrites": true,
+        "expectedNetworkErrors": [
+          "Failed to load resource: net::ERR_FAILED"
+        ],
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "mode": "design",
+      "case": "cancel",
+      "receipt": {
+        "kind": "isolated-inspector-load-cancellation",
+        "lazyUntilOpened": true,
+        "closeWhileLoading": true,
+        "lateModuleDoesNotReopen": true,
+        "cachedReentry": true,
+        "focusRestored": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "mode": "slides",
+      "case": "normal",
+      "receipt": {
+        "kind": "isolated-lazy-inspector-field",
+        "lazyUntilOpened": true,
+        "fieldDraftSaved": true,
+        "sharedUndo": true,
+        "reopenedValue": true,
+        "cachedReentry": true,
+        "focusRestored": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "mode": "slides",
+      "case": "failed",
+      "receipt": {
+        "kind": "isolated-inspector-module-error",
+        "lazyUntilOpened": true,
+        "chineseFailure": true,
+        "editorRetained": true,
+        "focusRestored": true,
+        "refreshRecovered": true,
+        "noWrites": true,
+        "expectedNetworkErrors": [
+          "Failed to load resource: net::ERR_FAILED"
+        ],
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "mode": "slides",
+      "case": "cancel",
+      "receipt": {
+        "kind": "isolated-inspector-load-cancellation",
+        "lazyUntilOpened": true,
+        "closeWhileLoading": true,
+        "lateModuleDoesNotReopen": true,
+        "cachedReentry": true,
+        "focusRestored": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "interactions": [
+    {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "slides",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": true,
+      "designPlayMenuOpensPreview": false,
+      "drawing": false,
+      "layouts": true,
+      "multiplePages": true,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-native-editor-interaction-diagnostic",
+      "mode": "design",
+      "textInsertion": true,
+      "gradientSaved": true,
+      "menuKeysDoNotNudge": true,
+      "cropReopensFullSource": true,
+      "presentationKeysFromControls": false,
+      "designPlayMenuOpensPreview": true,
+      "drawing": true,
+      "layouts": false,
+      "multiplePages": false,
+      "scope": "controlled HTTP shared reducer fixture, not authenticated product integration",
+      "consoleOrPageErrors": []
+    }
+  ],
+  "fontLazy": [
+    {
+      "kind": "isolated-font-lazy-cancellation-diagnostic",
+      "mode": "design",
+      "cancelAction": "outside",
+      "actualModuleHeld": true,
+      "pendingSessionCancelled": true,
+      "lateModuleDoesNotStealFocus": true,
+      "cachedReentryFocus": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-font-lazy-cancellation-diagnostic",
+      "mode": "design",
+      "cancelAction": "escape",
+      "actualModuleHeld": true,
+      "pendingSessionCancelled": true,
+      "lateModuleDoesNotStealFocus": true,
+      "cachedReentryFocus": true,
+      "consoleOrPageErrors": []
+    }
+  ]
+}

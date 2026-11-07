@@ -1,0 +1,140 @@
+{
+  "审查对象": {
+    "候选提交": "bcb2e6a11e91207efd66276f57606e228eb7a821",
+    "基线提交": "35451b5f5fb1abd10b0c16679c40109e46d2c8db",
+    "工作树": "/workspace/lingxi-issue707-scratch/review-bcb2e6a1",
+    "技能": ".agents/skills/repository-review/SKILL.md",
+    "隔离": "独立detached checkout，既有公有依赖；未读取root后续Layout WIP，未改产品、提交、推送、部署或外发。审查前后精确HEAD一致，git status --short为空。",
+    "范围": "仅本批元素对齐、作者坐标/锚点移动缩放与预览取消、连接线points保留、save入口测试调整和167项证据。"
+  },
+  "结论": "发现1项实际P2，无新增P1。本候选局部审查未通过；完整视觉、功能、授权服务和性能资格仍未完成。",
+  "问题": [
+    {
+      "严重级别": "P2",
+      "标题": "右对齐后键盘微移生成双侧锚点，导致后续水平拖动被锁死",
+      "位置": [
+        {
+          "文件": "src/features/artifacts/native/element-positioning.ts",
+          "行": 18,
+          "说明": "新增bothX锁定规则使键盘遗留的双侧锚点阻止后续移动。"
+        },
+        {
+          "文件": "src/features/artifacts/native/NativeEditor.tsx",
+          "行": 756,
+          "说明": "现有方向键路径仍对painted selectedNodes硬写x/y，未接入新增CSS锚点语义。"
+        }
+      ],
+      "最小复现": [
+        "Design打开含标题的画板，使用50%缩放，选中标题并在属性面板点右对齐。",
+        "确认节点css.left=auto、css.right=0px，元素在screen x432。",
+        "聚焦编辑器后按一次ArrowRight。原硬写x路径把x写为769，并把css.left桥接为769px；css.right仍为0px。元素screen x432.5。",
+        "从标题内容向右拖动20 CSS px并松开；元素仍screen x432.5，没有新写入。"
+      ],
+      "影响": "普通键盘微移之后无法继续水平拖动。该问题已在50%复现，不依赖已登记的低于25%手柄差异。",
+      "原因": "pointer手势新增使用真实pins和elementMovePatch；键盘路径仍用绘制后坐标写原生x/y。原始right锚点未清理，left:auto被变为像素，下一次readElementPositionPins判定bothX。真正双侧锚点的锁定是预期，但这里双侧状态是键盘路径意外产生的。",
+      "最小修复": "将键盘微移接入同样的实际pins/elementMovePatch，保留右侧/下侧锚点并只改变对应轴；普通节点保留既有行为。不要移除真正双侧锚点的锁定规则。补右/下锚点的方向键→拖动→撤销/重做连续回归。",
+      "实际验证": {
+        "Chrome140": "50%下x432→432.5→拖动后432.5，css.left769px/right0，拖动0新写入，断言失败。",
+        "Chrome154": "50%下完全相同，断言失败；默认约22%早先探针也失败，但主要结论使用50%证据。"
+      },
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-bcb-nudge-drag50-140/nudge-drag.json",
+        "/workspace/lingxi-issue707-scratch/review-bcb-nudge-drag50-140/nudge-drag.png",
+        "/workspace/lingxi-issue707-scratch/review-bcb-nudge-drag50-154/nudge-drag.json",
+        "/workspace/lingxi-issue707-scratch/review-bcb-nudge-drag50-154/nudge-drag.png",
+        "/tmp/lingxi-review-bcb-nudge-drag50-140.log",
+        "/tmp/lingxi-review-bcb-nudge-drag50-154.log"
+      ],
+      "复现脚本": "/workspace/lingxi-issue707-scratch/review-bcb-probes/native-nudge-drag.mjs",
+      "参数": "--mode=design --checks=element-sizing --sizing-case=align-right --sizing-zoom=50% --review-nudge=true --browser=<140或154> --output=<独立输出目录>；node --import tsx运行。脚本在仓库外，仅在冻结产品上增加复现步骤和断言。",
+      "来源限定": "固定Source12项资源哈希已验证。Source同50%只读探针未观察到ArrowRight产生移动；其后实际水平拖动仍可移动且保留right锚点（本次right=-27px）。不把此次Source取证当作同键盘或拖动量完全等价的通过证据。",
+      "来源证据": [
+        "/workspace/lingxi-issue707-scratch/review-bcb-source-nudge-drag50-154/nudge.json",
+        "/workspace/lingxi-issue707-scratch/review-bcb-source-nudge-drag50-154/reference.json"
+      ]
+    }
+  ],
+  "独立实际通过": [
+    {
+      "项目": "50个定向单元",
+      "结果": "50/50，无跳过；包含锚点、CSS重要声明、未触碰轴自适应、连接线resized.points保留、共享历史/冲突。",
+      "命令": "node --import tsx --test src/features/artifacts/native/element-positioning.test.ts src/features/artifacts/native/element-alignment.test.ts src/features/artifacts/native/editor-copy.test.ts src/features/artifacts/native/element-sizing.test.ts src/features/artifacts/native/inspector-code-edit.test.ts shared/artifact-operations.test.ts",
+      "证据": "/tmp/lingxi-review-bcb-units.log"
+    },
+    {
+      "项目": "六种对齐及历史",
+      "结果": "Chrome140/154各6项全部通过，包含共享撤销/重做、保存重开和其他页不变。",
+      "参数": "--mode=design --checks=element-sizing --sizing-case=align-top,align-right,align-center,align-left,align-bottom,align-middle --align-history=true",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-bcb-align140",
+        "/workspace/lingxi-issue707-scratch/review-bcb-align154"
+      ]
+    },
+    {
+      "项目": "移动/锁定与取消",
+      "结果": "Chrome154右对齐及居中拖动20px两项通过；Chrome140相同两项e手柄缩放取消通过，文档不变。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-bcb-drag154",
+        "/workspace/lingxi-issue707-scratch/review-bcb-cancel140"
+      ]
+    },
+    {
+      "项目": "相对定位",
+      "结果": "Chrome154左/中/右三项通过；垂直按钮禁用状态和保存重开保留。",
+      "证据": "/workspace/lingxi-issue707-scratch/review-bcb-relative154"
+    },
+    {
+      "项目": "50%真实缩放",
+      "结果": "Chrome154右对齐和居中e手柄两项通过。本轮实际结果与固定Source归档同两状态逐项比较，11项计算几何一致。",
+      "证据": "/workspace/lingxi-issue707-scratch/review-bcb-resize50-154"
+    },
+    {
+      "项目": "旧自适应缩放/取消",
+      "结果": "Chrome140 width-hug-resize、width-hug-cancel两项通过。",
+      "证据": "/workspace/lingxi-issue707-scratch/review-bcb-hug140"
+    },
+    {
+      "项目": "未触碰轴自适应",
+      "结果": "Chrome154先把高度设为自适应，再右对齐或居中并e手柄缩放，两项通过：高度模型76未被改为绘制值60，css.height=auto及implicitHeight=true保留，保存重开通过。",
+      "脚本": "/workspace/lingxi-issue707-scratch/review-bcb-probes/untouched-hug.mjs",
+      "证据": "/workspace/lingxi-issue707-scratch/review-bcb-untouched-height154"
+    },
+    {
+      "项目": "当前入口聚焦保存",
+      "结果": "Chrome154 --mode=both --checks=save的Design与Slides均通过；涵盖当前标题确认规则/当前画板宽度、备注、表格、组词期间CtrlS不提交、待确认保存、并发样式保留及活动RTE共享历史。不是OS真实输入法。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-bcb-save154",
+        "/tmp/lingxi-review-bcb-save154.log"
+      ]
+    }
+  ],
+  "证据核对": {
+    "167项": "实际解析parity-matrix.json共167项，全部functionalQualified=false及visualQualified=false，没有把局部结果提升为完整通过。",
+    "8对原图": "独立PIL/NumPy按RGBA逐像素重算8对Source/native PNG，differentPixels和rawDifferentRatio与清单完全一致，0/8达到0.5%。未使用mask或抗锯齿排除。",
+    "13对几何": "独立重读归档Source及原生JSON，基础6、50%缩放2、相对3、140缩放2共13状态，每组11个计算样式字段逐项一致；本轮新增缩放2例亦一致。此核对不代表重新运行全部Source状态。",
+    "收据": "/workspace/lingxi-issue707-scratch/review-bcb-evidence-recheck.json",
+    "CI": "workflow新增对齐历史、50%缩放和取消回归，并上传相应JSON/PNG；未更改计量/性能阈值。",
+    "旧save覆盖": "旧Design高级入口已替换为原位标题与当前画板宽度；旧坐标断言明确移交board-transform，并在返回结果标明coordinateCoverage，没有保留虚假的旧坐标已通过标志。",
+    "已有失败": "140合成composition首轮多出操作原因未明仍保留；本轮只独立运行154当前入口save，不推断该间歇失败已消除。"
+  },
+  "复现环境": {
+    "Playwright": "/tmp/lingxi-browser-tools/node_modules/playwright/index.mjs",
+    "Chrome140": "/tmp/review-a0-chrome140/chrome-linux/chrome",
+    "Chrome154": "/usr/bin/chromium",
+    "字体": "/tmp/review-font-environment/compatible.conf",
+    "临时目录": "/workspace/lingxi-issue707-scratch/review-tmp-959b41b5",
+    "范围": "受控HTTP真实React/Worker/浏览器，不是真实鉴权、外部Agent或性能测量。"
+  },
+  "失败保留": [
+    "/tmp/lingxi-review-bcb-nudge154.log：先发现left:auto改写。",
+    "/tmp/lingxi-review-bcb-nudge-drag154.log：默认约22%复现后续拖动锁定，随后改用50%独立复验排除已知低缩放状态。",
+    "/tmp/lingxi-review-bcb-nudge-drag50-140.log及154.log：两浏览器50%断言失败。"
+  ],
+  "未验证": [
+    "本次未独立重跑正式CI/完整诊断、真实PG/授权服务/Agent、OSIME、50页或全部导出。",
+    "连接线points保留已运行对应单元，没有补做所有旧CSS尺寸、矢量路径、旋转和零尺寸对象的全量真实UI；已有缺口仍按未完成保留。",
+    "本轮未触碰轴真实浏览器覆盖高度自适应/水平缩放；另一轴、全部混合选择及全部定位约束未全面覆盖。",
+    "完整视觉0.5%、触摸/25%手柄启用策略、全部状态和最终10组交替AB/BA性能门槛仍未通过。",
+    "没有根据Source额外ArrowRight未动的旁证声称其键盘行为已完全验证，也不更改此前视图匹配或历史mask结论。"
+  ]
+}

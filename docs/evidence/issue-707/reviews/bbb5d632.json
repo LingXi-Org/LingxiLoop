@@ -1,0 +1,31 @@
+{
+  "candidateCommit": "bbb5d632a59c0906660c95c279a988a1a7ed778c",
+  "reviewer": "/root/independent_review",
+  "mode": "独立只读",
+  "findings": [],
+  "closedFinding": "86c9预览评论输入删除和撤销被根节点拦截",
+  "independentlyRun": [
+    "评论原生撤销、退格、Delete；无文档写入",
+    "Chrome140评论HTTP流程",
+    "Chrome154保存503重试、根撤销与粘贴隔离、模块取消",
+    "4项请求合并单元",
+    "Design、Slides各一次进行中同图请求并解码成功"
+  ],
+  "owningCI": {
+    "run": 42261799567,
+    "conclusion": "success",
+    "deploy": "skipped"
+  },
+  "diagnostic": {
+    "run": 42261829286,
+    "conclusion": "failure",
+    "step": "Verify real worker script accounting before production measurements",
+    "failure": "工具栏几何断言：导出格式的x须与源码相差1px以内",
+    "productionMeasurementStarted": false,
+    "qualifiedSamples": 0,
+    "followup": "后续候选改为在同一CI浏览器及字体环境运行校验哈希的固定源码并对照，仍保留1px容差；待新CI确认。"
+  },
+  "realAuthorizationQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

@@ -56,6 +56,8 @@ async function execute(request: ComputeRequest) {
       if (task.kind === 'pages') bounds.replace(task.pages)
       else bounds.update(task.upserts, task.removed)
       geometryRevision = revision
+    } else if(task.kind==='pen'){
+      value=(await import('../../../../shared/artifact-pen')).fitCanvasPen(task.points,task.tolerance,true)
     } else if (task.kind === 'math') {
       value = await math(task.source, task.display)
     } else if (task.kind === 'elements') {

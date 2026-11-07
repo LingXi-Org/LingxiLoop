@@ -155,7 +155,27 @@ test('process crash after native write preserves receipts; disconnected replacem
     assert.equal(await api.retryDelivery(cancelled, 'terminal'), false)
     assert.equal((await api.readTerminal(cancelled))?.delivery, 'delivered')
     const last = await enqueue('after-terminal-restart'), finalWorker = await start('basic-final')
-    await until(async () => (await api.readRunState(last))?.delivery === 'delivered', 'message after terminal recovery')
+    await until(async () => (await api.readRunState(last))?.delivery === 'delivered', 'message after terminal recovery').catch(async error => {
+      // Keep the failed gate intact; only bounded public state and counts enter
+      // the diagnostic, never the message, prompt, credentials or run payload.
+      try {
+        const run = await api.readRun(last), state = await api.readRunState(last), failure = (await api.readDiagnostics(last))?.runtimeFailure
+        const events = await api.readEvents(last, 0), budget = [...events.events].reverse().find(event => event.kind === 'run.failed')?.data.compactionDiagnostics
+        const numbers = (value: unknown, fields: string[]) => Object.fromEntries(fields.flatMap(key => {
+          const entry = value && typeof value === 'object' ? Reflect.get(value, key) : undefined
+          return typeof entry === 'number' && Number.isFinite(entry) ? [[key, entry]] : []
+        }))
+        const components = budget && typeof budget === 'object' ? Reflect.get(budget, 'components') : undefined
+        t.diagnostic(JSON.stringify({ phase: 'terminal-recovery-followup-timeout', status: run?.status ?? null,
+          delivery: state?.delivery ?? null, modelCalls: finalWorker.calls, workerExitCode: finalWorker.child.exitCode,
+          contextBudget: numbers(budget, ['estimatedTokens', 'hardLimitTokens', 'contextWindowTokens', 'requestInputTokens', 'reservedTokens', 'overheadTokens', 'historyItems', 'completedChunks']),
+          contextComponents: numbers(components, ['instructionsTokens', 'toolSchemaTokens', 'requestTokens', 'evidenceTokens', 'dynamicContextTokens', 'memoryTokens', 'historyTokens', 'reservedTokens']),
+          runtimeFailure: failure ? { phase: failure.phase, bindingState: failure.bindingState, errorName: failure.errorName,
+            reason: failure.reason, category: failure.category, httpStatus: failure.httpStatus, causeCode: failure.causeCode,
+            sqlState: failure.sqlState, systemCode: failure.systemCode, frames: failure.frames } : null }))
+      } catch { t.diagnostic('terminal-recovery-followup-state-unavailable') }
+      throw error
+    })
     assert.equal((await api.readRun(last))?.status, 'succeeded')
     assert.equal(finalWorker.calls, 1)
     await stop(finalWorker, 'SIGTERM')

@@ -1,0 +1,67 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "baseCommit": "53126f83473958bb7f7f13eee1c68e93749c2bf6",
+  "qualified": false,
+  "firstFailure": "154在修改前复现导出按钮30px超过来源28px，另已捕获768/390纵向偏移4px及缩放槽宽度不足",
+  "geometry": {
+    "chrome140": "四容器浅深8组通过",
+    "chrome154": "四容器浅深8组通过",
+    "toleranceCssPx": 1,
+    "checks": [
+      "工具栏纵坐标和768px水平边距",
+      "28px导出/放映按钮",
+      "三位数缩放槽64.671875px",
+      "属性/缩放前13px分隔"
+    ]
+  },
+  "regressions": [
+    "中文组件文案2项通过",
+    "154属性面板懒加载/保存/共享撤销/重开/焦点通过",
+    "15项CI合约通过",
+    "web lint通过，43警告3信息保持现有"
+  ],
+  "limits": [
+    "公开分享入口按既有登记移除；其余功能尚未取得完整资格",
+    "8对未掩码默认截图仍0/8满足0.5%；不能把局部几何作为完整视觉通过"
+  ],
+  "sha256": {
+    "reference-controls.json": "b6519e36c852a5a77a7c7d026b529420545815c785fa7e23b3a4a0ab09602db4",
+    "chrome154/slides-toolbar-768-light.png": "1a2aac4b5ddab6ffb5269c1a536e93a7b6fcc6daf1f0da256075a31733e0e992",
+    "chrome154/slides.json": "271893b89d60723285f6e5f600815085ac20f93275df09a5aa1e53864ba3d3e8",
+    "chrome154/slides-toolbar-390-light.png": "def01c89e839f06d4d648c6df5ea2d7351c5cee2bb48b6ea760e5bd6a7a6a53b",
+    "chrome154/slides-toolbar-768-dark.png": "dd13e5e91ca8b4e484e92baffc0cd4b9f8906ab4099e7b8a4a88582d430a0e2d",
+    "chrome154/slides-toolbar-1920-dark.png": "686520b9ffba967d33f5620fcab5eb2e72c69df27fe1b178754ea8683f6ca819",
+    "chrome154/slides-toolbar-1440-light.png": "41209d77769e1d19d567576f11fe05021e266d79828f7309e0015d988d5369f9",
+    "chrome154/slides-toolbar-1440-dark.png": "5fdf51934fc193b2a311c7a1bde1863b848dc047977e468a03022688300d2a56",
+    "chrome154/toolbar-measured.json": "8432a364ee19aa0bc5620aab471430c97d925f724c613b4b8bd9f00890df5468",
+    "chrome154/slides-toolbar-390-dark.png": "e310469a86b2541a01e65ad885f38366e0dee36041d17050b24754d74f6e13dd",
+    "chrome154/slides-toolbar-1920-light.png": "af8f5545a12cf77277eb1fd62f801ac25ee765bc14e4ad730a75d259f441096d",
+    "chrome140/slides-toolbar-768-light.png": "2dad7adaf2474a9751a87375b92cfc5625daa2a3e2eb01fdbe31746c372a7f8f",
+    "chrome140/slides.json": "271893b89d60723285f6e5f600815085ac20f93275df09a5aa1e53864ba3d3e8",
+    "chrome140/slides-toolbar-390-light.png": "4b421207ba33f0ef1c590957e7c4e420fb81a46249e53838b34f918029c84f56",
+    "chrome140/slides-toolbar-768-dark.png": "802ab2ea226b40db102edfc28e1e0f862172f2618fb3f1f45764f6ed2ce47ce1",
+    "chrome140/slides-toolbar-1920-dark.png": "34e73799039986f68bed82d2bc5e37254429420b924d133cd1093a3165d1da29",
+    "chrome140/slides-toolbar-1440-light.png": "69c901c36f1d75c178e29a297b09b0754590dbfbee87ffa5ba2886df128bc799",
+    "chrome140/slides-toolbar-1440-dark.png": "9b7d748f9ee275794f7e6bb48b22dac5d177cb4319d1ad4e52cd7cae083c25a7",
+    "chrome140/toolbar-measured.json": "8432a364ee19aa0bc5620aab471430c97d925f724c613b4b8bd9f00890df5468",
+    "chrome140/slides-toolbar-390-dark.png": "78309cd09ff0f291499debb0885bf53062bc8725f7b848014aa0526a8bd3c1d7",
+    "chrome140/slides-toolbar-1920-light.png": "2c3fe4272f92d804593f9833bbe9260536fd360ddaa896e0cbcf5579fc1937e4",
+    "comparison/slides-1920-dark-diff.png": "183280b72a43a53c34b8fc5201b4af91c68a35aaf6dce426f3dcd71c2b2edfeb",
+    "comparison/slides-1440-light-overlay.png": "d079a79afcb4377dcd780e6cd4fd03dc72cca79d77cb6154abc54b68bc66ec9d",
+    "comparison/slides-1920-light-diff.png": "56706f6eb9fcc7d58cd45b079c23da31bdaeaf0a1a628e6c6fb34c1451d34f22",
+    "comparison/slides-768-dark-overlay.png": "99c8f83879952a0911c313eb0200b26bc3088a45ead506db0fba1690989bc991",
+    "comparison/slides-1440-dark-overlay.png": "dbd6ee0461675127d1dcff73c8354e5d0ad0175666d79557c147b0cfe31da5ff",
+    "comparison/slides-1440-dark-diff.png": "0d80f6cfc05a8208f576493d5b6457bf3c8a9d0642a7f44d1610c6ff7ad8c6be",
+    "comparison/slides-390-dark-overlay.png": "b82f7b5a693b38bfa4ad149900d2140d1f1c3aadd45c736a9ba597b2cf00eb84",
+    "comparison/slides-768-light-diff.png": "8969e9a9979c472c68570e181dfc586e5d97297da7b3908c653e0b30b82c1529",
+    "comparison/slides-390-light-overlay.png": "b19903727d88d64c3dbdcd87f33c0042069ea7715a331caa2d0a503611ffdbd2",
+    "comparison/slides-768-light-overlay.png": "99e997d85176979a8aa7e69bf8afca244a95439da5e69b3d1112a761261c81ba",
+    "comparison/slides-768-dark-diff.png": "b6b4dc4ce297d7c6bddfb182ea808ae14d6f183ab302e65452fbd221eb950aab",
+    "comparison/slides-390-dark-diff.png": "e24be9463f393c19c68f403550f05bc5f70dcf1863892e76c31c86a11a4619f2",
+    "comparison/slides-1440-light-diff.png": "98b384f939528443e59be216927e401d67ece61a5b2d7a1329f093ae757b3c3c",
+    "comparison/slides-390-light-diff.png": "5b037e3311c073bc50e9d599bb525f9aa071bd9be6e182db8989556026f99daa",
+    "comparison/raw-pixel-results.json": "88a72c094fafcdb393c451202d633e6d31775a55eff97b3ec11b4d62a3aaeb3f",
+    "comparison/slides-1920-dark-overlay.png": "f468cea73b8dd11aff7c8ae4395c5bd1149ed6367a3f733861a2d87757a94f0d",
+    "comparison/slides-1920-light-overlay.png": "b463740aa879a85cfe3542fed1f98bad3f0359fee83eb1c6d2f8e3efed248eab"
+  }
+}

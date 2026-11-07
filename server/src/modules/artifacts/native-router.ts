@@ -1,3 +1,4 @@
+import {artifactPageIds} from '../../../../shared/artifact-canvas-pages.js'
 import { raw, Router, type Response } from 'express'
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
@@ -13,15 +14,17 @@ import { blobFile, putBlob, sha256 } from './store.js'
 import { NativeHistoryConflict } from './native-history.js'
 import {
   ensureNativeDocument, nativeDocumentChanges, NativeDocumentError, nativeWritesEnabled,
-  nativeSourceArchive, readNativeOriginal, readNativeOriginalBlob, readNativePage, readNativePageSnapshot, submitNativeOperations,
+  nativeSourceArchive, readNativeOriginal, readNativeOriginalBlob, readNativePage, readNativePageSnapshot, readNativeRevision, submitNativeOperations,
   type NativeOperationResult,
 } from './native-document.js'
 import { projectNativeSnapshot } from './native-projection.js'
 import { artifactEditorOrigin } from '../../../../shared/artifact-editor-origin.js'
 import { issueGrant } from './grants.js'
 import { env } from '../../env.js'
+import { nativeCommentsRouter } from './native-comments-router.js'
 
 export const nativeArtifactsRouter = Router()
+nativeArtifactsRouter.use(nativeCommentsRouter)
 const transaction = <T>(work: Parameters<typeof withTransaction<T>>[1]) => withTransaction(pool, work)
 const assetCsp = "sandbox; default-src 'none'; style-src 'unsafe-inline'; img-src data:"
 
@@ -44,9 +47,19 @@ nativeArtifactsRouter.get('/artifacts/:id/document', safe(async (req, res) => {
   try {
     const snapshot = await ensureNativeDocument({ db: pool, transaction }, { artifactId, companyId: scope.companyId, actorId: scope.userId, write })
     const requested = typeof req.query.pages === 'string' ? req.query.pages.split(',').filter(Boolean) : [snapshot.document.pageOrder[0]].filter((id): id is string => Boolean(id))
-    const loaded = req.query.allPages === 'true' ? snapshot.document.pageOrder : requested
+    const loaded = req.query.allPages === 'true' ? artifactPageIds(snapshot.document) : requested
     res.set('Cache-Control', 'no-store').json({ ...projectNativeSnapshot(snapshot, loaded), write })
   } catch (error) { if (!respondError(res, error)) throw error }
+}))
+
+nativeArtifactsRouter.get('/artifacts/:id/revisions/:seq/document',safe(async(req,res)=>{
+  const artifactId=String(req.params.id),scope=await requireArtifact(req,artifactId)
+  const seq=z.string().regex(/^\d{1,18}$/).parse(req.params.seq)
+  try{
+    const snapshot=await readNativeRevision(pool,{artifactId,companyId:scope.companyId,seq})
+    const loaded=req.query.allPages==='true'||!Object.keys(snapshot.pageVersions).length?artifactPageIds(snapshot.document):snapshot.document.pageOrder.slice(0,1)
+    res.set('Cache-Control','no-store').json({...projectNativeSnapshot(snapshot,loaded),write:false})
+  }catch(error){if(!respondError(res,error))throw error}
 }))
 
 nativeArtifactsRouter.get('/artifacts/:id/pages/:pageId', safe(async (req, res) => {
@@ -116,10 +129,10 @@ nativeArtifactsRouter.post('/artifacts/:id/assets', raw({ type: () => true, limi
   const artifactId = String(req.params.id), scope = await requireArtifact(req, artifactId, true)
   if (!nativeWritesEnabled()) throw new NativeDocumentError(503, 'editor_upgrade_pending', 'Editor upgrade is in progress.')
   const bytes = Buffer.isBuffer(req.body) ? req.body : null
-  if (!bytes?.length) { res.status(400).json({ error: 'Expected an image file.' }); return }
+  if (!bytes?.length) { res.status(400).json({ error: 'Expected a media file.' }); return }
   const contentType = String(req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase()
-  if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif', 'image/svg+xml'].includes(contentType)) { res.status(415).json({ error: 'Unsupported image type.' }); return }
-  const asset = await putBlob(pool, artifactKind(scope.kind), artifactId, bytes, contentType)
+  if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/avif', 'image/svg+xml', 'video/mp4', 'video/webm', 'video/ogg'].includes(contentType)) { res.status(415).json({ error: 'Unsupported media type.' }); return }
+  const asset = await putBlob(pool, artifactKind(scope.kind), artifactId, bytes, contentType, { video: true })
   res.status(201).json({ id: asset.id, url: `/api/artifacts/${encodeURIComponent(artifactId)}/assets/${asset.id}`, contentType, sha256: sha256(bytes) })
 }))
 
@@ -134,8 +147,8 @@ nativeArtifactsRouter.get('/artifacts/:id/assets/:assetId', safe(async (req, res
 
 nativeArtifactsRouter.post('/artifacts/:id/embeds/:pageId/:nodeId/grant', safe(async (req, res) => {
   const artifactId = String(req.params.id), scope = await requireArtifact(req, artifactId)
-  const input = z.object({ sha256: z.string().regex(/^[a-f0-9]{64}$/), pageHash: z.string().regex(/^[a-f0-9]{64}$/).optional(), nonce: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/).optional() }).strict().parse(req.body)
-  const page = input.pageHash ? await readNativePage(pool, artifactId, String(req.params.pageId), input.pageHash)
+  const input = z.object({ sha256: z.string().regex(/^[a-f0-9]{64}$/), pageHash: z.string().regex(/^[a-f0-9]{64}$/).optional(), revisionSeq:z.string().regex(/^\d{1,18}$/).optional(), nonce: z.string().regex(/^[a-zA-Z0-9_-]{1,128}$/).optional() }).strict().parse(req.body)
+  const page = input.revisionSeq!==undefined ? (await readNativeRevision(pool,{artifactId,companyId:scope.companyId,seq:input.revisionSeq})).document.pages[String(req.params.pageId)] : input.pageHash ? await readNativePage(pool, artifactId, String(req.params.pageId), input.pageHash)
     : (await ensureNativeDocument({ db: pool, transaction }, { artifactId, companyId: scope.companyId, actorId: scope.userId, write: false })).document.pages[String(req.params.pageId)]
   const embed = page?.nodes[String(req.params.nodeId)]?.embed
   if (!embed) { res.sendStatus(404); return }
@@ -145,6 +158,7 @@ nativeArtifactsRouter.post('/artifacts/:id/embeds/:pageId/:nodeId/grant', safe(a
   const origin = env.NODE_ENV === 'production' ? await artifactEditorOrigin(grant, env.ARTIFACT_EDITOR_BASE) : ''
   const query = new URLSearchParams({ sha256: input.sha256, nonce: input.nonce ?? randomUUID() })
   if (input.pageHash) query.set('pageHash', input.pageHash)
+  if (input.revisionSeq!==undefined) query.set('revisionSeq',input.revisionSeq)
   res.set('Cache-Control', 'no-store').json({ url: `${origin}${prefix}?${query}`, expiresAt })
 }))
 

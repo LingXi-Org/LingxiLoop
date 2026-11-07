@@ -14,14 +14,15 @@ mock.module('@/stores/surface', { namedExports: { useSurface: { getState: () => 
   openDesign: (artifactId: string, title: string) => { opened.push(artifactId); surface = { kind: 'design', artifactId, title } },
   closeDesign: () => { surface = null },
 }) } } })
-let existing: { id: string } | null = null, looked = 0
+let existing: { id: string;title?:string } | null = null, looked = 0
+let deferRead=false,resolveRead!:(value:{id:string;title:string}|null)=>void
 mock.module('@/features/artifacts/api', { namedExports: { artifactsApi: {
   ensureConversationDesign: () => new Promise<{ id: string; title: string }>((done, fail) => { resolve = done; reject = fail }),
-  getConversationDesign: async () => { looked++; return existing },
+  getConversationDesign: async () => { looked++; return deferRead?new Promise(done=>{resolveRead=done}):existing },
 } } })
 const prefetched: (string | undefined)[] = []
 mock.module('@/features/artifacts/editor-preload', { namedExports: { prefetchEditor: (_kind: string, artifactId?: string) => { prefetched.push(artifactId) } } })
-const { openConversationDesign, prefetchConversationDesign } = await import('./open-design')
+const { openConversationDesign, prefetchConversationDesign, restoreLinkedConversationDesign } = await import('./open-design')
 const { PENDING_DESIGN_ID } = await import('./pending')
 const reset = () => { userId = 'user'; companyId = 'company'; projectId = 'project'; conversationId = 'room'; surface = null; opened.length = 0; prefetched.length = 0 }
 
@@ -95,4 +96,25 @@ test('an old scope response cannot close a newer canvas placeholder', async () =
     await current
     assert.deepEqual(surface, { kind: 'design', artifactId: 'new-board', title: '新画板' })
   }
+})
+
+ test('private linked pages only open the existing matching conversation design without creation',async()=>{
+  reset();existing={id:'linked',title:'链接中的设计'}
+  await restoreLinkedConversationDesign('room','linked',new AbortController().signal)
+  assert.deepEqual(opened,['linked']);assert.deepEqual(prefetched,['linked'])
+  reset();existing=null
+  await assert.rejects(restoreLinkedConversationDesign('room','linked',new AbortController().signal),/不存在或无权访问/)
+  assert.deepEqual(opened,[])
+  reset();existing={id:'another-board',title:'另一个设计'}
+  await assert.rejects(restoreLinkedConversationDesign('room','linked',new AbortController().signal),/不存在或无权访问/)
+  assert.deepEqual(prefetched,[])
+})
+ test('pending private links cannot reopen a closed surface or cross an account/workspace/conversation change',async()=>{
+  deferRead=true
+  try{for(const change of [()=>{companyId='other'},()=>{projectId='other'},()=>{conversationId='other'},()=>{userId='other'},()=>{surface={kind:'design',artifactId:'another',title:'其他设计'}}]){
+    reset();const controller=new AbortController(),pending=restoreLinkedConversationDesign('room','linked',controller.signal)
+    change();resolveRead({id:'linked',title:'原来的私有设计'});await pending;assert.deepEqual(opened,[]);assert.deepEqual(prefetched,[])
+  }
+  reset();const controller=new AbortController(),pending=restoreLinkedConversationDesign('room','linked',controller.signal);controller.abort();resolveRead({id:'linked',title:'已取消的设计'});await pending;assert.deepEqual(opened,[])
+  }finally{deferRead=false}
 })

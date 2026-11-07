@@ -1,0 +1,1488 @@
+{
+  "schemaVersion": 1,
+  "phase": "diagnostic",
+  "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "candidateCommit": "be5ae0fbdcb48d73a4a20ab5e089e0d0f69912df",
+  "environment": {
+    "operatingSystem": "linux",
+    "architecture": "x64",
+    "kernelRelease": "7.0.0-1017-azure",
+    "distribution": "ubuntu",
+    "distributionVersion": "24.04",
+    "node": "v22.23.4",
+    "expectedRuntime": {
+      "baseline": "4.0.0",
+      "candidate": "4.0.0"
+    },
+    "installedRuntime": {
+      "baseline": "4.0.0",
+      "candidate": "4.0.0"
+    },
+    "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "network": {
+      "latencyMs": 20,
+      "uploadMbps": 3
+    },
+    "cpuRate": 1,
+    "coldProcessPerSample": true,
+    "hostIdleMs": 12000,
+    "scriptIdleWindowMs": 5000,
+    "naturalCloseWindowMs": 10000,
+    "exportPeakIntervalMs": 100,
+    "browser": "140.0.7339.16"
+  },
+  "diagnosticPassed": false,
+  "qualified": false,
+  "checkpoint": {
+    "phase": "measurement",
+    "status": "failed",
+    "code": "CHILD_FAILED"
+  },
+  "summary": {
+    "baseline:design:fullNavigation": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "baseline:design": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "baseline:design:workbenchOpen": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:design:fullNavigation": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:design": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:design:workbenchOpen": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "baseline:slides:fullNavigation": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "baseline:slides": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "baseline:slides:workbenchOpen": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:slides:fullNavigation": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:slides": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    },
+    "candidate:slides:workbenchOpen": {
+      "successfulSamples": 0,
+      "editableMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "scriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptTransferBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "idleScriptDecodedBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "pssDeltaBytes": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "firstInputMs": {
+        "p50": null,
+        "p75": null,
+        "p95": null
+      },
+      "inputFeedbackP95Ms": null
+    }
+  },
+  "gates": [
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "editableMs",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "scriptTransferBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "pssDeltaBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "metric": "inputFeedbackP95",
+      "maximumMs": 100,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "editableMs",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "scriptTransferBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "pssDeltaBytes",
+      "requiredRatio": 1.05,
+      "observedRatio": null,
+      "passed": false
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "metric": "inputFeedbackP95",
+      "maximumMs": 100,
+      "passed": false
+    }
+  ],
+  "samples": [
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "design",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "phase": "traversal",
+      "failureStage": "traversal",
+      "failureCode": "current_page_media_or_fonts_not_ready",
+      "editableMs": 10014.4,
+      "scriptTransferBytes": 1279443,
+      "scriptDecodedBytes": 4052309,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "firstInputMs": 31.600000000093132,
+      "failureObservations": {
+        "frames": 1,
+        "matchingHeadings": 1,
+        "pageNumber": 12,
+        "headingMatches": true,
+        "headingVisible": true,
+        "decodedImages": 0,
+        "formulaElements": 2,
+        "fontChecks": 131,
+        "fontsReady": true
+      },
+      "viewNormalization": {
+        "inspectorToggles": 1,
+        "zoomActions": 0,
+        "observedScale": 0.5,
+        "inspectorClosed": true,
+        "container": {
+          "width": 619,
+          "height": 926
+        }
+      },
+      "visitedPages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "undoProofs": [
+        {
+          "pageNumber": 1,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        }
+      ],
+      "scriptAccounting": {
+        "transferredBytes": 1279443,
+        "decodedBytes": 4052309,
+        "requests": 60,
+        "inflight": 0,
+        "missingTransfer": 0,
+        "missingDecoded": 0,
+        "byteConflicts": 0
+      },
+      "networkObservations": {
+        "requests": 265,
+        "scripts": {
+          "transferredBytes": 1279443,
+          "decodedBytes": 4052309,
+          "requests": 60,
+          "inflight": 0,
+          "missingTransfer": 0,
+          "missingDecoded": 0
+        },
+        "inflight": 18,
+        "failed": 0
+      },
+      "failureCleanup": null,
+      "incompleteScriptObservations": []
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "status": "failed",
+      "phase": "validation",
+      "failureStage": "validation",
+      "failureCode": "decoded_script_accounting_incomplete",
+      "editableMs": 6943.9,
+      "scriptTransferBytes": 240662,
+      "scriptDecodedBytes": 746099,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 393592832,
+      "firstInputMs": 23,
+      "viewNormalization": {
+        "inspectorToggles": 1,
+        "zoomActions": 0,
+        "observedScale": 0.5,
+        "inspectorClosed": true,
+        "container": {
+          "width": 619,
+          "height": 926
+        }
+      },
+      "visitedPages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "undoProofs": [
+        {
+          "pageNumber": 1,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        },
+        {
+          "pageNumber": 25,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        },
+        {
+          "pageNumber": 50,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        }
+      ],
+      "scriptAccounting": {
+        "transferredBytes": 1277518,
+        "decodedBytes": 4047966,
+        "requests": 60,
+        "inflight": 0,
+        "missingTransfer": 1,
+        "missingDecoded": 1,
+        "byteConflicts": 0
+      },
+      "networkObservations": {
+        "requests": 673,
+        "scripts": {
+          "transferredBytes": 1277518,
+          "decodedBytes": 4047966,
+          "requests": 60,
+          "inflight": 0,
+          "missingTransfer": 1,
+          "missingDecoded": 1
+        },
+        "inflight": 0,
+        "failed": 0
+      },
+      "failureCleanup": null,
+      "incompleteScriptObservations": [
+        {
+          "resourceHash": "6d6b442c0c72ce682519e584f20f9ec999cff5169147aeec3136080a4ea6b3c6",
+          "category": "script",
+          "type": "Script",
+          "targetType": "page",
+          "start": 869.764825,
+          "startEpochMs": 1793913842377.775,
+          "requestOrdinal": 81,
+          "status": 200,
+          "transferredBytes": 393,
+          "observedResponseHeadersBytes": 393,
+          "finishedEpochMs": 1793913842511.7915,
+          "network": true,
+          "scriptPath": true,
+          "sourcePayload": false,
+          "retiredEditor": false,
+          "finished": true,
+          "transferPending": true,
+          "transferredBytesSource": "PlaywrightRequestSizes"
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "phase": "validation",
+      "failureStage": "validation",
+      "failureCode": "decoded_script_accounting_incomplete",
+      "editableMs": 7022.4,
+      "scriptTransferBytes": 1301915,
+      "scriptDecodedBytes": 4106296,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 281721651,
+      "firstInputMs": 31.199999999953434,
+      "viewNormalization": {
+        "inspectorToggles": 1,
+        "zoomActions": 0,
+        "inspectorClosed": true,
+        "container": {
+          "width": 819,
+          "height": 926
+        }
+      },
+      "exports": [
+        {
+          "format": "html",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180107,
+          "peakPssBytes": 766514176,
+          "hostSubtractedPeakPssBytes": 302062182
+        },
+        {
+          "format": "pdf",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180122,
+          "peakPssBytes": 711904256,
+          "hostSubtractedPeakPssBytes": 247452262
+        },
+        {
+          "format": "pptx",
+          "status": "failed",
+          "failureCode": "browser_timeout",
+          "bytes": null,
+          "durationMs": 180108,
+          "peakPssBytes": 663152640,
+          "hostSubtractedPeakPssBytes": 198700646
+        }
+      ],
+      "visitedPages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "undoProofs": [
+        {
+          "pageNumber": 1,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        },
+        {
+          "pageNumber": 25,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        },
+        {
+          "pageNumber": 50,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        }
+      ],
+      "scriptAccounting": {
+        "transferredBytes": 1301915,
+        "decodedBytes": 4106296,
+        "requests": 67,
+        "inflight": 0,
+        "missingTransfer": 1,
+        "missingDecoded": 1,
+        "byteConflicts": 0
+      },
+      "networkObservations": {
+        "requests": 877,
+        "scripts": {
+          "transferredBytes": 1648723,
+          "decodedBytes": 5178968,
+          "requests": 73,
+          "inflight": 0,
+          "missingTransfer": 1,
+          "missingDecoded": 1
+        },
+        "inflight": 0,
+        "failed": 0
+      },
+      "failureCleanup": null,
+      "incompleteScriptObservations": [
+        {
+          "resourceHash": "6d6b442c0c72ce682519e584f20f9ec999cff5169147aeec3136080a4ea6b3c6",
+          "category": "script",
+          "type": "Script",
+          "targetType": "page",
+          "start": 1108.545852,
+          "startEpochMs": 1793914081159.005,
+          "requestOrdinal": 87,
+          "status": 200,
+          "transferredBytes": 393,
+          "observedResponseHeadersBytes": 393,
+          "finishedEpochMs": 1793914081308.275,
+          "network": true,
+          "scriptPath": true,
+          "sourcePayload": false,
+          "retiredEditor": false,
+          "finished": true,
+          "transferPending": true,
+          "transferredBytesSource": "PlaywrightRequestSizes"
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "arm": "baseline",
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "status": "failed",
+      "phase": "validation",
+      "failureStage": "validation",
+      "failureCode": "decoded_script_accounting_incomplete",
+      "editableMs": 4684,
+      "scriptTransferBytes": 640602,
+      "scriptDecodedBytes": 2007595,
+      "idleScriptTransferBytes": 0,
+      "idleScriptDecodedBytes": 0,
+      "pssDeltaBytes": 295353958,
+      "firstInputMs": 31.4000000001397,
+      "viewNormalization": {
+        "inspectorToggles": 1,
+        "zoomActions": 0,
+        "inspectorClosed": true,
+        "container": {
+          "width": 819,
+          "height": 926
+        }
+      },
+      "visitedPages": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "undoProofs": [
+        {
+          "pageNumber": 1,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        },
+        {
+          "pageNumber": 25,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        },
+        {
+          "pageNumber": 50,
+          "originalHeadingRestored": true,
+          "saveAcknowledged": true,
+          "focusTabs": 1,
+          "focusInsideEditor": true,
+          "operationPosts": 1,
+          "snapshotReads": 2,
+          "historyPosts": 1,
+          "snapshotStatuses": [
+            200,
+            200
+          ],
+          "operationStatuses": [
+            200
+          ],
+          "historyStatuses": [
+            200
+          ],
+          "focusCompleted": true,
+          "keySent": true,
+          "headingVerified": true,
+          "ackVerified": true,
+          "nativeEditorPresent": true,
+          "editorVisible": true,
+          "documentFocused": true,
+          "activeInEditor": true,
+          "activeIsButton": true,
+          "activeIsRoot": false,
+          "activeEditable": false,
+          "headingNodePresent": true,
+          "bodyOriginal": true,
+          "bodyMarked": false,
+          "rootKeySeen": true,
+          "rootKeyTrusted": true,
+          "rootKeyPrevented": true
+        }
+      ],
+      "scriptAccounting": {
+        "transferredBytes": 1301915,
+        "decodedBytes": 4106296,
+        "requests": 67,
+        "inflight": 0,
+        "missingTransfer": 1,
+        "missingDecoded": 1,
+        "byteConflicts": 0
+      },
+      "networkObservations": {
+        "requests": 575,
+        "scripts": {
+          "transferredBytes": 1370906,
+          "decodedBytes": 4320269,
+          "requests": 68,
+          "inflight": 0,
+          "missingTransfer": 1,
+          "missingDecoded": 1
+        },
+        "inflight": 0,
+        "failed": 0
+      },
+      "failureCleanup": null,
+      "incompleteScriptObservations": [
+        {
+          "resourceHash": "6d6b442c0c72ce682519e584f20f9ec999cff5169147aeec3136080a4ea6b3c6",
+          "category": "script",
+          "type": "Script",
+          "targetType": "page",
+          "start": 1841.975891,
+          "startEpochMs": 1793914814589.191,
+          "requestOrdinal": 88,
+          "status": 200,
+          "transferredBytes": 393,
+          "observedResponseHeadersBytes": 393,
+          "finishedEpochMs": 1793914814727.3955,
+          "network": true,
+          "scriptPath": true,
+          "sourcePayload": false,
+          "retiredEditor": false,
+          "finished": true,
+          "transferPending": true,
+          "transferredBytesSource": "PlaywrightRequestSizes"
+        }
+      ]
+    },
+    {
+      "run": 1,
+      "arm": "candidate",
+      "kind": "design",
+      "mode": "fullNavigation",
+      "status": "failed",
+      "phase": "firstInput",
+      "failureStage": "firstInput",
+      "failureCode": "browser_timeout",
+      "failureObservations": {
+        "inputStep": 2,
+        "activeEditable": false,
+        "documentFocused": true,
+        "nativeEditorCount": 0,
+        "editableCount": 0,
+        "inspectorCount": 0,
+        "nativeReadonly": false
+      },
+      "viewNormalization": {
+        "inspectorToggles": 0,
+        "zoomActions": 2,
+        "observedScale": 0.5,
+        "inspectorClosed": true,
+        "container": {
+          "width": 619,
+          "height": 926
+        }
+      },
+      "visitedPages": [],
+      "undoProofs": [],
+      "scriptAccounting": null,
+      "networkObservations": {
+        "requests": 215,
+        "scripts": {
+          "transferredBytes": 1184841,
+          "decodedBytes": 3755377,
+          "requests": 70,
+          "inflight": 0,
+          "missingTransfer": 1,
+          "missingDecoded": 1
+        },
+        "inflight": 0,
+        "failed": 13
+      },
+      "failureCleanup": {
+        "status": "failed",
+        "failureCode": "fixture_restore_unconfirmed"
+      },
+      "incompleteScriptObservations": []
+    }
+  ],
+  "fullEvidence": {
+    "runId": 42110207953,
+    "artifactId": 13455731043,
+    "publicJsonSha256": "bca07bb89e82a1ee7577f73539fdb45815cecbf6470ac22e76c9c9b58f921d40",
+    "artifactZipSha256": "1367845d4555365e7a9940334d99b6f2756770bf34741b3fcfa754c6d54e9008"
+  }
+}

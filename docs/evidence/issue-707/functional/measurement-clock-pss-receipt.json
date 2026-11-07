@@ -1,0 +1,44 @@
+{
+  "scope": "仅计量工具回归，真实性能样本为0",
+  "sourceInvestigation": "4abf9704原始归档及独立只读调查",
+  "changes": [
+    "Worker入口保留网络时钟，并只在实际父请求ID等于Worker目标ID且Worker自报资源身份一致时增加创建时钟的100ms匹配通道",
+    "保持双向唯一配对；相同URL并发、缺请求身份、错误资源身份仍拒绝",
+    "已有缓存0传输不因ResourceTiming编码尺寸被加大",
+    "ExtraInfo只留状态码；发现无法完整计量的重定向腿则拒绝，不留响应头",
+    "只排除确认Z/X或消失的非根进程；不可读根进程、存活或未知子进程仍拒绝",
+    "PSS报告固定进程角色和读取失败计数；失败时保留有界请求清单",
+    "只读取已有DOM图片/缩略图与自然尺寸，不创建图片、不额外解码或发请求"
+  ],
+  "checks": {
+    "rawLaunch140": "measurement-worker-clock-140.json",
+    "rawLaunch154": "measurement-worker-clock-154.json",
+    "existingProtocolCases": "measurement-worker-accounting.json",
+    "realOSProcesses": "measurement-pss-processes.json",
+    "pythonSelfCheck": "通过，包括缓存0字节、错误身份、并发歧义及历史快照重定向拒绝",
+    "nodeContracts": {
+      "passed": true,
+      "tests": 15
+    },
+    "realDOMAndCleanup": "Chrome140进程字体兼容配置下通过，已有图片计数和零额外请求断言通过"
+  },
+  "failedAttempts": [
+    {
+      "check": "Chrome154首次附加检查",
+      "failure": "TemporaryDirectory清理ENOTEMPTY，整次检查失败；重跑四场景通过，不追认首次"
+    },
+    {
+      "check": "Chrome140未带进程字体兼容配置的清理夹具",
+      "failure": "fixture_restore_unconfirmed；使用既有进程级字体配置后通过"
+    }
+  ],
+  "limitsUnchanged": {
+    "pairsPerEditor": 10,
+    "regressionPercent": 5,
+    "inputP95Ms": 100
+  },
+  "historicalSamplesReclassified": false,
+  "performanceSamples": 0,
+  "qualified": false,
+  "independentReview": "待冻结后独立只读审查"
+}

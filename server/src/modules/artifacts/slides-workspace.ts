@@ -109,9 +109,15 @@ export async function slideEditingContext(db: Queryable, artifactId: string, use
 
 export async function slideRevisions(db: Queryable, artifactId: string) {
   return { current: (await listing(db, artifactId)).ver, revisions: (await db.query<{
-    seq: string; version: string; actorId: string | null; createdAt: string
-  }>(`SELECT seq::text,version,actor_id AS "actorId",created_at AS "createdAt" FROM artifact_revisions
-    WHERE artifact_id=$1 ORDER BY seq DESC LIMIT 100`, [artifactId])).rows }
+    seq: string; version: string; actorId: string | null; createdAt: string;actorName:string;actorKind:'user'|'agent';changedPageIds:string[]
+  }>(`SELECT revision.seq::text,revision.version,revision.actor_id AS "actorId",revision.created_at AS "createdAt",
+    COALESCE(person.name,usr.display_name,'') AS "actorName",COALESCE(operation.actor_kind,'user') AS "actorKind",
+    COALESCE(operation.result->'changedPageIds','[]'::jsonb) AS "changedPageIds"
+    FROM artifact_revisions revision JOIN artifacts artifact ON artifact.id=revision.artifact_id
+    LEFT JOIN users usr ON usr.id=revision.actor_id
+    LEFT JOIN participants person ON person.id=revision.actor_id AND person.company_id=artifact.company_id
+    LEFT JOIN artifact_operations operation ON operation.artifact_id=revision.artifact_id AND operation.seq=revision.seq
+    WHERE revision.artifact_id=$1 ORDER BY revision.seq DESC LIMIT 100`, [artifactId])).rows }
 }
 
 /** Restore as a new CAS-protected save: neither later edits nor checkpoints are discarded. */

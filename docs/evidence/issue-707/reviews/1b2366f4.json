@@ -1,0 +1,34 @@
+{
+  "commit": "1b2366f4ff32fb9b461d4d713f8f661488b02a9f",
+  "reviewer": "/root/independent_review",
+  "readOnly": true,
+  "findings": [],
+  "passed": [
+    "619×926 完成/Escape × Chrome140/154 四场景",
+    "15 项草稿/会话测试",
+    "15 项计量合约",
+    "第二画板高亮保持与来源几何"
+  ],
+  "unverified": [
+    "长性能",
+    "真实操作系统输入法",
+    "真实授权浏览器服务",
+    "最终性能资格"
+  ],
+  "owningCI": {
+    "runId": 42277875822,
+    "url": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42277875822",
+    "web": "success",
+    "server": "success",
+    "integration": "success",
+    "deploy": "skipped"
+  },
+  "diagnostic": {
+    "runId": 42277918007,
+    "status": "completed",
+    "diagnosticPassed": true,
+    "qualified": false,
+    "receipt": "performance/1b2366f4-diagnostic.json",
+    "scope": "每编辑器每模式每侧仅1组；六项基线导出超时仍保留失败，未取得最终十组资格"
+  }
+}

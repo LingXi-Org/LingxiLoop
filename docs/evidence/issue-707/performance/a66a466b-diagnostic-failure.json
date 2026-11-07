@@ -1,0 +1,22 @@
+{
+  "candidateCommit": "a66a466b6d3bab852be3b1d5ab85ee57efbfadd1",
+  "runId": 42324052948,
+  "jobId": 128255107377,
+  "workflowConclusion": "failure",
+  "failedStep": "Verify real worker script accounting before production measurements",
+  "performanceSamples": 0,
+  "qualified": false,
+  "failure": {
+    "type": "TypeError",
+    "message": "Cannot read properties of null (reading 'width')",
+    "location": "scripts/native-editor-ui-acceptance.mjs:813",
+    "cause": "属性面板按需加载，测量脚本点击后没有等待属性内容就绪；替换加载占位时 boundingBox 可返回 null。"
+  },
+  "correction": "显式等待属性内容可见后测量，保留 336px / min(50%,384px) 原有严格尺寸断言。",
+  "verification": [
+    "Chromium 154，1440×1000：336×1000 侧栏通过。",
+    "Chromium 140，1440×1000：336×1000 侧栏通过。",
+    "Chromium 140，390×844：390×384 底部面板通过。"
+  ],
+  "notEvidenceOfPerformancePass": true
+}

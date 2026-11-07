@@ -1,8 +1,13 @@
+import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
+import {canvasTextMetrics} from '../../../../../shared/artifact-canvas-typography'
+import { artifactShapeGeometry,artifactUsesBoxRectangle } from '../../../../../shared/artifact-shapes'
 import type { ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../../shared/artifact-document'
-import { isSafeArtifactSvg } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
 import { awaitPageFonts } from './fonts'
 import { escapeHtml, type ExportResources, offlineMathCss } from './common'
+import { appearance, nodeTransform, paddingCss } from '../../../../../shared/artifact-appearance'
+import { editorFontFamily } from '../editor-fonts'
+import { presentSvg } from '../svg-presentation'
 
 const safeText = (text: string) => escapeHtml(text).replace(/\n/g, '<br>')
 export function nodeHasMath(node: ArtifactNode) { return node.type === 'math' || /\$|\\(?:\(|\[|begin\{)/.test([node.text ?? '', ...(node.cells ?? []).flat()].join('\n')) }
@@ -25,7 +30,7 @@ async function richText(node: ArtifactRichText, resources: ExportResources): Pro
     let body = node.marks?.some(mark => mark.type === 'code') ? escapeHtml(node.text ?? '') : await sourceText(node.text ?? '', resources)
     for (const mark of node.marks ?? []) {
       const tag = ({ bold: 'strong', italic: 'em', underline: 'u', strike: 's', code: 'code', link: 'a' })[mark.type]
-      body = `<${tag}${mark.type === 'link' ? ` href="${escapeHtml(mark.attrs?.href ?? '#')}" rel="noreferrer"` : ''}>${body}</${tag}>`
+      body = `<${tag}${mark.type === 'link' ? ` href="${escapeHtml(mark.attrs?.href ?? '#')}" rel="noreferrer" style="color: inherit"${mark.attrs?.target?` target="${mark.attrs.target}"`:''}` : ''}>${body}</${tag}>`
     }
     return body
   }
@@ -36,25 +41,31 @@ async function richText(node: ArtifactRichText, resources: ExportResources): Pro
   return `<${tag}>${body}</${tag}>`
 }
 function textStyle(style: ArtifactStyle) {
-  return Object.entries({ color: style.color, background: style.backgroundColor ?? style.fill, opacity: style.opacity, 'font-family': style.fontFamily, 'font-size': style.fontSize === undefined ? undefined : `${style.fontSize}px`,
+  const extra = Object.fromEntries(Object.entries(appearance(style)).map(([key,value]) => [key.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`),value]))
+  return Object.entries({ color: style.color, 'background-color': style.backgroundColor ?? style.fill, opacity: style.opacity, 'font-family': editorFontFamily(style.fontFamily), 'font-size': style.fontSize === undefined ? undefined : `${style.fontSize}px`,
     'font-weight': style.fontWeight, 'font-style': style.fontStyle, 'text-align': style.textAlign, 'text-decoration': style.textDecoration, 'line-height': style.lineHeight,
-    'border-radius': style.borderRadius === undefined ? undefined : `${style.borderRadius}px`, padding: style.padding === undefined ? undefined : `${style.padding}px`,
-    border: (style.borderColor ?? style.stroke) ? `${style.borderWidth ?? style.strokeWidth ?? 1}px solid ${style.borderColor ?? style.stroke}` : undefined,
+    'border-radius': style.borderRadius === undefined ? undefined : `${style.borderRadius}px`, padding:paddingCss(style),
+    border: (style.borderColor ?? style.stroke) ? `${style.borderWidth ?? style.strokeWidth ?? 1}px ${style.borderStyle ?? 'solid'} ${style.borderColor ?? style.stroke}` : undefined, ...extra,
   }).filter(([, value]) => value !== undefined).map(([key, value]) => `${key}:${String(value)}`).join(';')
 }
 
-export const EXPORT_PAGE_CSS = `.artifact-export-page{position:relative;overflow:hidden;box-sizing:border-box;font:32px/1.3 system-ui,sans-serif;color:#141413;background:white}.artifact-export-page *{box-sizing:border-box}.artifact-export-node{overflow:visible;min-width:0;min-height:0}.artifact-export-node p,.artifact-export-node h1,.artifact-export-node h2,.artifact-export-node h3,.artifact-export-node h4,.artifact-export-node h5,.artifact-export-node h6{font:inherit;line-height:inherit;margin:0}.artifact-export-node img,.artifact-export-node svg{display:block;width:100%;height:100%;object-fit:contain}.artifact-export-node table{border-collapse:collapse;width:100%;height:100%;table-layout:fixed}.artifact-export-node td{padding:.25em;border:1px solid currentColor;overflow-wrap:anywhere}.artifact-export-node .katex-display{margin:0;max-width:100%;overflow:hidden}.artifact-export-node a{color:inherit}.artifact-export-unsupported{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border:1px dashed #73726c;color:#73726c;font-size:18px;white-space:pre-wrap}`
+export const EXPORT_PAGE_CSS = `.artifact-export-page{position:relative;overflow:hidden;box-sizing:border-box;font:32px/1.3 system-ui,sans-serif;color:#141413;background:white}.artifact-export-page *{box-sizing:border-box}a.artifact-export-node{display:block;color:inherit}
+.artifact-export-node[data-element-link]{text-decoration:underline}
+.artifact-export-element-link{position:absolute;inset:0;display:block;color:inherit;pointer-events:auto}
+.artifact-export-node[data-element-link]>:not(.artifact-export-element-link){pointer-events:none}
+.artifact-export-node[data-element-link] a[href]{pointer-events:auto}
+.artifact-export-node[data-element-link] a[href]:not(.artifact-export-element-link){position:relative;z-index:1}.artifact-export-node{overflow:visible;min-width:0;min-height:0}.artifact-export-node p,.artifact-export-node h1,.artifact-export-node h2,.artifact-export-node h3,.artifact-export-node h4,.artifact-export-node h5,.artifact-export-node h6{font:inherit;line-height:inherit;margin:0}.artifact-export-node img,.artifact-export-node svg{display:block;width:100%;height:100%;object-fit:contain}.artifact-export-node img{object-fit:cover}.artifact-export-node table{display:grid;width:100%;height:100%;box-sizing:border-box;border-top:2px solid color-mix(in srgb,currentColor 22%,transparent);border-left:2px solid color-mix(in srgb,currentColor 22%,transparent)}.artifact-export-node table>tbody,.artifact-export-node table tr{display:contents}.artifact-export-node td,.artifact-export-node th{box-sizing:content-box;min-width:0;min-height:1lh;padding:.35em .6em;border-right:2px solid color-mix(in srgb,currentColor 22%,transparent);border-bottom:2px solid color-mix(in srgb,currentColor 22%,transparent);white-space:pre-wrap;overflow-wrap:break-word;text-align:inherit;font-weight:inherit}.artifact-export-node th{font-weight:600;background:color-mix(in srgb,currentColor 8%,transparent)}.artifact-export-node .katex-display{margin:0;max-width:100%;overflow:hidden}.artifact-export-node a{color:inherit}.artifact-export-unsupported{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border:1px dashed #73726c;color:#73726c;font-size:18px;white-space:pre-wrap}`
 
 export async function renderPageHtml(page: ArtifactPage, resources: ExportResources): Promise<string> {
   resources.check()
-  const children = (id: string | null) => page.nodeOrder.map(key => page.nodes[key]!).filter(node => node.parentId === id && !node.hidden)
+  const children = (id: string | null) => page.nodeOrder.map(key => page.nodes[key]!).filter(node => node.parentId === id && !node.hidden && node.scope !== 'canvas')
   async function render(node: ArtifactNode): Promise<string> {
     resources.check()
     const parent = node.parentId ? page.nodes[node.parentId] : null
     const inFlow = parent?.layout?.mode === 'flex' || parent?.layout?.mode === 'grid'
     const position = inFlow ? 'position:relative;flex-shrink:1' : `position:absolute;left:${node.x}px;top:${node.y}px`
     const style = artifactResolvedStyle(node.style, resources.document)
-    let css = `${position};width:${node.width}px;height:${node.height}px;transform:rotate(${node.rotation}deg);${textStyle(style)}`
+    let css = `${position};width:${node.textSizing==='content'?'max-content':`${node.width}px`};${node.textSizing==='content'?`max-width:${node.width}px;height:auto;min-height:${canvasTextMetrics(style.fontSize??24).minHeight}px`:`height:${node.height}px`};transform:${nodeTransform(node)};${textStyle(style)}`
     let content = ''
     switch (node.type) {
       case 'group': {
@@ -64,11 +75,18 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         content = (await Promise.all(children(node.id).map(render))).join('')
         break
       }
+      case 'note':
       case 'text': content = node.richText ? await richText(node.richText, resources) : await sourceText(node.text ?? '', resources); break
+      case 'video': {
+        if (node.posterAssetId) { const crop=node.crop;content=`<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text??'视频')}" src="${escapeHtml(await resources.asset(node.posterAssetId))}" ${crop?` style="max-width:none;width:${100/Math.max(.01,crop.width)}%;height:${100/Math.max(.01,crop.height)}%;transform:translate(${-crop.x*100}%,-${crop.y*100}%);object-fit:cover"`:''}></div>` }
+        else content = `<div class="artifact-export-unsupported">${escapeHtml(node.text ?? '视频')}</div>`
+        resources.warnings.add(`${page.title} / ${node.id}：视频以封面导出，原稿保留视频。`)
+        break
+      }
       case 'image': {
         const source = node.assetId ? await resources.asset(node.assetId) : ''
         const crop = node.crop
-        content = `<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text ?? '')}" src="${escapeHtml(source)}"${crop && crop.width > 0 && crop.height > 0 ? ` style="max-width:none;width:${100 / crop.width}%;height:${100 / crop.height}%;transform:translate(${-crop.x * 100}%,-${crop.y * 100}%);object-fit:fill"` : ''}></div>`
+        content = `<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text ?? '')}" src="${escapeHtml(source)}"${crop && crop.width > 0 && crop.height > 0 ? ` style="max-width:none;width:${100 / crop.width}%;height:${100 / crop.height}%;transform:translate(${-crop.x * 100}%,-${crop.y * 100}%);object-fit:cover"` : ''}></div>`
         break
       }
       case 'math': {
@@ -77,21 +95,36 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         catch { content = safeText(node.source ?? ''); resources.warnings.add(`${page.title}：无效公式按源码导出。`) }
         break
       }
-      case 'table': content = `<table>${(await Promise.all((node.cells ?? []).map(async row => `<tr>${(await Promise.all(row.map(async cell => `<td>${await sourceText(cell, resources)}</td>`))).join('')}</tr>`))).join('')}</table>`; break
-      case 'svg': {
-        const prefix = `${page.id}-${node.id}-`
-        content = node.svg && isSafeArtifactSvg(node.svg) ? node.svg.replace(/\bid=("|')([^"']+)\1/g, (_, quote: string, id: string) => `id=${quote}${prefix}${id}${quote}`).replace(/url\(#([a-zA-Z0-9_-]+)\)/g, `url(#${prefix}$1)`) : ''
+      case 'table': {
+        const columns=Math.max(1,...(node.cells??[]).map(row=>row.length))
+        content=`<table style="grid-template-columns:repeat(${columns},minmax(0,1fr))"><tbody>${(await Promise.all((node.cells??[]).map(async(row,index)=>`<tr>${(await Promise.all(row.map(async(cell,column)=>{const tag=node.tableHeader&&index===0?'th':'td';return `<${tag}${tag==='th'?' scope="col"':''} style="grid-row:${index+1};grid-column:${column+1}">${await sourceText(cell,resources)}</${tag}>`}))).join('')}</tr>`))).join('')}</tbody></table>`
         break
       }
+      case 'svg': {
+        const prefix = `${page.id}-${node.id}-`
+        content = node.svg ? presentSvg(node.svg, prefix) : ''
+        break
+      }
+      case 'drawing':
       case 'line': {
+        css += ';background:none;border:none'
+        if(node.path){content=`<svg xmlns="http://www.w3.org/2000/svg" style="overflow:visible" viewBox="0 0 ${node.path.width} ${node.path.height}" preserveAspectRatio="none"><path d="${escapeHtml(node.path.d)}" fill="none" stroke="${escapeHtml(style.stroke??'#8a8378')}" stroke-width="${style.strokeWidth??2}" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;break}
         const points = node.points?.length ? node.points : [{ x: 0, y: 0 }, { x: node.width, y: node.height }]
-        content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${node.width || 1} ${node.height || 1}"><polyline points="${points.map(point => `${point.x},${point.y}`).join(' ')}" fill="none" stroke="${escapeHtml(style.stroke ?? style.color ?? '#141413')}" stroke-width="${style.strokeWidth ?? 2}"/></svg>`
+        const markerId = `marker-${page.id}-${node.id}`
+        const marker = `<defs><marker id="${markerId}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${escapeHtml(style.stroke ?? '#333')}"/></marker></defs>`
+        content = `<svg xmlns="http://www.w3.org/2000/svg" style="overflow:visible" viewBox="0 0 ${node.width || 1} ${node.height || 1}">${marker}<polyline${node.lineStart === 'arrow' ? ` marker-start="url(#${markerId})"` : ''}${node.type !== 'drawing' && node.lineEnd !== 'none' ? ` marker-end="url(#${markerId})"` : ''} points="${points.map(point => `${point.x},${point.y}`).join(' ')}" fill="none" stroke="${escapeHtml(style.stroke ?? style.color ?? '#141413')}" stroke-width="${style.strokeWidth ?? 2}"/></svg>`
         break
       }
       case 'shape': {
-        const fill = escapeHtml(style.fill ?? '#d97757'), stroke = escapeHtml(style.stroke ?? 'none')
-        const shape = node.shape === 'ellipse' ? '<ellipse cx="50" cy="50" rx="49" ry="49"/>' : node.shape === 'triangle' ? '<polygon points="50,1 99,99 1,99"/>' : node.shape === 'diamond' ? '<polygon points="50,1 99,50 50,99 1,50"/>' : node.shape === 'arrow' ? '<polygon points="0,25 65,25 65,0 100,50 65,100 65,75 0,75"/>' : `<rect x="0" y="0" width="100" height="100" rx="${Math.min(50, (style.borderRadius ?? 0) / Math.max(1, node.width) * 100)}"/>`
-        content = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none" fill="${fill}" stroke="${stroke}" stroke-width="${style.strokeWidth ?? 0}">${shape}</svg>`
+        if(artifactUsesBoxRectangle(node)){css+=`;background-color:${style.gradient?'transparent':style.backgroundColor??style.fill??'#d6e6ff'}`;break}
+        const gradientId = `gradient-${page.id}-${node.id}`
+        const gradient = style.gradient
+        const gradientDefinition = gradient ? `<defs><${gradient.type === 'radial' ? 'radialGradient' : 'linearGradient'} id="${gradientId}"${gradient.type === 'linear' ? ` x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(${gradient.angle-90} .5 .5)"` : ''}>${gradient.stops.map(stop => `<stop offset="${stop.offset}" stop-color="${escapeHtml(stop.color)}"/>`).join('')}</${gradient.type === 'radial' ? 'radialGradient' : 'linearGradient'}></defs>` : ''
+        css += ';background:none'
+        const fill = gradient ? `url(#${gradientId})` : escapeHtml(style.fill ?? '#d97757'), stroke = escapeHtml(style.stroke ?? 'none')
+        const geometry=artifactShapeGeometry(node.shape,node.width,node.height,style.borderRadius)
+        const shape=`<${geometry.tag} ${Object.entries(geometry.attributes).map(([key,value])=>`${key}="${value}"`).join(' ')}/>`
+        content = `<svg xmlns="http://www.w3.org/2000/svg" style="overflow:visible" viewBox="0 0 ${node.width} ${node.height}" fill="${fill}" stroke="${stroke}" stroke-width="${style.strokeWidth ?? 0}">${gradientDefinition}${shape}</svg>`
         break
       }
       case 'embed': {
@@ -102,9 +135,17 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         break
       }
     }
-    return `<div class="artifact-export-node" data-node-id="${node.id}" style="${escapeHtml(css)}">${content}</div>`
+    if(node.css){
+      // Generated values reject semicolons. Replace matching declarations before
+      // appending authored CSS so an invalid value cannot revive an old width.
+      css=css.split(';').filter(declaration=>!Object.hasOwn(node.css!,declaration.slice(0,declaration.indexOf(':')).trim())).join(';')
+      css+=';'+Object.entries(node.css).map(([name,value])=>`${name}:${value}`).join(';')
+    }
+    const href=node.attributes?.href,attributes=Object.entries(node.attributes??{}).filter(([name])=>name!=='href'&&name!=='target').map(([name,value])=>` ${name}="${escapeHtml(value)}"`).join('')
+    const link=href?`<a class="artifact-export-element-link" href="${escapeHtml(href)}"${node.attributes?.target?` target="${escapeHtml(node.attributes.target)}"`:''} rel="noopener noreferrer" aria-label="打开元素链接"></a>`:''
+    return `<div class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'}${href?' data-element-link':''}${attributes} style="${escapeHtml(css)}">${link}${content}</div>`
   }
-  return `<section class="artifact-export-page" data-page-id="${page.id}" aria-label="${escapeHtml(page.title)}" style="width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}">${(await Promise.all(children(null).map(render))).join('')}</section>`
+  return `<section class="artifact-export-page" data-page-id="${page.id}" data-transition="${page.transition}" aria-label="${escapeHtml(page.title)}" style="width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}${pageRadiusCss(page.radius)?`;border-radius:${pageRadiusCss(page.radius)}`:''}">${(await Promise.all(children(null).map(render))).join('')}</section>`
 }
 
 export async function mountExportPage(page: ArtifactPage, resources: ExportResources): Promise<{ element: HTMLElement; viewport: HTMLElement; dispose: () => void }> {
@@ -128,5 +169,12 @@ export async function mountExportPage(page: ArtifactPage, resources: ExportResou
 }
 
 export function pageText(page: ArtifactPage) {
-  return page.nodeOrder.map(id => page.nodes[id]!).filter(node => !node.hidden).flatMap(node => node.type === 'text' ? [node.text ?? ''] : node.type === 'table' ? (node.cells ?? []).map(row => row.join('\t')) : node.type === 'math' ? [node.source ?? ''] : []).join('\n')
+  return page.nodeOrder.map(id => page.nodes[id]!).filter(node => {
+    let current: ArtifactNode | undefined = node
+    while (current) {
+      if (current.hidden || current.scope === 'canvas') return false
+      current = current.parentId ? page.nodes[current.parentId] : undefined
+    }
+    return true
+  }).flatMap(node => node.type === 'text' || node.type === 'note' ? [node.text ?? ''] : node.type === 'table' ? (node.cells ?? []).map(row => row.join('\t')) : node.type === 'math' ? [node.source ?? ''] : []).join('\n')
 }

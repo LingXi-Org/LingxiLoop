@@ -1,0 +1,68 @@
+{
+  "commit": "fadc73d5070fc93ddcaa60528218af1242207f24",
+  "baseCommit": "db9673858eb92c8c87cd272d4ce1784dade49bf8",
+  "reviewer": "independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": true,
+  "scope": "精确冻结detached checkout；真实OS拼音IME脚本、手动CI依赖/入口/证据上传及真实性。候选无src/shared/server产品代码差异；未混入根后续表单WIP，未修改产品文件、提交、合并或部署。",
+  "findings": [],
+  "independentChecks": [
+    {
+      "check": "140真实Linux/X11/Fcitx5系统IME，Design与Slides",
+      "result": "两流程通过；真实窗口和xdotool ASCII拼音输入、候选窗截图、nihao→你好、900ms组词不保存、选词一次共享批次、zhongwen后Escape取消不保存/不退出、重开中文保持，0页面错误。",
+      "evidence": [
+        "/tmp/lingxi-review-fadc-ime140/design.json",
+        "/tmp/lingxi-review-fadc-ime140/slides.json",
+        "/tmp/lingxi-review-fadc-ime140/design-os-ime-candidates.png",
+        "/tmp/lingxi-review-fadc-ime140/slides-os-ime-candidates.png"
+      ]
+    },
+    {
+      "check": "156真实Linux/X11/Fcitx5系统IME，Design与Slides",
+      "result": "两流程通过；同一脚本、相同断言，0页面错误。",
+      "evidence": [
+        "/tmp/lingxi-review-fadc-ime156/design.json",
+        "/tmp/lingxi-review-fadc-ime156/slides.json"
+      ]
+    },
+    {
+      "check": "Node编排/存储/错误投影/保留资源合同",
+      "result": "23项CI/存储/错误投影合同加2项保留资源校验，共25项通过，0失败。",
+      "commands": [
+        "node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-retirement.test.mjs",
+        "node --test scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs"
+      ],
+      "evidence": [
+        "/tmp/lingxi-review-fadc-contract.log",
+        "/tmp/lingxi-review-fadc-more-contract.log"
+      ]
+    },
+    {
+      "check": "Bash与Node语法",
+      "result": "bash -n scripts/native-editor-os-ime-check.sh及node --check scripts/native-editor-ui-acceptance.mjs通过。"
+    }
+  ],
+  "executionEnvironment": {
+    "containerImage": "sha256:bc9ac6a7f40aaf251d7ef3624d187b2a87383b61d887f28dcc77ea2c0641d839",
+    "containerUser": "node（UID1000）",
+    "browsers": [
+      "140.0.7339.16",
+      "156.0.8078.79"
+    ],
+    "fcitx5": "5.0.21",
+    "isolation": "显式unix:///var/run/docker.sock；每浏览器独立--network=none --rm容器、独立Xvfb/DBus/config/runtime；冻结源、公共依赖与140浏览器只读挂载，仅/results可写。缓存镜像已存在，未安装依赖或联网构建。",
+    "cleanup": "两容器均正常退出；独立label=issue707-ime-review检查无残留。根工作树、其他容器与共享依赖缓存未变。"
+  },
+  "analysis": [
+    "输入由系统xdotool向真实Chrome窗口发送拉丁拼音，Fcitx5候选转换为你好；目视候选窗截图，与字面字符串插入或脚本dispatch组合事件不同。程序派发compositionend监测断言为空。",
+    "四流程compositionstart及汉字input的isTrusted=true，compositionend的isTrusted=false，事件原值完整保留；报告不将结束事件声称为可信，也不据此伪造事件。",
+    "900ms无保存断言跨过现有短防抖窗口；提交与取消均检查共享操作批次数和编辑状态，最后重载服务器夹具确认持久化中文。此为HTTP夹具与真实浏览器/Worker/操作链路，未调用真实授权服务。",
+    "headed默认仍为false，X11/GTK3参数只在os-ime检查启用；CI只新增所需工具及手动工作流步骤，不改变性能门槛或部署入口。截图在独立测试Xvfb采集，未读取用户桌面。"
+  ],
+  "unverified": [
+    "未重建Docker recipe；本次使用与登记SHA相同缓存镜像，未运行GitHub正式CI或完整web lint/build/typecheck。",
+    "只覆盖Linux/X11/Fcitx5拼音及指定两版Chrome，不代表Windows/macOS/Wayland/iOS/其他IME，亦未覆盖属性/代码/评论等所有输入表面。",
+    "没有真实授权服务/跨租户/Agent输入法端到端验证，也未在本次重跑两个编辑器全部50页或性能测量。",
+    "完整功能/整体视觉与正式10组AB/BA性能资格仍未通过；本次通过仅证明以上系统IME局部行为。"
+  ]
+}

@@ -17,6 +17,48 @@ function fixture() {
   return document
 }
 
+test('代码样式与属性首次写入、重开、共享撤销重做及冲突保护',()=>{
+  const before=fixture()
+  const operations=[{type:'node.patch' as const,pageId:'first',nodeId:'title',patch:{css:{filter:'blur(1px)','max-width':'1800px'},attributes:{'data-label':'中文测试',title:'说明'}}}]
+  const written=applyOperations(before,prepareBatch(before,operations,'set-code'))
+  assert.equal(validateArtifactDocument(JSON.parse(JSON.stringify(written.document))).pages.first!.nodes.title!.css?.filter,'blur(1px)')
+  const undone=applyOperations(written.document,prepareBatch(written.document,written.inverse,'undo-code'))
+  assert.equal(undone.document.pages.first!.nodes.title!.css,undefined)
+  assert.equal(undone.document.pages.first!.nodes.title!.attributes,undefined)
+  const redone=applyOperations(undone.document,prepareBatch(undone.document,undone.inverse,'redo-code'))
+  assert.deepEqual(redone.document.pages.first!.nodes.title!.attributes,operations[0].patch.attributes)
+  assert.throws(()=>applyOperations(redone.document,prepareBatch(before,operations,'stale-code')),ArtifactOperationConflict)
+  assert.equal(before.pages.first!.nodes.title!.css,undefined)
+})
+
+test('原生几何操作同步已有位置声明，撤销恢复原始表示，旧样式修改不能覆盖',()=>{
+  const before=fixture(),node=before.pages.first!.nodes.title!
+  node.x=760;node.css={left:'120px !important',filter:'blur(1px)'}
+  const move=prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{x:121}}],'move-code')
+  const moved=applyOperations(before,move)
+  assert.equal(moved.document.pages.first!.nodes.title!.css?.left,'121px !important')
+  assert.equal(moved.document.pages.first!.nodes.title!.css?.filter,'blur(1px)')
+  const undone=applyOperations(moved.document,prepareBatch(moved.document,moved.inverse,'undo-move-code'))
+  assert.deepEqual(undone.document.pages.first!.nodes.title,node)
+  const remote=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{css:{...node.css,left:'140px'}}}],'remote-code')).document
+  assert.throws(()=>applyOperations(remote,move),ArtifactOperationConflict)
+})
+
+test('first motion identity write supports shared undo/redo, explicit removal and stale-field protection',()=>{
+  const before=fixture(),written=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{motionId:'shared-heading'}}],'set-motion'))
+  const undone=applyOperations(written.document,prepareBatch(written.document,written.inverse,'undo-motion'))
+  assert.equal(undone.document.pages.first!.nodes.title!.motionId,undefined)
+  const redone=applyOperations(undone.document,prepareBatch(undone.document,undone.inverse,'redo-motion'))
+  assert.equal(redone.document.pages.first!.nodes.title!.motionId,'shared-heading')
+  const removal=prepareBatch(redone.document,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{},unset:['motionId']}],'remove-motion')
+  const removed=applyOperations(redone.document,removal)
+  assert.equal(removed.document.pages.first!.nodes.title!.motionId,undefined)
+  assert.equal(applyOperations(removed.document,prepareBatch(removed.document,removed.inverse,'restore-motion')).document.pages.first!.nodes.title!.motionId,'shared-heading')
+  const changed=applyOperations(redone.document,prepareBatch(redone.document,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{motionId:'another-heading'}}],'remote-motion')).document
+  assert.throws(()=>applyOperations(changed,removal),ArtifactOperationConflict)
+  assert.equal(before.pages.first!.nodes.title!.motionId,undefined)
+})
+
 test('stale document revisions can change disjoint fields of the same node', () => {
   const before = fixture()
   const human = prepareBatch(before, [{ type: 'node.patch', pageId: 'first', nodeId: 'title', patch: { text: 'Human' } }], 'human')
@@ -274,4 +316,31 @@ test('theme style helpers reject executable token strings and unresolved aliases
   assert.deepEqual(artifactThemeDefaults(before.themes.unsafe), { background: '#ffffff', text: '#222222', accent: '#d6e6ff', fontFamily: 'sans-serif' })
   assert.equal(artifactPageBackground(before.pages.first!, before), '#ffffff')
   assert.equal(artifactResolvedStyle(createNode('shape', 'shape').style, before).fill, '#d6e6ff')
+})
+
+test('设计播放属性经保存重开、字段版本和共享撤销重做保留，旧快照不变',()=>{
+  let document=createDocument('design','playback');const page=createPage('board','画板');document.pages[page.id]=page;document.pageOrder=[page.id]
+  const before=JSON.stringify(document),batch=prepareBatch(document,[{type:'page.patch',pageId:page.id,patch:{interactive:true,frameless:true}}]),applied=applyOperations(document,batch)
+  const reopened=validateArtifactDocument(JSON.parse(JSON.stringify(applied.document)))
+  assert.equal(reopened.pages.board!.interactive,true);assert.equal(reopened.pages.board!.frameless,true);assert.equal(JSON.stringify(document),before)
+  for(const field of ['interactive','frameless']){assert.equal(batch.expectedVersions[`page/board/field/${field}`],0);assert.equal(reopened.versions[`page/board/field/${field}`],reopened.seq)}
+  const undo=applyOperations(reopened,prepareBatch(reopened,applied.inverse));assert.equal(undo.document.pages.board!.interactive,undefined);assert.equal(undo.document.pages.board!.frameless,undefined)
+  document=applyOperations(undo.document,prepareBatch(undo.document,undo.inverse)).document;assert.equal(document.pages.board!.interactive,true);assert.equal(document.pages.board!.frameless,true)
+})
+
+test('打印模式与画板增长独立，保存重开、共享历史及字段冲突保持原尺寸',()=>{
+  const before=fixture(),original=JSON.stringify(before)
+  before.pages.first!.sizing='flow'
+  const fixed=applyOperations(before,prepareBatch(before,[{type:'page.patch',pageId:'first',patch:{print:'fixed',paper:'A4'}}],'print-fixed'))
+  const page=validateArtifactDocument(JSON.parse(JSON.stringify(fixed.document))).pages.first!
+  assert.equal(page.print,'fixed');assert.equal(page.sizing,'flow');assert.equal(page.paper,'A4')
+  assert.deepEqual([page.width,page.height],[before.pages.first!.width,before.pages.first!.height])
+  const undo=applyOperations(fixed.document,prepareBatch(fixed.document,JSON.parse(JSON.stringify(fixed.inverse)),'undo-print'))
+  assert.deepEqual(undo.document.pages,before.pages)
+  const removal=prepareBatch(fixed.document,[{type:'page.patch',pageId:'first',patch:{},unset:['print']}],'remove-print')
+  const other=applyOperations(fixed.document,prepareBatch(fixed.document,[{type:'page.patch',pageId:'first',patch:{height:240}}],'resize'))
+  assert.equal(applyOperations(other.document,removal).document.pages.first!.print,undefined)
+  const changed=applyOperations(fixed.document,prepareBatch(fixed.document,[{type:'page.patch',pageId:'first',patch:{print:'flow'}}],'remote-print'))
+  assert.throws(()=>applyOperations(changed.document,removal),ArtifactOperationConflict)
+  const old=JSON.parse(original);assert.equal(Object.hasOwn(validateArtifactDocument(old).pages.first!,'print'),false)
 })

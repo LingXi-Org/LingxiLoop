@@ -1,3 +1,4 @@
+import {checkedServiceFailure,checkedTransportFailures,measurementFailure}from'./native-artifact-failure.mjs'
 /** CI-only real product orchestration. No API mocks, runtime substitutions or model calls.
  * Cookies, TLS keys, downloads and raw service output stay in RUNNER_TEMP. The
  * artifact projection below is deliberately an allowlist, not a log redactor. */
@@ -11,19 +12,22 @@ import { release as kernelRelease, platform as osPlatform, arch as osArchitectur
 import { fileURLToPath } from 'node:url'
 
 export const BASELINE = 'd004312841026a4d90dfbd9e8292a55cc29a2e95'
+export const FIDELITY_BASELINE = '72162f582fe49e9cbdb03f760e29e3683f9c5c99'
+export function baselineFor(env = process.env) { return env.NATIVE_ARTIFACT_PROFILE === 'fidelity' ? FIDELITY_BASELINE : BASELINE }
 const root = fileURLToPath(new URL('../', import.meta.url))
 const database = arm => `postgresql://postgres:native-artifact-local-test-only@127.0.0.1:25432/native_artifact_${arm}_test`
 const delay = milliseconds => new Promise(resolveDelay => setTimeout(resolveDelay, milliseconds))
 const phases = new Set(['guard', 'bootstrap', 'bootstrap-baseline', 'bootstrap-candidate', 'serve-baseline', 'serve-candidate', 'measurement', 'complete'])
 const serviceStages = new Set(['database-connect', 'database-ready', 'tenant-seeding', 'web-starting', 'im-starting', 'auth-starting', 'auth-ready', 'object-storage-ready', 'design-created', 'slides-created', 'fixture-design', 'fixture-slides', 'fixture-slides-assets', 'ready'])
-const codes = new Set(['ERR_ASSERTION', 'ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND', 'ENOENT', 'ENOSPC', 'E401', 'E403', 'E404', 'ECONNREFUSED', 'ETIMEDOUT', 'SERVICE_TIMEOUT', 'CHILD_FAILED', 'DIAGNOSTIC_FAILED', 'MEASUREMENT_FAILED'])
+const codes = new Set(['ERR_ASSERTION', 'ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND', 'ENOENT', 'ENOSPC', 'E401', 'E403', 'E404', 'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'ERR_STREAM_PREMATURE_CLOSE', 'ETIMEDOUT', 'SERVICE_TIMEOUT', 'CHILD_FAILED', 'DIAGNOSTIC_FAILED', 'MEASUREMENT_FAILED'])
 const safeCode = error => codes.has(error?.code) ? error.code : 'CHILD_FAILED'
 const measurementStages = new Set(['configuration', 'fixture', 'host', 'launch', 'workbenchPreparation', 'open', 'firstReadiness', 'firstInput', 'idleObservation', 'undo', 'traversal', 'export', 'closeReclamation', 'validation', 'complete'])
-const failureCodes = new Set(['fixture_mismatch', 'browser_startup_failed', 'cdp_setup_failed', 'current_page_media_or_fonts_not_ready', 'decoded_script_accounting_incomplete', 'editor_close_control_missing', 'editor_close_not_observed', 'export_control_missing', 'export_diagnostic_incomplete', 'export_download_empty', 'export_download_failed', 'export_page_count_mismatch', 'export_signature_invalid', 'matching_edit_save_not_acknowledged', 'native_export_control_missing', 'natural_reclamation_pss_incomplete', 'network_did_not_settle', 'network_failure_observed', 'page_exception_observed', 'page_navigation_control_missing', 'pss_incomplete', 'retired_editor_loaded', 'traversal_intentionally_unverified', 'trusted_input_proof_failed', 'undo_save_not_acknowledged', 'export_pss_incomplete', 'process_or_filesystem_error', 'browser_timeout', 'browser_or_measurement_error'])
+const failureCodes = new Set(['native_keyboard_focus_unavailable', 'fixture_restore_unconfirmed', 'native_view_normalization_failed', 'native_editor_not_ready', 'fixture_mismatch', 'browser_startup_failed', 'cdp_setup_failed', 'current_page_media_or_fonts_not_ready', 'decoded_script_accounting_incomplete', 'editor_close_control_missing', 'editor_close_not_observed', 'export_control_missing', 'export_diagnostic_incomplete', 'export_download_empty', 'export_download_failed', 'export_page_count_mismatch', 'export_signature_invalid', 'matching_edit_save_not_acknowledged', 'native_export_control_missing', 'natural_reclamation_pss_incomplete', 'network_did_not_settle', 'network_failure_observed', 'page_exception_observed', 'page_navigation_control_missing', 'pss_incomplete', 'retired_editor_loaded', 'traversal_intentionally_unverified', 'trusted_input_proof_failed', 'undo_save_not_acknowledged', 'export_pss_incomplete', 'process_or_filesystem_error', 'browser_timeout', 'browser_or_measurement_error'])
 for (const code of ['configuration_invalid', 'browser_dependency_missing', 'export_pdf_parser_unavailable', 'export_pdf_parser_failed', 'export_page_content_mismatch', 'legacy_all_board_html_control_unverified', 'legacy_focused_page_unknown']) failureCodes.add(code)
 for (const code of ['export_offline_browser_mismatch', 'export_offline_html_incomplete', 'export_offline_html_open_failed']) failureCodes.add(code)
 
 export function configuration(env = process.env) {
+  assert.ok(!env.NATIVE_ARTIFACT_PROFILE || ['retirement','fidelity'].includes(env.NATIVE_ARTIFACT_PROFILE), 'known measurement profile required')
   assert.ok(['diagnostic', 'paired'].includes(env.NATIVE_ARTIFACT_PHASE), 'explicit acceptance phase required')
   const temporary = resolve(env.RUNNER_TEMP ?? '/tmp')
   const privateRoot = resolve(env.NATIVE_ARTIFACT_PRIVATE ?? '')
@@ -31,7 +35,7 @@ export function configuration(env = process.env) {
   const publicRoot = resolve(env.NATIVE_ARTIFACT_PUBLIC ?? '')
   assert.ok(isAbsolute(env.NATIVE_ARTIFACT_PUBLIC ?? '') && publicRoot !== privateRoot && !publicRoot.startsWith(privateRoot + '/') && !privateRoot.startsWith(publicRoot + '/'), 'public and private directories must be separate')
   assert.ok(isAbsolute(env.NATIVE_ARTIFACT_BASELINE_ROOT ?? ''), 'explicit frozen checkout required')
-  return { phase: env.NATIVE_ARTIFACT_PHASE, privateRoot, publicRoot, baselineRoot: resolve(env.NATIVE_ARTIFACT_BASELINE_ROOT) }
+  return { phase: env.NATIVE_ARTIFACT_PHASE, fidelity: env.NATIVE_ARTIFACT_PROFILE === 'fidelity', baselineCommit: baselineFor(env), privateRoot, publicRoot, baselineRoot: resolve(env.NATIVE_ARTIFACT_BASELINE_ROOT) }
 }
 
 async function downloadDiagnosticReceipt(env, artifactName) {
@@ -45,6 +49,14 @@ async function downloadDiagnosticReceipt(env, artifactName) {
     return JSON.parse(await readFile(join(directory, 'results.json'), 'utf8'))
   } finally { await rm(directory, { recursive: true, force: true }) }
 }
+export function performanceSampleEligible(sample,fidelity=false){
+  if(sample.status==='passed')return true
+  const exports=sample.exports??[]
+  return fidelity&&sample.arm==='baseline'&&sample.mode==='fullNavigation'&&sample.run===1
+    &&sample.status==='failed'&&sample.failureStage==='validation'&&sample.failureCode==='export_diagnostic_incomplete'
+    &&exports.length===3&&new Set(exports.map(row=>row.format)).size===3&&exports.every(row=>['html','pdf','pptx'].includes(row.format)&&(row.status==='passed'||row.status==='failed'&&row.failureCode==='browser_timeout'))&&exports.some(row=>row.status==='failed')
+}
+
 export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = fetch, receiptReader = downloadDiagnosticReceipt) {
   assert.equal(env.GITHUB_EVENT_NAME, 'workflow_dispatch')
   assert.equal(env.GITHUB_REF_TYPE, 'branch')
@@ -73,7 +85,7 @@ export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = 
   assert.equal(artifacts.length, 1, 'exact unexpired diagnostic artifact required')
   const receipt = await receiptReader(env, artifactName)
   assert.equal(receipt.phase, 'diagnostic')
-  assert.equal(receipt.baselineCommit, BASELINE)
+  assert.equal(receipt.baselineCommit, baselineFor(env))
   assert.equal(receipt.candidateCommit, env.GITHUB_SHA)
   assert.equal(receipt.diagnosticPassed, true)
   assert.equal(receipt.qualified, false)
@@ -85,27 +97,35 @@ export async function verifyDiagnosticPrerequisite(env = process.env, fetcher = 
   for (const arm of ['baseline', 'candidate']) for (const kind of ['design', 'slides']) for (const mode of ['fullNavigation', 'workbenchOpen']) {
     const matching = samples.filter(sample => sample.arm === arm && sample.kind === kind && sample.mode === mode)
     assert.equal(matching.length, 1)
-    assert.equal(matching[0].status, 'passed')
+    assert.equal(performanceSampleEligible(matching[0],env.NATIVE_ARTIFACT_PROFILE==='fidelity'), true)
   }
 }
 
 // Permit numeric evidence and fixed labels only. URLs, errors, headers, cookies,
 // HTML, source code, prompts and arbitrary strings never enter uploaded JSON.
-const labels = new Set(['baseline', 'candidate', 'design', 'slides', 'passed', 'failed', 'unsupported', 'diagnostic', 'paired', 'fullNavigation', 'workbenchOpen', 'html', 'pdf', 'pptx', 'Script', 'Document', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'page', 'iframe', 'worker', 'service_worker', 'none', 'observed', 'incomplete', 'nativePageStrip', 'legacySlidesRail', 'legacyDesignPageKey', 'legacyDesignBoard', 'insertText'])
+const labels = new Set(['baseline', 'candidate', 'design', 'slides', 'passed', 'failed', 'unsupported', 'diagnostic', 'paired', 'fullNavigation', 'workbenchOpen', 'html', 'pdf', 'pptx', 'Script', 'Document', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'page', 'iframe', 'worker', 'service_worker', 'none', 'observed', 'incomplete', 'nativePageStrip', 'nativeDesignKeyboard', 'nativeDesignBoard', 'legacySlidesRail', 'legacyDesignPageKey', 'legacyDesignBoard', 'insertText'])
 const dottedVersion = /^\d{1,3}(?:\.\d{1,6}){1,4}$/
 const linuxKernelPattern = String.raw`\d{1,3}\.\d{1,3}\.\d{1,4}(?:[.-]\d{1,6})?(?:-(?:generic|azure|aws|amd64|cloud-amd64))?\+?`
 const linuxPlatform = new RegExp(`^Linux-${linuxKernelPattern}-(?:x86_64|aarch64)-with-glibc\\d{1,3}\\.\\d{1,3}$`)
-const requestTables = new Set(['requestsAtEditable', 'requestsAtIdle', 'requestsAtStable', 'requestsAtOpen', 'requestsBeforeOpen', 'failedRequests'])
+const networkErrorCodes = new Set(['ERR_ABORTED', 'ERR_FAILED', 'ERR_CONNECTION_REFUSED', 'ERR_CONNECTION_RESET', 'ERR_CONNECTION_CLOSED', 'ERR_CONNECTION_ABORTED', 'ERR_CONNECTION_TIMED_OUT', 'ERR_NETWORK_CHANGED', 'ERR_INTERNET_DISCONNECTED', 'ERR_NAME_NOT_RESOLVED', 'ERR_CERT_AUTHORITY_INVALID', 'ERR_CERT_COMMON_NAME_INVALID', 'ERR_CERT_DATE_INVALID', 'ERR_CERT_INVALID', 'ERR_SSL_PINNED_KEY_NOT_IN_CERT_CHAIN', 'ERR_SSL_VERSION_OR_CIPHER_MISMATCH', 'ERR_SSL_PROTOCOL_ERROR', 'ERR_TIMED_OUT', 'ERR_BLOCKED_BY_CLIENT', 'ERR_BLOCKED_BY_RESPONSE', 'ERR_HTTP_RESPONSE_CODE_FAILURE', 'ERR_EMPTY_RESPONSE', 'ERR_PROXY_CONNECTION_FAILED', 'ERR_TUNNEL_CONNECTION_FAILED', 'ERR_ADDRESS_UNREACHABLE', 'ERR_CACHE_MISS', 'ERR_TOO_MANY_REDIRECTS', 'ERR_UNSAFE_REDIRECT', 'ERR_HTTP2_PROTOCOL_ERROR', 'ERR_INCOMPLETE_CHUNKED_ENCODING', 'ERR_CONTENT_LENGTH_MISMATCH', 'ERR_CONTENT_DECODING_FAILED', 'other'])
+const networkBlockedReasons = new Set(['other', 'csp', 'mixed-content', 'origin', 'inspector', 'subresource-filter', 'content-type', 'coep-frame-resource-needs-coep-header', 'corp-not-same-origin', 'corp-not-same-site'])
+const requestTables = new Set(['inflightRequests', 'requestsAtEditable', 'requestsAtIdle', 'requestsAtStable', 'requestsAtOpen', 'requestsBeforeOpen', 'failedRequests', 'unaccountedScriptTimings','scriptResourceTimings','requestsAfterExport'])
 const requestTypes = new Set(['Script', 'Document', 'Stylesheet', 'Image', 'Font', 'Fetch', 'XHR', 'Other', 'Media', 'WebSocket', 'EventSource', 'Ping', 'Preflight', 'Manifest'])
 export function publicRequest(row) {
   const safe = { resourceHash: createHash('sha256').update(typeof row.url === 'string' ? row.url : '').digest('hex'),
-    category: row.retiredEditor ? 'retired-editor' : row.scriptPath || row.type === 'Script' ? 'script' : row.sourcePayload ? 'source-document' : 'other',
+    category: row.retiredEditor ? 'retired-editor' : row.scriptPath || row.type === 'Script' || row.scriptObserved===true || /(?:java|ecma)script/i.test(typeof row.mime==='string'?row.mime:'') ? 'script' : row.sourcePayload ? 'source-document' : 'other',
     type: requestTypes.has(row.type) ? row.type : 'Other',
     targetType: ['page', 'iframe', 'worker', 'service_worker', 'shared_worker'].includes(row.targetType) ? row.targetType : 'other' }
-  for (const key of ['start', 'startEpochMs', 'requestOrdinal', 'status', 'transferredBytes', 'decodedBytes', 'declaredEncodedBodyBytes', 'end']) if (typeof row[key] === 'number' && Number.isFinite(row[key])) safe[key] = row[key]
-  for (const key of ['network', 'scriptPath', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled']) if (typeof row[key] === 'boolean') safe[key] = row[key]
+  if (['artifact-api','project-api','conversation-api','auth-api','product-api','static-script','static-media','editor-reference','other'].includes(row.routeClass)) safe.routeClass=row.routeClass
+  if(networkErrorCodes.has(row.networkErrorCode))safe.networkErrorCode=row.networkErrorCode
+  if(networkBlockedReasons.has(row.blockedReason))safe.blockedReason=row.blockedReason
+  if(['page','iframe','worker'].includes(row.timingContext))safe.timingContext=row.timingContext
+  if(['script','link','css','fetch','xmlhttprequest','other'].includes(row.initiatorType))safe.initiatorType=row.initiatorType
+  for (const key of ['start', 'startEpochMs', 'requestOrdinal', 'status', 'transferredBytes', 'decodedBytes', 'declaredEncodedBodyBytes', 'observedResponseHeadersBytes', 'finishedEpochMs', 'end', 'responseEndEpochMs', 'requestStartEpochMs','timeOriginEpochMs','contextOrdinal','encodedBytes']) if (typeof row[key] === 'number' && Number.isFinite(row[key])) safe[key] = row[key]
+  for (const key of ['network', 'scriptPath', 'scriptObserved', 'sourcePayload', 'retiredEditor', 'cache', 'decodedObserved', 'finished', 'failed', 'canceled', 'transferPending', 'unaccountedRedirect']) if (typeof row[key] === 'boolean') safe[key] = row[key]
   if (['identity', 'gzip', 'br', 'deflate', 'zstd'].includes(row.encoding)) safe.encoding = row.encoding
   if (['Network.dataReceived', 'PerformanceResourceTiming'].includes(row.decodedBytesSource)) safe.decodedBytesSource = row.decodedBytesSource
+  if (['Network.loadingFinished', 'PlaywrightRequestSizes', 'PlaywrightHeaders+PerformanceResourceTiming'].includes(row.transferredBytesSource)) safe.transferredBytesSource = row.transferredBytesSource
   return safe
 }
 export function publicEvidence(value, key = '') {
@@ -117,6 +137,8 @@ export function publicEvidence(value, key = '') {
       return /^[a-f0-9]{64}$/.test(hash ?? '') ? [[kind, hash]] : []
     })),
   }]))
+  if (['nativeFailure','passwordForm','browserErrorPage'].includes(key) && typeof value === 'boolean') return value
+  if (['unaccountedResources','ambiguousRequests','historicalAmbiguousObservations','sourcePayloadTransferBytes','sourcePayloadDecodedBytes'].includes(key)) return typeof value==='number'?(Number.isFinite(value)?value:null):undefined
   if (key === 'textVerified' && typeof value === 'boolean') return value
   if (key === 'networkRequests' && typeof value === 'number') return Number.isFinite(value) ? value : null
   if (key === 'offlineHtml' && value && typeof value === 'object') return publicEvidence(value)
@@ -131,7 +153,8 @@ export function publicEvidence(value, key = '') {
   if (key === 'requests' && typeof value === 'number') return Number.isFinite(value) ? value : null
   if (key === 'failureCode') return failureCodes.has(value) ? value : undefined
   if (key === 'failureStage' || key === 'phase' && measurementStages.has(value)) return measurementStages.has(value) ? value : undefined
-  if (key === 'failureObservations' && value && typeof value === 'object') return publicEvidence(value)
+  if (['failureObservations', 'failureCleanup', 'pssReadFailures'].includes(key) && value && typeof value === 'object') return publicEvidence(value)
+  if (['htmlImages','readyHtmlImages'].includes(key)) return Number.isSafeInteger(value)&&value>=0?value:undefined
   if (/cookie|token|secret|password|authorization|headers|source|prompt|html|url|error|failure|request|command|stack|authentication|path|text|message|download|^arms$/i.test(key)) return undefined
   if (typeof value === 'number') return Number.isFinite(value) ? value : null
   if (typeof value === 'boolean' || value === null) return value
@@ -159,16 +182,17 @@ async function executionEnvironment(config) {
     distribution: ['ubuntu', 'debian'].includes(distribution) ? distribution : null,
     distributionVersion: distributionVersion && /^\d{1,3}(?:\.\d{1,3})?$/.test(distributionVersion) ? distributionVersion : null,
     node: /^v\d{1,3}(?:\.\d{1,6}){2}$/.test(process.version) ? process.version : null,
-    expectedRuntime: { baseline: '3.8.25', candidate: '4.0.0' },
-    installedRuntime: { baseline: await runtimeVersion(join(config.baselineRoot, 'node_modules/@lyyzka/lingxios/package.json')), candidate: await runtimeVersion(join(root, 'node_modules/@lingxi-org/lingxios/package.json')) } }
+    expectedRuntime: { baseline: config.fidelity ? '4.0.0' : '3.8.25', candidate: '4.0.0' },
+    installedRuntime: { baseline: await runtimeVersion(join(config.baselineRoot, config.fidelity ? 'node_modules/@lingxi-org/lingxios/package.json' : 'node_modules/@lyyzka/lingxios/package.json')), candidate: await runtimeVersion(join(root, 'node_modules/@lingxi-org/lingxios/package.json')) } }
 }
 
 export function compactReceipt(safe) {
-  const fields = ['run', 'arm', 'kind', 'mode', 'status', 'phase', 'failureStage', 'failureCode', 'editableMs', 'scriptTransferBytes', 'scriptDecodedBytes', 'idleScriptTransferBytes', 'idleScriptDecodedBytes', 'pssDeltaBytes', 'firstInputMs']
-  const exportFields = ['format', 'status', 'failureCode', 'bytes', 'pages', 'durationMs', 'peakPssBytes', 'hostSubtractedPeakPssBytes', 'offlineHtml']
+  const fields = ['run', 'arm', 'kind', 'mode', 'status', 'performanceEligible', 'phase', 'failureStage', 'failureCode', 'editableMs', 'scriptTransferBytes', 'scriptDecodedBytes', 'idleScriptTransferBytes', 'idleScriptDecodedBytes', 'pssDeltaBytes', 'firstInputMs', 'failureObservations', 'viewNormalization']
+  const exportFields = ['format', 'status', 'failureCode', 'bytes', 'pages', 'durationMs', 'peakPssBytes', 'hostSubtractedPeakPssBytes', 'offlineHtml','editorStateAfterExport']
   return { schemaVersion: safe.schemaVersion, phase: safe.phase, baselineCommit: safe.baselineCommit, candidateCommit: safe.candidateCommit,
     environment: { ...safe.executionEnvironment, ...safe.measurement?.environment },
-    diagnosticPassed: safe.diagnosticPassed, qualified: safe.qualified, checkpoint: safe.checkpoint,
+    diagnosticPassed: safe.diagnosticPassed, qualified: safe.qualified, checkpoint: safe.checkpoint, exportObservationsPassed:safe.measurement?.exportObservationsPassed,
+    ...(safe.measurementFault?{measurementFault:safe.measurementFault}:{}),
     ...(safe.measurement?.setupFailure ? { setupFailure: safe.measurement.setupFailure } : {}),
     summary: safe.measurement?.summary ?? {}, gates: safe.measurement?.gates ?? [],
     samples: (safe.measurement?.samples ?? []).map(sample => ({ ...Object.fromEntries(fields.filter(key => sample[key] !== undefined).map(key => [key, sample[key]])),
@@ -225,18 +249,18 @@ async function bootstrap(config) {
     const env = { ...process.env, NODE_ENV: 'test', DATABASE_URL: database(arm), INTEGRATION_DATABASE_URL: database(arm), DOTENV_CONFIG_PATH: '/dev/null',
       REDIS_URL: `redis://127.0.0.1:26379/${arm === 'baseline' ? 1 : 2}`, WUKONG_USER_TOKEN_SECRET: 'native-artifact-local-test-only',
       LINGXILOOP_INVITE_BASE_URL: 'http://127.0.0.1:24411', OPENAI_API_KEY: 'native-artifact-provider-disabled', OPENAI_BASE_URL: 'http://127.0.0.1:1', LINGXILOOP_DISABLE_EMBEDDINGS: '1' }
-    if (arm === 'baseline') {
+    if (arm === 'baseline' && !config.fidelity) {
       // The existing verified historical fixture executes the official 3.8.25
       // chain and product62 SQL. No candidate SDK is run as the old product.
       const code = "import {withFormal25TestFixture} from './server/scripts/formal19-test-fixture.mjs';import{execFile}from'node:child_process';import{promisify}from'node:util';await withFormal25TestFixture(process.cwd(),process.env,async(root,env)=>{await promisify(execFile)(process.execPath,['server/scripts/bootstrap-runtime-patch-test-db.mjs'],{cwd:root,env,timeout:900000,maxBuffer:2097152})})"
       await execute(config, 'bootstrap-baseline', process.execPath, ['--input-type=module', '-e', code], root, env)
       const verify = "import{assertMigrationsCurrent}from'./server/src/db/migrate.ts';import{pool}from'./server/src/db/pool.ts';try{await assertMigrationsCurrent()}finally{await pool.end()}"
       await execute(config, 'verify-frozen-baseline-database', process.execPath, ['--import', 'tsx', '--input-type=module', '-e', verify], config.baselineRoot, env)
-    } else await execute(config, 'bootstrap-candidate', process.execPath, ['server/scripts/bootstrap-runtime-patch-test-db.mjs'], root, env)
+    } else await execute(config, `bootstrap-${arm}`, process.execPath, ['server/scripts/bootstrap-runtime-patch-test-db.mjs'], arm === 'baseline' ? config.baselineRoot : root, env)
   }
 }
 async function measure(config) {
-  assert.equal(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: config.baselineRoot, encoding: 'utf8' }).trim(), BASELINE)
+  assert.equal(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: config.baselineRoot, encoding: 'utf8' }).trim(), config.baselineCommit)
   for (const name of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'GOOGLE_API_KEY', 'GEMINI_API_KEY']) assert.ok(!process.env[name], 'measurement cannot inherit model credentials')
   const tasks = []
   try {
@@ -246,7 +270,7 @@ async function measure(config) {
       const status = join(config.privateRoot, `${arm}-service-status.json`)
       const env = { ...process.env, DATABASE_URL: database(arm), REDIS_URL: `redis://127.0.0.1:26379/${index + 1}`, DOTENV_CONFIG_PATH: '/dev/null' }
       delete env.NODE_AUTH_TOKEN; delete env.GH_TOKEN; delete env.GITHUB_TOKEN
-      const task = child(process.execPath, ['--import', 'tsx', join(root, 'scripts/native-artifact-serve.mjs'), `--root=${checkout}`, `--format=${arm === 'baseline' ? 'legacy' : 'native'}`, `--port=${24411 + index}`, `--api-port=${24811 + index}`, `--out=${join(config.privateRoot, `${arm}.json`)}`, `--status=${status}`], checkout, env, join(config.privateRoot, `${arm}-service.log`))
+      const task = child(process.execPath, ['--import', 'tsx', join(root, 'scripts/native-artifact-serve.mjs'), `--root=${checkout}`, `--format=${arm === 'baseline' && !config.fidelity ? 'legacy' : 'native'}`, `--port=${24411 + index}`, `--api-port=${24811 + index}`, `--out=${join(config.privateRoot, `${arm}.json`)}`, `--status=${status}`], checkout, env, join(config.privateRoot, `${arm}-service.log`))
       tasks.push(task)
       const deadline = Date.now() + 600000
       while (true) {
@@ -261,6 +285,7 @@ async function measure(config) {
     await delay(5000)
     const chromium = execFileSync('python', ['-c', 'from playwright.sync_api import sync_playwright\nwith sync_playwright() as p: print(p.chromium.executable_path)'], { encoding: 'utf8' }).trim()
     const arguments_ = [join(root, 'scripts/native-artifact-benchmark.py'), '--baseline', join(config.privateRoot, 'baseline.json'), '--candidate', join(config.privateRoot, 'candidate.json'), '--browser', chromium, '--out', join(config.privateRoot, 'measurement', 'report.json')]
+    if (config.fidelity) arguments_.push('--fidelity')
     if (config.phase === 'diagnostic') arguments_.push('--diagnostic', '--keep-going')
     else arguments_.push('--runs', '10')
     await execute(config, 'measurement', 'python', arguments_)
@@ -269,17 +294,18 @@ async function measure(config) {
 async function summarize(config) {
   await mkdir(config.publicRoot, { recursive: true })
   const report = await readFile(join(config.privateRoot, 'measurement/report.json'), 'utf8').then(JSON.parse).catch(() => null)
+  const measurementFault=report?undefined:measurementFailure(await readFile(join(config.privateRoot,'measurement.log'),'utf8').catch(()=>''))
   const phase = await readFile(join(config.privateRoot, 'phase.json'), 'utf8').then(JSON.parse).catch(() => ({ phase: 'guard', status: 'failed' }))
   const servicePhases = {}
   for (const arm of ['baseline', 'candidate']) {
     const state = await readFile(join(config.privateRoot, `${arm}-service-status.json`), 'utf8').then(JSON.parse).catch(() => null)
-    if (state && serviceStages.has(state.phase)) servicePhases[arm] = { phase: state.phase, ...(state.failed ? { code: codes.has(state.code) ? state.code : 'CHILD_FAILED' } : {}) }
+    if (state && serviceStages.has(state.phase)) servicePhases[arm] = { phase: state.phase, fault:checkedServiceFailure(state.fault),transportFailures:checkedTransportFailures(state.transportFailures), ...(state.failed ? { code: codes.has(state.code) ? state.code : 'CHILD_FAILED' } : {}) }
   }
-  const safe = { schemaVersion: 1, phase: config.phase, baselineCommit: BASELINE,
+  const safe = { schemaVersion: 1, phase: config.phase, baselineCommit: config.baselineCommit,
     candidateCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
     executionEnvironment: await executionEnvironment(config),
     checkpoint: { phase: phases.has(phase.phase) ? phase.phase : 'guard', status: phase.status === 'passed' ? 'passed' : 'failed', ...(phase.status === 'failed' ? { code: safeCode(phase) } : {}) },
-    servicePhases, diagnosticPassed: report?.diagnosticPassed === true, qualified: config.phase === 'paired' && report?.qualified === true,
+    servicePhases, ...(measurementFault?{measurementFault}:{}), diagnosticPassed: report?.diagnosticPassed === true, qualified: config.phase === 'paired' && report?.qualified === true,
     ...(report ? { measurement: publicEvidence(report) } : {}) }
   await writeFile(join(config.publicRoot, 'results.json'), JSON.stringify(safe, null, 2) + '\n')
   // This is the same approved public projection, bounded to aggregate/sample
@@ -292,7 +318,7 @@ async function summarize(config) {
   }
   const total = report?.samples?.length ?? 0, passed = report?.samples?.filter(sample => sample.status === 'passed').length ?? 0
   console.log(`::notice title=Native artifact acceptance::phase=${config.phase}; samples=${total}; passed=${passed}; diagnosticPassed=${safe.diagnosticPassed}; qualified=${safe.qualified}; checkpoint=${safe.checkpoint.phase}${safe.checkpoint.code ? `; code=${safe.checkpoint.code}` : ''}`)
-  for (const [arm, stage] of Object.entries(servicePhases)) console.log(`::notice title=Native artifact service::arm=${arm}; phase=${stage.phase}${stage.code ? `; code=${stage.code}` : ''}`)
+  for (const [arm, stage] of Object.entries(servicePhases)) console.log(`::notice title=Native artifact service::arm=${arm}; phase=${stage.phase}${stage.code ? `; code=${stage.code}` : ''}; fault=${JSON.stringify(stage.fault)}`)
   if (measurementStages.has(report?.setupFailure?.failureStage) && failureCodes.has(report?.setupFailure?.failureCode)) console.log(`::notice title=Native artifact setup failed::phase=${report.setupFailure.failureStage}; code=${report.setupFailure.failureCode}`)
   for (const sample of report?.samples ?? []) {
     if (!['baseline', 'candidate'].includes(sample.arm) || !['design', 'slides'].includes(sample.kind) || !['fullNavigation', 'workbenchOpen'].includes(sample.mode)) continue

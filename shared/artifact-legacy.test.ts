@@ -6,6 +6,27 @@ const sha = 'a'.repeat(64)
 const file = (content: string) => ({ content, sha256: sha })
 
 describe('legacy artifact conversion', () => {
+  it('preserves relative inline links and targets without leaking link marks into siblings',()=>{
+    const result=convertLegacyArtifact({id:'links',kind:'slides',title:'链接',files:{
+      'project/deck.json':file(JSON.stringify({v:4,order:['a']})),
+      'project/slides/a.html':file('<section><h1 id="heading">前文<a href="../页面.html" target="_blank"><b>链接</b></a>后文</h1></section>'),
+    }})
+    const parts=result.document.pages.a.nodes.heading.richText!.content![0].content!
+    assert.equal(parts[0].marks,undefined)
+    assert.deepEqual(parts[1].marks,[{type:'link',attrs:{href:'../页面.html',target:'_blank'}},{type:'bold'}])
+    assert.equal(parts[2].marks,undefined)
+  })
+  it('retains every pinned Slides transition and matching element identities across slides', () => {
+    for (const transition of ['none', 'fade', 'push', 'magic', 'slide']) {
+      const result = convertLegacyArtifact({id:'transitions',kind:'slides',title:'转场',files:{
+        'project/deck.json':file(JSON.stringify({v:4,order:['a','b']})),
+        'project/slides/a.html':file(`<section data-transition="${transition}"><h1 id="shared-heading">标题</h1></section>`),
+        'project/slides/b.html':file('<section><h1 id="shared-heading">标题</h1></section>'),
+      }})
+      assert.equal(result.document.pages.a!.transition, transition)
+      assert.equal(result.document.pages.a!.nodes['shared-heading']!.id, result.document.pages.b!.nodes['shared-heading']!.id)
+    }
+  })
   it('preserves ordered pages, editable text, images, formula source and notes without changing originals', () => {
     const files = {
       'project/deck.json': file(JSON.stringify({ v: 4, order: ['second', 'first'], title: '原稿' })),
@@ -61,7 +82,7 @@ describe('legacy artifact conversion', () => {
       'project/Page.dc.html': file('<html><head><script src="./support.js"></script></head><body><x-dc><div style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr))"><p>一</p><p>二</p></div><div style="position:absolute;left:20px;top:500px;width:100px;height:80px;background:#112233"></div></x-dc></body></html>'),
     } })
     const page = result.document.pages.Page!
-    assert.equal(page.sizing, 'flow'); assert.equal(page.paper, 'A4')
+    assert.equal(page.print, 'flow'); assert.equal(page.sizing, undefined); assert.equal(page.paper, 'A4')
     assert.ok(Object.values(page.nodes).some(node => node.type === 'shape' && node.style.fill === '#112233'))
     assert.ok(Object.values(page.nodes).some(node => node.layout?.mode === 'grid' && node.layout.columns === 2))
     assert.ok(!Object.values(page.nodes).some(node => node.type === 'embed'))
@@ -103,4 +124,75 @@ it('keeps x-embed contents byte-exact and converts surrounding nodes and stored 
   assert.ok(nodes.some(node => node.embed?.source.includes('../../missing.png')))
   assert.equal(JSON.stringify(files), before)
   assert.equal('__legacyEmbedMustNotRun' in globalThis, false)
+})
+
+it('preserves authored header cells while body-only legacy tables stay body-only', () => {
+  for (const [cell,header] of [['th',true],['td',undefined]] as const) {
+    const source=`<section><table><tr><${cell}>标题</${cell}></tr><tr><td>正文</td></tr></table></section>`
+    const files={'project/deck.json':file(JSON.stringify({v:4,order:['first']})),'project/slides/first.html':file(source)}
+    const result=convertLegacyArtifact({id:'table-doc',kind:'slides',title:'表格',files})
+    const table=Object.values(result.document.pages.first.nodes).find(node=>node.type==='table')!
+    assert.equal(table.tableHeader,header)
+    assert.deepEqual(table.cells,[['标题'],['正文']])
+    assert.equal(files['project/slides/first.html'].content,source)
+  }
+})
+
+describe('Design canvas page conversion', () => {
+  it('preserves independent canvas pages and board membership without changing source snapshots', () => {
+    const files = {
+      'project/canvas.json':file(JSON.stringify({v:3,pages:[{id:'one',name:'第一页'},{id:'two',name:'流程图'}],boards:{'a.dc.html':{},'b.dc.html':{page:'two'},'c.dc.html':{page:'missing'}},order:['a.dc.html','b.dc.html','c.dc.html']})),
+      'project/a.dc.html':file('<p>画板甲</p>'),'project/b.dc.html':file('<p>画板乙</p>'),'project/c.dc.html':file('<p>画板丙</p>'),
+    }
+    const before=JSON.stringify(files)
+    const doc=convertLegacyArtifact({id:'design',kind:'design',title:'设计',files}).document
+    assert.deepEqual(doc.canvasPages,[{id:'one',name:'第一页'},{id:'two',name:'流程图'}])
+    assert.equal(doc.pages.a!.canvasPageId,'one')
+    assert.equal(doc.pages.b!.canvasPageId,'two')
+    assert.equal(doc.pages.c!.canvasPageId,'one')
+    assert.deepEqual(doc.pageOrder,['a','b','c'])
+    assert.equal(JSON.stringify(files),before)
+  })
+})
+
+it('imports source canvas notes as independent world objects without altering board bodies or original files',()=>{
+  const index={v:3,order:['first.dc.html'],boards:{'first.dc.html':{w:1920,h:1080}},pages:[],notes:{'note-source':{text:'画布便签',w:240,x:688,y:-778},'shape-source':{kind:'rect',w:452,h:452,x:1366,y:-1102}}}
+  const files={'project/canvas.json':file(JSON.stringify(index)),'project/first.dc.html':file('<p>原始画板正文</p>')},before=JSON.stringify(files)
+  const result=convertLegacyArtifact({id:'canvas',kind:'design',title:'设计稿',files}),doc=result.document
+  const contentId=doc.canvasPages?.[0].contentId
+  assert.ok(contentId)
+  assert.deepEqual(doc.pageOrder,['first'])
+  const content=doc.pages[contentId]!
+  assert.deepEqual([content.x,content.y,content.width,content.height],[0,0,0,0])
+  assert.equal(content.nodes['note-source']!.text,'画布便签')
+  assert.deepEqual([content.nodes['note-source']!.x,content.nodes['note-source']!.y,content.nodes['note-source']!.width],[688,-778,240])
+  assert.equal(content.nodes['shape-source']!.shape,'rect')
+  assert.equal(doc.pages.first!.nodes['note-source'],undefined)
+  assert.equal(JSON.stringify(files),before)
+  assert.deepEqual(result.originals,Object.fromEntries(Object.entries(files).map(([path,value])=>[path,value.sha256])))
+})
+
+
+it('imported Chinese sticky backgrounds include automatic wrapping and explicit blank lines',()=>{
+  const text='中文自动换行'.repeat(50),files={'project/canvas.json':file(JSON.stringify({v:3,order:[],notes:{wrapped:{text,w:240,x:0,y:0},lines:{text:'甲\n\n乙',w:240}}}))}
+  const doc=convertLegacyArtifact({id:'wrapped-notes',kind:'design',title:'中文便签',files}).document,body=doc.pages[doc.canvasPages![0]!.contentId!]!
+  assert.equal(body.nodes.wrapped!.height,426)
+  assert.equal(body.nodes.lines!.height,81)
+  assert.equal(body.nodes.wrapped!.text,text)
+})
+
+it('设计播放元数据保留原型和无框标记，旧文件默认静态且原始文件不变',()=>{
+  const files={'project/canvas.json':file(JSON.stringify({v:3,order:['原型.dc.html','无框.dc.html','静态.dc.html'],boards:{'原型.dc.html':{is_interactive:true},'无框.dc.html':{frameless:true},'静态.dc.html':{}}})),...Object.fromEntries(['原型','无框','静态'].map(name=>[`project/${name}.dc.html`,file('<p>保留内容</p>')]))}
+  const before=JSON.stringify(files),result=convertLegacyArtifact({id:'playback',kind:'design',title:'播放',files}).document
+  assert.equal(result.pages[result.pageOrder[0]!]!.interactive,true)
+  assert.equal(result.pages[result.pageOrder[1]!]!.frameless,true)
+  assert.equal(result.pages[result.pageOrder[2]!]!.interactive,undefined)
+  assert.equal(result.pages[result.pageOrder[2]!]!.frameless,undefined)
+  assert.equal(JSON.stringify(files),before)
+})
+
+it('旧版画板四角读取为可选元数据，转换不修改原文件',()=>{
+  const files={'project/canvas.json':file(JSON.stringify({v:3,order:['a.dc.html'],boards:{'a.dc.html':{w:800,h:600,radius:[10,20,30,40]}}})),'project/a.dc.html':file('<html><body><x-dc><p>圆角画板</p></x-dc></body></html>')}
+  const before=JSON.stringify(files),result=convertLegacyArtifact({id:'radius',kind:'design',title:'圆角',files})
+  assert.deepEqual(result.document.pages.a.radius,[10,20,30,40]);assert.equal(JSON.stringify(files),before)
 })

@@ -1,0 +1,3010 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceResourceHashesVerified": 12,
+  "browser": "154.0.8037.57",
+  "fixture": "native-editor-visual-fixture.mjs",
+  "scope": "27个1440×1000浅色实际手势及9900个限定纯数学断言；等距分布、拖动中切换Alt、全部触摸与全部视觉仍未通过。参考程序与字体不进入产品。",
+  "results": [
+    {
+      "scenario": {
+        "name": "move"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "frame": {
+        "x": 83.36842346191406,
+        "y": 442.1158142089844,
+        "width": 424.42103576660156,
+        "height": 238.73684692382812
+      },
+      "heading": {
+        "x": 83.36842346191406,
+        "y": 414.1161193847656,
+        "width": 424.40626525878906,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 160,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "move-shift",
+        "modifier": "Shift"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 160,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "snap-25",
+        "dx": 25
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 113,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "snap-28",
+        "dx": 28
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 160,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "snap-30",
+        "dx": 30
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 160,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "snap-42",
+        "dx": 42
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 160,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "snap-44",
+        "dx": 44
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 199,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "snap-46",
+        "dx": 46
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 208,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-n",
+        "resize": true,
+        "handle": "n"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 944,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 0,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-e",
+        "resize": true,
+        "handle": "e"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 2080,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-s",
+        "resize": true,
+        "handle": "s"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1216,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-w",
+        "resize": true,
+        "handle": "w"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1739,
+            "x": 181,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-nw",
+        "resize": true,
+        "handle": "nw"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 944,
+            "title": "Page 1",
+            "w": 1739,
+            "x": 181,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-ne",
+        "resize": true,
+        "handle": "ne"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 944,
+            "title": "Page 1",
+            "w": 2080,
+            "x": 0,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-sw",
+        "resize": true,
+        "handle": "sw"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1216,
+            "title": "Page 1",
+            "w": 1739,
+            "x": 181,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize",
+        "resize": true
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 459.7894592285156,
+        "height": 268.8000183105469
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 459.7812805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1216,
+            "title": "Page 1",
+            "w": 2080,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-shift",
+        "resize": true,
+        "modifier": "Shift"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 477.915771484375,
+        "height": 268.8000183105469
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 477.90625,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1216,
+            "title": "Page 1",
+            "w": 2162,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-alt",
+        "resize": true,
+        "modifier": "Alt"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1216,
+            "title": "Page 1",
+            "w": 2080,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "minimum",
+        "resize": true,
+        "dx": -500,
+        "dy": -300
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 26.52631378173828,
+        "height": 26.52630615234375
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 26.515625,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 120,
+            "title": "Page 1",
+            "w": 120,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "minimum-shift",
+        "resize": true,
+        "dx": -500,
+        "dy": -300,
+        "modifier": "Shift"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 120,
+            "title": "Page 1",
+            "w": 213,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "maximum",
+        "resize": true,
+        "dx": 3000,
+        "dy": 2000
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 1768.4210205078125,
+        "height": 1768.4209899902344
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 1768.4219970703125,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 8000,
+            "title": "Page 1",
+            "w": 8000,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "copy",
+        "modifier": "Alt"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1-614c.dc.html": {
+            "h": 1080,
+            "title": "Page 1 copy",
+            "w": 1920,
+            "x": 160,
+            "y": 136
+          },
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html",
+          "Page1-614c.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": [
+        {
+          "rect": {
+            "x": 83.36842346191406,
+            "y": 442.1158142089844,
+            "width": 424.4210205078125,
+            "height": 238.73684692382812,
+            "top": 442.1158142089844,
+            "right": 507.78944396972656,
+            "bottom": 680.8526611328125,
+            "left": 83.36842346191406
+          },
+          "background": "oklab(0.591645 -0.0448253 -0.164977 / 0.05)",
+          "border": "2px dashed oklab(0.591645 -0.0448253 -0.164977 / 0.7)",
+          "borderRadius": "4px"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "cancel",
+        "cancel": true
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "copy-cancel",
+        "modifier": "Alt",
+        "cancel": true
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "preview": [
+        {
+          "rect": {
+            "x": 83.36842346191406,
+            "y": 442.1158142089844,
+            "width": 424.4210205078125,
+            "height": 238.73684692382812,
+            "top": 442.1158142089844,
+            "right": 507.78944396972656,
+            "bottom": 680.8526611328125,
+            "left": 83.36842346191406
+          },
+          "background": "oklab(0.591645 -0.0448253 -0.164977 / 0.05)",
+          "border": "2px dashed oklab(0.591645 -0.0448253 -0.164977 / 0.7)",
+          "borderRadius": "4px"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "copy-multi",
+        "modifier": "Alt",
+        "multi": true,
+        "selectionModifier": "Shift"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1-nnxl.dc.html": {
+            "h": 1080,
+            "title": "Page 1 copy",
+            "w": 1920,
+            "x": 160,
+            "y": 136
+          },
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 0,
+            "y": 0
+          },
+          "Page2-415d.dc.html": {
+            "h": 1080,
+            "title": "Page 2 copy",
+            "w": 1920,
+            "x": 2240,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html",
+          "Page1-nnxl.dc.html",
+          "Page2-415d.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": [
+        {
+          "rect": {
+            "x": 83.36842346191406,
+            "y": 442.1158142089844,
+            "width": 424.4210205078125,
+            "height": 238.73684692382812,
+            "top": 442.1158142089844,
+            "right": 507.78944396972656,
+            "bottom": 680.8526611328125,
+            "left": 83.36842346191406
+          },
+          "background": "oklab(0.591645 -0.0448253 -0.164977 / 0.05)",
+          "border": "2px dashed oklab(0.591645 -0.0448253 -0.164977 / 0.7)",
+          "borderRadius": "4px"
+        },
+        {
+          "rect": {
+            "x": 543.1578979492188,
+            "y": 442.1158142089844,
+            "width": 424.4210205078125,
+            "height": 238.73684692382812,
+            "top": 442.1158142089844,
+            "right": 967.5789184570312,
+            "bottom": 680.8526611328125,
+            "left": 543.1578979492188
+          },
+          "background": "oklab(0.591645 -0.0448253 -0.164977 / 0.05)",
+          "border": "2px dashed oklab(0.591645 -0.0448253 -0.164977 / 0.7)",
+          "borderRadius": "4px"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "move-unsnapped",
+        "modifier": "Control"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "frame": {
+        "x": 88.01052856445312,
+        "y": 442.1158142089844,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "heading": {
+        "x": 88.01052856445312,
+        "y": 414.1161193847656,
+        "width": 424.4062194824219,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 181,
+            "y": 136
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    },
+    {
+      "scenario": {
+        "name": "resize-unsnapped",
+        "resize": true,
+        "modifier": "Control"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 464.43157958984375,
+        "height": 268.8000183105469
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 464.421875,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1216,
+            "title": "Page 1",
+            "w": 2101,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    }
+  ],
+  "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "offsetUnit": "UTF-16 code units",
+  "locations": [
+    {
+      "lookup": "mega-artboard-title-",
+      "start": 5159719,
+      "end": 5159739
+    },
+    {
+      "lookup": "mega-artboard-resize-",
+      "start": 5163432,
+      "end": 5163453
+    },
+    {
+      "lookup": "mega-dup-ghost",
+      "start": 5180273,
+      "end": 5180287
+    }
+  ],
+  "selectionRule": "标题多选读取shiftKey，普通单击在释放时替换选择；拖动携带已选画板。Ctrl探针只复制一页，未作为多选通过证据。",
+  "handleGeometry": {
+    "parts": [
+      {
+        "tag": "DIV",
+        "cls": "outline-fill-accent",
+        "style": "position: absolute; left: 0px; top: 0px; width: 424.421px; height: 238.737px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 2px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.40625,
+          "height": 238.73434448242188,
+          "top": 412.0526428222656,
+          "right": 472.40625,
+          "bottom": 650.7869873046875,
+          "left": 48
+        },
+        "cursor": "auto",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgb(37, 125, 224) solid 2px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "DIV",
+        "cls": "touch-none",
+        "style": "position: absolute; pointer-events: auto; cursor: ns-resize; left: 12px; width: 400.421px; top: -4px; height: 8px;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 60,
+          "y": 408.0526428222656,
+          "width": 400.40625,
+          "height": 8,
+          "top": 408.0526428222656,
+          "right": 460.40625,
+          "bottom": 416.0526428222656,
+          "left": 60
+        },
+        "cursor": "ns-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "DIV",
+        "cls": "touch-none",
+        "style": "position: absolute; pointer-events: auto; cursor: ew-resize; top: 12px; height: 214.737px; left: 420.421px; width: 8px;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 468.40625,
+          "y": 424.0526428222656,
+          "width": 7.999969482421875,
+          "height": 214.73434448242188,
+          "top": 424.0526428222656,
+          "right": 476.4062194824219,
+          "bottom": 638.7869873046875,
+          "left": 468.40625
+        },
+        "cursor": "ew-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "DIV",
+        "cls": "touch-none",
+        "style": "position: absolute; pointer-events: auto; cursor: ns-resize; left: 12px; width: 400.421px; top: 234.737px; height: 8px;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 60,
+          "y": 646.7869873046875,
+          "width": 400.40625,
+          "height": 8,
+          "top": 646.7869873046875,
+          "right": 460.40625,
+          "bottom": 654.7869873046875,
+          "left": 60
+        },
+        "cursor": "ns-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "DIV",
+        "cls": "touch-none",
+        "style": "position: absolute; pointer-events: auto; cursor: ew-resize; top: 12px; height: 214.737px; left: -4px; width: 8px;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 44,
+          "y": 424.0526428222656,
+          "width": 8,
+          "height": 214.73434448242188,
+          "top": 424.0526428222656,
+          "right": 52,
+          "bottom": 638.7869873046875,
+          "left": 44
+        },
+        "cursor": "ew-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "DIV",
+        "cls": "touch-none",
+        "style": "position: absolute; left: calc(0% - 12px); top: calc(0% - 12px); width: 24px; height: 24px; pointer-events: auto; cursor: nwse-resize;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 36,
+          "y": 400.0526428222656,
+          "width": 24,
+          "height": 24,
+          "top": 400.0526428222656,
+          "right": 60,
+          "bottom": 424.0526428222656,
+          "left": 36
+        },
+        "cursor": "nwse-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "SPAN",
+        "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+        "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 42,
+          "y": 406.0526428222656,
+          "width": 12,
+          "height": 12,
+          "top": 406.0526428222656,
+          "right": 54,
+          "bottom": 418.0526428222656,
+          "left": 42
+        },
+        "cursor": "nwse-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgb(255, 255, 255)",
+        "shadow": "none",
+        "outline": "rgb(37, 125, 224) solid 2px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "DIV",
+        "cls": "touch-none",
+        "style": "position: absolute; left: calc(100% - 12px); top: calc(0% - 12px); width: 24px; height: 24px; pointer-events: auto; cursor: nesw-resize;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 460.40625,
+          "y": 400.0526428222656,
+          "width": 24,
+          "height": 24,
+          "top": 400.0526428222656,
+          "right": 484.40625,
+          "bottom": 424.0526428222656,
+          "left": 460.40625
+        },
+        "cursor": "nesw-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "SPAN",
+        "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+        "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 466.40625,
+          "y": 406.0526428222656,
+          "width": 11.999969482421875,
+          "height": 12,
+          "top": 406.0526428222656,
+          "right": 478.4062194824219,
+          "bottom": 418.0526428222656,
+          "left": 466.40625
+        },
+        "cursor": "nesw-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgb(255, 255, 255)",
+        "shadow": "none",
+        "outline": "rgb(37, 125, 224) solid 2px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "DIV",
+        "cls": "touch-none",
+        "style": "position: absolute; left: calc(100% - 12px); top: calc(100% - 12px); width: 24px; height: 24px; pointer-events: auto; cursor: nwse-resize;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 460.40625,
+          "y": 638.7869873046875,
+          "width": 24,
+          "height": 24,
+          "top": 638.7869873046875,
+          "right": 484.40625,
+          "bottom": 662.7869873046875,
+          "left": 460.40625
+        },
+        "cursor": "nwse-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "SPAN",
+        "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+        "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 466.40625,
+          "y": 644.7869873046875,
+          "width": 11.999969482421875,
+          "height": 12,
+          "top": 644.7869873046875,
+          "right": 478.4062194824219,
+          "bottom": 656.7869873046875,
+          "left": 466.40625
+        },
+        "cursor": "nwse-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgb(255, 255, 255)",
+        "shadow": "none",
+        "outline": "rgb(37, 125, 224) solid 2px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "DIV",
+        "cls": "touch-none",
+        "style": "position: absolute; left: calc(0% - 12px); top: calc(100% - 12px); width: 24px; height: 24px; pointer-events: auto; cursor: nesw-resize;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 36,
+          "y": 638.7869873046875,
+          "width": 24,
+          "height": 24,
+          "top": 638.7869873046875,
+          "right": 60,
+          "bottom": 662.7869873046875,
+          "left": 36
+        },
+        "cursor": "nesw-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "tabIndex": -1
+      },
+      {
+        "tag": "SPAN",
+        "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+        "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+        "role": null,
+        "label": null,
+        "rect": {
+          "x": 42,
+          "y": 644.7869873046875,
+          "width": 12,
+          "height": 12,
+          "top": 644.7869873046875,
+          "right": 54,
+          "bottom": 656.7869873046875,
+          "left": 42
+        },
+        "cursor": "nesw-resize",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "background": "rgb(255, 255, 255)",
+        "shadow": "none",
+        "outline": "rgb(37, 125, 224) solid 2px",
+        "tabIndex": -1
+      }
+    ],
+    "title": {
+      "rect": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24,
+        "top": 384.052978515625,
+        "right": 472.4062805175781,
+        "bottom": 408.052978515625,
+        "left": 48
+      },
+      "color": "rgb(23, 87, 172)",
+      "font": "",
+      "cursor": "grab",
+      "style": "width: calc(1920px * var(--mega-scale)); transform: scale(var(--mega-inv-scale)); transform-origin: left bottom; margin-bottom: calc(4px * var(--mega-inv-scale)); --mega-scale: 0.22105263157894736; --mega-inv-scale: 4.523809523809524;"
+    }
+  },
+  "reproduction": "scripts/native-editor-board-transform-reference.mjs --reference-root=<独立参考目录> --browser=<固定浏览器> --output=<证据目录>",
+  "qualified": false,
+  "pureGeometryOracle": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+    "offsetUnit": "UTF-16 code units",
+    "modules": [
+      {
+        "name": "Sz",
+        "start": 3147037,
+        "end": 3148757,
+        "sha256": "358ab584262962ea3098b8166e264c452a4bbd893634e4e2d21ccfd32d7960c3"
+      },
+      {
+        "name": "wz",
+        "start": 3148757,
+        "end": 3150798,
+        "sha256": "eba1af74a8b616f508ec56952283aa680d16cc0051f1689adb08f3e89da186c9"
+      },
+      {
+        "name": "eU",
+        "start": 5073877,
+        "end": 5076690,
+        "sha256": "2400cf14dc118589b53ee6a950325c2ee11f1f095a3b1121ad3e3597f7d4d115"
+      }
+    ],
+    "comparedAssertions": 9900,
+    "allEqual": true,
+    "scope": "纯八向几何、角等比、分数坐标保留、边/中心类型吸附及有效缩放辅助线；未覆盖等距分布、触摸与完整编辑器视觉。",
+    "qualified": false
+  }
+}

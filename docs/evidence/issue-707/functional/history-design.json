@@ -1,0 +1,8 @@
+{
+  "kind": "isolated-version-history-diagnostic",
+  "mode": "design",
+  "onDemand": true,
+  "readonlyPreview": true,
+  "restoredThroughExistingApi": true,
+  "consoleOrPageErrors": []
+}

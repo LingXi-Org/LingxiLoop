@@ -1,0 +1,55 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "offsetUnit": "UTF-16 code units",
+  "sourceLocations": [
+    {
+      "symbol": "元素对齐属性生成及工具栏",
+      "start": 4387950,
+      "end": 4390450
+    },
+    {
+      "symbol": "authoredPositioning",
+      "start": 799050
+    },
+    {
+      "symbol": "positioningAnchors",
+      "start": 730248
+    },
+    {
+      "symbol": "beginResize",
+      "start": 854552
+    },
+    {
+      "symbol": "selectionChromeMinimumScale（25%）",
+      "start": 4861799
+    }
+  ],
+  "license": "固定发布包仅在独立环境参考运行。原生实现使用产品React及MIT Lucide，不复制来源图标字体或发布包进入产品；许可清单见source-inventory.json及THIRD_PARTY_NOTICES.md。",
+  "localizedCopy": [
+    "元素对齐",
+    "左对齐",
+    "水平居中",
+    "右对齐",
+    "顶部对齐",
+    "垂直居中",
+    "底部对齐",
+    "对齐修改未能应用，请重试。"
+  ],
+  "implementation": [
+    "src/features/artifacts/native/ElementAlignmentControls.tsx",
+    "src/features/artifacts/native/element-alignment.ts",
+    "src/features/artifacts/native/element-positioning.ts",
+    "src/features/artifacts/native/NativeEditor.tsx"
+  ],
+  "triggers": [
+    "选择画板文字后点六个对齐按钮，检查声明偏移与实际自动边距位置。",
+    "居中后修改宽高；流式、相对、固定、粘性定位检查垂直按钮条件。",
+    "真实Tab/Shift+Tab聚焦与悬停，浅深色下等待过渡结束再取样。",
+    "50%缩放并用空格拖动画布使元素进入可见区域，真实手柄向右拖动20 CSS px。",
+    "原生聚焦编辑器执行共享撤销/重做、取消拖动/缩放，保存并重开。"
+  ],
+  "evidence": "functional/element-alignment.json",
+  "completeQualification": false
+}

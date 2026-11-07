@@ -1,0 +1,104 @@
+{
+  "commit": "ac5cb5b4fceb71343223b8d445b7b7db6a7c4f54",
+  "baseCommit": "d483c82bc57a820d030c3f96e88fbf7642fcfaa1",
+  "reviewer": "independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "冻结detached checkout；三项旧P2修复及新增InspectorWidthGrip偏好、触摸/键盘宽度、关闭重开和菜单视口约束。独立原版临时项目对照，无产品文件修改、提交、合并或部署。",
+  "findings": [
+    {
+      "id": "P2-1",
+      "severity": "P2",
+      "title": "600px最大面板宽度遮挡工具栏，点击属性实际切到代码",
+      "file": "src/features/artifacts/native/NativeEditor.tsx",
+      "line": 675,
+      "relatedLocation": "InspectorWidthGrip.tsx:5允许正确的容器宽度减120上限；NativeEditor使用可变--native-sidebar-width后，原有工具栏布局与侧栏层叠未适配该可用宽度。",
+      "scenario": "600×844容器打开Design属性面板，将宽度调至允许最大480px。侧栏从x120起，原生播放x148、显示属性x176、缩放x204，三个按钮被面板属性/代码/主题tab覆盖，均无法通过真实hit-test；140普通鼠标坐标点击“显示属性”实际切到“代码”。154粗指针也复现。",
+      "referenceComparison": "固定原版016b39d7同600×844、同480px侧栏、CSS1Compat下，Play x42、Properties x70、Zoom x98，三项真实hit-test均通过；已核对12个参考资源SHA256全部匹配。可确认不是照搬原版自身边界行为。",
+      "minimalFix": "保留来源宽度范围，为实际剩余空间调整工具栏收缩/溢出与位置及层叠，使原版可达按钮不被侧栏标签拦截；同时验收标签可达。增加600px/最大宽度的真实鼠标hit-test及实际属性按钮点击，不能只断言侧栏宽度。",
+      "evidence": [
+        "/tmp/lingxi-review-ac5-extra140/design.json",
+        "/tmp/lingxi-review-ac5-extra140/width600-max.png",
+        "/tmp/lingxi-review-ac5-extra154/design.json",
+        "/tmp/lingxi-review-ac5-source600.json",
+        "/tmp/lingxi-review-ac5-source600.png"
+      ],
+      "reproductionScripts": [
+        "/tmp/lingxi-review-probe-ac5/probe.mjs",
+        "/tmp/lingxi-review-ac5-source600.mjs"
+      ]
+    }
+  ],
+  "closedFindings": [
+    {
+      "id": "d483c82b/P2-1",
+      "status": "已关闭",
+      "reason": "navigate仅接管treeitem自身事件；140/154原生按钮Space隐藏及显示均实际通过。"
+    },
+    {
+      "id": "d483c82b/P2-2",
+      "status": "已关闭",
+      "reason": "宽屏回退先读取实际root宽；140/154首次从菜单打开窄屏图层均实际显示树，无写入。"
+    },
+    {
+      "id": "d483c82b/P2-3",
+      "status": "已关闭",
+      "reason": "菜单按offset实测尺寸夹取且自身max-height限制；140/154窄菜单完整可见，End不滚编辑器，Escape恢复树焦点。"
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "正式design-outline space/menu/narrow-context/width，140与154",
+      "result": "8次均通过；旧三项关闭，宽度285至560、8/32键盘步进、双击、拖动、关开/重载偏好、容器上限、sheet隐藏grip及0文档写入通过。",
+      "evidencePattern": "/tmp/lingxi-review-ac5-{space,menu,narrow-context,width}-{140,154}/design.json"
+    },
+    {
+      "check": "154额外粗指针与真实CDP触摸",
+      "result": "默认376px，真实touchStart/move/end将宽度376→416px，关闭重开保持416，0文档写入；600/480下复现新P2。",
+      "evidence": "/tmp/lingxi-review-ac5-extra154/design.json"
+    },
+    {
+      "check": "140额外普通指针",
+      "result": "默认336px；600/480下属性/代码/主题tab可点，三项工具栏hit-test失败，按钮中心前景正是对应tab；真实点击属性按钮位置切到代码。",
+      "evidence": "/tmp/lingxi-review-ac5-extra140/design.json"
+    },
+    {
+      "check": "固定原版同状态真实浏览器比较",
+      "result": "12个资源哈希匹配；独立temp项目/参考服务，600/480三项工具栏均可点；服务与项目已清理，输出不含参考URL。",
+      "evidence": "/tmp/lingxi-review-ac5-source600.json"
+    },
+    {
+      "check": "node --import tsx --test src/features/artifacts/native/outline-rows.test.ts scripts/native-artifact-ci.test.mjs",
+      "result": "17项通过，0失败。",
+      "evidence": "/tmp/lingxi-review-ac5-unit.log"
+    }
+  ],
+  "analysis": [
+    "宽度偏好仅保存到固定localStorage键，读取限制为有限数字并按容器上下限裁剪；存储读写失败有捕获。拖动、键盘、双击更新本地偏好，不产生ArtifactOperation。",
+    "pointer主指针/主键检查及capture释放在结束、取消和丢失capture时收尾；关闭重开和重载已实际验证。未发现新增授权、草稿/CAS或执行内容通道。",
+    "正式宽度回归覆盖数值和偏好，尚未覆盖新增宽度状态下其他顶层控件的命中关系；新P2来自该缺口。"
+  ],
+  "unverified": [
+    "没有重跑两个编辑器完整50页、全部旧功能、lazyInspector、真实服务/授权/并发CAS、完整lint/typecheck/build或正式CI；根线程运行结果不记作本审查独立通过。",
+    "未独立验证操作系统级触屏取消、存储禁用、多标签偏好同步等额外环境；本次真实触摸为Chromium CDP可信输入。",
+    "完整Code/视觉/服务和正式10组AB/BA性能资格仍未通过；旧3项关闭不代表整体交付完成。"
+  ],
+  "referenceLayoutEvidence": {
+    "state": "固定原版600×844、面板480、CSS1Compat；12资源哈希一致，独立参考项目与服务完成后已清理。",
+    "files": [
+      "/tmp/lingxi-review-ac5-source600-dom-full.json",
+      "/tmp/lingxi-review-ac5-source600-structure.json",
+      "/tmp/lingxi-review-ac5-source-toolbar-rules.json"
+    ],
+    "rules": [
+      "根header.tb-root实际宽120、overflow visible、z-index49；属性aside z-index40。",
+      "左岛.tb-card-start flex-shrink1000、min-width0、overflow clip；实际x8宽10，内部.tb-scroll宽8但scrollWidth320，overflow-x:auto。",
+      "右岛.tb-card-end flex-shrink1、min-width0；实际x24宽88，gap4、overflow visible。",
+      "右岛前段.tb-end-strip flex-shrink1000、min-width0，实际x29宽0；内部.tb-scroll宽8/scrollWidth134、overflow-x:auto，前段导出/历史/评论让位并留在滚动区域。",
+      "尾部.tb-tail及其.tb-slot可缩且min-width0，实际尾部x33宽74；内部播放/属性/缩放固定组flex:0 0 auto、gap4、宽117.125，从x42起并overflow visible。",
+      "因此修复需同时遵循前段高收缩与滚动裁切、尾部固定组、toolbar与aside层叠，单独升z-index不能还原来源布局。"
+    ],
+    "sourceCss": "/tmp/lingxi-baoyu-v280/skills/claude-design/scripts/editor/assets/index-tSD8GYWj.css",
+    "limits": "规则JSON用于定位，省略了CSS原始媒体/容器嵌套上下文；应结合完整source CSS与本状态computed DOM，不将所有提取规则视作同时生效。"
+  }
+}

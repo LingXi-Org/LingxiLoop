@@ -1,0 +1,98 @@
+{
+  "commit": "62e247fb3fd898b9700682fc41351918365bac51",
+  "baseCommit": "a66a466b6d3bab852be3b1d5ab85ee57efbfadd1",
+  "reviewer": "/root/independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "独立冻结worktree审查底层逐行声明、css/attributes模型及渲染/导出接线。代码面板未接入，不把尚未声明完成的面板能力作为缺陷。浏览器使用受控HTTP夹具。",
+  "findings": [
+    {
+      "id": "raw-css-geometry-overrides-native-edit-operations",
+      "severity": "P2",
+      "title": "让合法CSS几何声明与原生几何操作保持一致",
+      "file": "src/features/artifacts/native/renderer.tsx",
+      "line": 205,
+      "failure": "新模型合法接受css.left等几何声明，而codeStyleProperties最后展开，覆盖原生left/width/transform等。真实Chrome154中给形状css.left=120px，选择后按ArrowRight，原生操作成功持久化x760→761、receipts=1，但实际BCR x始终126.55902099609375，画面完全不动。现有选择/拖动/缩放操作仍改原生几何字段，不能改变实际呈现。",
+      "smallestCorrection": "对声明几何与原生字段建立统一的规范化/优先级，或让原生几何动作同步改写实际生效的CSS声明并保留CAS，不能成功提交一个不改变呈现的移动。补合法left/width/transform与原生移动/缩放的具体回归。",
+      "reproduction": [
+        "/tmp/lingxi-review-probe-62/probe.mjs",
+        "/tmp/lingxi-review-62-geometry154/slides.json"
+      ],
+      "observed": {
+        "beforeModelX": 760,
+        "afterModelX": 761,
+        "beforeScreenX": 126.55902099609375,
+        "afterScreenX": 126.55902099609375,
+        "rawCss": {
+          "left": "120px"
+        },
+        "committedBatches": 1,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "id": "removed-important-css-retains-priority-when-native-value-matches",
+      "severity": "P2",
+      "title": "删除CSS时显式清除旧important并恢复原生样式",
+      "file": "src/features/artifacts/native/renderer.tsx",
+      "line": 205,
+      "failure": "回调ref只应用当前声明，没有清除旧声明。节点原生style.color=#18332b，添加css.color=\"#18332b !important\"后再通过正常共享操作unset css：React前后普通style.color字符串相同，因而不写DOM，旧ref(null)也没有清理。同一真实DOM中模型css已为undefined，color的priority却仍为important。现有filter→none回归会因普通值变化而通过，覆盖不到原生回退值相同的情形。",
+      "smallestCorrection": "跟踪旧声明/priority并在删除或替换时清除，再恢复相应原生样式；不能只依赖React对剥除important后的值做diff。增加与原生值相同的important声明→unset且DOM不重挂的回归。",
+      "reproduction": [
+        "/tmp/lingxi-review-62-important154/slides.json"
+      ],
+      "observed": {
+        "sameDomElement": true,
+        "modelCss": null,
+        "priorityAfterRemoval": "important",
+        "inlineColor": "rgb(24, 51, 43)",
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "逐行声明/原生CSS属性验证/操作共享历史/导出/缩略图定向单测",
+      "result": "passed",
+      "count": 74,
+      "files": [
+        "shared/artifact-inspector-code.test.ts",
+        "shared/artifact-node-code.test.ts",
+        "shared/artifact-operations.test.ts",
+        "src/features/artifacts/native/export/export.test.ts",
+        "src/features/artifacts/native/thumbnail.test.tsx"
+      ]
+    },
+    {
+      "check": "Chrome154 Design原有code-style回归",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-62-code154/design.json"
+    },
+    {
+      "check": "Chrome154 Slides原有code-style回归",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-62-code154/slides.json"
+    },
+    {
+      "check": "Chrome154合法CSS left与原生ArrowRight移动联动",
+      "result": "failed",
+      "receipt": "/tmp/lingxi-review-62-geometry154/slides.json"
+    },
+    {
+      "check": "Chrome154同值原生回退的important清除",
+      "result": "failed",
+      "receipt": "/tmp/lingxi-review-62-important154/slides.json"
+    }
+  ],
+  "analysis": [
+    "optional css/attributes进入同一node schema和操作链，首次写入/反向unset/共享撤销重做及陈旧版本拒绝单测通过。旧文档不携带新字段时主要渲染分支保持原有路径。",
+    "已运行校验用例中事件、编辑器内部属性、srcdoc、javascript协议及编码表达式被拒绝，未复现活动内容验证绕过。",
+    "普通编辑态链接点击回归通过；额外中键诊断未复现导航，没有列为问题。",
+    "按父线程指示，在两条真实失败确认后收敛归档，没有扩展理论场景。"
+  ],
+  "unverified": [
+    "未独立运行父线程全部100 focused units、15 CI contracts、5 server tests或正式CI。",
+    "本候选Chrome140、完整CSS媒体资源、真实PDF/PPTX样式覆盖未独立全面复测。",
+    "代码面板尚未接入，完整功能/视觉、真实授权服务、物理输入法与最终性能资格仍未通过。"
+  ]
+}

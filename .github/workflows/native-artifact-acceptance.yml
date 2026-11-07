@@ -8,6 +8,9 @@ on:
       phase:
         type: string
         default: diagnostic
+      profile:
+        type: string
+        default: retirement
       diagnostic_run_id:
         type: string
         default: ''
@@ -18,6 +21,11 @@ on:
         type: choice
         options: [diagnostic, paired]
         default: diagnostic
+      profile:
+        description: Frozen editor retirement or native fidelity against 72162f58
+        type: choice
+        options: [retirement, fidelity]
+        default: retirement
       diagnostic_run_id:
         description: Paired only; successful diagnostic run ID for this exact candidate SHA
         type: string
@@ -46,6 +54,7 @@ jobs:
     defaults:
       run: { working-directory: candidate, shell: bash }
     env:
+      NATIVE_ARTIFACT_PROFILE: ${{ inputs.profile }}
       NATIVE_ARTIFACT_PHASE: ${{ inputs.phase }}
       NATIVE_ARTIFACT_DIAGNOSTIC_RUN_ID: ${{ inputs.diagnostic_run_id }}
       NATIVE_ARTIFACT_BASELINE_ROOT: ${{ github.workspace }}/baseline
@@ -58,7 +67,13 @@ jobs:
       - uses: actions/checkout@v5
         with:
           path: baseline
-          ref: d004312841026a4d90dfbd9e8292a55cc29a2e95
+          ref: ${{ inputs.profile == 'fidelity' && '72162f582fe49e9cbdb03f760e29e3683f9c5c99' || 'd004312841026a4d90dfbd9e8292a55cc29a2e95' }}
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          repository: jimliu/baoyu-design
+          ref: 016b39d7fdcc30bfacee31ea5541498ac53921c6
+          path: reference
           persist-credentials: false
       - uses: actions/setup-node@v5
         with: { node-version: '22' }
@@ -68,7 +83,7 @@ jobs:
         run: node scripts/native-artifact-ci.mjs guard
         env: { GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
       - name: Verify acceptance orchestration contracts
-        run: node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs
+        run: node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs
       - name: Install both immutable dependency graphs
         run: |
           npm ci --ignore-scripts --no-audit --no-fund
@@ -81,10 +96,110 @@ jobs:
           python -m pip install playwright==1.55.0
           python -m playwright install --with-deps chromium
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends postgresql-client poppler-utils
+          sudo apt-get install -y --no-install-recommends postgresql-client poppler-utils xvfb xauth xdotool scrot fcitx5 fcitx5-pinyin fcitx5-frontend-gtk3 fcitx5-module-xorg
+      - name: Verify real worker script accounting before production measurements
+        run: |
+          export CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          python scripts/native-artifact-trace-check.py
+          python scripts/native-artifact-worker-clock-check.py
+          python scripts/native-artifact-pss-check.py
+          python scripts/native-artifact-cleanup-check.py
+          python scripts/native-artifact-navigation-check.py
+          python scripts/native-artifact-navigation-readiness-check.py --browser "$CHROMIUM_PATH" --out "$RUNNER_TEMP/native-navigation-readiness.json"
+          python scripts/native-artifact-export-control-check.py
+          node scripts/native-artifact-proxy-check.mjs
+          python scripts/native-embed-capture-check.py
+          export PLAYWRIGHT_MODULE="$(python -c 'from pathlib import Path; import playwright; print(Path(playwright.__file__).parent / "driver/package/index.mjs")')"
+          node scripts/native-reference-paint-check.mjs
+          node scripts/native-startup-probe-check.mjs
+          node --import tsx scripts/native-page-radius-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-page-radius-oracle.json"
+          node --import tsx scripts/native-page-print-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-page-print-oracle.json"
+          node --import tsx scripts/native-board-transform-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-board-transform-oracle.json"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-transform --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-transform"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-title --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-title"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-title --title-case=narrow-long,wide-long --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-title-range"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --link-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-exports"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=nested-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-nested"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=same-node --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-same-node"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-left,align-center,align-right,align-top,align-middle,align-bottom --align-history=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-history"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-center,align-right --align-resize=e --sizing-zoom=50% --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-resize"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-right,align-center --align-nudge=ArrowRight --align-drag=20 --sizing-zoom=50% --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-nudge"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-left,align-right --align-drag=20 --align-cancel=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-cancel"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=width-hug-resize,width-hug-cancel,width-percent-click,width-important-click,min-width-add,max-width-add,min-height-add,max-height-add,right-add,bottom-add --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-extra"
+          for task_sizing_node in image shape; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-node="$task_sizing_node" --sizing-case=width-hug,height-hug --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-$task_sizing_node"
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-node=shape --sizing-case=theme-fill --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-theme"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-sizing --sizing-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-exports"
+          for task_artboard_case in default exports readonly fit-repeat fit-hidden fit-policy; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-artboard --artboard-case="$task_artboard_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-artboard-$task_artboard_case"
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=page-radius --radius-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-page-radius"
+          for task_radius_case in preview jpeg; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=page-radius --radius-case="$task_radius_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-page-radius-$task_radius_case"
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-outline --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-design-outline"
+          for task_outline_case in large context space menu width width-tools narrow-context; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-outline --outline-case="$task_outline_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-design-outline-$task_outline_case"
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=inspector-code --code-case=empty --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-code-empty"
+          NATIVE_IME_BROWSER="$CHROMIUM_PATH" bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime"
+          NATIVE_IME_BROWSER="$CHROMIUM_PATH" NATIVE_IME_TARGET=board-title bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime-title"
+          NATIVE_IME_BROWSER="$CHROMIUM_PATH" NATIVE_IME_TARGET=element-link bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime-link"
+          NATIVE_IME_BROWSER="$CHROMIUM_PATH" NATIVE_IME_TARGET=element-sizing bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime-sizing"
+          node --import tsx scripts/native-canvas-text-export-check.mjs "$RUNNER_TEMP/native-canvas-text-export.json"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-pen --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-pen"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-load --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-load"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-retention --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-retention"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --canvas-theme=dark --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-dark"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-cas --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-cas"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-retention --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-retention"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit-load --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector-edit-load"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-fit-switch --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-switch"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-fit-body --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-body"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-comments=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-small=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-small"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-readonly=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-readonly"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-body-delay=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-delay"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-deleted=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-deleted"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview-load --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-load"
+          for task_case in save-retry keyboard-isolation module-cancel; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-preview --preview-$task_case=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-preview-$task_case"
+          done
+          for task_presentation_case in keyboard-isolation copy-identity mixed-sizes; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=slide-transitions --presentation-$task_presentation_case=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-presentation-$task_presentation_case"
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=slide-transitions --presentation-mixed-sizes=true --presentation-portrait=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-presentation-portrait"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=slide-transitions --presentation-focus-return=true --strict-mode=false --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-presentation-focus-return"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=slide-transitions --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-slide-transitions"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=slides --checks=asset-colors --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-asset-colors"
+          for task_editor in design slides; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode="$task_editor" --checks=asset-reads --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-asset-reads-$task_editor"
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-board-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-export"
+          for task_completion in button escape; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=undo-focus --completion="$task_completion" --width=619 --height=926 --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-undo-focus-$task_completion"
+          done
+          node scripts/native-slide-transition-oracle.mjs --reference-root="${{ github.workspace }}/reference" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-reference-transitions"
+          node --import tsx scripts/native-canvas-fit-oracle.mjs --reference-root="${{ github.workspace }}/reference" --capture=true --play-menu=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-reference-geometry"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-play-menu --source-runtime="$RUNNER_TEMP/native-reference-geometry/results.json" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-play-menu"
+          for task_size in 1920x1200 1440x1000 768x1024 390x844; do
+            task_width=${task_size%x*}
+            task_height=${task_size#*x}
+            for task_theme in light dark; do
+              node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector-edit --vector-case=initial --point-matched=true --source-camera=true --source-toolbar=true --source-surfaces=true --source-runtime="$RUNNER_TEMP/native-reference-geometry/results.json" --width="$task_width" --height="$task_height" --canvas-theme="$task_theme" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-fit-$task_size-$task_theme"
+            done
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=viewport-loading --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-viewport-loading"
       - name: Build both production applications before any measurements
         run: |
-          npm --prefix "$NATIVE_ARTIFACT_BASELINE_ROOT" run build:slides-editor
+          if [ "$NATIVE_ARTIFACT_PROFILE" != fidelity ]; then
+            npm --prefix "$NATIVE_ARTIFACT_BASELINE_ROOT" run build:slides-editor
+          fi
           npm --prefix "$NATIVE_ARTIFACT_BASELINE_ROOT" run build
           npm run build
       - name: Build and start the actual pinned WuKong service
@@ -108,11 +223,12 @@ jobs:
         env: { NODE_AUTH_TOKEN: '${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}' }
       - name: Start pinned local object storage for actual native image uploads
         run: |
+          docker build --file scripts/native-artifact-minio.Dockerfile --tag native-artifact-minio:acceptance .
           docker run --detach --name native-artifact-minio \
             --publish 127.0.0.1:29000:9000 \
             --env MINIO_ROOT_USER=native-artifact-access \
             --env MINIO_ROOT_PASSWORD=native-artifact-storage-test-only \
-            quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z server /data
+            native-artifact-minio:acceptance server /data
           for attempt in $(seq 1 60); do
             if curl --fail --silent http://127.0.0.1:29000/minio/health/ready >/dev/null; then exit 0; fi
             sleep 1
@@ -130,6 +246,43 @@ jobs:
           name: native-artifact-${{ inputs.phase }}-${{ github.sha }}
           path: native-artifact-results/
           if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-editor-reference-geometry-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/native-reference-geometry/*.json
+            ${{ runner.temp }}/native-reference-geometry/*.png
+            ${{ runner.temp }}/native-fit-*/*.json
+            ${{ runner.temp }}/native-fit-*/*.png
+            ${{ runner.temp }}/native-play-menu/*.json
+            ${{ runner.temp }}/native-play-menu/*.png
+            ${{ runner.temp }}/native-board-transform/*.json
+            ${{ runner.temp }}/native-board-transform/*.png
+            ${{ runner.temp }}/native-board-transform-oracle.json
+            ${{ runner.temp }}/native-board-title/*.json
+            ${{ runner.temp }}/native-board-title/*.png
+            ${{ runner.temp }}/native-board-title-range/*
+            ${{ runner.temp }}/native-element-link/*.json
+            ${{ runner.temp }}/native-element-link/*.png
+            ${{ runner.temp }}/native-element-link-exports/*
+            ${{ runner.temp }}/native-element-link-nested/*
+            ${{ runner.temp }}/native-element-link-same-node/*
+            ${{ runner.temp }}/native-element-sizing*/*.json
+            ${{ runner.temp }}/native-element-sizing*/*.png
+            ${{ runner.temp }}/native-element-alignment-*/*.json
+            ${{ runner.temp }}/native-element-alignment-*/*.png
+            ${{ runner.temp }}/native-artboard-*/*.json
+            ${{ runner.temp }}/native-artboard-*/*.png
+            ${{ runner.temp }}/native-page-print-oracle.json
+            ${{ runner.temp }}/native-os-ime/*.json
+            ${{ runner.temp }}/native-os-ime/*-os-ime-*.png
+            ${{ runner.temp }}/native-os-ime-title/*.json
+            ${{ runner.temp }}/native-os-ime-title/*-os-ime-*.png
+            ${{ runner.temp }}/native-os-ime-link/*.json
+            ${{ runner.temp }}/native-os-ime-link/*.png
+          if-no-files-found: ignore
           retention-days: 7
       - name: Remove ephemeral services and private login state
         if: always()

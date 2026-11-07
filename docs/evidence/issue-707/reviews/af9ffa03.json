@@ -1,0 +1,176 @@
+{
+  "commit": "af9ffa03531723360e8db2ee6fbe0594b5bb960e",
+  "reviewer": "/root/independent_review",
+  "readOnly": true,
+  "reviewPassed": false,
+  "findings": [
+    {
+      "id": "presentation-tab-undo",
+      "severity": "P2",
+      "file": "src/features/artifacts/native/NativeEditor.tsx",
+      "line": 626,
+      "failure": "正常Tab回到根节点后CtrlZ撤销放映中的实时文档",
+      "observations": {
+        "trail": [
+          {
+            "tag": "BUTTON",
+            "root": false,
+            "label": "下一页"
+          },
+          {
+            "tag": "BUTTON",
+            "root": false,
+            "label": "讲者备注"
+          },
+          {
+            "tag": "BUTTON",
+            "root": false,
+            "label": "全屏"
+          },
+          {
+            "tag": "BUTTON",
+            "root": false,
+            "label": "退出放映"
+          },
+          {
+            "tag": "BODY",
+            "root": false,
+            "label": null
+          },
+          {
+            "tag": "SECTION",
+            "root": true,
+            "label": "原生编辑器验收编辑器"
+          }
+        ],
+        "seqBefore": 1,
+        "seqAfter": 2,
+        "xBefore": 761,
+        "xAfter": 760,
+        "showStillOpen": 1
+      }
+    },
+    {
+      "id": "motion-copy-collision",
+      "severity": "P2",
+      "file": "src/features/artifacts/native/NativeEditor.tsx",
+      "line": 436,
+      "failure": "普通节点复制保留motionId，使神奇移动匹配最后一个副本",
+      "observations": {
+        "matches": [
+          {
+            "id": "2fedf6e9-c15d-42b0-8504-658db6dbec0a",
+            "motionId": "page-1-heading",
+            "x": 64,
+            "y": 40
+          },
+          {
+            "id": "a314be3a-d7fa-4b87-9705-14a6d1c31073",
+            "motionId": "page-1-heading",
+            "x": 88,
+            "y": 64
+          }
+        ],
+        "animations": [
+          {
+            "id": null,
+            "frames": [
+              {
+                "opacity": 1
+              },
+              {
+                "opacity": 0
+              }
+            ]
+          },
+          {
+            "id": "a314be3a-d7fa-4b87-9705-14a6d1c31073",
+            "frames": [
+              {
+                "left": "64px",
+                "top": "40px",
+                "width": "1152px",
+                "height": "76px",
+                "right": "auto",
+                "bottom": "auto",
+                "transform": "none"
+              },
+              {
+                "left": "88px",
+                "top": "64px",
+                "width": "1152px",
+                "height": "76px",
+                "right": "auto",
+                "bottom": "auto",
+                "transform": "none"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "mixed-slide-fit",
+      "severity": "P2",
+      "file": "src/features/artifacts/native/SlidesPresentation.tsx",
+      "line": 224,
+      "failure": "离去页复用目标页比例，1440×810变成2880×1620",
+      "observations": {
+        "before": {
+          "x": 0,
+          "y": 95,
+          "width": 1440,
+          "height": 810
+        },
+        "after": {
+          "x": 0,
+          "y": 95,
+          "width": 2880,
+          "height": 1620
+        },
+        "pageSizes": [
+          1920,
+          960
+        ]
+      }
+    },
+    {
+      "id": "motion-id-undo",
+      "severity": "P2",
+      "file": "shared/artifact-operations.ts",
+      "line": 11,
+      "failure": "首次设置motionId生成逆操作unset，但允许移除集合缺字段；正式共享撤销同样失败"
+    }
+  ],
+  "independentPassed": [
+    "40项定向单测",
+    "Chrome154标准及Chrome140窄屏转场",
+    "模块延迟Escape取消；晚到模块不重开"
+  ],
+  "excluded": [
+    "含嵌入的顶层组整体隐藏与固定源码frame规则一致，不算finding"
+  ],
+  "unverified": [
+    "长性能",
+    "新增PostgreSQL用例",
+    "完整视觉门槛"
+  ],
+  "owningCI": {
+    "runId": 42284708188,
+    "web": "success",
+    "server": "success",
+    "integration": "success",
+    "deploy": "skipped",
+    "newPostgreSQLTestEvidence": {
+      "jobId": 128122615499,
+      "result": "ok 16 - 幻灯片神奇移动身份与转场真实持久化，复制可编辑并保留历史页哈希",
+      "scope": "af9基础测试通过，不覆盖后续扩展的首次motionId写入与unset回归"
+    }
+  },
+  "rootThreadAdditionalFailures": [
+    "非StrictMode的初始放映焦点被父effect覆盖",
+    "离线混合尺寸magic起始屏幕矩形跳变",
+    "离线隐藏页offsetWidth为0导致后续页面不适配"
+  ],
+  "scope": "正式CI绿色不抵消已复现的P2。修复候选需独立复审。"
+}

@@ -1,0 +1,34 @@
+{
+  "scope": "诊断遍历工具的受控DOM回归，不是性能样本或产品授权API验收",
+  "failure": "bc751dc3真实诊断中Design遍历第二页失败，旧滚动目标忽略画布新增留白",
+  "change": "从实际已挂载画板CSS位置及固定夹具世界坐标校准目标，仍仅使用可信滚轮及画板按钮；冻结基线继续使用原偏移",
+  "before": {
+    "code": "page_navigation_control_missing",
+    "reproduced": true
+  },
+  "after": [
+    {
+      "browser": "154",
+      "cases": 102,
+      "trustedWheelAndClick": true,
+      "viewportPadding": true,
+      "frozenBaselineFallback": true,
+      "virtualBoards": true
+    },
+    {
+      "browser": "140.0.7339.16",
+      "cases": 102,
+      "trustedWheelAndClick": true,
+      "viewportPadding": true,
+      "frozenBaselineFallback": true,
+      "virtualBoards": true
+    }
+  ],
+  "otherRegressions": [
+    "原iframe卸载时刷新frame列表的真实浏览器回归通过",
+    "23项计量编排、存储和失败合约通过",
+    "计量纯数据自检通过"
+  ],
+  "performanceSamples": 0,
+  "qualified": false
+}

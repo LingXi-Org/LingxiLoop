@@ -1,0 +1,91 @@
+{
+  "commit": "305ee08977f7694ce7346f6f6cdcccb0727d5fd4",
+  "baseCommit": "62e247fb3fd898b9700682fc41351918365bac51",
+  "reviewer": "/root/independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "精确冻结worktree复审原两项CSS P2及新选区/共享操作接线，未修改产品文件。受控HTTP中的真实浏览器复现，不代表真实授权服务验收。",
+  "closedPreviousFindings": [
+    "removed-important-css-retains-priority-when-native-value-matches：Chrome154 Design/Slides important-same均通过，卸载旧ref显式清除priority，原生同值回退不再残留important。"
+  ],
+  "partialPreviousFixes": [
+    "原CSS几何P2的ArrowRight移动及共享undo路径已在154两编辑器通过；共享reducer的CSS字段版本保护及逆操作单测通过，但下面同一简单left声明的拖动路径仍未闭合。"
+  ],
+  "findings": [
+    {
+      "id": "css-drag-uses-authored-base-instead-of-painted-frame",
+      "severity": "P2",
+      "title": "首次按下开始拖动时也从实际绘制框取基准",
+      "file": "src/features/artifacts/native/NativeEditor.tsx",
+      "line": 543,
+      "failure": "useCodeSelection只改变selectedNodes，而pointerDown仍从page.nodes创建gesture.nodes。对合法css.left=120px !important且模型x=760的同一夹具，鼠标向右20、向下10屏幕px时，预览x126.559→146.559正确；松手却用原始模型x760+dx提交，再由新reducer同步CSS，实际x跳到598.489，css.left变788px。只按ArrowRight的新回归因此通过，但实际拖动仍跳跃。",
+      "smallestCorrection": "将已绘制框到局部坐标的读取复用到pointerDown初始化，包含尚未选中对象的第一次拖动；保持最初文档CAS基准并验证共享undo回原表示。补实际可信鼠标拖动，不能仅以先选中后的ArrowRight替代。",
+      "reproduction": [
+        "/tmp/lingxi-review-probe-305/probe.mjs",
+        "/tmp/lingxi-review-305-drag154-rerun/slides.json",
+        "/tmp/lingxi-review-305-drag154-rerun/css-drag-result.png"
+      ],
+      "observed": {
+        "beforeScreenX": 126.55902099609375,
+        "previewScreenX": 146.55902099609375,
+        "afterScreenX": 598.4886474609375,
+        "undoneScreenX": 126.55902099609375,
+        "intendedScreenDelta": {
+          "x": 20,
+          "y": 10
+        },
+        "modelXBefore": 760,
+        "modelXAfter": 788,
+        "cssAfter": {
+          "left": "788px !important"
+        },
+        "committedBatches": 1,
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "解析/校验/共享操作/导出/缩略图相关定向单测",
+      "result": "passed",
+      "count": 75,
+      "includes": [
+        "已有CSS位置声明同步",
+        "CSS版本保护拒绝陈旧修改",
+        "逆操作恢复原始表示"
+      ]
+    },
+    {
+      "check": "Chrome154 Design/Slides geometry箭头移动与undo",
+      "result": "passed",
+      "receipts": [
+        "/tmp/lingxi-review-305-geometry154-rerun/design.json",
+        "/tmp/lingxi-review-305-geometry154-rerun/slides.json"
+      ]
+    },
+    {
+      "check": "Chrome154 Design/Slides important-same清除",
+      "result": "passed",
+      "receipts": [
+        "/tmp/lingxi-review-305-important154-rerun/design.json",
+        "/tmp/lingxi-review-305-important154-rerun/slides.json"
+      ]
+    },
+    {
+      "check": "Chrome154同一简单CSS位置的真实鼠标拖动",
+      "result": "failed",
+      "receipt": "/tmp/lingxi-review-305-drag154-rerun/slides.json"
+    }
+  ],
+  "infrastructure": [
+    "首次两条正式UI检查及首次拖动诊断因/tmp达到100%而由Vite/esbuild ENOSPC中止，未执行成功，未视为产品失败。仅移除本审查者自己此前已完成的干净临时worktree，保留JSON/截图及当前checkout，释放约1.6GB后重跑；上述passed/failed均来自有效重跑。根工作区及其他人的临时目录未改。"
+  ],
+  "analysis": [
+    "此次没有把任意CSS布局/复杂变换未验收当作新增缺陷；剩余问题使用原先同一left=120px夹具，是基础拖动链路的可复现失败。",
+    "共享reducer会同时写入CSS字段并要求相应版本，单测确认undo恢复原字段与CSS原表示；未发现其绕过现有授权链路。"
+  ],
+  "unverified": [
+    "未独立运行全部101单测、15合约、Chrome140或正式CI。",
+    "复杂CSS布局/变换、完整Code界面、真实授权服务及最终视觉/性能资格仍未取得。"
+  ]
+}

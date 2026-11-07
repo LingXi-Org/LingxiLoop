@@ -1,0 +1,303 @@
+{
+  "referenceRepository": "https://github.com/JimLiu/baoyu-design",
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "sources": [
+    {
+      "path": "skills/claude-design/scripts/editor/index.html",
+      "bytes": 2577,
+      "sha256": "fa0d8402c92c5eac08c1c6ef73a07f872cf579c32d533e5b4f34a9ba3e677323"
+    },
+    {
+      "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+      "bytes": 6662991,
+      "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08"
+    },
+    {
+      "path": "skills/claude-design/scripts/editor/assets/index-tSD8GYWj.css",
+      "bytes": 644571,
+      "sha256": "644c2d900468953c965f375e384b4b52d90f64a626aa3a65fb154340140364d9"
+    },
+    {
+      "path": "skills/claude-design/scripts/editor/assets/anthropicons-fizzy-lake-CfC2JIbf.woff2",
+      "bytes": 47932,
+      "sha256": "3b2802f4331409152b38402763d94a99520adca364f0dd65012f49f9b3383c33"
+    },
+    {
+      "path": "skills/claude-slides/scripts/editor/index.html",
+      "bytes": 3238,
+      "sha256": "05ba3678097eed75cc9bf5f8f1569b58355f4471b6a5efcd16723564771f1dfe"
+    },
+    {
+      "path": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+      "bytes": 4943004,
+      "sha256": "878eab1994de6c7896126cf1549cd46950b74c547bb45f7da5eddf9bef488caf"
+    },
+    {
+      "path": "skills/claude-slides/scripts/editor/assets/index-DX-X-CY8.css",
+      "bytes": 605589,
+      "sha256": "d81e7f456e34d3f3ccaa368dc978bec2a5654b134ae05a76381c65b89f3c84aa"
+    },
+    {
+      "path": "skills/claude-slides/scripts/editor/assets/anthropicons-fizzy-lake-D4byUNVq.woff2",
+      "bytes": 88012,
+      "sha256": "f823eeae0cc8afc316c4c8ea19098265b6f25c27ffceeadbb84ec1fd16a6d1a6"
+    },
+    {
+      "path": "skills/claude-slides/scripts/server.mjs",
+      "bytes": 221693,
+      "sha256": "c84affe33a71d8164f8509faaff718f25360b7e30238e886c2e6a06a42c667a8"
+    },
+    {
+      "path": "skills/claude-design/scripts/server.mjs",
+      "bytes": 220328,
+      "sha256": "de22edfbd4a0d44cae9c70334b8bf7974d775c74ad503ce02916e13363952948"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1325,
+      "sha256": "9be8148aa0237d67a619feb0973383ba82a37460263ad828ad3d06560ac7f9b6"
+    },
+    {
+      "path": "NOTICE.md",
+      "bytes": 6810,
+      "sha256": "d95acea8ec4e45b505b804a4bf7e6320cf0239d65cfeab97edccc952b75132d8"
+    }
+  ],
+  "features": {
+    "design": {
+      "floating-toolbar": {
+        "source": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "symbols": [
+          {
+            "name": "FootToolbar",
+            "characterOffset": 2454462
+          },
+          {
+            "name": "CanvasFootToolbarRow",
+            "characterOffset": 5861933
+          }
+        ]
+      },
+      "camera": {
+        "source": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "symbols": [
+          {
+            "name": "CanvasZoomControl",
+            "characterOffset": 5403612
+          },
+          {
+            "name": "defaultCanvasCamera",
+            "characterOffset": 5861374
+          }
+        ]
+      },
+      "pages-and-artboards": {
+        "source": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "symbols": [
+          {
+            "name": "DesignCanvas",
+            "characterOffset": 5861968
+          },
+          {
+            "name": "CanvasDialogHost",
+            "characterOffset": 5398467
+          }
+        ]
+      },
+      "canvas-annotations": {
+        "source": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "symbols": [
+          {
+            "name": "Sticky note, scrolls",
+            "characterOffset": 3838445
+          },
+          {
+            "name": "Pencil",
+            "characterOffset": 3517197
+          },
+          {
+            "name": "Pen",
+            "characterOffset": 4592758,
+            "matchedBy": "exact defaultMessage from TypeScript AST; previous first substring was a PDF font symbol"
+          },
+          {
+            "name": "Note actions",
+            "characterOffset": 5183958
+          }
+        ]
+      },
+      "layers-inspector": {
+        "source": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "symbols": [
+          {
+            "name": "useInspectorOpen",
+            "characterOffset": 2453973
+          },
+          {
+            "name": "getTweakSelection",
+            "characterOffset": 2453904
+          },
+          {
+            "name": "Fill type",
+            "characterOffset": 4106624
+          },
+          {
+            "name": "Add shadow",
+            "characterOffset": 4281600
+          }
+        ]
+      },
+      "crop": {
+        "source": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "symbols": [
+          {
+            "name": "Crop handle, top edge",
+            "characterOffset": 4166220
+          },
+          {
+            "name": "Cropping. Press Enter",
+            "characterOffset": 4155989
+          }
+        ]
+      },
+      "export": {
+        "source": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "symbols": [
+          {
+            "name": "ExportArtboardPickTarget",
+            "characterOffset": 5434991
+          },
+          {
+            "name": "Export artboards as PDF",
+            "characterOffset": 5435432
+          }
+        ]
+      },
+      "comments": {
+        "source": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "symbols": [
+          {
+            "name": "CommentComposer",
+            "characterOffset": 6469007
+          },
+          {
+            "name": "CommentCard",
+            "characterOffset": 6456089
+          }
+        ]
+      }
+    },
+    "slides": {
+      "floating-toolbar": {
+        "source": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "symbols": [
+          {
+            "name": "SlidesAppJsx",
+            "characterOffset": 4416310
+          }
+        ]
+      },
+      "page-navigation": {
+        "source": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "symbols": [
+          {
+            "name": "SLIDES_LIST_LABEL",
+            "characterOffset": 3600129
+          },
+          {
+            "name": "SlideGridCommentLayer",
+            "characterOffset": 4125072
+          }
+        ]
+      },
+      "layouts": {
+        "source": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "symbols": [
+          {
+            "name": "SlideTemplatePicker",
+            "characterOffset": 4222924
+          },
+          {
+            "name": "SLIDE_TEMPLATES",
+            "characterOffset": 4222846
+          }
+        ]
+      },
+      "notes-and-presentation": {
+        "source": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "symbols": [
+          {
+            "name": "SpeakerNotesPanel",
+            "characterOffset": 3939760
+          },
+          {
+            "name": "PresentationView",
+            "characterOffset": 4018679
+          },
+          {
+            "name": "SpeakerClock",
+            "characterOffset": 3962595
+          }
+        ]
+      },
+      "inspector": {
+        "source": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "symbols": [
+          {
+            "name": "initializeUiInspectorIcons",
+            "characterOffset": 1603718
+          },
+          {
+            "name": "Fill type",
+            "characterOffset": 1670623
+          },
+          {
+            "name": "Add to Effects",
+            "characterOffset": 3368061
+          }
+        ]
+      },
+      "crop": {
+        "source": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "symbols": [
+          {
+            "name": "Crop handle, top edge",
+            "characterOffset": 2756420
+          },
+          {
+            "name": "Cropping. Press Enter",
+            "characterOffset": 2746262
+          }
+        ]
+      },
+      "comments": {
+        "source": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "symbols": [
+          {
+            "name": "CommentComposer",
+            "characterOffset": 3695033
+          },
+          {
+            "name": "SlideCommentLayer",
+            "characterOffset": 4104805
+          }
+        ]
+      },
+      "export": {
+        "source": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+        "symbols": [
+          {
+            "name": "ExportDeliveryDialog",
+            "characterOffset": 4237715
+          },
+          {
+            "name": "ExportNotesDialog",
+            "characterOffset": 4143956
+          }
+        ]
+      }
+    }
+  },
+  "qualification": "Source locations only. Presence of a symbol is not feature or visual acceptance."
+}

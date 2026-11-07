@@ -2,7 +2,7 @@ import { validateArtifactDocument, type ArtifactDocument, type ArtifactAsset } f
 import type { ArtifactExportOptions } from '../export-artifact'
 
 export const escapeHtml = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
-export const exportFilename = (title: string, extension: string) => `${title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').trim().slice(0, 120) || 'document'}.${extension}`
+export const exportFilename = (title: string, extension: string) => `${title.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '_').trim().slice(0, 120) || '文稿'}.${extension}`
 
 export async function blobDataUrl(blob: Blob, signal?: AbortSignal): Promise<string> {
   signal?.throwIfAborted()

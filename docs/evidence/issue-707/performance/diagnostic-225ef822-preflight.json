@@ -1,0 +1,45 @@
+{
+  "candidate": "225ef8229fb59854c003d7f636b54979bff14071",
+  "baseline": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "run": 42367664420,
+  "phase": "diagnostic",
+  "profile": "fidelity",
+  "conclusion": "failure",
+  "failedJob": 128389047590,
+  "failedStep": {
+    "number": 13,
+    "name": "Verify real worker script accounting before production measurements"
+  },
+  "failure": "design-outline/width：640px容器下侧栏aria-valuemax立即读到560，预期520。",
+  "fix": "等待ResizeObserver反映的确定上限520后，再执行原有宽度与端点断言；没有放宽上限。",
+  "reproducedState": {
+    "kind": "isolated-design-inspector-width",
+    "sourceKeyboardSteps": true,
+    "pointerDrag": true,
+    "doubleClickResets": true,
+    "persistsAcrossCloseAndReload": true,
+    "containerMaximum": true,
+    "maxBeforeObserver": "560",
+    "maxAfterObserver": 520,
+    "sheetHidesGrip": true,
+    "noDocumentWrites": true,
+    "consoleOrPageErrors": []
+  },
+  "chrome154": {
+    "kind": "isolated-design-inspector-width",
+    "sourceKeyboardSteps": true,
+    "pointerDrag": true,
+    "doubleClickResets": true,
+    "persistsAcrossCloseAndReload": true,
+    "containerMaximum": true,
+    "maxBeforeObserver": "520",
+    "maxAfterObserver": 520,
+    "sheetHidesGrip": true,
+    "noDocumentWrites": true,
+    "consoleOrPageErrors": []
+  },
+  "productionMeasurementStarted": false,
+  "qualified": false,
+  "finalTenPairsRun": false,
+  "scope": "预检查失败，不产生本候选可用的冷启动、脚本传输或PSS数据；后续候选须重新诊断。"
+}

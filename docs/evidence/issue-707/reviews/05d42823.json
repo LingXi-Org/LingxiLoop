@@ -1,0 +1,18 @@
+{
+  "candidateCommit": "05d42823e24bf3da13b1553f29ab2e3ebadc6650",
+  "reviewer": "independent_review",
+  "mode": "独立只读",
+  "scope": "de3 SVG模块恢复策略在缓存逐出与重新挂载后的持续性、串行队列、取消和失败恢复",
+  "result": "上一轮P2已关闭，无新增可执行缺陷",
+  "independentlyRun": [
+    "Chromium：首次恢复、9个不同源、首图逐出后重新挂载，无需第二次点击",
+    "画布与缩略图结果一致",
+    "排队取消、活动取消、模块失败不阻塞后续任务",
+    "实际iframe峰值1、结束0",
+    "5项缓存/呈现单元测试及diff检查"
+  ],
+  "owningCI": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42134684803",
+  "owningCIStatus": "通过（主线程核验）",
+  "visualQualified": false,
+  "performanceQualified": false
+}

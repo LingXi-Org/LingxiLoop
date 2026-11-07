@@ -1,0 +1,21 @@
+{
+  "candidateCommit": "9f0c34f34cb256280fd1b23efacef3ee68bd5ad7",
+  "reviewer": "/root/independent_review",
+  "mode": "独立只读",
+  "scope": "自然布局整页克隆、预算淘汰及公开来源校验",
+  "closed": [
+    "无关节点编辑造成的整页克隆保留已测高度",
+    "公开来源额外冒号被拒绝"
+  ],
+  "finding": {
+    "priority": "P2",
+    "scenario": "访问另外八个含便签的画布使第一页布局测量淘汰，返回时仍可见的长便签被 Worker 按较短保存高度裁掉。",
+    "reproduced": true,
+    "correction": "保持原有缓存预算，缺失布局以至多八个 inert/aria-hidden、裁切隐藏的 DOM 节点补测当前实际文字样式；专用标识不参与实际节点/评论定位。",
+    "fixIndependentVerification": "待新候选复审"
+  },
+  "owningCI": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42152908618",
+  "owningCIStatus": "主线程核验通过，deploy 跳过",
+  "visualQualified": false,
+  "performanceQualified": false
+}

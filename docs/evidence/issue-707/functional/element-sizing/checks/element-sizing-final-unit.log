@@ -1,0 +1,45 @@
+✔ 代码样式与属性首次写入、重开、共享撤销重做及冲突保护 (41.046511ms)
+✔ 原生几何操作同步已有位置声明，撤销恢复原始表示，旧样式修改不能覆盖 (9.493766ms)
+✔ first motion identity write supports shared undo/redo, explicit removal and stale-field protection (9.71959ms)
+✔ stale document revisions can change disjoint fields of the same node (4.993566ms)
+✔ same field conflict rejects the entire batch without mutation (8.722623ms)
+✔ inverse restores content but versions and sequence keep increasing (4.850117ms)
+✔ deleted and recreated IDs invalidate older field edits (2.911249ms)
+✔ different style fields merge, and missing CAS checks are rejected (2.693701ms)
+✔ page and group removal detect descendant changes and inverse restores structure (3.971907ms)
+✔ native data rejects executable SVG, unknown properties and invalid graph references (2.230329ms)
+✔ SVG subset rejects executable namespaces, encoded attributes and malformed tag boundaries (0.556967ms)
+✔ new page and dependent nodes can be submitted atomically (4.285564ms)
+✔ reordering conflicts on collection version without conflicting on unrelated text edits (3.930324ms)
+✔ stale group deletion cannot discard newly inserted descendants (2.045393ms)
+✔ replacement invalidates older patches even for previously absent fields (2.257124ms)
+✔ resource deletion conflicts with concurrent new references instead of breaking them (3.569301ms)
+✔ flow and paper metadata undo remains lossless through serialized history (1.925436ms)
+✔ theme operations retain exact source resources as inert metadata and undo restores prior theme (4.279518ms)
+✔ theme source resources enforce safe paths, file count and UTF-8 byte limits (35.265954ms)
+✔ plain text edits replace manual rich text, guard both values and undo restores formatting (7.62204ms)
+✔ plain text prepared before rich text existed cannot erase a later rich edit (2.564165ms)
+✔ retained theme variants change default page, text and shapes with one reversible selection (30.632464ms)
+✔ explicit colors remain overrides and resetting page theme binding is reversible (1.628562ms)
+✔ theme style helpers reject executable token strings and unresolved aliases (0.297107ms)
+✔ 设计播放属性经保存重开、字段版本和共享撤销重做保留，旧快照不变 (2.53241ms)
+✔ 打印模式与画板增长独立，保存重开、共享历史及字段冲突保持原尺寸 (2.89923ms)
+✔ 尺寸输入归一像素且保留其他声明，包裹和填充不回退旧尺寸 (14.048667ms)
+✔ 清除宽度与作者输入auto分别持久化，重复自适应没有历史 (1.424814ms)
+✔ 普通位置移除偏移，其他位置模式保留偏移并通过现有校验 (1.558408ms)
+✔ 可选尺寸标记支持校验重开、复制、共享历史，几何及代码编辑恢复显式尺寸 (23.792395ms)
+✔ 代码中的像素几何回到原生字段，外观声明与中文属性保留 (19.536698ms)
+✔ 混合选择只更改编辑过的共同声明；旧样式不被空代码覆盖 (1.491845ms)
+✔ 代码属性批次在提交前拒绝事件处理属性 (0.674989ms)
+✔ 行高的像素值保持CSS单位，无单位数才映射为原生倍数 (0.932978ms)
+✔ 长度声明不会把缺少单位的非零数值改写为像素 (1.022649ms)
+✔ 合法CSS超出原生字段范围时保留声明，交给浏览器绘制 (0.917938ms)
+✔ 重要声明保留在CSS中，不能被原生字段丢失优先级 (0.375806ms)
+ℹ tests 37
+ℹ suites 0
+ℹ pass 37
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 981.311101

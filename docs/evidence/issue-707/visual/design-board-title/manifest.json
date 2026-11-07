@@ -1,0 +1,388 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "browser": "Chromium154",
+  "qualified": false,
+  "scope": "同一语义文档、容器、缩放、主题和改名状态；列明矩形及样式；原始RGBA逐像素，无替换区域或抗锯齿排除。未计全部编辑器状态或真实服务。",
+  "states": [
+    {
+      "state": "1920x1200-light",
+      "reference": "reference/1920x1200-light.png",
+      "native": "native/1920x1200-light.png",
+      "overlay": "overlay/1920x1200-light.png",
+      "diff": "diff/1920x1200-light.png",
+      "referenceSha256": "dfc9279c9f09d7c503d0d8f84d1326073a28359fa44f85adba193012046edb2e",
+      "nativeSha256": "2659dc7cb78a15ea7ff35c0430f94b70542c0e2dc60864f624e0e50ecf0a798d",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.0015869140625,
+        "width": 0.00054931640625,
+        "height": 3.0517578125e-05
+      },
+      "maxRectDeviationCssPx": 0.0015869140625,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 16746,
+      "totalPixels": 2304000,
+      "rawDifferenceRatio": 0.007268229166666667,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "1920x1200-dark",
+      "reference": "reference/1920x1200-dark.png",
+      "native": "native/1920x1200-dark.png",
+      "overlay": "overlay/1920x1200-dark.png",
+      "diff": "diff/1920x1200-dark.png",
+      "referenceSha256": "8d2de00851efc6e557fd04b1d9a1f18b446d5277eead1ddaf5ce9f1830c6757f",
+      "nativeSha256": "944d547ac742e5ac63f669888dde8e3d513a6feef27da343cb2e103494462bec",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.0015869140625,
+        "width": 0.00054931640625,
+        "height": 3.0517578125e-05
+      },
+      "maxRectDeviationCssPx": 0.0015869140625,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 13908,
+      "totalPixels": 2304000,
+      "rawDifferenceRatio": 0.006036458333333333,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "1440x1000-light",
+      "reference": "reference/1440x1000-light.png",
+      "native": "native/1440x1000-light.png",
+      "overlay": "overlay/1440x1000-light.png",
+      "diff": "diff/1440x1000-light.png",
+      "referenceSha256": "65f04ce0e436453c9599104cac5fb32b5a7fa1f98f4a50502f6c233c5486b694",
+      "nativeSha256": "d25766f773a61be7fe809446a467267c76164dc1014cda3b844941a865ff80f4",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.006103515625,
+        "width": 3.0517578125e-05,
+        "height": 0
+      },
+      "maxRectDeviationCssPx": 0.006103515625,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 16484,
+      "totalPixels": 1440000,
+      "rawDifferenceRatio": 0.011447222222222221,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "1440x1000-dark",
+      "reference": "reference/1440x1000-dark.png",
+      "native": "native/1440x1000-dark.png",
+      "overlay": "overlay/1440x1000-dark.png",
+      "diff": "diff/1440x1000-dark.png",
+      "referenceSha256": "e788203a785adb67fae0b6e89e57cd4e209bb41ebaaff5371f8505c91226941a",
+      "nativeSha256": "019f3dadbabd7a25ac2baa28f6e169c94616c774079d68542de9a739011c6860",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.006103515625,
+        "width": 3.0517578125e-05,
+        "height": 0
+      },
+      "maxRectDeviationCssPx": 0.006103515625,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 14757,
+      "totalPixels": 1440000,
+      "rawDifferenceRatio": 0.010247916666666667,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "768x1024-light",
+      "reference": "reference/768x1024-light.png",
+      "native": "native/768x1024-light.png",
+      "overlay": "overlay/768x1024-light.png",
+      "diff": "diff/768x1024-light.png",
+      "referenceSha256": "45dedece7db39af9afb4fb6fb169bccc5f79d9e5b9ac418ad7ab1804c43ef626",
+      "nativeSha256": "d0d868eb46c0c24600b86d1c9e0a1f5d862e7059802d33b0daa10d568c53b0d1",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.011016845703125,
+        "width": 1.52587890625e-05,
+        "height": 0
+      },
+      "maxRectDeviationCssPx": 0.011016845703125,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 13449,
+      "totalPixels": 786432,
+      "rawDifferenceRatio": 0.017101287841796875,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "768x1024-dark",
+      "reference": "reference/768x1024-dark.png",
+      "native": "native/768x1024-dark.png",
+      "overlay": "overlay/768x1024-dark.png",
+      "diff": "diff/768x1024-dark.png",
+      "referenceSha256": "5a370c2c6b60bec078765b2e01a39a39b8be8ceb35b00f9744751673bf1e00c7",
+      "nativeSha256": "244e6d6a50886d2cd12fbb3c1f8616450ecd5d74576120f81ae14516fb957557",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.011016845703125,
+        "width": 1.52587890625e-05,
+        "height": 0
+      },
+      "maxRectDeviationCssPx": 0.011016845703125,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 11931,
+      "totalPixels": 786432,
+      "rawDifferenceRatio": 0.015171051025390625,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "390x844-light",
+      "reference": "reference/390x844-light.png",
+      "native": "native/390x844-light.png",
+      "overlay": "overlay/390x844-light.png",
+      "diff": "diff/390x844-light.png",
+      "referenceSha256": "7f7c835866c3c048af82d4c50b89553e5aa3ef6d17eb716768c97a82f94fc406",
+      "nativeSha256": "68dc557a1c2c8661030f12fdc1c8c43aa87af18d7cd09b1da69d82b0b462e8c4",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.0115966796875,
+        "width": 0.0001220703125,
+        "height": 3.0517578125e-05
+      },
+      "maxRectDeviationCssPx": 0.0115966796875,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 8275,
+      "totalPixels": 329160,
+      "rawDifferenceRatio": 0.025139749665816016,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "390x844-dark",
+      "reference": "reference/390x844-dark.png",
+      "native": "native/390x844-dark.png",
+      "overlay": "overlay/390x844-dark.png",
+      "diff": "diff/390x844-dark.png",
+      "referenceSha256": "e25de414b1e2211f54331afd8a993aa8a4eefe0ca061af930008735013e2afd9",
+      "nativeSha256": "505c02dce74074418d16f172c6bd2a4a3f9eba154d5b7240e09503d7a8bd6f61",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.0115966796875,
+        "width": 0.0001220703125,
+        "height": 3.0517578125e-05
+      },
+      "maxRectDeviationCssPx": 0.0115966796875,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 7181,
+      "totalPixels": 329160,
+      "rawDifferenceRatio": 0.021816138048365536,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "escape",
+      "reference": "reference/escape.png",
+      "native": "native/escape.png",
+      "overlay": "overlay/escape.png",
+      "diff": "diff/escape.png",
+      "referenceSha256": "65f04ce0e436453c9599104cac5fb32b5a7fa1f98f4a50502f6c233c5486b694",
+      "nativeSha256": "d25766f773a61be7fe809446a467267c76164dc1014cda3b844941a865ff80f4",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.006103515625,
+        "width": 3.0517578125e-05,
+        "height": 0
+      },
+      "maxRectDeviationCssPx": 0.006103515625,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 16484,
+      "totalPixels": 1440000,
+      "rawDifferenceRatio": 0.011447222222222221,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "blur",
+      "reference": "reference/blur.png",
+      "native": "native/blur.png",
+      "overlay": "overlay/blur.png",
+      "diff": "diff/blur.png",
+      "referenceSha256": "65f04ce0e436453c9599104cac5fb32b5a7fa1f98f4a50502f6c233c5486b694",
+      "nativeSha256": "d25766f773a61be7fe809446a467267c76164dc1014cda3b844941a865ff80f4",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.006103515625,
+        "width": 3.0517578125e-05,
+        "height": 0
+      },
+      "maxRectDeviationCssPx": 0.006103515625,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 16484,
+      "totalPixels": 1440000,
+      "rawDifferenceRatio": 0.011447222222222221,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "blank",
+      "reference": "reference/blank.png",
+      "native": "native/blank.png",
+      "overlay": "overlay/blank.png",
+      "diff": "diff/blank.png",
+      "referenceSha256": "f587ec22386802b0cafb778e7c7ee545d7ade601a3eeec9726693b61f06fced5",
+      "nativeSha256": "ab73aa98b6b71fc2ba87b32db4002420baac0a48879abc05c7126493d7205e96",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.006103515625,
+        "width": 3.0517578125e-05,
+        "height": 0
+      },
+      "maxRectDeviationCssPx": 0.006103515625,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 18729,
+      "totalPixels": 1440000,
+      "rawDifferenceRatio": 0.01300625,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    },
+    {
+      "state": "spaces",
+      "reference": "reference/spaces.png",
+      "native": "native/spaces.png",
+      "overlay": "overlay/spaces.png",
+      "diff": "diff/spaces.png",
+      "referenceSha256": "c5025ba4196a1d124e66fe793f44333b76ed73a37aa6720d75a86b3e761b09dd",
+      "nativeSha256": "9b7e64c2e705f34c88db6b6ffeb0f12a2550e6dcbf68d659e77ef9391488a219",
+      "rectDeviationCssPx": {
+        "x": 0,
+        "y": 0.006103515625,
+        "width": 3.0517578125e-05,
+        "height": 0
+      },
+      "maxRectDeviationCssPx": 0.006103515625,
+      "sameListedStyleFields": {
+        "fontSize": true,
+        "lineHeight": true,
+        "padding": true,
+        "borderRadius": true,
+        "color": true,
+        "background": true
+      },
+      "rawDifferentPixels": 16124,
+      "totalPixels": 1440000,
+      "rawDifferenceRatio": 0.011197222222222223,
+      "passesRawPixelThreshold": false,
+      "masksApplied": false,
+      "antiAliasingExcluded": false,
+      "visualQualified": false
+    }
+  ],
+  "maxListedRectDeviationCssPx": 0.0115966796875,
+  "rawPassed": 0,
+  "rawTotal": 12,
+  "rawRatioRange": [
+    0.006036458333333333,
+    0.025139749665816016
+  ],
+  "fontFamilyNote": "实际使用同一浏览器和字体环境，但fontFamily字符串及透明占位box-shadow不字面相同，不宣称全部CSS一致。"
+}

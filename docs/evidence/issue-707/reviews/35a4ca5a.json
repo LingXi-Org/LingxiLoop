@@ -1,0 +1,82 @@
+{
+  "审查提交": "35a4ca5a9ceffcc5f30472b336b48aa3645faba4",
+  "比较基线": "3ff1a0b62587f15dff31c699520f75bca1b0e7e7",
+  "审查方式": "依据repository-review技能，在/workspace/lingxi-issue707-scratch/review-35a4ca5a独立detached checkout。未修改产品文件/提交/合并/发布外部消息；未使用root未提交尺寸WIP。临时探针与文档仅在独立scratch。",
+  "结论": "原极窄标题P2已独立复验关闭；未发现新的可复现P1/P2。局部修复审查通过，不代表完整像素、全部键盘流程、服务或性能验收。",
+  "发现": [],
+  "已关闭问题": [
+    {
+      "原问题": "120宽画板标题固定64下限，中心被clip，双击不能原位改名",
+      "复验": "140/154实际长标题用例中，120宽板标题为27.515625px、中心可命中，实际中心双击打开输入，Escape取消零写入；1920宽长标题保持372.40625px自然宽度，编辑input仍填满。未选中极窄opacity0，focus后1、选择蓝色，与Source一致。",
+      "来源对照": "独立Source新版runner验证两种长标题，12哈希核验且完整正文/图片/字体就绪，普通标题最大矩形偏差0.006103515625 CSS px，列明颜色/圆角/透明度一致；编辑宽度差≤0.000030517578125px。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-35a4-range140/design-narrow-long.json",
+        "/workspace/lingxi-issue707-scratch/review-35a4-range154/design-narrow-long.json",
+        "/workspace/lingxi-issue707-scratch/review-35a4-source-range/title-source.json",
+        "/tmp/lingxi-review-35a4-range-audit.json"
+      ]
+    }
+  ],
+  "实际验证": [
+    {
+      "项目": "140/154长标题边界",
+      "结果": "各narrow-long/wide-long两项通过，真实中心双击、输入值保留、取消零写入及选择颜色通过。",
+      "收据": [
+        "/tmp/lingxi-review-35a4-range140.log",
+        "/tmp/lingxi-review-35a4-range154.log"
+      ]
+    },
+    {
+      "项目": "154深色长标题边界",
+      "结果": "两项通过：普通色rgba(255,255,255,.57)，选中色rgb(106,171,241)，窄opacity与宽度/输入/取消正确。",
+      "收据": "/tmp/lingxi-review-35a4-range-dark154.log"
+    },
+    {
+      "项目": "Source长标题实际运行",
+      "结果": "两项通过，动态firstBoardTitle正确进入完整就绪检查，12来源资源哈希核验。",
+      "收据": "/workspace/lingxi-issue707-scratch/review-35a4-source-range/title-source.json"
+    },
+    {
+      "项目": "短标题极窄夹具及部分真实键盘焦点",
+      "结果": "文字“短名”、width120：Source及Native同为27.515625px，未选opacity0；Native从相邻预览按钮以真实ShiftTab进入标题，isTrusted=true、opacity恢复1，然后实际中心双击改名/Escape零写入。不是完整Tab流程。Source短标题保留完整就绪/12哈希检查。",
+      "收据": [
+        "/workspace/lingxi-issue707-scratch/review-35a4-short154/design-narrow-long.json",
+        "/workspace/lingxi-issue707-scratch/review-35a4-source-short/title-source.json"
+      ],
+      "探针": [
+        "/workspace/lingxi-issue707-scratch/review-35a4-probe/short-keyboard.mjs",
+        "/workspace/lingxi-issue707-scratch/review-35a4-probe/source-short.mjs"
+      ]
+    },
+    {
+      "项目": "named container下动作菜单",
+      "结果": "154宽长标题取消后真实点击导出菜单，popup位于viewport内（x278.40625/y410.046875，194.015625×310），菜单项中心可命中；Escape关闭，焦点返回summary，无写入。",
+      "收据": "/workspace/lingxi-issue707-scratch/review-35a4-menu-v2-154/menu-container-proof.json"
+    },
+    {
+      "项目": "默认就绪检查回归",
+      "结果": "native-reference-paint-check：Design实际等待两个可见iframe含延迟创建的第二个，忽略屏外占位；Slides等待内部heading及图片解码。两项通过，默认Page1调用兼容。",
+      "收据": "/tmp/lingxi-review-35a4-paint.log"
+    },
+    {
+      "项目": "默认严格Source样式抽验",
+      "结果": "154在1440×1000深色，复用上次独立采集的固定Source完整runtime，默认camera/toolbar/surfaces/标题几何及严格颜色/圆角断言全部通过。未放宽1px。",
+      "收据": "/tmp/lingxi-review-35a4-default154.log"
+    },
+    {
+      "项目": "脚本语法与只读",
+      "结果": "三个变更脚本node --check通过；HEAD精确匹配，git status --short空，git diff --check 3ff1a0b6通过。"
+    }
+  ],
+  "诊断说明": "自建菜单探针首轮在Escape成功关闭后，仍用默认只找可见role的locator读取已隐藏popover，导致locator.evaluate超时；改为includeHidden后完整验证通过。不是菜单打不开或容器定位失败，首轮日志保留/tmp/lingxi-review-35a4-menu154.log。",
+  "代码追踪": "普通标题min-width按Source限定为min(64px,calc(100% + 1px))，命名inline-size container仅在≤32px且未选中时隐藏按钮，focus恢复；编辑input的flex规则未变。就绪助手只将第一画板标题匹配参数化，默认仍Page1，后续全部可见画板iframe、正文heading、图片解码和字体条件逐行保持不变，没有用外层标签代替实际内容就绪。",
+  "未验证与剩余门槛": [
+    "本轮没有重跑完整8默认尺寸/主题矩阵、标题全部12场景、所有动作实际导出；仅列明默认严格抽验与边界回归。",
+    "部分ShiftTab和程序化CSS焦点不是完整Tab/触摸/所有焦点状态验收；32px精确边界及所有缩放/长短标题组合未穷举。",
+    "未独立重跑真实OS-IME、授权API、跨租户、数据库、50页或外部Agent全周期。",
+    "完整owning lint/typecheck/build与正式CI未独立执行；CSS局部以列明真实UI和脚本语法检查为证据。",
+    "没有重做本候选完整RGBA像素或正式10组AB/BA及5%/输入p95性能门槛；原3ff未通过的完整像素与性能记录不被本修复覆盖。"
+  ],
+  "局部审查通过": true,
+  "完整还原资格通过": false
+}

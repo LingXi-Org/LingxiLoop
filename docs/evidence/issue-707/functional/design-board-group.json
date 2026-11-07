@@ -1,0 +1,100 @@
+{
+  "kind": "多选画板统一外框及整体缩放",
+  "qualified": false,
+  "verifiedBase": {
+    "commit": "8ce4802e81e22e666bc2320fa44953eef8b0c8e9",
+    "ci": 42361301145,
+    "ciConclusion": "success",
+    "independentReview": "../reviews/8ce4802e.json",
+    "reviewPassed": true
+  },
+  "reference": "../source-design-board-group.json",
+  "before": "group-resize先复现统一外框0 != 1；旧实现逐板手柄并显示单板属性。",
+  "implementation": [
+    "shared/artifact-board-transform.ts",
+    "src/features/artifacts/native/board-transforms.tsx",
+    "src/features/artifacts/native/NativeEditor.tsx",
+    "src/features/artifacts/native/NativeInspector.tsx"
+  ],
+  "behavior": [
+    "成员外框1 CSS px，全组2 CSS px，仅统一组保留八向手柄；多选画板显示中文属性空态",
+    "组框用未舍入几何显示，成员按来源规则保留等价的小数或舍入变换；普通及Shift角等比区分",
+    "按各成员尺寸推导组的缩放上/下限；旧越界值及无边框页维持来源规则",
+    "一次批次最多每成员一条page.patch，节点数据不改；取消不写，统一撤销/重做、保存重开",
+    "手柄方向键可操作；只读保留选择外框并移除手柄，不写文档"
+  ],
+  "browserChecks": {
+    "140": {
+      "passed": true,
+      "cases": 7
+    },
+    "154": {
+      "passed": true,
+      "cases": 7,
+      "allBoardScenariosPassed": 40,
+      "existingArtboardFormPassed": true
+    }
+  },
+  "units": {
+    "passed": 21
+  },
+  "pureGeometryOracle": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+    "offsetUnit": "UTF-16 code units",
+    "modules": [
+      {
+        "name": "Sz",
+        "start": 3147037,
+        "end": 3148757,
+        "sha256": "358ab584262962ea3098b8166e264c452a4bbd893634e4e2d21ccfd32d7960c3"
+      },
+      {
+        "name": "wz",
+        "start": 3148757,
+        "end": 3150798,
+        "sha256": "eba1af74a8b616f508ec56952283aa680d16cc0051f1689adb08f3e89da186c9"
+      },
+      {
+        "name": "eU",
+        "start": 5073877,
+        "end": 5076690,
+        "sha256": "2400cf14dc118589b53ee6a950325c2ee11f1f095a3b1121ad3e3597f7d4d115"
+      },
+      {
+        "name": "U9",
+        "start": 5015588,
+        "end": 5019712,
+        "sha256": "3d91dbe84b0a92523271db9010efd756a31b06e895e04b0b87f5a2f8e1d2817c"
+      }
+    ],
+    "comparedAssertions": 21420,
+    "individualAssertions": 9900,
+    "groupAssertions": 11520,
+    "allEqual": true,
+    "scope": "单画板/多选组的八向几何、角等比、小数与旧越界值保留、无边框页、边/中心吸附及有效辅助线；未覆盖等距分布、触摸与完整编辑器视觉。",
+    "qualified": false
+  },
+  "visual": {
+    "manifest": "../visual/design-board-group/manifest.json",
+    "maximumListedGeometryDeviationCssPx": 0.01544189453125,
+    "rawRatios": [
+      0.01653125,
+      0.015264583333333333,
+      0.012825
+    ],
+    "qualified": false
+  },
+  "localChecks": {
+    "webLint": "通过；43警告/4信息均既有",
+    "typecheck": "仍76项缺少正式SDK及级联，修改模块无诊断；未引入替身。"
+  },
+  "remaining": [
+    "混合画板/自由对象、全部旋转或无边框UI策略",
+    "全部触摸、修饰键与权限/CAS交互状态",
+    "四容器浅深完整视觉和0.5%门槛",
+    "新尺寸全部媒体、实际授权服务及全部隔离导出",
+    "最终候选正式CI/独立复审和10组交替性能"
+  ],
+  "scope": "受控HTTP及实际组件/Worker；纯参考VM只测列明数学，不能代替完整服务、交互和视觉。"
+}

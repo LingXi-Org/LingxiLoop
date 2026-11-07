@@ -1,0 +1,365 @@
+{
+  "scope": "受控HTTP、真实React/Worker及共享reducer；不等于真实身份会话、PostgreSQL、真实智能体或最终性能验收。",
+  "source": "../source-design-code.json",
+  "visual": "../visual/code-inspector/manifest.json",
+  "qualified": false,
+  "units": 118,
+  "ciContracts": 15,
+  "lint": {
+    "webPassed": true,
+    "warnings": 43,
+    "infos": 3,
+    "serverPassed": true
+  },
+  "localTypecheck": {
+    "webPassed": false,
+    "webErrors": 76,
+    "serverPassed": false,
+    "serverErrors": 748,
+    "changedNativeSharedAndApiTestErrors": 0,
+    "reason": "准确版本私有LingxiOS SDK缺失及其级联错误；以正式CI为证。"
+  },
+  "browserCases": {
+    "154-normal": [
+      {
+        "kind": "isolated-native-inspector-code",
+        "chineseField": true,
+        "savedAndReopened": true,
+        "repeatedFocusedSave": true,
+        "invalidBlurRestores": true,
+        "activeAttributesRejected": true,
+        "sharedUndo": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-normal": [
+      {
+        "kind": "isolated-native-inspector-code",
+        "chineseField": true,
+        "savedAndReopened": true,
+        "repeatedFocusedSave": true,
+        "invalidBlurRestores": true,
+        "activeAttributesRejected": true,
+        "sharedUndo": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-geometry": [
+      {
+        "kind": "isolated-code-native-geometry",
+        "typedWidth": true,
+        "noCompetingCssWidth": true,
+        "sharedUndo": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-empty": [
+      {
+        "kind": "isolated-empty-code",
+        "chinesePlaceholder": true,
+        "readOnlyWithoutSelection": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-readonly": [
+      {
+        "kind": "isolated-readonly-code",
+        "chineseField": true,
+        "copyable": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-ime": [
+      {
+        "kind": "isolated-code-composition",
+        "syntheticCompositionOnly": true,
+        "noIntermediateWrite": true,
+        "saveAfterComposition": true,
+        "oneBatch": true,
+        "realOsImeUnverified": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-cas": [
+      {
+        "kind": "isolated-code-conflict",
+        "peerStyleRetained": true,
+        "localStyleRecoverable": true,
+        "noSilentOverwrite": true,
+        "expectedOperationConflicts": 1,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-clean-remote": [
+      {
+        "kind": "isolated-code-refocus",
+        "cleanRemoteValueRefreshed": true,
+        "matchingBaseSnapshot": true,
+        "noFalseConflict": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-permission": [
+      {
+        "kind": "isolated-code-permission-retention",
+        "draftSurvivesPanelClose": true,
+        "recoveryContainsChineseDraft": true,
+        "noUnauthorizedWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-permission": [
+      {
+        "kind": "isolated-code-permission-retention",
+        "draftSurvivesPanelClose": true,
+        "recoveryContainsChineseDraft": true,
+        "noUnauthorizedWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-mixed": [
+      {
+        "kind": "isolated-mixed-code",
+        "commonDeclarationsOnly": true,
+        "mixedValuesPreserved": true,
+        "singleSharedUndo": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-tabs": [
+      {
+        "kind": "isolated-inspector-tabs",
+        "chineseLabels": true,
+        "arrowKeys": true,
+        "home": true,
+        "rovingFocus": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-narrow-dark": [
+      {
+        "kind": "isolated-native-inspector-code",
+        "chineseField": true,
+        "savedAndReopened": true,
+        "repeatedFocusedSave": true,
+        "invalidBlurRestores": true,
+        "activeAttributesRejected": true,
+        "sharedUndo": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-drag": [
+      {
+        "kind": "isolated-native-code-style",
+        "case": "drag",
+        "cssGeometryMovesFromPaintedPosition": false,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-native-code-style",
+        "case": "drag",
+        "cssGeometryMovesFromPaintedPosition": false,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": false,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-drag": [
+      {
+        "kind": "isolated-native-code-style",
+        "case": "drag",
+        "cssGeometryMovesFromPaintedPosition": false,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": false,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-native-code-style",
+        "case": "drag",
+        "cssGeometryMovesFromPaintedPosition": false,
+        "cssPaint": true,
+        "important": true,
+        "remoteRemovalClearsImportantWithoutRemount": true,
+        "chineseAttributes": true,
+        "editingLinkDoesNotNavigate": true,
+        "noWrites": false,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-existing-property-load": [
+      {
+        "kind": "isolated-lazy-inspector-field",
+        "lazyUntilOpened": true,
+        "fieldDraftSaved": true,
+        "sharedUndo": true,
+        "reopenedValue": true,
+        "cachedReentry": true,
+        "focusRestored": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-lazy-inspector-field",
+        "lazyUntilOpened": true,
+        "fieldDraftSaved": true,
+        "sharedUndo": true,
+        "reopenedValue": true,
+        "cachedReentry": true,
+        "focusRestored": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-existing-fonts": [
+      {
+        "kind": "isolated-font-lazy-cancellation-diagnostic",
+        "mode": "design",
+        "cancelAction": "escape",
+        "actualModuleHeld": true,
+        "pendingSessionCancelled": true,
+        "lateModuleDoesNotStealFocus": true,
+        "cachedReentryFocus": true,
+        "consoleOrPageErrors": []
+      },
+      {
+        "kind": "isolated-font-lazy-cancellation-diagnostic",
+        "mode": "design",
+        "cancelAction": "outside",
+        "actualModuleHeld": true,
+        "pendingSessionCancelled": true,
+        "lateModuleDoesNotStealFocus": true,
+        "cachedReentryFocus": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "154-existing-note-conflict": [
+      {
+        "kind": "isolated-speaker-notes-conflict",
+        "localDraftRetained": true,
+        "popupRecoveryVisible": true,
+        "recoveryDownloaded": true,
+        "remoteNotOverwritten": true,
+        "permissionRestoreRetries": false,
+        "readonlySavedDocumentExported": false,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-readonly": [
+      {
+        "kind": "isolated-readonly-code",
+        "chineseField": true,
+        "copyable": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-ime": [
+      {
+        "kind": "isolated-code-composition",
+        "syntheticCompositionOnly": true,
+        "noIntermediateWrite": true,
+        "saveAfterComposition": true,
+        "oneBatch": true,
+        "realOsImeUnverified": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-mixed": [
+      {
+        "kind": "isolated-mixed-code",
+        "commonDeclarationsOnly": true,
+        "mixedValuesPreserved": true,
+        "singleSharedUndo": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-tabs": [
+      {
+        "kind": "isolated-inspector-tabs",
+        "chineseLabels": true,
+        "arrowKeys": true,
+        "home": true,
+        "rovingFocus": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-cas": [
+      {
+        "kind": "isolated-code-conflict",
+        "peerStyleRetained": true,
+        "localStyleRecoverable": true,
+        "noSilentOverwrite": true,
+        "expectedOperationConflicts": 0,
+        "consoleOrPageErrors": []
+      }
+    ],
+    "140-clean-remote": [
+      {
+        "kind": "isolated-code-refocus",
+        "cleanRemoteValueRefreshed": true,
+        "matchingBaseSnapshot": true,
+        "noFalseConflict": true,
+        "consoleOrPageErrors": []
+      }
+    ]
+  },
+  "regressionsFirst": [
+    {
+      "problem": "首次拖动仍使用原始模型坐标",
+      "before": "屏幕右拖20px，x126.559→598.489。",
+      "after": "复用已绘制框读取，首次拖动与共享撤销在140/154两编辑器通过。"
+    },
+    {
+      "problem": "权限变化后关闭代码面板会丢失中文草稿",
+      "before": "失去写权限后关闭面板，没有本地副本可下载。",
+      "after": "复用会话恢复数据保留操作，不自动发送；重开会话不自动覆盖，140/154可下载中文草稿，无越权写入。"
+    },
+    {
+      "problem": "多选缺少原版混合值注释",
+      "before": "混合声明被直接省略。",
+      "after": "样式与属性分组显示中文注释，解析时不作为声明；实际统一编辑保留不同宽度和颜色。"
+    }
+  ],
+  "infrastructureFailures": [
+    {
+      "phase": "代码界面首轮尝试",
+      "cause": "临时磁盘ENOSPC，未执行功能检查。",
+      "result": "清理已完成审查的临时目录后重跑；未把中止算作功能通过或先失败回归。"
+    }
+  ],
+  "serverApiIntegration": {
+    "file": "server/src/__integration__/artifact-app-boundary.test.ts",
+    "cases": [
+      "授权保存重开",
+      "首次写入共享撤销/重做",
+      "几何同步声明",
+      "旧样式冲突拒绝",
+      "跨租户拒绝"
+    ],
+    "localRun": false,
+    "reason": "本地缺少准确私有SDK与集成数据库，等待正式CI。"
+  },
+  "remaining": [
+    "图层嵌入、微调和完整属性/主题面板尚未完成。",
+    "声明删除、任意CSS布局/变换、完整媒体属性、继承样式与全部原版语法仍需逐项还原。",
+    "外部CSS资源离线打包与全部导出视觉尚未验收。",
+    "原版/实现选区不同，未进行1px/0.5%代码面板视觉验收。",
+    "真实操作系统中文输入法、授权评论/智能体完整生命周期及最终十组AB/BA性能未完成。"
+  ]
+}

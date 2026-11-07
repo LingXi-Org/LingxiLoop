@@ -1,0 +1,1264 @@
+{
+  "kind": "属性面板停靠视觉及历史回归时序",
+  "qualified": false,
+  "verifiedBase": {
+    "commit": "6309676879853f9252526467b37d847589da8fee",
+    "ciRun": 42353417968,
+    "ciConclusion": "success",
+    "reviewPassed": true,
+    "review": "../reviews/63096768.json"
+  },
+  "sourceDefaultSurface": {
+    "panels": [
+      {
+        "tag": "ASIDE",
+        "role": null,
+        "cls": "flex isolate z-40 h-full shrink-0 max-[599px]:h-auto max-[599px]:w-full max-[599px]:flex-col",
+        "rect": {
+          "x": 0,
+          "y": 479.28125,
+          "width": 390,
+          "height": 364.71875,
+          "top": 479.28125,
+          "right": 390,
+          "bottom": 844,
+          "left": 0
+        },
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px",
+        "filter": "none",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "cls": "contents",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px",
+        "filter": "none",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "cls": "relative flex h-screen w-screen bg-page text-primary max-[599px]:flex-col",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 390,
+          "height": 844,
+          "top": 0,
+          "right": 390,
+          "bottom": 844,
+          "left": 0
+        },
+        "background": "rgb(249, 249, 249)",
+        "shadow": "none",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px",
+        "filter": "none",
+        "opacity": "1"
+      },
+      {
+        "tag": "DIV",
+        "role": null,
+        "cls": "cds-root text-primary contents",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 0,
+          "height": 0,
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0
+        },
+        "background": "rgba(0, 0, 0, 0)",
+        "shadow": "none",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px",
+        "filter": "none",
+        "opacity": "1"
+      }
+    ],
+    "children": [
+      {
+        "tag": "DIV",
+        "cls": "relative z-20 flex w-full flex-col border-t bg-surface-panel pb-[var(--mc-foot-inset,0px)] transition-[height,transform] duration-200 ease-out motion-reduce:transition-none",
+        "rect": {
+          "x": 0,
+          "y": 479.28125,
+          "width": 390,
+          "height": 364.71875,
+          "top": 479.28125,
+          "right": 390,
+          "bottom": 844,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgb(255, 255, 255)",
+        "border": "",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "shrink-0 touch-pan-x border-b [&_*]:touch-pan-x",
+        "rect": {
+          "x": 0,
+          "y": 480.28125,
+          "width": 390,
+          "height": 41,
+          "top": 480.28125,
+          "right": 390,
+          "bottom": 521.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 shrink-0 items-center gap-xs py-md pr-sm pl-sm",
+        "rect": {
+          "x": 0,
+          "y": 480.28125,
+          "width": 390,
+          "height": 40,
+          "top": 480.28125,
+          "right": 390,
+          "bottom": 520.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-3 select-none [&_input]:select-text [&_textarea]:select-text [--pp-label-w:88px] [[data-cds-fizzy-lake~=panels]_&]:[--pp-label-w:92px]",
+        "rect": {
+          "x": 0,
+          "y": 521.28125,
+          "width": 390,
+          "height": 322.71875,
+          "top": 521.28125,
+          "right": 390,
+          "bottom": 844,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "[--pp-label-w:84px] [[data-cds-fizzy-lake~=panels]_&]:[--pp-label-w:88px]",
+        "rect": {
+          "x": 0,
+          "y": 521.28125,
+          "width": 390,
+          "height": 289,
+          "top": 521.28125,
+          "right": 390,
+          "bottom": 810.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 shrink-0 flex-col border-alpha-2 [&:not(:first-child)]:border-t",
+        "rect": {
+          "x": 0,
+          "y": 521.28125,
+          "width": 390,
+          "height": 176,
+          "top": 521.28125,
+          "right": 390,
+          "bottom": 697.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 shrink-0 items-center gap-xs select-none pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] min-h-10 border-t border-alpha-2 py-2 text-body-semibold text-primary first:border-t-0",
+        "rect": {
+          "x": 0,
+          "y": 521.28125,
+          "width": 390,
+          "height": 40,
+          "top": 521.28125,
+          "right": 390,
+          "bottom": 561.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 flex-col pb-2",
+        "rect": {
+          "x": 0,
+          "y": 561.28125,
+          "width": 390,
+          "height": 136,
+          "top": 561.28125,
+          "right": 390,
+          "bottom": 697.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "group/row grid min-w-0 shrink-0 items-center gap-x-sm py-px pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] grid-cols-[var(--pp-label-w,80px)_minmax(0,1fr)] pointer-coarse:grid-cols-[calc(var(--pp-label-w,80px)*13/12)_minmax(0,1fr)] min-h-[var(--prop-row-h,32px)] pointer-coarse:min-h-[var(--prop-row-h,40px)]",
+        "rect": {
+          "x": 0,
+          "y": 561.28125,
+          "width": 390,
+          "height": 32,
+          "top": 561.28125,
+          "right": 390,
+          "bottom": 593.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "group/row grid min-w-0 shrink-0 items-center gap-x-sm py-px pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] grid-cols-[var(--pp-label-w,80px)_minmax(0,1fr)] pointer-coarse:grid-cols-[calc(var(--pp-label-w,80px)*13/12)_minmax(0,1fr)] min-h-[var(--prop-row-h,32px)] pointer-coarse:min-h-[var(--prop-row-h,40px)]",
+        "rect": {
+          "x": 0,
+          "y": 593.28125,
+          "width": 390,
+          "height": 32,
+          "top": 593.28125,
+          "right": 390,
+          "bottom": 625.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "group/row grid min-w-0 shrink-0 items-center gap-x-sm py-px pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] grid-cols-[var(--pp-label-w,80px)_minmax(0,1fr)] pointer-coarse:grid-cols-[calc(var(--pp-label-w,80px)*13/12)_minmax(0,1fr)] min-h-[var(--prop-row-h,32px)] pointer-coarse:min-h-[var(--prop-row-h,40px)]",
+        "rect": {
+          "x": 0,
+          "y": 625.28125,
+          "width": 390,
+          "height": 32,
+          "top": 625.28125,
+          "right": 390,
+          "bottom": 657.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "group/row grid min-w-0 shrink-0 items-center gap-x-sm py-px pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] grid-cols-[var(--pp-label-w,80px)_minmax(0,1fr)] pointer-coarse:grid-cols-[calc(var(--pp-label-w,80px)*13/12)_minmax(0,1fr)] min-h-[var(--prop-row-h,32px)] pointer-coarse:min-h-[var(--prop-row-h,40px)]",
+        "rect": {
+          "x": 0,
+          "y": 657.28125,
+          "width": 390,
+          "height": 32,
+          "top": 657.28125,
+          "right": 390,
+          "bottom": 689.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 shrink-0 flex-col border-alpha-2 [&:not(:first-child)]:border-t [--pp-iconcol:var(--cds-h-control)]",
+        "rect": {
+          "x": 0,
+          "y": 697.28125,
+          "width": 390,
+          "height": 113,
+          "top": 697.28125,
+          "right": 390,
+          "bottom": 810.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 shrink-0 items-center gap-xs select-none pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] min-h-10 border-t border-alpha-2 py-2 text-body-semibold text-primary first:border-t-0",
+        "rect": {
+          "x": 0,
+          "y": 698.28125,
+          "width": 390,
+          "height": 40,
+          "top": 698.28125,
+          "right": 390,
+          "bottom": 738.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 flex-col pb-2",
+        "rect": {
+          "x": 0,
+          "y": 738.28125,
+          "width": 390,
+          "height": 72,
+          "top": 738.28125,
+          "right": 390,
+          "bottom": 810.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "group/row grid min-w-0 shrink-0 items-center gap-x-sm py-px pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] grid-cols-[var(--pp-label-w,80px)_minmax(0,1fr)] pointer-coarse:grid-cols-[calc(var(--pp-label-w,80px)*13/12)_minmax(0,1fr)] min-h-[var(--prop-row-h,32px)] pointer-coarse:min-h-[var(--prop-row-h,40px)]",
+        "rect": {
+          "x": 0,
+          "y": 738.28125,
+          "width": 390,
+          "height": 32,
+          "top": 738.28125,
+          "right": 390,
+          "bottom": 770.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "group/row grid min-w-0 shrink-0 items-center gap-x-sm py-px pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] grid-cols-[var(--pp-label-w,80px)_minmax(0,1fr)] pointer-coarse:grid-cols-[calc(var(--pp-label-w,80px)*13/12)_minmax(0,1fr)] min-h-[var(--prop-row-h,32px)] pointer-coarse:min-h-[var(--prop-row-h,40px)]",
+        "rect": {
+          "x": 0,
+          "y": 770.28125,
+          "width": 390,
+          "height": 32,
+          "top": 770.28125,
+          "right": 390,
+          "bottom": 802.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 shrink-0 flex-col border-alpha-2 [&:not(:first-child)]:border-t",
+        "rect": {
+          "x": 0,
+          "y": 810.28125,
+          "width": 390,
+          "height": 41,
+          "top": 810.28125,
+          "right": 390,
+          "bottom": 851.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "",
+        "borderRadius": "0px"
+      },
+      {
+        "tag": "DIV",
+        "cls": "flex min-w-0 shrink-0 items-center gap-xs select-none pl-[var(--pp-gutter-l,var(--cds-pad-lg))] pr-[var(--pp-gutter-r,var(--cds-pad-md))] min-h-10 border-t border-alpha-2 py-2 text-body-semibold text-primary first:border-t-0",
+        "rect": {
+          "x": 0,
+          "y": 811.28125,
+          "width": 390,
+          "height": 40,
+          "top": 811.28125,
+          "right": 390,
+          "bottom": 851.28125,
+          "left": 0
+        },
+        "shadow": "none",
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px solid color(srgb 0.0431373 0.0431373 0.0431373 / 0.1)",
+        "borderRadius": "0px"
+      }
+    ],
+    "boards": [
+      {
+        "id": "Page1.dc.html",
+        "rect": {
+          "x": 48,
+          "y": 423.8552551269531,
+          "width": 92.84210205078125,
+          "height": 52.22369384765625,
+          "top": 423.8552551269531,
+          "right": 140.84210205078125,
+          "bottom": 476.0789489746094,
+          "left": 48
+        },
+        "cls": "absolute",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "shadow": "none"
+      },
+      {
+        "id": "Page2.dc.html",
+        "rect": {
+          "x": 148.57894897460938,
+          "y": 423.8552551269531,
+          "width": 92.84210205078125,
+          "height": 52.22369384765625,
+          "top": 423.8552551269531,
+          "right": 241.42105102539062,
+          "bottom": 476.0789489746094,
+          "left": 148.57894897460938
+        },
+        "cls": "absolute",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "shadow": "none"
+      },
+      {
+        "id": "Page3.dc.html",
+        "rect": {
+          "x": 249.15789794921875,
+          "y": 423.8552551269531,
+          "width": 92.84210205078125,
+          "height": 52.22369384765625,
+          "top": 423.8552551269531,
+          "right": 342,
+          "bottom": 476.0789489746094,
+          "left": 249.15789794921875
+        },
+        "cls": "absolute",
+        "outline": "rgba(0, 0, 0, 0.9) none 3px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "shadow": "none"
+      }
+    ]
+  },
+  "before": {
+    "nativeShadow": "rgba(0, 0, 0, 0.067) -4px 0px 20px 0px",
+    "sourceShadow": "none",
+    "visualAssertion": "先复现阴影不相等失败"
+  },
+  "after": {
+    "surfaces": "../visual/design-panel-shadow/surfaces.json",
+    "rawPixels": "../visual/design-panel-shadow/differences/raw-pixel-results.json"
+  },
+  "historyTiming": {
+    "reviewFailureRetained": true,
+    "problem": "154首次redo读到之前的saved，未等历史命令完成；重跑通过，未判产品P2。",
+    "fix": "等待kind=undo/redo的operations响应200，并等待纸张单选状态改变，最后核对共享文档。",
+    "results": {
+      "140": {
+        "kind": "画板属性局部回归",
+        "printAndPaperDoNotResize": true,
+        "savedAndReopened": true,
+        "paperSharedUndoRedo": true,
+        "sourceDimensionsBounds": true,
+        "fitHeight": true,
+        "nodesAndOtherPagesUnchanged": true,
+        "geometry": [
+          {
+            "label": "属性",
+            "rect": {
+              "x": 1111,
+              "y": 8,
+              "width": 79.15625,
+              "height": 24,
+              "top": 8,
+              "right": 1190.15625,
+              "bottom": 32,
+              "left": 1111
+            },
+            "background": "rgba(0, 0, 0, 0.055)"
+          },
+          {
+            "label": "代码",
+            "rect": {
+              "x": 1190.15625,
+              "y": 8,
+              "width": 47.421875,
+              "height": 24,
+              "top": 8,
+              "right": 1237.578125,
+              "bottom": 32,
+              "left": 1190.15625
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "主题",
+            "rect": {
+              "x": 1237.578125,
+              "y": 8,
+              "width": 58.09375,
+              "height": 24,
+              "top": 8,
+              "right": 1295.671875,
+              "bottom": 32,
+              "left": 1237.578125
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "关闭属性",
+            "rect": {
+              "x": 1410,
+              "y": 8,
+              "width": 24,
+              "height": 24,
+              "top": 8,
+              "right": 1434,
+              "bottom": 32,
+              "left": 1410
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "收起画板 Page 1",
+            "rect": {
+              "x": 1117,
+              "y": 49,
+              "width": 20,
+              "height": 20,
+              "top": 49,
+              "right": 1137,
+              "bottom": 69,
+              "left": 1117
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "展开组合 LingxiLoop 1",
+            "rect": {
+              "x": 1133,
+              "y": 73,
+              "width": 20,
+              "height": 20,
+              "top": 73,
+              "right": 1153,
+              "bottom": 93,
+              "left": 1133
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "展开画板 Page 2",
+            "rect": {
+              "x": 1117,
+              "y": 97,
+              "width": 20,
+              "height": 20,
+              "top": 97,
+              "right": 1137,
+              "bottom": 117,
+              "left": 1117
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "展开画板 Page 3",
+            "rect": {
+              "x": 1117,
+              "y": 121,
+              "width": 20,
+              "height": 20,
+              "top": 121,
+              "right": 1137,
+              "bottom": 141,
+              "left": 1117
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "画板",
+            "rect": {
+              "x": 1105,
+              "y": 210,
+              "width": 335,
+              "height": 40,
+              "top": 210,
+              "right": 1440,
+              "bottom": 250,
+              "left": 1105
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "画板宽度",
+            "rect": {
+              "x": 1221,
+              "y": 254,
+              "width": 184.625,
+              "height": 24,
+              "top": 254,
+              "right": 1405.625,
+              "bottom": 278,
+              "left": 1221
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "画板高度",
+            "rect": {
+              "x": 1221,
+              "y": 286,
+              "width": 156.625,
+              "height": 24,
+              "top": 286,
+              "right": 1377.625,
+              "bottom": 310,
+              "left": 1221
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "高度操作",
+            "rect": {
+              "x": 1408,
+              "y": 286,
+              "width": 24,
+              "height": 24,
+              "top": 286,
+              "right": 1432,
+              "bottom": 310,
+              "left": 1408
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "流式",
+            "rect": {
+              "x": 1213,
+              "y": 319,
+              "width": 109.5,
+              "height": 22,
+              "top": 319,
+              "right": 1322.5,
+              "bottom": 341,
+              "left": 1213
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "",
+            "rect": {
+              "x": -1,
+              "y": -1,
+              "width": 1,
+              "height": 1,
+              "top": -1,
+              "right": 0,
+              "bottom": 0,
+              "left": -1
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "固定",
+            "rect": {
+              "x": 1322.5,
+              "y": 319,
+              "width": 109.5,
+              "height": 22,
+              "top": 319,
+              "right": 1432,
+              "bottom": 341,
+              "left": 1322.5
+            },
+            "background": "rgb(255, 255, 255)"
+          },
+          {
+            "label": "",
+            "rect": {
+              "x": -1,
+              "y": -1,
+              "width": 1,
+              "height": 1,
+              "top": -1,
+              "right": 0,
+              "bottom": 0,
+              "left": -1
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "美式信纸",
+            "rect": {
+              "x": 1213,
+              "y": 351,
+              "width": 109.5,
+              "height": 22,
+              "top": 351,
+              "right": 1322.5,
+              "bottom": 373,
+              "left": 1213
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "",
+            "rect": {
+              "x": -1,
+              "y": -1,
+              "width": 1,
+              "height": 1,
+              "top": -1,
+              "right": 0,
+              "bottom": 0,
+              "left": -1
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "A4",
+            "rect": {
+              "x": 1322.5,
+              "y": 351,
+              "width": 109.5,
+              "height": 22,
+              "top": 351,
+              "right": 1432,
+              "bottom": 373,
+              "left": 1322.5
+            },
+            "background": "rgb(255, 255, 255)"
+          },
+          {
+            "label": "",
+            "rect": {
+              "x": -1,
+              "y": -1,
+              "width": 1,
+              "height": 1,
+              "top": -1,
+              "right": 0,
+              "bottom": 0,
+              "left": -1
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "外观",
+            "rect": {
+              "x": 1105,
+              "y": 386,
+              "width": 335,
+              "height": 41,
+              "top": 386,
+              "right": 1440,
+              "bottom": 427,
+              "left": 1105
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "背景",
+            "rect": {
+              "x": 1213,
+              "y": 431,
+              "width": 191,
+              "height": 24,
+              "top": 431,
+              "right": 1404,
+              "bottom": 455,
+              "left": 1213
+            },
+            "background": "rgba(255, 255, 255, 0.5)"
+          },
+          {
+            "label": "圆角",
+            "rect": {
+              "x": 1221,
+              "y": 463,
+              "width": 156.625,
+              "height": 24,
+              "top": 463,
+              "right": 1377.625,
+              "bottom": 487,
+              "left": 1221
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "分别设置圆角",
+            "rect": {
+              "x": 1408,
+              "y": 463,
+              "width": 24,
+              "height": 24,
+              "top": 463,
+              "right": 1432,
+              "bottom": 487,
+              "left": 1408
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "布局参考线",
+            "rect": {
+              "x": 1105,
+              "y": 500,
+              "width": 303,
+              "height": 40,
+              "top": 500,
+              "right": 1408,
+              "bottom": 540,
+              "left": 1105
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "添加布局参考线",
+            "rect": {
+              "x": 1408,
+              "y": 508,
+              "width": 24,
+              "height": 24,
+              "top": 508,
+              "right": 1432,
+              "bottom": 532,
+              "left": 1408
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "consoleOrPageErrors": []
+      },
+      "154": {
+        "kind": "画板属性局部回归",
+        "printAndPaperDoNotResize": true,
+        "savedAndReopened": true,
+        "paperSharedUndoRedo": true,
+        "sourceDimensionsBounds": true,
+        "fitHeight": true,
+        "nodesAndOtherPagesUnchanged": true,
+        "geometry": [
+          {
+            "label": "属性",
+            "rect": {
+              "x": 1111,
+              "y": 8,
+              "width": 79.15625,
+              "height": 24,
+              "top": 8,
+              "right": 1190.15625,
+              "bottom": 32,
+              "left": 1111
+            },
+            "background": "rgba(0, 0, 0, 0.055)"
+          },
+          {
+            "label": "代码",
+            "rect": {
+              "x": 1190.15625,
+              "y": 8,
+              "width": 47.421875,
+              "height": 24,
+              "top": 8,
+              "right": 1237.578125,
+              "bottom": 32,
+              "left": 1190.15625
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "主题",
+            "rect": {
+              "x": 1237.578125,
+              "y": 8,
+              "width": 58.09375,
+              "height": 24,
+              "top": 8,
+              "right": 1295.671875,
+              "bottom": 32,
+              "left": 1237.578125
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "关闭属性",
+            "rect": {
+              "x": 1410,
+              "y": 8,
+              "width": 24,
+              "height": 24,
+              "top": 8,
+              "right": 1434,
+              "bottom": 32,
+              "left": 1410
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "收起画板 Page 1",
+            "rect": {
+              "x": 1117,
+              "y": 49,
+              "width": 20,
+              "height": 20,
+              "top": 49,
+              "right": 1137,
+              "bottom": 69,
+              "left": 1117
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "展开组合 LingxiLoop 1",
+            "rect": {
+              "x": 1133,
+              "y": 73,
+              "width": 20,
+              "height": 20,
+              "top": 73,
+              "right": 1153,
+              "bottom": 93,
+              "left": 1133
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "展开画板 Page 2",
+            "rect": {
+              "x": 1117,
+              "y": 97,
+              "width": 20,
+              "height": 20,
+              "top": 97,
+              "right": 1137,
+              "bottom": 117,
+              "left": 1117
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "展开画板 Page 3",
+            "rect": {
+              "x": 1117,
+              "y": 121,
+              "width": 20,
+              "height": 20,
+              "top": 121,
+              "right": 1137,
+              "bottom": 141,
+              "left": 1117
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "画板",
+            "rect": {
+              "x": 1105,
+              "y": 210,
+              "width": 335,
+              "height": 40,
+              "top": 210,
+              "right": 1440,
+              "bottom": 250,
+              "left": 1105
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "画板宽度",
+            "rect": {
+              "x": 1221,
+              "y": 254,
+              "width": 184.625,
+              "height": 24,
+              "top": 254,
+              "right": 1405.625,
+              "bottom": 278,
+              "left": 1221
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "画板高度",
+            "rect": {
+              "x": 1221,
+              "y": 286,
+              "width": 156.625,
+              "height": 24,
+              "top": 286,
+              "right": 1377.625,
+              "bottom": 310,
+              "left": 1221
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "高度操作",
+            "rect": {
+              "x": 1408,
+              "y": 286,
+              "width": 24,
+              "height": 24,
+              "top": 286,
+              "right": 1432,
+              "bottom": 310,
+              "left": 1408
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "流式",
+            "rect": {
+              "x": 1213,
+              "y": 319,
+              "width": 109.5,
+              "height": 22,
+              "top": 319,
+              "right": 1322.5,
+              "bottom": 341,
+              "left": 1213
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "",
+            "rect": {
+              "x": -1,
+              "y": -1,
+              "width": 1,
+              "height": 1,
+              "top": -1,
+              "right": 0,
+              "bottom": 0,
+              "left": -1
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "固定",
+            "rect": {
+              "x": 1322.5,
+              "y": 319,
+              "width": 109.5,
+              "height": 22,
+              "top": 319,
+              "right": 1432,
+              "bottom": 341,
+              "left": 1322.5
+            },
+            "background": "rgb(255, 255, 255)"
+          },
+          {
+            "label": "",
+            "rect": {
+              "x": -1,
+              "y": -1,
+              "width": 1,
+              "height": 1,
+              "top": -1,
+              "right": 0,
+              "bottom": 0,
+              "left": -1
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "美式信纸",
+            "rect": {
+              "x": 1213,
+              "y": 351,
+              "width": 109.5,
+              "height": 22,
+              "top": 351,
+              "right": 1322.5,
+              "bottom": 373,
+              "left": 1213
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "",
+            "rect": {
+              "x": -1,
+              "y": -1,
+              "width": 1,
+              "height": 1,
+              "top": -1,
+              "right": 0,
+              "bottom": 0,
+              "left": -1
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "A4",
+            "rect": {
+              "x": 1322.5,
+              "y": 351,
+              "width": 109.5,
+              "height": 22,
+              "top": 351,
+              "right": 1432,
+              "bottom": 373,
+              "left": 1322.5
+            },
+            "background": "rgb(255, 255, 255)"
+          },
+          {
+            "label": "",
+            "rect": {
+              "x": -1,
+              "y": -1,
+              "width": 1,
+              "height": 1,
+              "top": -1,
+              "right": 0,
+              "bottom": 0,
+              "left": -1
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "外观",
+            "rect": {
+              "x": 1105,
+              "y": 386,
+              "width": 335,
+              "height": 41,
+              "top": 386,
+              "right": 1440,
+              "bottom": 427,
+              "left": 1105
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "背景",
+            "rect": {
+              "x": 1213,
+              "y": 431,
+              "width": 191,
+              "height": 24,
+              "top": 431,
+              "right": 1404,
+              "bottom": 455,
+              "left": 1213
+            },
+            "background": "rgba(255, 255, 255, 0.5)"
+          },
+          {
+            "label": "圆角",
+            "rect": {
+              "x": 1221,
+              "y": 463,
+              "width": 156.625,
+              "height": 24,
+              "top": 463,
+              "right": 1377.625,
+              "bottom": 487,
+              "left": 1221
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "分别设置圆角",
+            "rect": {
+              "x": 1408,
+              "y": 463,
+              "width": 24,
+              "height": 24,
+              "top": 463,
+              "right": 1432,
+              "bottom": 487,
+              "left": 1408
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "布局参考线",
+            "rect": {
+              "x": 1105,
+              "y": 500,
+              "width": 303,
+              "height": 40,
+              "top": 500,
+              "right": 1408,
+              "bottom": 540,
+              "left": 1105
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "添加布局参考线",
+            "rect": {
+              "x": 1408,
+              "y": 508,
+              "width": 24,
+              "height": 24,
+              "top": 508,
+              "right": 1432,
+              "bottom": 532,
+              "left": 1408
+            },
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ],
+        "consoleOrPageErrors": []
+      }
+    }
+  }
+}

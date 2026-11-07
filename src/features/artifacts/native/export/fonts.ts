@@ -1,8 +1,9 @@
 import { isSafeArtifactSvg, type ArtifactDocument, type ArtifactPage } from '../../../../../shared/artifact-document'
 import { artifactResolvedStyle } from '../../../../../shared/artifact-themes'
 import { blobDataUrl, type ExportResources } from './common'
+import { editorFontKey, isLocalEditorFont } from '../editor-fonts'
 
-const normalize = (family: string) => family.trim().replace(/^["']|["']$/g, '').toLowerCase()
+const normalize = editorFontKey
 const retainedFonts = new Set(['inter', 'noto sans sc', 'jetbrains mono'])
 function requestedFonts(document: ArtifactDocument, pages: ArtifactPage[]) {
   const requested = new Map<string, string>()
@@ -10,11 +11,11 @@ function requestedFonts(document: ArtifactDocument, pages: ArtifactPage[]) {
     if (!text.trim()) return
     for (const entry of (family ?? '').split(',')) {
       const key = normalize(entry)
-      if (retainedFonts.has(key)) requested.set(key, (requested.get(key) ?? '') + text)
+      if (retainedFonts.has(key) || isLocalEditorFont(key)) requested.set(key, (requested.get(key) ?? '') + text)
     }
   }
   for (const page of pages) for (const node of Object.values(page.nodes)) {
-    if (node.hidden || !['text', 'table', 'math', 'svg'].includes(node.type)) continue
+    if (node.hidden || !['text', 'note', 'table', 'math', 'svg'].includes(node.type)) continue
     let family = artifactResolvedStyle(node.style, document).fontFamily, parent = node.parentId
     while (!family && parent) { family = artifactResolvedStyle(page.nodes[parent]!.style, document).fontFamily; parent = page.nodes[parent]!.parentId }
     if (node.type === 'svg') {
@@ -43,21 +44,26 @@ function requestedFonts(document: ArtifactDocument, pages: ArtifactPage[]) {
 
 /** Load the actual inherited/marked style and weight of each rendered text run. */
 export async function awaitPageFonts(element: HTMLElement) {
-  const registered = new Set([...window.document.fonts].map(face => normalize(face.family)))
-  const requested = new Map<string, string>()
+  const faceName = (family: string) => family.trim().replace(/^["']|["']$/g, '').toLowerCase()
+  const registered = [...window.document.fonts]
+  const requested = new Map<string, { text: string; faces: FontFace[] }>()
   const walker = window.document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
     if (!node.textContent?.trim() || !node.parentElement) continue
     const style = getComputedStyle(node.parentElement)
     for (const candidate of style.fontFamily.split(',')) {
       const family = normalize(candidate)
-      if (!retainedFonts.has(family)) continue
-      if (!registered.has(family)) throw new Error(`字体样式未能加载：${family}，请重试导出。`)
-      const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} "${family}"`
-      requested.set(font, (requested.get(font) ?? '') + node.textContent)
+      if (!retainedFonts.has(family) && !isLocalEditorFont(family)) continue
+      const faces = registered.filter(face => faceName(face.family) === faceName(candidate))
+      if (!faces.length) throw new Error(`字体样式未能加载：${family}，请重试导出。`)
+      const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${candidate.trim()}`
+      requested.set(font, { text: (requested.get(font)?.text ?? '') + node.textContent, faces })
     }
   }
-  await Promise.all([...requested].map(async ([font, text]) => {
+  await Promise.all([...requested].map(async ([font, { text, faces: declared }]) => {
+    // A Latin face with explicit Unicode subsets legitimately falls back for
+    // Chinese-only runs. No declared matching subset means no font to fetch.
+    if (!declared.some(face => hasGlyph(face.unicodeRange, text))) return
     const faces = await window.document.fonts.load(font, text)
     if (!faces.length) throw new Error(`字体未能加载：${font}，请重试导出。`)
   }))

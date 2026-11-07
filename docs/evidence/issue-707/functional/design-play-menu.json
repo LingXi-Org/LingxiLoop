@@ -1,0 +1,133 @@
+{
+  "scope": "固定源码运行与受控HTTP交互；真实授权API及完整视觉资格仍待完成",
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "source": "source-design-playback.json",
+  "regressionBefore": [
+    "原入口直接进入幻灯片放映，与源码先显示画板菜单不一致",
+    "旧交互回归在设计文字插入后仍错误检查原画板计数",
+    "未知--checks=menus曾回退运行50页默认检查"
+  ],
+  "after": {
+    "functional": [
+      "静态画板、交互原型分组",
+      "无框项不进入播放菜单",
+      "菜单项选择进入全窗口预览，返回与Escape恢复世界相机及播放入口焦点",
+      "键盘进入、Home、Enter及菜单导航",
+      "旧文档默认静态，新标记导入及共享撤销重做，旧快照不改写"
+    ],
+    "chrome154": [
+      "八种容器与主题下播放菜单、标题及各项几何偏差不超过1px",
+      "八种工具栏与相机几何仍不超过1px",
+      "Slides与Design插入、渐变、裁剪、预览或放映、绘图或版式及多选链通过",
+      "窄屏两种编辑器通过"
+    ],
+    "chrome140": [
+      "八种工具栏与相机同环境参考几何不超过1px",
+      "390×844深色播放菜单、键盘、分组、预览与返回通过"
+    ],
+    "units": 45,
+    "focusedLint": "4个改动源文件，无告警",
+    "localTypecheck": "76项缺少私有SDK及级联错误；新增编辑器和共享模型无类型错误",
+    "serverPersistenceRegression": "已添加，等待正式CI；本机无测试PostgreSQL及已发布私有SDK，未运行"
+  },
+  "screenshots": [
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "reference": "visual/play-menu/reference/design-1920-1200-light.png",
+      "native": "visual/play-menu/native/design-1920-1200-light.png",
+      "sourceSha256": "218d0f523215bed12f5e1093c3ca60cfec2bded8b13653fb5d4f6acbe6d1dee4",
+      "nativeSha256": "7d0ae3edfd9677fd5130ab8b8780482d9d43348b6dc310331d91437972f97cd2",
+      "panelAndItemGeometryWithin1CssPx": true,
+      "visualQualified": false
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "reference": "visual/play-menu/reference/design-1920-1200-dark.png",
+      "native": "visual/play-menu/native/design-1920-1200-dark.png",
+      "sourceSha256": "16f424a223c077c49bc714ad62baf4fad9692e4824bd41625d32b84c1df69b49",
+      "nativeSha256": "ead1ddd1dd73bcb76f13932c83b6a8817acf1c3ad3ee9bc55ca767222ba0e4c6",
+      "panelAndItemGeometryWithin1CssPx": true,
+      "visualQualified": false
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "reference": "visual/play-menu/reference/design-1440-1000-light.png",
+      "native": "visual/play-menu/native/design-1440-1000-light.png",
+      "sourceSha256": "673e7e464d20fd5f071d51b79e7fc142495cc26d272abb62df50726a44231f6f",
+      "nativeSha256": "51dd19667fa73a22a631ef0d08d6a3c5cd1c589d54f1e599c359f7f304cad3ec",
+      "panelAndItemGeometryWithin1CssPx": true,
+      "visualQualified": false
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "reference": "visual/play-menu/reference/design-1440-1000-dark.png",
+      "native": "visual/play-menu/native/design-1440-1000-dark.png",
+      "sourceSha256": "5cd85e001cbb22a78bf7f526c2dbd8e15932459808fb9d3cbccaf18f68ca0ae7",
+      "nativeSha256": "d08acd3ad27bc7fd8329a49d04712396eb622f43d0b5116a11e291952f5dbbec",
+      "panelAndItemGeometryWithin1CssPx": true,
+      "visualQualified": false
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "reference": "visual/play-menu/reference/design-768-1024-light.png",
+      "native": "visual/play-menu/native/design-768-1024-light.png",
+      "sourceSha256": "93ece4c072ce9e213897555ad331f4bfaf3d2136f9238415d744ebc042d03db3",
+      "nativeSha256": "88afcf7650c7183defe49c3376f40a152ba550a58c2c5c417ad181b124e11bf4",
+      "panelAndItemGeometryWithin1CssPx": true,
+      "visualQualified": false
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "reference": "visual/play-menu/reference/design-768-1024-dark.png",
+      "native": "visual/play-menu/native/design-768-1024-dark.png",
+      "sourceSha256": "8cd64860d6f2095bf3eec56f2964a6c0ce82b4e3b940e878a169e3ab32fa9256",
+      "nativeSha256": "1678ee31badb7058d508c01692fdf7f8648b5f8f5dd593e52b9ebbc1a0eb8f7a",
+      "panelAndItemGeometryWithin1CssPx": true,
+      "visualQualified": false
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "reference": "visual/play-menu/reference/design-390-844-light.png",
+      "native": "visual/play-menu/native/design-390-844-light.png",
+      "sourceSha256": "b496916193e0c6f43006643d0d9121a100a0adc09e6adfd078ddc2e0d12db2e0",
+      "nativeSha256": "d1b42c9ed9a144200c9eedcf8b701d606caa4b6ae495be3029aac9d048fdaa32",
+      "panelAndItemGeometryWithin1CssPx": true,
+      "visualQualified": false
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "reference": "visual/play-menu/reference/design-390-844-dark.png",
+      "native": "visual/play-menu/native/design-390-844-dark.png",
+      "sourceSha256": "7e4a618846d321e92734f38fb2fb7fa91f389f8f83d7bddccdd73fd6bc34f494",
+      "nativeSha256": "d4fa1003cc83521e3e93c02b6042352c06940ce5819594a4af84d960aeb112a6",
+      "panelAndItemGeometryWithin1CssPx": true,
+      "visualQualified": false
+    }
+  ],
+  "remaining": [
+    "真实交互脚本的完整原型状态与导航",
+    "无框内容的全部编辑与视觉状态",
+    "菜单全部悬停、焦点、混合选择及主题状态的像素验收",
+    "真实授权服务",
+    "最终候选十组AB/BA性能"
+  ],
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

@@ -1,0 +1,29 @@
+{
+  "candidateCommit": "ee84414626ee513ed24b0a28ffa0872532f1642a",
+  "reviewer": "/root/independent_review",
+  "mode": "独立只读",
+  "findings": [],
+  "independentlyRun": [
+    "四尺寸双主题源码相机及16控件几何",
+    "双模式菜单缩放定位",
+    "390px键盘菜单导航、焦点恢复及Tab露出隐藏工具",
+    "31项聚焦测试",
+    "Slides未使用新增读数占位"
+  ],
+  "failedExistingEntrances": [
+    "Design narrow 在公式可见性前置等待超时，935亦失败",
+    "interactions使用过期历史记录标签超时"
+  ],
+  "unverified": [
+    "完整菜单状态",
+    "完整视觉",
+    "性能门槛"
+  ],
+  "visualQualified": false,
+  "performanceQualified": false,
+  "owningCI": {
+    "run": 42240544136,
+    "conclusion": "success",
+    "deploy": "skipped"
+  }
+}

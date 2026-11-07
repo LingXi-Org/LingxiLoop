@@ -1,0 +1,2032 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceFile": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "scope": "固定版本运行时：同一三画板加钢笔文档，进入画板1的全窗口预览；四尺寸双主题。小画板附加800×600案例。",
+  "runtime": [
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "fit": {
+        "x": 24,
+        "y": 93.5,
+        "width": 1872,
+        "height": 1053,
+        "top": 93.5,
+        "right": 1896,
+        "bottom": 1146.5,
+        "left": 24
+      },
+      "fill": {
+        "x": 0,
+        "y": 40,
+        "width": 1920,
+        "height": 1160,
+        "top": 40,
+        "right": 1920,
+        "bottom": 1200,
+        "left": 0
+      },
+      "controls": [
+        {
+          "label": "Back to canvas",
+          "rect": {
+            "x": 4,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 28,
+            "bottom": 32,
+            "left": 4
+          }
+        },
+        {
+          "label": "Export",
+          "rect": {
+            "x": 1720.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1744.390625,
+            "bottom": 32,
+            "left": 1720.390625
+          }
+        },
+        {
+          "label": "Version history",
+          "rect": {
+            "x": 1748.390625,
+            "y": 8,
+            "width": 28,
+            "height": 24,
+            "top": 8,
+            "right": 1776.390625,
+            "bottom": 32,
+            "left": 1748.390625
+          }
+        },
+        {
+          "label": "Share",
+          "rect": {
+            "x": 1778.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1802.390625,
+            "bottom": 32,
+            "left": 1778.390625
+          }
+        },
+        {
+          "label": "Comments",
+          "rect": {
+            "x": 1806.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1830.390625,
+            "bottom": 32,
+            "left": 1806.390625
+          }
+        },
+        {
+          "label": "Comment options",
+          "rect": {
+            "x": 1830.390625,
+            "y": 8,
+            "width": 16,
+            "height": 24,
+            "top": 8,
+            "right": 1846.390625,
+            "bottom": 32,
+            "left": 1830.390625
+          }
+        }
+      ],
+      "exportMenu": [
+        {
+          "label": "PNG 1×1920 × 1080 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 673,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 673,
+            "right": 858.859375,
+            "bottom": 713.5,
+            "left": 608
+          }
+        },
+        {
+          "label": "PNG 2×3840 × 2160 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 713.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 713.5,
+            "right": 858.859375,
+            "bottom": 754,
+            "left": 608
+          }
+        },
+        {
+          "label": "PDF (.pdf)One page at this artboard’s size",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 754,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 754,
+            "right": 858.859375,
+            "bottom": 794.5,
+            "left": 608
+          }
+        },
+        {
+          "label": "HTML (.zip)Page + its images and runtime",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 794.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 794.5,
+            "right": 858.859375,
+            "bottom": 835,
+            "left": 608
+          }
+        },
+        {
+          "label": "All artboards (.pdf)All 3 artboards in order of canvas position",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 844,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 844,
+            "right": 858.859375,
+            "bottom": 884.5,
+            "left": 608
+          }
+        },
+        {
+          "label": "Selected artboards (.pdf)",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 884.5,
+            "width": 250.859375,
+            "height": 24,
+            "top": 884.5,
+            "right": 858.859375,
+            "bottom": 908.5,
+            "left": 608
+          }
+        }
+      ],
+      "trigger": "点击"
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "fit": {
+        "x": 24,
+        "y": 93.5,
+        "width": 1872,
+        "height": 1053,
+        "top": 93.5,
+        "right": 1896,
+        "bottom": 1146.5,
+        "left": 24
+      },
+      "fill": {
+        "x": 0,
+        "y": 40,
+        "width": 1920,
+        "height": 1160,
+        "top": 40,
+        "right": 1920,
+        "bottom": 1200,
+        "left": 0
+      },
+      "controls": [
+        {
+          "label": "Back to canvas",
+          "rect": {
+            "x": 4,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 28,
+            "bottom": 32,
+            "left": 4
+          }
+        },
+        {
+          "label": "Export",
+          "rect": {
+            "x": 1720.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1744.390625,
+            "bottom": 32,
+            "left": 1720.390625
+          }
+        },
+        {
+          "label": "Version history",
+          "rect": {
+            "x": 1748.390625,
+            "y": 8,
+            "width": 28,
+            "height": 24,
+            "top": 8,
+            "right": 1776.390625,
+            "bottom": 32,
+            "left": 1748.390625
+          }
+        },
+        {
+          "label": "Share",
+          "rect": {
+            "x": 1778.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1802.390625,
+            "bottom": 32,
+            "left": 1778.390625
+          }
+        },
+        {
+          "label": "Comments",
+          "rect": {
+            "x": 1806.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1830.390625,
+            "bottom": 32,
+            "left": 1806.390625
+          }
+        },
+        {
+          "label": "Comment options",
+          "rect": {
+            "x": 1830.390625,
+            "y": 8,
+            "width": 16,
+            "height": 24,
+            "top": 8,
+            "right": 1846.390625,
+            "bottom": 32,
+            "left": 1830.390625
+          }
+        }
+      ],
+      "exportMenu": [
+        {
+          "label": "PNG 1×1920 × 1080 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 673,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 673,
+            "right": 858.859375,
+            "bottom": 713.5,
+            "left": 608
+          }
+        },
+        {
+          "label": "PNG 2×3840 × 2160 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 713.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 713.5,
+            "right": 858.859375,
+            "bottom": 754,
+            "left": 608
+          }
+        },
+        {
+          "label": "PDF (.pdf)One page at this artboard’s size",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 754,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 754,
+            "right": 858.859375,
+            "bottom": 794.5,
+            "left": 608
+          }
+        },
+        {
+          "label": "HTML (.zip)Page + its images and runtime",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 794.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 794.5,
+            "right": 858.859375,
+            "bottom": 835,
+            "left": 608
+          }
+        },
+        {
+          "label": "All artboards (.pdf)All 3 artboards in order of canvas position",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 844,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 844,
+            "right": 858.859375,
+            "bottom": 884.5,
+            "left": 608
+          }
+        },
+        {
+          "label": "Selected artboards (.pdf)",
+          "role": "menuitem",
+          "rect": {
+            "x": 608,
+            "y": 884.5,
+            "width": 250.859375,
+            "height": 24,
+            "top": 884.5,
+            "right": 858.859375,
+            "bottom": 908.5,
+            "left": 608
+          }
+        }
+      ],
+      "trigger": "点击"
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "fit": {
+        "x": 24,
+        "y": 128.5,
+        "width": 1392,
+        "height": 783,
+        "top": 128.5,
+        "right": 1416,
+        "bottom": 911.5,
+        "left": 24
+      },
+      "fill": {
+        "x": 0,
+        "y": 40,
+        "width": 1440,
+        "height": 960,
+        "top": 40,
+        "right": 1440,
+        "bottom": 1000,
+        "left": 0
+      },
+      "controls": [
+        {
+          "label": "Back to canvas",
+          "rect": {
+            "x": 4,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 28,
+            "bottom": 32,
+            "left": 4
+          }
+        },
+        {
+          "label": "Export",
+          "rect": {
+            "x": 1240.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1264.390625,
+            "bottom": 32,
+            "left": 1240.390625
+          }
+        },
+        {
+          "label": "Version history",
+          "rect": {
+            "x": 1268.390625,
+            "y": 8,
+            "width": 28,
+            "height": 24,
+            "top": 8,
+            "right": 1296.390625,
+            "bottom": 32,
+            "left": 1268.390625
+          }
+        },
+        {
+          "label": "Share",
+          "rect": {
+            "x": 1298.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1322.390625,
+            "bottom": 32,
+            "left": 1298.390625
+          }
+        },
+        {
+          "label": "Comments",
+          "rect": {
+            "x": 1326.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1350.390625,
+            "bottom": 32,
+            "left": 1326.390625
+          }
+        },
+        {
+          "label": "Comment options",
+          "rect": {
+            "x": 1350.390625,
+            "y": 8,
+            "width": 16,
+            "height": 24,
+            "top": 8,
+            "right": 1366.390625,
+            "bottom": 32,
+            "left": 1350.390625
+          }
+        }
+      ],
+      "exportMenu": [
+        {
+          "label": "PNG 1×1920 × 1080 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 562,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 562,
+            "right": 706.859375,
+            "bottom": 602.5,
+            "left": 456
+          }
+        },
+        {
+          "label": "PNG 2×3840 × 2160 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 602.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 602.5,
+            "right": 706.859375,
+            "bottom": 643,
+            "left": 456
+          }
+        },
+        {
+          "label": "PDF (.pdf)One page at this artboard’s size",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 643,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 643,
+            "right": 706.859375,
+            "bottom": 683.5,
+            "left": 456
+          }
+        },
+        {
+          "label": "HTML (.zip)Page + its images and runtime",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 683.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 683.5,
+            "right": 706.859375,
+            "bottom": 724,
+            "left": 456
+          }
+        },
+        {
+          "label": "All artboards (.pdf)All 3 artboards in order of canvas position",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 733,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 733,
+            "right": 706.859375,
+            "bottom": 773.5,
+            "left": 456
+          }
+        },
+        {
+          "label": "Selected artboards (.pdf)",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 773.5,
+            "width": 250.859375,
+            "height": 24,
+            "top": 773.5,
+            "right": 706.859375,
+            "bottom": 797.5,
+            "left": 456
+          }
+        }
+      ],
+      "trigger": "点击"
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "fit": {
+        "x": 24,
+        "y": 128.5,
+        "width": 1392,
+        "height": 783,
+        "top": 128.5,
+        "right": 1416,
+        "bottom": 911.5,
+        "left": 24
+      },
+      "fill": {
+        "x": 0,
+        "y": 40,
+        "width": 1440,
+        "height": 960,
+        "top": 40,
+        "right": 1440,
+        "bottom": 1000,
+        "left": 0
+      },
+      "controls": [
+        {
+          "label": "Back to canvas",
+          "rect": {
+            "x": 4,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 28,
+            "bottom": 32,
+            "left": 4
+          }
+        },
+        {
+          "label": "Export",
+          "rect": {
+            "x": 1240.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1264.390625,
+            "bottom": 32,
+            "left": 1240.390625
+          }
+        },
+        {
+          "label": "Version history",
+          "rect": {
+            "x": 1268.390625,
+            "y": 8,
+            "width": 28,
+            "height": 24,
+            "top": 8,
+            "right": 1296.390625,
+            "bottom": 32,
+            "left": 1268.390625
+          }
+        },
+        {
+          "label": "Share",
+          "rect": {
+            "x": 1298.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1322.390625,
+            "bottom": 32,
+            "left": 1298.390625
+          }
+        },
+        {
+          "label": "Comments",
+          "rect": {
+            "x": 1326.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 1350.390625,
+            "bottom": 32,
+            "left": 1326.390625
+          }
+        },
+        {
+          "label": "Comment options",
+          "rect": {
+            "x": 1350.390625,
+            "y": 8,
+            "width": 16,
+            "height": 24,
+            "top": 8,
+            "right": 1366.390625,
+            "bottom": 32,
+            "left": 1350.390625
+          }
+        }
+      ],
+      "exportMenu": [
+        {
+          "label": "PNG 1×1920 × 1080 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 562,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 562,
+            "right": 706.859375,
+            "bottom": 602.5,
+            "left": 456
+          }
+        },
+        {
+          "label": "PNG 2×3840 × 2160 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 602.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 602.5,
+            "right": 706.859375,
+            "bottom": 643,
+            "left": 456
+          }
+        },
+        {
+          "label": "PDF (.pdf)One page at this artboard’s size",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 643,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 643,
+            "right": 706.859375,
+            "bottom": 683.5,
+            "left": 456
+          }
+        },
+        {
+          "label": "HTML (.zip)Page + its images and runtime",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 683.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 683.5,
+            "right": 706.859375,
+            "bottom": 724,
+            "left": 456
+          }
+        },
+        {
+          "label": "All artboards (.pdf)All 3 artboards in order of canvas position",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 733,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 733,
+            "right": 706.859375,
+            "bottom": 773.5,
+            "left": 456
+          }
+        },
+        {
+          "label": "Selected artboards (.pdf)",
+          "role": "menuitem",
+          "rect": {
+            "x": 456,
+            "y": 773.5,
+            "width": 250.859375,
+            "height": 24,
+            "top": 773.5,
+            "right": 706.859375,
+            "bottom": 797.5,
+            "left": 456
+          }
+        }
+      ],
+      "trigger": "点击"
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "fit": {
+        "x": 24,
+        "y": 329.5,
+        "width": 720,
+        "height": 405,
+        "top": 329.5,
+        "right": 744,
+        "bottom": 734.5,
+        "left": 24
+      },
+      "fill": {
+        "x": 0,
+        "y": 40,
+        "width": 768,
+        "height": 984,
+        "top": 40,
+        "right": 768,
+        "bottom": 1024,
+        "left": 0
+      },
+      "controls": [
+        {
+          "label": "Back to canvas",
+          "rect": {
+            "x": 4,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 28,
+            "bottom": 32,
+            "left": 4
+          }
+        },
+        {
+          "label": "Export",
+          "rect": {
+            "x": 568.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 592.390625,
+            "bottom": 32,
+            "left": 568.390625
+          }
+        },
+        {
+          "label": "Version history",
+          "rect": {
+            "x": 596.390625,
+            "y": 8,
+            "width": 28,
+            "height": 24,
+            "top": 8,
+            "right": 624.390625,
+            "bottom": 32,
+            "left": 596.390625
+          }
+        },
+        {
+          "label": "Share",
+          "rect": {
+            "x": 626.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 650.390625,
+            "bottom": 32,
+            "left": 626.390625
+          }
+        },
+        {
+          "label": "Comments",
+          "rect": {
+            "x": 654.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 678.390625,
+            "bottom": 32,
+            "left": 654.390625
+          }
+        },
+        {
+          "label": "Comment options",
+          "rect": {
+            "x": 678.390625,
+            "y": 8,
+            "width": 16,
+            "height": 24,
+            "top": 8,
+            "right": 694.390625,
+            "bottom": 32,
+            "left": 678.390625
+          }
+        }
+      ],
+      "exportMenu": [
+        {
+          "label": "PNG 1×1920 × 1080 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 559,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 559,
+            "right": 494.859375,
+            "bottom": 599.5,
+            "left": 244
+          }
+        },
+        {
+          "label": "PNG 2×3840 × 2160 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 599.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 599.5,
+            "right": 494.859375,
+            "bottom": 640,
+            "left": 244
+          }
+        },
+        {
+          "label": "PDF (.pdf)One page at this artboard’s size",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 640,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 640,
+            "right": 494.859375,
+            "bottom": 680.5,
+            "left": 244
+          }
+        },
+        {
+          "label": "HTML (.zip)Page + its images and runtime",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 680.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 680.5,
+            "right": 494.859375,
+            "bottom": 721,
+            "left": 244
+          }
+        },
+        {
+          "label": "All artboards (.pdf)All 3 artboards in order of canvas position",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 730,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 730,
+            "right": 494.859375,
+            "bottom": 770.5,
+            "left": 244
+          }
+        },
+        {
+          "label": "Selected artboards (.pdf)",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 770.5,
+            "width": 250.859375,
+            "height": 24,
+            "top": 770.5,
+            "right": 494.859375,
+            "bottom": 794.5,
+            "left": 244
+          }
+        }
+      ],
+      "trigger": "点击"
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "fit": {
+        "x": 24,
+        "y": 329.5,
+        "width": 720,
+        "height": 405,
+        "top": 329.5,
+        "right": 744,
+        "bottom": 734.5,
+        "left": 24
+      },
+      "fill": {
+        "x": 0,
+        "y": 40,
+        "width": 768,
+        "height": 984,
+        "top": 40,
+        "right": 768,
+        "bottom": 1024,
+        "left": 0
+      },
+      "controls": [
+        {
+          "label": "Back to canvas",
+          "rect": {
+            "x": 4,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 28,
+            "bottom": 32,
+            "left": 4
+          }
+        },
+        {
+          "label": "Export",
+          "rect": {
+            "x": 568.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 592.390625,
+            "bottom": 32,
+            "left": 568.390625
+          }
+        },
+        {
+          "label": "Version history",
+          "rect": {
+            "x": 596.390625,
+            "y": 8,
+            "width": 28,
+            "height": 24,
+            "top": 8,
+            "right": 624.390625,
+            "bottom": 32,
+            "left": 596.390625
+          }
+        },
+        {
+          "label": "Share",
+          "rect": {
+            "x": 626.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 650.390625,
+            "bottom": 32,
+            "left": 626.390625
+          }
+        },
+        {
+          "label": "Comments",
+          "rect": {
+            "x": 654.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 678.390625,
+            "bottom": 32,
+            "left": 654.390625
+          }
+        },
+        {
+          "label": "Comment options",
+          "rect": {
+            "x": 678.390625,
+            "y": 8,
+            "width": 16,
+            "height": 24,
+            "top": 8,
+            "right": 694.390625,
+            "bottom": 32,
+            "left": 678.390625
+          }
+        }
+      ],
+      "exportMenu": [
+        {
+          "label": "PNG 1×1920 × 1080 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 559,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 559,
+            "right": 494.859375,
+            "bottom": 599.5,
+            "left": 244
+          }
+        },
+        {
+          "label": "PNG 2×3840 × 2160 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 599.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 599.5,
+            "right": 494.859375,
+            "bottom": 640,
+            "left": 244
+          }
+        },
+        {
+          "label": "PDF (.pdf)One page at this artboard’s size",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 640,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 640,
+            "right": 494.859375,
+            "bottom": 680.5,
+            "left": 244
+          }
+        },
+        {
+          "label": "HTML (.zip)Page + its images and runtime",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 680.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 680.5,
+            "right": 494.859375,
+            "bottom": 721,
+            "left": 244
+          }
+        },
+        {
+          "label": "All artboards (.pdf)All 3 artboards in order of canvas position",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 730,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 730,
+            "right": 494.859375,
+            "bottom": 770.5,
+            "left": 244
+          }
+        },
+        {
+          "label": "Selected artboards (.pdf)",
+          "role": "menuitem",
+          "rect": {
+            "x": 244,
+            "y": 770.5,
+            "width": 250.859375,
+            "height": 24,
+            "top": 770.5,
+            "right": 494.859375,
+            "bottom": 794.5,
+            "left": 244
+          }
+        }
+      ],
+      "trigger": "点击"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "fit": {
+        "x": 24,
+        "y": 345.8125,
+        "width": 342,
+        "height": 192.375,
+        "top": 345.8125,
+        "right": 366,
+        "bottom": 538.1875,
+        "left": 24
+      },
+      "fill": {
+        "x": 0,
+        "y": 40,
+        "width": 390,
+        "height": 804,
+        "top": 40,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "controls": [
+        {
+          "label": "Back to canvas",
+          "rect": {
+            "x": 4,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 28,
+            "bottom": 32,
+            "left": 4
+          }
+        },
+        {
+          "label": "Export",
+          "rect": {
+            "x": 190.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 214.390625,
+            "bottom": 32,
+            "left": 190.390625
+          }
+        },
+        {
+          "label": "Version history",
+          "rect": {
+            "x": 218.390625,
+            "y": 8,
+            "width": 28,
+            "height": 24,
+            "top": 8,
+            "right": 246.390625,
+            "bottom": 32,
+            "left": 218.390625
+          }
+        },
+        {
+          "label": "Share",
+          "rect": {
+            "x": 248.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 272.390625,
+            "bottom": 32,
+            "left": 248.390625
+          }
+        },
+        {
+          "label": "Comments",
+          "rect": {
+            "x": 276.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 300.390625,
+            "bottom": 32,
+            "left": 276.390625
+          }
+        },
+        {
+          "label": "Comment options",
+          "rect": {
+            "x": 300.390625,
+            "y": 8,
+            "width": 16,
+            "height": 24,
+            "top": 8,
+            "right": 316.390625,
+            "bottom": 32,
+            "left": 300.390625
+          }
+        }
+      ],
+      "exportMenu": [
+        {
+          "label": "PNG 1×1920 × 1080 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 460,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 460,
+            "right": 380.859375,
+            "bottom": 500.5,
+            "left": 130
+          }
+        },
+        {
+          "label": "PNG 2×3840 × 2160 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 500.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 500.5,
+            "right": 380.859375,
+            "bottom": 541,
+            "left": 130
+          }
+        },
+        {
+          "label": "PDF (.pdf)One page at this artboard’s size",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 541,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 541,
+            "right": 380.859375,
+            "bottom": 581.5,
+            "left": 130
+          }
+        },
+        {
+          "label": "HTML (.zip)Page + its images and runtime",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 581.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 581.5,
+            "right": 380.859375,
+            "bottom": 622,
+            "left": 130
+          }
+        },
+        {
+          "label": "All artboards (.pdf)All 3 artboards in order of canvas position",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 631,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 631,
+            "right": 380.859375,
+            "bottom": 671.5,
+            "left": 130
+          }
+        },
+        {
+          "label": "Selected artboards (.pdf)",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 671.5,
+            "width": 250.859375,
+            "height": 24,
+            "top": 671.5,
+            "right": 380.859375,
+            "bottom": 695.5,
+            "left": 130
+          }
+        }
+      ],
+      "trigger": "回车；缩小状态下相邻画板标题可能遮挡导出入口"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "fit": {
+        "x": 24,
+        "y": 345.8125,
+        "width": 342,
+        "height": 192.375,
+        "top": 345.8125,
+        "right": 366,
+        "bottom": 538.1875,
+        "left": 24
+      },
+      "fill": {
+        "x": 0,
+        "y": 40,
+        "width": 390,
+        "height": 804,
+        "top": 40,
+        "right": 390,
+        "bottom": 844,
+        "left": 0
+      },
+      "controls": [
+        {
+          "label": "Back to canvas",
+          "rect": {
+            "x": 4,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 28,
+            "bottom": 32,
+            "left": 4
+          }
+        },
+        {
+          "label": "Export",
+          "rect": {
+            "x": 190.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 214.390625,
+            "bottom": 32,
+            "left": 190.390625
+          }
+        },
+        {
+          "label": "Version history",
+          "rect": {
+            "x": 218.390625,
+            "y": 8,
+            "width": 28,
+            "height": 24,
+            "top": 8,
+            "right": 246.390625,
+            "bottom": 32,
+            "left": 218.390625
+          }
+        },
+        {
+          "label": "Share",
+          "rect": {
+            "x": 248.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 272.390625,
+            "bottom": 32,
+            "left": 248.390625
+          }
+        },
+        {
+          "label": "Comments",
+          "rect": {
+            "x": 276.390625,
+            "y": 8,
+            "width": 24,
+            "height": 24,
+            "top": 8,
+            "right": 300.390625,
+            "bottom": 32,
+            "left": 276.390625
+          }
+        },
+        {
+          "label": "Comment options",
+          "rect": {
+            "x": 300.390625,
+            "y": 8,
+            "width": 16,
+            "height": 24,
+            "top": 8,
+            "right": 316.390625,
+            "bottom": 32,
+            "left": 300.390625
+          }
+        }
+      ],
+      "exportMenu": [
+        {
+          "label": "PNG 1×1920 × 1080 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 460,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 460,
+            "right": 380.859375,
+            "bottom": 500.5,
+            "left": 130
+          }
+        },
+        {
+          "label": "PNG 2×3840 × 2160 px",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 500.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 500.5,
+            "right": 380.859375,
+            "bottom": 541,
+            "left": 130
+          }
+        },
+        {
+          "label": "PDF (.pdf)One page at this artboard’s size",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 541,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 541,
+            "right": 380.859375,
+            "bottom": 581.5,
+            "left": 130
+          }
+        },
+        {
+          "label": "HTML (.zip)Page + its images and runtime",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 581.5,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 581.5,
+            "right": 380.859375,
+            "bottom": 622,
+            "left": 130
+          }
+        },
+        {
+          "label": "All artboards (.pdf)All 3 artboards in order of canvas position",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 631,
+            "width": 250.859375,
+            "height": 40.5,
+            "top": 631,
+            "right": 380.859375,
+            "bottom": 671.5,
+            "left": 130
+          }
+        },
+        {
+          "label": "Selected artboards (.pdf)",
+          "role": "menuitem",
+          "rect": {
+            "x": 130,
+            "y": 671.5,
+            "width": 250.859375,
+            "height": 24,
+            "top": 671.5,
+            "right": 380.859375,
+            "bottom": 695.5,
+            "left": 130
+          }
+        }
+      ],
+      "trigger": "回车；缩小状态下相邻画板标题可能遮挡导出入口"
+    }
+  ],
+  "smallArtboard": {
+    "width": 1440,
+    "height": 1000,
+    "artboardWidth": 800,
+    "artboardHeight": 600,
+    "fit": {
+      "x": 320,
+      "y": 220,
+      "width": 800,
+      "height": 600,
+      "top": 220,
+      "right": 1120,
+      "bottom": 820,
+      "left": 320
+    }
+  },
+  "observedFit": {
+    "padding": 24,
+    "scaleCap": 1,
+    "headerHeight": 40,
+    "fill": "保持原始CSS像素尺寸，内容按预览容器裁剪"
+  },
+  "readingOrder": {
+    "functionName": "artboardsInReadingOrder",
+    "sourceUtf16Start": 2609158,
+    "sourceUtf16End": 2609485,
+    "cases": [
+      {
+        "name": "空画布",
+        "pages": [],
+        "order": []
+      },
+      {
+        "name": "同排反序",
+        "pages": [
+          {
+            "id": "右",
+            "x": 400,
+            "y": 0,
+            "h": 200
+          },
+          {
+            "id": "左",
+            "x": 0,
+            "y": 0,
+            "h": 200
+          }
+        ],
+        "order": [
+          "左",
+          "右"
+        ]
+      },
+      {
+        "name": "两排交错",
+        "pages": [
+          {
+            "id": "下右",
+            "x": 400,
+            "y": 500,
+            "h": 200
+          },
+          {
+            "id": "上右",
+            "x": 400,
+            "y": 0,
+            "h": 200
+          },
+          {
+            "id": "下左",
+            "x": 0,
+            "y": 500,
+            "h": 200
+          },
+          {
+            "id": "上左",
+            "x": 0,
+            "y": 0,
+            "h": 200
+          }
+        ],
+        "order": [
+          "上左",
+          "上右",
+          "下左",
+          "下右"
+        ]
+      },
+      {
+        "name": "高矮画板同排",
+        "pages": [
+          {
+            "id": "高",
+            "x": 200,
+            "y": 0,
+            "h": 800
+          },
+          {
+            "id": "矮",
+            "x": 0,
+            "y": 200,
+            "h": 100
+          },
+          {
+            "id": "后排",
+            "x": 20,
+            "y": 850,
+            "h": 100
+          }
+        ],
+        "order": [
+          "矮",
+          "高",
+          "后排"
+        ]
+      },
+      {
+        "name": "中线边界",
+        "pages": [
+          {
+            "id": "右上",
+            "x": 400,
+            "y": 0,
+            "h": 100
+          },
+          {
+            "id": "左边界",
+            "x": 0,
+            "y": 50,
+            "h": 100
+          }
+        ],
+        "order": [
+          "右上",
+          "左边界"
+        ]
+      },
+      {
+        "name": "负坐标重叠",
+        "pages": [
+          {
+            "id": "右",
+            "x": 400,
+            "y": -100,
+            "h": 600
+          },
+          {
+            "id": "左",
+            "x": -400,
+            "y": 100,
+            "h": 100
+          },
+          {
+            "id": "底",
+            "x": 0,
+            "y": 600,
+            "h": 200
+          }
+        ],
+        "order": [
+          "左",
+          "右",
+          "底"
+        ]
+      }
+    ]
+  },
+  "controlSemantics": {
+    "radios": [
+      {
+        "tag": "SPAN",
+        "role": "radio",
+        "ariaLabel": null,
+        "ariaChecked": "false",
+        "tabIndex": -1,
+        "rect": {
+          "x": 1371.390625,
+          "y": 9,
+          "width": 32.8125,
+          "height": 22,
+          "top": 9,
+          "right": 1404.203125,
+          "bottom": 31,
+          "left": 1371.390625
+        },
+        "parent": {
+          "tag": "DIV",
+          "role": "radiogroup",
+          "text": "FillFit"
+        }
+      },
+      {
+        "tag": "INPUT",
+        "type": "radio",
+        "role": null,
+        "ariaLabel": null,
+        "checked": false,
+        "ariaChecked": null,
+        "tabIndex": -1,
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "width": 1,
+          "height": 1,
+          "top": -1,
+          "right": 0,
+          "bottom": 0,
+          "left": -1
+        },
+        "parent": {
+          "tag": "DIV",
+          "role": "radiogroup",
+          "text": "FillFit"
+        }
+      },
+      {
+        "tag": "SPAN",
+        "role": "radio",
+        "ariaLabel": null,
+        "ariaChecked": "true",
+        "tabIndex": 0,
+        "rect": {
+          "x": 1404.203125,
+          "y": 9,
+          "width": 30.796875,
+          "height": 22,
+          "top": 9,
+          "right": 1435,
+          "bottom": 31,
+          "left": 1404.203125
+        },
+        "parent": {
+          "tag": "DIV",
+          "role": "radiogroup",
+          "text": "FillFit"
+        }
+      },
+      {
+        "tag": "INPUT",
+        "type": "radio",
+        "role": null,
+        "ariaLabel": null,
+        "checked": true,
+        "ariaChecked": null,
+        "tabIndex": -1,
+        "rect": {
+          "x": -1,
+          "y": -1,
+          "width": 1,
+          "height": 1,
+          "top": -1,
+          "right": 0,
+          "bottom": 0,
+          "left": -1
+        },
+        "parent": {
+          "tag": "DIV",
+          "role": "radiogroup",
+          "text": "FillFit"
+        }
+      }
+    ],
+    "reopeningAfterFill": {
+      "reopened": {
+        "x": 24,
+        "y": 128.5,
+        "width": 1392,
+        "height": 783
+      },
+      "other": {
+        "x": 24,
+        "y": 128.5,
+        "width": 1392,
+        "height": 783
+      }
+    },
+    "result": "单选组支持方向键；每次重新进入默认适应，不记住填满。"
+  },
+  "runtimeSurfaces": [
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "surfaces": [
+        {
+          "rect": {
+            "x": 24,
+            "y": 93.5,
+            "width": 1872,
+            "height": 1053,
+            "top": 93.5,
+            "right": 1896,
+            "bottom": 1146.5,
+            "left": 24
+          },
+          "width": "1920px",
+          "height": "1080px",
+          "transform": "none",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 6px 16px 0px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "surfaces": [
+        {
+          "rect": {
+            "x": 24,
+            "y": 93.5,
+            "width": 1872,
+            "height": 1053,
+            "top": 93.5,
+            "right": 1896,
+            "bottom": 1146.5,
+            "left": 24
+          },
+          "width": "1920px",
+          "height": "1080px",
+          "transform": "none",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, rgba(0, 0, 0, 0.24) 0px 6px 16px 0px",
+          "border": "0px solid rgba(255, 255, 255, 0.04)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "surfaces": [
+        {
+          "rect": {
+            "x": 24,
+            "y": 128.5,
+            "width": 1392,
+            "height": 783,
+            "top": 128.5,
+            "right": 1416,
+            "bottom": 911.5,
+            "left": 24
+          },
+          "width": "1920px",
+          "height": "1080px",
+          "transform": "none",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 6px 16px 0px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "surfaces": [
+        {
+          "rect": {
+            "x": 24,
+            "y": 128.5,
+            "width": 1392,
+            "height": 783,
+            "top": 128.5,
+            "right": 1416,
+            "bottom": 911.5,
+            "left": 24
+          },
+          "width": "1920px",
+          "height": "1080px",
+          "transform": "none",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, rgba(0, 0, 0, 0.24) 0px 6px 16px 0px",
+          "border": "0px solid rgba(255, 255, 255, 0.04)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "surfaces": [
+        {
+          "rect": {
+            "x": 24,
+            "y": 329.5,
+            "width": 720,
+            "height": 405,
+            "top": 329.5,
+            "right": 744,
+            "bottom": 734.5,
+            "left": 24
+          },
+          "width": "1920px",
+          "height": "1080px",
+          "transform": "none",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 6px 16px 0px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "surfaces": [
+        {
+          "rect": {
+            "x": 24,
+            "y": 329.5,
+            "width": 720,
+            "height": 405,
+            "top": 329.5,
+            "right": 744,
+            "bottom": 734.5,
+            "left": 24
+          },
+          "width": "1920px",
+          "height": "1080px",
+          "transform": "none",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, rgba(0, 0, 0, 0.24) 0px 6px 16px 0px",
+          "border": "0px solid rgba(255, 255, 255, 0.04)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "surfaces": [
+        {
+          "rect": {
+            "x": 24,
+            "y": 345.8125,
+            "width": 342,
+            "height": 192.375,
+            "top": 345.8125,
+            "right": 366,
+            "bottom": 538.1875,
+            "left": 24
+          },
+          "width": "1920px",
+          "height": "1080px",
+          "transform": "none",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 6px 16px 0px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "surfaces": [
+        {
+          "rect": {
+            "x": 24,
+            "y": 345.8125,
+            "width": 342,
+            "height": 192.375,
+            "top": 345.8125,
+            "right": 366,
+            "bottom": 538.1875,
+            "left": 24
+          },
+          "width": "1920px",
+          "height": "1080px",
+          "transform": "none",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, rgba(0, 0, 0, 0.24) 0px 6px 16px 0px",
+          "border": "0px solid rgba(255, 255, 255, 0.04)",
+          "background": "rgb(255, 255, 255)"
+        }
+      ]
+    }
+  ],
+  "exportNames": {
+    "singlePdf": "画板标题，未提供标题时取文件名",
+    "singleHtmlZip": "画板文件名或标题加-html.zip",
+    "sourceCallbacks": [
+      "onExportArtboardPdf/Vg",
+      "onExportArtboardHtmlZip/nm"
+    ]
+  }
+}

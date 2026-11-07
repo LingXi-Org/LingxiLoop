@@ -1,0 +1,334 @@
+{
+  "candidateCommit": "1dea14e9be4ffd4c28ba8d0b1ef9a6e36ee09ebf",
+  "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "runId": 42336781537,
+  "artifactId": 13562420139,
+  "archiveSha256": "db43716b3303728dfc7392ff2e96dad6c04dd8e0ff7f131dca6aae48d2dcb869",
+  "diagnosticPassed": true,
+  "qualified": false,
+  "sampleCount": 8,
+  "metrics": [
+    {
+      "arm": "candidate",
+      "kind": "design",
+      "mode": "fullNavigation",
+      "editableMs": 8991.6,
+      "scriptTransferBytes": 1337453,
+      "pssDeltaBytes": 413706445,
+      "inputSamplesMs": [
+        35.10000000009313,
+        35.89999999990687,
+        23.100000000093132
+      ],
+      "longTaskCount": 6,
+      "longTaskIntersectionMs": 529.0,
+      "tasks": [
+        {
+          "startMs": 2273.76,
+          "durationMs": 109
+        },
+        {
+          "startMs": 2395.46,
+          "durationMs": 75
+        },
+        {
+          "startMs": 2481.36,
+          "durationMs": 67
+        },
+        {
+          "startMs": 2853.16,
+          "durationMs": 68
+        },
+        {
+          "startMs": 3105.36,
+          "durationMs": 52
+        },
+        {
+          "startMs": 4177.86,
+          "durationMs": 158
+        }
+      ],
+      "dropped": 0,
+      "truncated": false
+    },
+    {
+      "arm": "candidate",
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "editableMs": 5471.3,
+      "scriptTransferBytes": 296269,
+      "pssDeltaBytes": 388845159,
+      "inputSamplesMs": [
+        32.10000000009313,
+        39.800000000046566,
+        24.300000000046566
+      ],
+      "longTaskCount": 3,
+      "longTaskIntersectionMs": 289.0,
+      "tasks": [
+        {
+          "startMs": 34.17,
+          "durationMs": 76
+        },
+        {
+          "startMs": 1136.87,
+          "durationMs": 160
+        },
+        {
+          "startMs": 4993.57,
+          "durationMs": 53
+        }
+      ],
+      "dropped": 0,
+      "truncated": false
+    },
+    {
+      "arm": "candidate",
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "editableMs": 8692.2,
+      "scriptTransferBytes": 1361717,
+      "pssDeltaBytes": 292969677,
+      "inputSamplesMs": [
+        31.199999999953434,
+        18.5999999998603,
+        23.100000000093132
+      ],
+      "longTaskCount": 5,
+      "longTaskIntersectionMs": 428.0,
+      "tasks": [
+        {
+          "startMs": 1714.12,
+          "durationMs": 154
+        },
+        {
+          "startMs": 2246.52,
+          "durationMs": 69
+        },
+        {
+          "startMs": 3308.62,
+          "durationMs": 65
+        },
+        {
+          "startMs": 4171.72,
+          "durationMs": 87
+        },
+        {
+          "startMs": 8188.32,
+          "durationMs": 53
+        }
+      ],
+      "dropped": 0,
+      "truncated": false
+    },
+    {
+      "arm": "candidate",
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "editableMs": 6178.8,
+      "scriptTransferBytes": 696449,
+      "pssDeltaBytes": 309891891,
+      "inputSamplesMs": [
+        34.59999999962747,
+        30.799999999813735,
+        35.299999999813735
+      ],
+      "longTaskCount": 3,
+      "longTaskIntersectionMs": 203.0,
+      "tasks": [
+        {
+          "startMs": 1158.56,
+          "durationMs": 63
+        },
+        {
+          "startMs": 1759.36,
+          "durationMs": 85
+        },
+        {
+          "startMs": 5665.56,
+          "durationMs": 55
+        }
+      ],
+      "dropped": 0,
+      "truncated": false
+    },
+    {
+      "arm": "baseline",
+      "kind": "design",
+      "mode": "fullNavigation",
+      "editableMs": 9955.4,
+      "scriptTransferBytes": 1279443,
+      "pssDeltaBytes": 407434649,
+      "inputSamplesMs": [
+        26.700000000186265,
+        19.5,
+        19.5
+      ],
+      "longTaskCount": 7,
+      "longTaskIntersectionMs": 517.0,
+      "tasks": [
+        {
+          "startMs": 2306.91,
+          "durationMs": 113
+        },
+        {
+          "startMs": 2427.01,
+          "durationMs": 66
+        },
+        {
+          "startMs": 2504.11,
+          "durationMs": 70
+        },
+        {
+          "startMs": 2880.61,
+          "durationMs": 71
+        },
+        {
+          "startMs": 3128.61,
+          "durationMs": 96
+        },
+        {
+          "startMs": 3832.01,
+          "durationMs": 50
+        },
+        {
+          "startMs": 9689.61,
+          "durationMs": 51
+        }
+      ],
+      "dropped": 0,
+      "truncated": false
+    },
+    {
+      "arm": "baseline",
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "editableMs": 6804.7,
+      "scriptTransferBytes": 242587,
+      "pssDeltaBytes": 412227379,
+      "inputSamplesMs": [
+        32.60000000009313,
+        18.59999999962747,
+        18.100000000093132
+      ],
+      "longTaskCount": 2,
+      "longTaskIntersectionMs": 103.0,
+      "tasks": [
+        {
+          "startMs": 714.35,
+          "durationMs": 52
+        },
+        {
+          "startMs": 6543.35,
+          "durationMs": 51
+        }
+      ],
+      "dropped": 0,
+      "truncated": false
+    },
+    {
+      "arm": "baseline",
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "editableMs": 6742.4,
+      "scriptTransferBytes": 1303840,
+      "pssDeltaBytes": 304032153,
+      "inputSamplesMs": [
+        33.89999999990687,
+        28.600000000093132,
+        30.800000000279397
+      ],
+      "longTaskCount": 3,
+      "longTaskIntersectionMs": 307.0,
+      "tasks": [
+        {
+          "startMs": 1681.49,
+          "durationMs": 168
+        },
+        {
+          "startMs": 2229.49,
+          "durationMs": 73
+        },
+        {
+          "startMs": 3570.29,
+          "durationMs": 66
+        }
+      ],
+      "dropped": 0,
+      "truncated": false
+    },
+    {
+      "arm": "baseline",
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "editableMs": 4575.3,
+      "scriptTransferBytes": 642527,
+      "pssDeltaBytes": 303065497,
+      "inputSamplesMs": [
+        31.300000000279397,
+        18.200000000186265,
+        18.800000000745058
+      ],
+      "longTaskCount": 2,
+      "longTaskIntersectionMs": 113.0,
+      "tasks": [
+        {
+          "startMs": 758.08,
+          "durationMs": 51
+        },
+        {
+          "startMs": 1537.68,
+          "durationMs": 62
+        }
+      ],
+      "dropped": 0,
+      "truncated": false
+    }
+  ],
+  "ratios": [
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "singleSampleChangePercent": {
+        "editableMs": -9.681178054121375,
+        "scriptTransferBytes": 4.534004250287049,
+        "pssDeltaBytes": 1.5393379074149394
+      }
+    },
+    {
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "singleSampleChangePercent": {
+        "editableMs": -19.595279733125626,
+        "scriptTransferBytes": 22.1289681639989,
+        "pssDeltaBytes": -5.6721657005707975
+      }
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "singleSampleChangePercent": {
+        "editableMs": 28.9184859990508,
+        "scriptTransferBytes": 4.438964903669151,
+        "pssDeltaBytes": -3.638587527944781
+      }
+    },
+    {
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "singleSampleChangePercent": {
+        "editableMs": 35.046882171660876,
+        "scriptTransferBytes": 8.392176515539429,
+        "pssDeltaBytes": 2.2524484204152095
+      }
+    }
+  ],
+  "limits": [
+    "每编辑器/模式/臂仅1个样本，未满足十组AB/BA，不能把单次比率当作p75或性能门槛通过。",
+    "长任务采用与启动窗口的交集求和；只包括>=50ms主窗口任务，不代表全部CPU工作，也不能单独识别模块根因。",
+    "本轮Slides PSS低于基线，与前轮上升不同；未获得缓存或缩略图是内存回归根因的证据。",
+    "Slides单次完整启动仍约慢1.95秒，主线程长任务交集仅多121ms，不能用已观测长任务独自解释全量差距。",
+    "candidate六项整份导出成功，基线导出超时保留在原始档案。"
+  ],
+  "rawResult": "1dea14e9-diagnostic.zip/results.json"
+}

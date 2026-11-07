@@ -1,0 +1,10 @@
+{
+  "kind": "isolated-svg-font-recovery-diagnostic",
+  "mode": "design",
+  "actualFontRequestFailed": true,
+  "chineseRetry": true,
+  "retryLoadedPackedImage": true,
+  "sourceAndHistoryUnchanged": true,
+  "scope": "actual React and local font fetch; controlled HTTP failure",
+  "consoleOrPageErrors": []
+}

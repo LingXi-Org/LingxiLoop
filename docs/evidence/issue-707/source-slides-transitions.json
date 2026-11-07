@@ -1,0 +1,310 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceFile": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+  "referenceResourceHashesVerified": 12,
+  "sourceSha256": "878eab1994de6c7896126cf1549cd46950b74c547bb45f7da5eddf9bef488caf",
+  "scope": "固定原版运行时记录，受控静态文档；不是完整视觉、授权服务或性能验收。",
+  "cases": [
+    {
+      "kind": "fade",
+      "forward": [
+        {
+          "frames": [
+            {
+              "opacity": 1
+            },
+            {
+              "opacity": 0
+            }
+          ],
+          "timing": {
+            "duration": 320,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        }
+      ],
+      "backward": [
+        {
+          "frames": [
+            {
+              "opacity": 1
+            },
+            {
+              "opacity": 0
+            }
+          ],
+          "timing": {
+            "duration": 320,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        }
+      ]
+    },
+    {
+      "kind": "push",
+      "forward": [
+        {
+          "frames": [
+            {
+              "transform": "translateX(0px)"
+            },
+            {
+              "transform": "translateX(-1920px)"
+            }
+          ],
+          "timing": {
+            "duration": 420,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "transform": "translateX(1920px)"
+            },
+            {
+              "transform": "translateX(0px)"
+            }
+          ],
+          "timing": {
+            "duration": 420,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        }
+      ],
+      "backward": [
+        {
+          "frames": [
+            {
+              "transform": "translateX(0px)"
+            },
+            {
+              "transform": "translateX(1920px)"
+            }
+          ],
+          "timing": {
+            "duration": 420,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "transform": "translateX(-1920px)"
+            },
+            {
+              "transform": "translateX(0px)"
+            }
+          ],
+          "timing": {
+            "duration": 420,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        }
+      ]
+    },
+    {
+      "kind": "magic",
+      "forward": [
+        {
+          "frames": [
+            {
+              "left": "64px",
+              "top": "40px",
+              "right": "auto",
+              "bottom": "auto",
+              "width": "1152px",
+              "height": "76px",
+              "transform": "none"
+            },
+            {
+              "left": "164px",
+              "top": "40px",
+              "right": "auto",
+              "bottom": "auto",
+              "width": "1152px",
+              "height": "76px",
+              "transform": "none"
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "opacity": 1
+            },
+            {
+              "opacity": 0
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "opacity": 1
+            },
+            {
+              "opacity": 0
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0
+            },
+            {
+              "opacity": 1
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0
+            },
+            {
+              "opacity": 1
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        }
+      ],
+      "backward": [
+        {
+          "frames": [
+            {
+              "left": "164px",
+              "top": "40px",
+              "right": "auto",
+              "bottom": "auto",
+              "width": "1152px",
+              "height": "76px",
+              "transform": "none"
+            },
+            {
+              "left": "64px",
+              "top": "40px",
+              "right": "auto",
+              "bottom": "auto",
+              "width": "1152px",
+              "height": "76px",
+              "transform": "none"
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "opacity": 1
+            },
+            {
+              "opacity": 0
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "opacity": 1
+            },
+            {
+              "opacity": 0
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0
+            },
+            {
+              "opacity": 1
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        },
+        {
+          "frames": [
+            {
+              "opacity": 0
+            },
+            {
+              "opacity": 1
+            }
+          ],
+          "timing": {
+            "duration": 480,
+            "easing": "cubic-bezier(0.33, 0.01, 0.2, 1)",
+            "fill": "forwards"
+          },
+          "tag": "DIV"
+        }
+      ]
+    }
+  ]
+}

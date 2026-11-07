@@ -1,0 +1,74 @@
+{
+  "kind": "matched-synthetic-fixture-raw-pixel-diagnostic",
+  "state": "board-fill",
+  "masks": [],
+  "antialiasExclusions": false,
+  "qualified": false,
+  "scope": "Only the specified matched state; control geometry and complete interaction states remain separate gates.",
+  "results": [
+    {
+      "image": "design-1920-light.png",
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 2301,
+      "rawDifferentRatio": 0.0009986979166666666,
+      "conservativePixelPass": true
+    },
+    {
+      "image": "design-1920-dark.png",
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 2586,
+      "rawDifferentRatio": 0.0011223958333333333,
+      "conservativePixelPass": true
+    },
+    {
+      "image": "design-1440-light.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 2302,
+      "rawDifferentRatio": 0.0015986111111111112,
+      "conservativePixelPass": true
+    },
+    {
+      "image": "design-1440-dark.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 2586,
+      "rawDifferentRatio": 0.0017958333333333333,
+      "conservativePixelPass": true
+    },
+    {
+      "image": "design-768-light.png",
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 2301,
+      "rawDifferentRatio": 0.002925872802734375,
+      "conservativePixelPass": true
+    },
+    {
+      "image": "design-768-dark.png",
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 2586,
+      "rawDifferentRatio": 0.00328826904296875,
+      "conservativePixelPass": true
+    },
+    {
+      "image": "design-390-light.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 2301,
+      "rawDifferentRatio": 0.006990521327014218,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-390-dark.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 2586,
+      "rawDifferentRatio": 0.007856361647830842,
+      "conservativePixelPass": false
+    }
+  ]
+}

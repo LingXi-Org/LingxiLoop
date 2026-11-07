@@ -1,0 +1,38 @@
+▶ legacy artifact conversion
+  ✔ preserves relative inline links and targets without leaking link marks into siblings (20.467564ms)
+  ✔ retains every pinned Slides transition and matching element identities across slides (10.388878ms)
+  ✔ preserves ordered pages, editable text, images, formula source and notes without changing originals (4.67352ms)
+  ✔ keeps executable Design source isolated and addressed by its original hash (3.231177ms)
+  ✔ never moves event handlers or unsafe SVG into native DOM nodes (1.055809ms)
+  ✔ refuses unknown format versions and missing referenced pages instead of losing data (1.216812ms)
+  ✔ converts static DC wrappers, empty decorative shapes, grid tracks and print metadata (2.312644ms)
+✔ legacy artifact conversion (45.129967ms)
+✔ legacy iframe srcdoc becomes the opaque block source without a forbidden nested frame (1.74884ms)
+✔ keeps x-embed contents byte-exact and converts surrounding nodes and stored image references (2.11446ms)
+✔ preserves authored header cells while body-only legacy tables stay body-only (1.81015ms)
+▶ Design canvas page conversion
+  ✔ preserves independent canvas pages and board membership without changing source snapshots (1.848822ms)
+✔ Design canvas page conversion (2.042266ms)
+✔ imports source canvas notes as independent world objects without altering board bodies or original files (2.619818ms)
+✔ imported Chinese sticky backgrounds include automatic wrapping and explicit blank lines (1.83317ms)
+✔ 设计播放元数据保留原型和无框标记，旧文件默认静态且原始文件不变 (3.0823ms)
+✔ 旧版画板四角读取为可选元数据，转换不修改原文件 (1.65931ms)
+✔ non-square rounded rectangles and ellipses use document units without shrinking the fill (1.756713ms)
+✔ directional arrows retain the upstream silhouette when their dimensions differ (0.324433ms)
+✔ new arrow directions save, reopen and undo through the existing operations (21.41726ms)
+✔ runtime and remote failures always produce Chinese editor feedback (1.529898ms)
+✔ editor component prose and accessible labels contain no English UI copy (254.46019ms)
+✔ 链接缩略图保留局部下划线，紧凑摘要不携带网址或挂载链接 (14.104101ms)
+✔ 代码样式进入有界缩略图，隐藏属性不绘制，属性与源码不成为导航内容 (1.547727ms)
+✔ thumbnail depicts node data and groups without editor, iframe or executable source (1.477053ms)
+✔ unloaded page reuses its cached preview and immutable edits/theme changes refresh it (3.805559ms)
+✔ thumbnail DOM remains bounded for dense pages (10.259639ms)
+✔ 画板四角裁切背景和全部缩略内容，不改写节点 (1.178076ms)
+ℹ tests 26
+ℹ suites 2
+ℹ pass 26
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1225.398084

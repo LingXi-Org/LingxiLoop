@@ -1,0 +1,22 @@
+{
+  "kind": "isolated-grid-row-geometry-diagnostic",
+  "mixedNodes": true,
+  "shapesOnly": false,
+  "flowOffsetsReachWorker": true,
+  "secondRowVisibleAfterTrustedWheel": true,
+  "authoredGeometryUnchanged": true,
+  "before": {
+    "x": 377,
+    "y": 1827.5,
+    "width": 120,
+    "height": 1564
+  },
+  "after": {
+    "x": 377,
+    "y": -1384.5,
+    "width": 120,
+    "height": 1564
+  },
+  "scope": "actual React/Worker and trusted wheel; controlled HTTP fixture",
+  "consoleOrPageErrors": []
+}

@@ -1,0 +1,548 @@
+{
+  "scope": "仅计量辅助回归，不是产品性能样本",
+  "baseCommit": "194d46dbbfd1f1115e720a4fc87869e71450fc0d",
+  "performanceSamples": 0,
+  "qualified": false,
+  "contracts": {
+    "tests": 21,
+    "passed": 21,
+    "failed": 0
+  },
+  "selfCheck": "通过：非脚本歧义不污染脚本资格；脚本当前歧义仍拒绝；后续精确时钟可解除歧义但保留历史；106.964ms未匹配仍拒绝",
+  "realTrace": {
+    "check": "worker-entry-network-accounting",
+    "results": [
+      {
+        "encoding": "identity",
+        "workerTransferBytes": 1000203,
+        "workerDecodedBytes": 1000054,
+        "importDurationMs": 2030.7,
+        "scriptRequests": 2,
+        "inflight": 0
+      },
+      {
+        "encoding": "gzip",
+        "workerTransferBytes": 1230,
+        "workerDecodedBytes": 1000054,
+        "importDurationMs": 2026.0,
+        "scriptRequests": 2,
+        "inflight": 0
+      },
+      {
+        "encoding": "concurrent",
+        "refusedAsAmbiguous": true,
+        "ambiguousRequests": 4
+      },
+      {
+        "encoding": "queued",
+        "scriptRequests": 12,
+        "maxNetworkStartSkewMs": 601.7,
+        "scriptDecodedBytes": 240492
+      },
+      {
+        "encoding": "mimeFetch",
+        "extensionlessFetchCountedAsScript": true,
+        "scriptRequests": 1,
+        "scriptDecodedBytes": 28
+      },
+      {
+        "encoding": "networkFailure",
+        "networkErrorCodes": [
+          "ERR_EMPTY_RESPONSE"
+        ],
+        "browserErrorPage": true,
+        "rawBrowserErrorLogged": false
+      }
+    ],
+    "performanceSamples": 0,
+    "qualified": false
+  },
+  "realCleanupAndNavigation": {
+    "check": "failed-input-cleanup-selector",
+    "results": [
+      {
+        "kind": "design",
+        "native": true,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "slides",
+        "native": true,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "design",
+        "native": true,
+        "activeEditableEnded": true,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "design",
+        "native": false,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": null
+      },
+      {
+        "kind": "slides",
+        "native": false,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": null
+      }
+    ],
+    "completionResults": [
+      {
+        "kind": "design",
+        "trustedCompletionClick": true,
+        "outerWorkspaceStayedOpen": true,
+        "realKeyboardUndoAcknowledged": true
+      },
+      {
+        "kind": "slides",
+        "trustedCompletionClick": true,
+        "outerWorkspaceStayedOpen": true,
+        "realKeyboardUndoAcknowledged": true
+      }
+    ],
+    "deniedUndoEvidence": {
+      "frames": 1,
+      "matchingHeadings": 0,
+      "operationPosts": 1,
+      "snapshotReads": 0,
+      "historyPosts": 1,
+      "snapshotStatuses": [],
+      "operationStatuses": [
+        403
+      ],
+      "historyStatuses": [
+        403
+      ],
+      "focusCompleted": true,
+      "keySent": true,
+      "headingVerified": false,
+      "ackVerified": false,
+      "focusTabs": 0,
+      "focusInsideEditor": true,
+      "nativeEditorPresent": true,
+      "editorVisible": true,
+      "documentFocused": true,
+      "activeInEditor": true,
+      "activeIsButton": true,
+      "activeIsRoot": false,
+      "activeEditable": false,
+      "headingNodePresent": true,
+      "bodyOriginal": false,
+      "bodyMarked": true,
+      "rootKeySeen": true,
+      "rootKeyTrusted": true,
+      "rootKeyPrevented": true
+    },
+    "closedEditorEvidence": {
+      "operationPosts": 0,
+      "snapshotReads": 0,
+      "historyPosts": 0,
+      "snapshotStatuses": [],
+      "operationStatuses": [],
+      "historyStatuses": [],
+      "focusCompleted": false,
+      "keySent": false,
+      "headingVerified": false,
+      "ackVerified": false,
+      "nativeEditorPresent": true,
+      "editorVisible": false,
+      "documentFocused": true,
+      "activeInEditor": false,
+      "activeIsButton": false,
+      "activeIsRoot": false,
+      "activeEditable": false,
+      "headingNodePresent": true,
+      "bodyOriginal": false,
+      "bodyMarked": true,
+      "rootKeySeen": false,
+      "rootKeyTrusted": false,
+      "rootKeyPrevented": false
+    },
+    "navigationDetach": {
+      "iframeRemovedDuringTrustedWheel": true,
+      "newFrameSnapshotUsed": true,
+      "trustedPageControlClicked": true
+    },
+    "scope": "isolated measurement helper fixture, not product undo acceptance",
+    "performanceSamples": 0,
+    "qualified": false
+  },
+  "sourceSha256": {
+    "scripts/native-artifact-benchmark.py": "9427fc3b6a9ab6e0beaf07fcad8a3b8506b23bc0f33eb4129176d7cc7536fffe",
+    "scripts/native-artifact-ci.mjs": "4ff132137bcc4c6aae44ab19b73ef92bd17c61d0b2c29f6d033df6253f7dd33a",
+    "scripts/native-artifact-ci.test.mjs": "8d4bb68af10b4091262c04940a7625ee483d8f942db7c8aaeebfd0c3fa2c6de7",
+    "scripts/native-artifact-cleanup-check.py": "d818ed20a03bf321731f2c7d264bc6c37e5395453e5a1650fadb6560d84ae7b0",
+    "scripts/native-artifact-trace-check.py": "37c2d9a356ab87134794e18efaeb682b0d037a91ca52c69bd8bba88a26458b98"
+  },
+  "mimeCoverage": [
+    "无扩展URL，左侧CDP MIME脚本/右侧Fetch的未解歧义仍拒绝",
+    "右侧MIME脚本的未解歧义仍拒绝",
+    "唯一PW MIME fallback保留脚本数、实际线字节和解压字节",
+    "alias合并保留可信脚本身份",
+    "真实无扩展Fetch JavaScript MIME被计量",
+    "脱敏保留script分类而不发布MIME或headers"
+  ],
+  "lateIdentitySnapshotCoverage": [
+    "editable旧快照晚到MIME后仍计入实际已有脚本字节",
+    "CDP/PW双别名两种顺序去重后不丢脚本身份",
+    "不复制晚到finished状态或替换原时点wire字节",
+    "pre-open同步身份后不把原已加载脚本误计成打开增量"
+  ],
+  "exportControl": {
+    "scope": "selector/download-event fixture only; no product export or performance qualification",
+    "results": [
+      {
+        "helper": "current",
+        "mode": "baseline-select",
+        "format": "html",
+        "download": true,
+        "bytes": 29,
+        "trustedMenuClick": null
+      },
+      {
+        "helper": "current",
+        "mode": "baseline-select",
+        "format": "pdf",
+        "download": true,
+        "bytes": 21,
+        "trustedMenuClick": null
+      },
+      {
+        "helper": "current",
+        "mode": "baseline-select",
+        "format": "pptx",
+        "download": true,
+        "bytes": 19,
+        "trustedMenuClick": null
+      },
+      {
+        "helper": "current",
+        "mode": "old-menu",
+        "format": "html",
+        "download": true,
+        "bytes": 29,
+        "trustedMenuClick": true
+      },
+      {
+        "helper": "current",
+        "mode": "old-menu",
+        "format": "pdf",
+        "download": true,
+        "bytes": 21,
+        "trustedMenuClick": true
+      },
+      {
+        "helper": "current",
+        "mode": "old-menu",
+        "format": "pptx",
+        "download": true,
+        "bytes": 19,
+        "trustedMenuClick": true
+      },
+      {
+        "helper": "current",
+        "mode": "current-menu",
+        "format": "html",
+        "download": true,
+        "bytes": 29,
+        "trustedMenuClick": true
+      },
+      {
+        "helper": "current",
+        "mode": "current-menu",
+        "format": "pdf",
+        "download": true,
+        "bytes": 21,
+        "trustedMenuClick": true
+      },
+      {
+        "helper": "current",
+        "mode": "current-menu",
+        "format": "pptx",
+        "download": true,
+        "bytes": 19,
+        "trustedMenuClick": true
+      }
+    ]
+  },
+  "failureCleanup": {
+    "check": "failed-input-cleanup-selector",
+    "results": [
+      {
+        "kind": "design",
+        "native": true,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "slides",
+        "native": true,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "design",
+        "native": true,
+        "activeEditableEnded": true,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": true
+      },
+      {
+        "kind": "design",
+        "native": false,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": null
+      },
+      {
+        "kind": "slides",
+        "native": false,
+        "activeEditableEnded": false,
+        "markerUndoneWithRealKeyboardAndAck": true,
+        "unknownEditRefused": true,
+        "outerWorkspaceStayedOpen": null
+      }
+    ],
+    "completionResults": [
+      {
+        "kind": "design",
+        "trustedCompletionClick": true,
+        "outerWorkspaceStayedOpen": true,
+        "realKeyboardUndoAcknowledged": true
+      },
+      {
+        "kind": "slides",
+        "trustedCompletionClick": true,
+        "outerWorkspaceStayedOpen": true,
+        "realKeyboardUndoAcknowledged": true
+      }
+    ],
+    "deniedUndoEvidence": {
+      "frames": 1,
+      "matchingHeadings": 0,
+      "operationPosts": 1,
+      "snapshotReads": 0,
+      "historyPosts": 1,
+      "snapshotStatuses": [],
+      "operationStatuses": [
+        403
+      ],
+      "historyStatuses": [
+        403
+      ],
+      "focusCompleted": true,
+      "keySent": true,
+      "headingVerified": false,
+      "ackVerified": false,
+      "focusTabs": 0,
+      "focusInsideEditor": true,
+      "nativeEditorPresent": true,
+      "editorVisible": true,
+      "documentFocused": true,
+      "activeInEditor": true,
+      "activeIsButton": true,
+      "activeIsRoot": false,
+      "activeEditable": false,
+      "headingNodePresent": true,
+      "bodyOriginal": false,
+      "bodyMarked": true,
+      "rootKeySeen": true,
+      "rootKeyTrusted": true,
+      "rootKeyPrevented": true
+    },
+    "closedEditorEvidence": {
+      "operationPosts": 0,
+      "snapshotReads": 0,
+      "historyPosts": 0,
+      "snapshotStatuses": [],
+      "operationStatuses": [],
+      "historyStatuses": [],
+      "focusCompleted": false,
+      "keySent": false,
+      "headingVerified": false,
+      "ackVerified": false,
+      "nativeEditorPresent": true,
+      "editorVisible": false,
+      "documentFocused": true,
+      "activeInEditor": false,
+      "activeIsButton": false,
+      "activeIsRoot": false,
+      "activeEditable": false,
+      "headingNodePresent": true,
+      "bodyOriginal": false,
+      "bodyMarked": true,
+      "rootKeySeen": false,
+      "rootKeyTrusted": false,
+      "rootKeyPrevented": false
+    },
+    "navigationDetach": {
+      "iframeRemovedDuringTrustedWheel": true,
+      "newFrameSnapshotUsed": true,
+      "trustedPageControlClicked": true
+    },
+    "scope": "isolated measurement helper fixture, not product undo acceptance",
+    "performanceSamples": 0,
+    "qualified": false
+  },
+  "rawProxy": {
+    "nodeVersion": "v22.23.0",
+    "scope": "current proxy fragment; localhost HTTP/TLS/socket fixture, not actual SDK/API reproduction",
+    "results": [
+      {
+        "test": "upload-reset",
+        "exitCode": 0,
+        "timedOut": false,
+        "observations": [
+          {
+            "stage": "request",
+            "code": "ABORT_ERR"
+          },
+          {
+            "stage": "upload",
+            "code": "ABORT_ERR"
+          },
+          {
+            "test": "upload-reset",
+            "clientExit": 0
+          },
+          {
+            "test": "upload-reset",
+            "survived": true,
+            "upstreamSeen": 1,
+            "upstreamClosed": true,
+            "bytesWritten": 0
+          }
+        ],
+        "unhandledStreamError": false
+      },
+      {
+        "test": "upstream-reset",
+        "exitCode": 0,
+        "timedOut": false,
+        "observations": [
+          {
+            "stage": "response",
+            "code": "ECONNRESET"
+          },
+          {
+            "test": "upstream-reset",
+            "clientExit": 0
+          },
+          {
+            "test": "upstream-reset",
+            "survived": true,
+            "upstreamSeen": 1,
+            "upstreamClosed": true,
+            "bytesWritten": 16384
+          }
+        ],
+        "unhandledStreamError": false
+      },
+      {
+        "test": "websocket-client-reset",
+        "exitCode": 0,
+        "timedOut": false,
+        "observations": [
+          {
+            "stage": "upgrade",
+            "code": "ECONNRESET"
+          },
+          {
+            "test": "websocket-client-reset",
+            "clientExit": 0
+          },
+          {
+            "test": "websocket-client-reset",
+            "survived": true,
+            "upstreamSeen": 1,
+            "upstreamClosed": true,
+            "bytesWritten": 2000
+          }
+        ],
+        "unhandledStreamError": false
+      },
+      {
+        "test": "download-client-reset",
+        "exitCode": 0,
+        "timedOut": false,
+        "observations": [
+          {
+            "stage": "response",
+            "code": "ERR_STREAM_PREMATURE_CLOSE"
+          },
+          {
+            "test": "download-client-reset",
+            "clientExit": 0
+          },
+          {
+            "test": "download-client-reset",
+            "survived": true,
+            "upstreamSeen": 1,
+            "upstreamClosed": true,
+            "bytesWritten": 32768
+          }
+        ],
+        "unhandledStreamError": false
+      },
+      {
+        "test": "encoded-gzip",
+        "exitCode": 0,
+        "timedOut": false,
+        "observations": [
+          {
+            "test": "encoded-gzip",
+            "clientExit": 0
+          },
+          {
+            "test": "encoded-gzip",
+            "survived": true,
+            "upstreamSeen": 1,
+            "upstreamClosed": true,
+            "bytesWritten": 53
+          }
+        ],
+        "unhandledStreamError": false
+      }
+    ],
+    "passed": 5
+  },
+  "sourceHashes": {
+    "scripts/native-artifact-benchmark.py": "76e1c614d823760ce86ec0601b3a0ff7a5368eeb4704d118f75743934e365070",
+    "scripts/native-artifact-serve.mjs": "7deae108d95a4e4201612c2ed04c159a1b0ef6b586f950d27c50ad5b1a9d05e4",
+    "scripts/native-artifact-failure.mjs": "bc8886da705f7bcb9f2b98217bedd260288626b47f6e8707306bc0d181771a81",
+    "scripts/native-artifact-ci.mjs": "2779e60eaaf45a0dd010a2bfce44f51e266663e741a2ab6cfe0f0d01a39483c8",
+    "scripts/native-artifact-proxy-check.mjs": "d3d25a58b13287bd357b95b362a6c70510eac890767cfb4d35a9672f976c3ae7",
+    "scripts/native-artifact-export-control-check.py": "786452c7f4e0d399e9f092916c3b6182123610889e809d217fd1cfa4169d7ecc"
+  },
+  "publicSourceValidation": "固定文件名后只允许单个数字行号；额外冒号/任意文字已纳入实际回归。",
+  "captureRegression": {
+    "result": "通过",
+    "browser": "140.0.7339.16",
+    "opaque": true,
+    "activeAbortCleaned": true,
+    "callbackErrors": 0,
+    "confirmedSetupDetaches": 1,
+    "scope": "受控HTTP夹具，不是真实性能或授权API通过"
+  }
+}

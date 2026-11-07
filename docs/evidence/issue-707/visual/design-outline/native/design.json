@@ -1,0 +1,1258 @@
+{
+  "kind": "isolated-design-outline-visual",
+  "fixtureSemanticSha256": "140fa965bf41223a0f140b46c0b957c95b6ebb95a1a654fae8011f29568b729c",
+  "renderingMode": "CSS1Compat",
+  "productThemeAncestor": true,
+  "screenshots": [
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "state": "properties",
+      "file": "design-outline-1920-light-properties.png",
+      "panel": {
+        "x": 1584,
+        "y": 0,
+        "width": 336,
+        "height": 1200
+      },
+      "header": {
+        "x": 1585,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 1585,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 1914,
+            "bottom": 71,
+            "left": 1591
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 1591,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 1914,
+            "bottom": 95,
+            "left": 1591
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 1914,
+            "bottom": 119,
+            "left": 1591
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 1914,
+            "bottom": 143,
+            "left": 1591
+          }
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "state": "code",
+      "file": "design-outline-1920-light-code.png",
+      "panel": {
+        "x": 1584,
+        "y": 0,
+        "width": 336,
+        "height": 1200
+      },
+      "header": {
+        "x": 1585,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 1585,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 1914,
+            "bottom": 71,
+            "left": 1591
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 1591,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 1914,
+            "bottom": 95,
+            "left": 1591
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 1914,
+            "bottom": 119,
+            "left": 1591
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 1914,
+            "bottom": 143,
+            "left": 1591
+          }
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "state": "properties",
+      "file": "design-outline-1920-dark-properties.png",
+      "panel": {
+        "x": 1584,
+        "y": 0,
+        "width": 336,
+        "height": 1200
+      },
+      "header": {
+        "x": 1585,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 1585,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 1914,
+            "bottom": 71,
+            "left": 1591
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 1591,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 1914,
+            "bottom": 95,
+            "left": 1591
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 1914,
+            "bottom": 119,
+            "left": 1591
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 1914,
+            "bottom": 143,
+            "left": 1591
+          }
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "state": "code",
+      "file": "design-outline-1920-dark-code.png",
+      "panel": {
+        "x": 1584,
+        "y": 0,
+        "width": 336,
+        "height": 1200
+      },
+      "header": {
+        "x": 1585,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 1585,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 1914,
+            "bottom": 71,
+            "left": 1591
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 1591,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 1914,
+            "bottom": 95,
+            "left": 1591
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 1914,
+            "bottom": 119,
+            "left": 1591
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 1591,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 1914,
+            "bottom": 143,
+            "left": 1591
+          }
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "state": "properties",
+      "file": "design-outline-1440-light-properties.png",
+      "panel": {
+        "x": 1104,
+        "y": 0,
+        "width": 336,
+        "height": 1000
+      },
+      "header": {
+        "x": 1105,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 1105,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 1434,
+            "bottom": 71,
+            "left": 1111
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 1111,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 1434,
+            "bottom": 95,
+            "left": 1111
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 1434,
+            "bottom": 119,
+            "left": 1111
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 1434,
+            "bottom": 143,
+            "left": 1111
+          }
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "state": "code",
+      "file": "design-outline-1440-light-code.png",
+      "panel": {
+        "x": 1104,
+        "y": 0,
+        "width": 336,
+        "height": 1000
+      },
+      "header": {
+        "x": 1105,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 1105,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 1434,
+            "bottom": 71,
+            "left": 1111
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 1111,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 1434,
+            "bottom": 95,
+            "left": 1111
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 1434,
+            "bottom": 119,
+            "left": 1111
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 1434,
+            "bottom": 143,
+            "left": 1111
+          }
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "state": "properties",
+      "file": "design-outline-1440-dark-properties.png",
+      "panel": {
+        "x": 1104,
+        "y": 0,
+        "width": 336,
+        "height": 1000
+      },
+      "header": {
+        "x": 1105,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 1105,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 1434,
+            "bottom": 71,
+            "left": 1111
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 1111,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 1434,
+            "bottom": 95,
+            "left": 1111
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 1434,
+            "bottom": 119,
+            "left": 1111
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 1434,
+            "bottom": 143,
+            "left": 1111
+          }
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "state": "code",
+      "file": "design-outline-1440-dark-code.png",
+      "panel": {
+        "x": 1104,
+        "y": 0,
+        "width": 336,
+        "height": 1000
+      },
+      "header": {
+        "x": 1105,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 1105,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 1434,
+            "bottom": 71,
+            "left": 1111
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 1111,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 1434,
+            "bottom": 95,
+            "left": 1111
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 1434,
+            "bottom": 119,
+            "left": 1111
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 1111,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 1434,
+            "bottom": 143,
+            "left": 1111
+          }
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "state": "properties",
+      "file": "design-outline-768-light-properties.png",
+      "panel": {
+        "x": 432,
+        "y": 0,
+        "width": 336,
+        "height": 1024
+      },
+      "header": {
+        "x": 433,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 433,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 762,
+            "bottom": 71,
+            "left": 439
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 439,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 762,
+            "bottom": 95,
+            "left": 439
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 762,
+            "bottom": 119,
+            "left": 439
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 762,
+            "bottom": 143,
+            "left": 439
+          }
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "state": "code",
+      "file": "design-outline-768-light-code.png",
+      "panel": {
+        "x": 432,
+        "y": 0,
+        "width": 336,
+        "height": 1024
+      },
+      "header": {
+        "x": 433,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 433,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 762,
+            "bottom": 71,
+            "left": 439
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 439,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 762,
+            "bottom": 95,
+            "left": 439
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 762,
+            "bottom": 119,
+            "left": 439
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 762,
+            "bottom": 143,
+            "left": 439
+          }
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "state": "properties",
+      "file": "design-outline-768-dark-properties.png",
+      "panel": {
+        "x": 432,
+        "y": 0,
+        "width": 336,
+        "height": 1024
+      },
+      "header": {
+        "x": 433,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 433,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 762,
+            "bottom": 71,
+            "left": 439
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 439,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 762,
+            "bottom": 95,
+            "left": 439
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 762,
+            "bottom": 119,
+            "left": 439
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 762,
+            "bottom": 143,
+            "left": 439
+          }
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "state": "code",
+      "file": "design-outline-768-dark-code.png",
+      "panel": {
+        "x": 432,
+        "y": 0,
+        "width": 336,
+        "height": 1024
+      },
+      "header": {
+        "x": 433,
+        "y": 0,
+        "width": 335,
+        "height": 40
+      },
+      "tree": {
+        "x": 433,
+        "y": 41,
+        "width": 335,
+        "height": 168
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 47,
+            "width": 323,
+            "height": 24,
+            "top": 47,
+            "right": 762,
+            "bottom": 71,
+            "left": 439
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 439,
+            "y": 71,
+            "width": 323,
+            "height": 24,
+            "top": 71,
+            "right": 762,
+            "bottom": 95,
+            "left": 439
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 95,
+            "width": 323,
+            "height": 24,
+            "top": 95,
+            "right": 762,
+            "bottom": 119,
+            "left": 439
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 439,
+            "y": 119,
+            "width": 323,
+            "height": 24,
+            "top": 119,
+            "right": 762,
+            "bottom": 143,
+            "left": 439
+          }
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "state": "properties",
+      "file": "design-outline-390-light-properties.png",
+      "panel": {
+        "x": 0,
+        "y": 479.28125,
+        "width": 390,
+        "height": 364.71875
+      },
+      "header": {
+        "x": 0,
+        "y": 480.28125,
+        "width": 390,
+        "height": 40
+      },
+      "tree": null,
+      "rows": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "state": "code",
+      "file": "design-outline-390-light-code.png",
+      "panel": {
+        "x": 0,
+        "y": 479.28125,
+        "width": 390,
+        "height": 364.71875
+      },
+      "header": {
+        "x": 0,
+        "y": 480.28125,
+        "width": 390,
+        "height": 40
+      },
+      "tree": null,
+      "rows": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "state": "outline",
+      "file": "design-outline-390-light-outline.png",
+      "panel": {
+        "x": 0,
+        "y": 479.28125,
+        "width": 390,
+        "height": 364.71875
+      },
+      "header": {
+        "x": 0,
+        "y": 480.28125,
+        "width": 390,
+        "height": 40
+      },
+      "tree": {
+        "x": 0,
+        "y": 521.28125,
+        "width": 390,
+        "height": 310.71875
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 6,
+            "y": 527.28125,
+            "width": 378,
+            "height": 24,
+            "top": 527.28125,
+            "right": 384,
+            "bottom": 551.28125,
+            "left": 6
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 6,
+            "y": 551.28125,
+            "width": 378,
+            "height": 24,
+            "top": 551.28125,
+            "right": 384,
+            "bottom": 575.28125,
+            "left": 6
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 6,
+            "y": 575.28125,
+            "width": 378,
+            "height": 24,
+            "top": 575.28125,
+            "right": 384,
+            "bottom": 599.28125,
+            "left": 6
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 6,
+            "y": 599.28125,
+            "width": 378,
+            "height": 24,
+            "top": 599.28125,
+            "right": 384,
+            "bottom": 623.28125,
+            "left": 6
+          }
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "state": "properties",
+      "file": "design-outline-390-dark-properties.png",
+      "panel": {
+        "x": 0,
+        "y": 479.28125,
+        "width": 390,
+        "height": 364.71875
+      },
+      "header": {
+        "x": 0,
+        "y": 480.28125,
+        "width": 390,
+        "height": 40
+      },
+      "tree": null,
+      "rows": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "state": "code",
+      "file": "design-outline-390-dark-code.png",
+      "panel": {
+        "x": 0,
+        "y": 479.28125,
+        "width": 390,
+        "height": 364.71875
+      },
+      "header": {
+        "x": 0,
+        "y": 480.28125,
+        "width": 390,
+        "height": 40
+      },
+      "tree": null,
+      "rows": []
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "state": "outline",
+      "file": "design-outline-390-dark-outline.png",
+      "panel": {
+        "x": 0,
+        "y": 479.28125,
+        "width": 390,
+        "height": 364.71875
+      },
+      "header": {
+        "x": 0,
+        "y": 480.28125,
+        "width": 390,
+        "height": 40
+      },
+      "tree": {
+        "x": 0,
+        "y": 521.28125,
+        "width": 390,
+        "height": 310.71875
+      },
+      "rows": [
+        {
+          "label": "Page 1",
+          "level": "1",
+          "rect": {
+            "x": 6,
+            "y": 527.28125,
+            "width": 378,
+            "height": 24,
+            "top": 527.28125,
+            "right": 384,
+            "bottom": 551.28125,
+            "left": 6
+          }
+        },
+        {
+          "label": "组合，LingxiLoop 1",
+          "level": "2",
+          "rect": {
+            "x": 6,
+            "y": 551.28125,
+            "width": 378,
+            "height": 24,
+            "top": 551.28125,
+            "right": 384,
+            "bottom": 575.28125,
+            "left": 6
+          }
+        },
+        {
+          "label": "Page 2",
+          "level": "1",
+          "rect": {
+            "x": 6,
+            "y": 575.28125,
+            "width": 378,
+            "height": 24,
+            "top": 575.28125,
+            "right": 384,
+            "bottom": 599.28125,
+            "left": 6
+          }
+        },
+        {
+          "label": "Page 3",
+          "level": "1",
+          "rect": {
+            "x": 6,
+            "y": 599.28125,
+            "width": 378,
+            "height": 24,
+            "top": 599.28125,
+            "right": 384,
+            "bottom": 623.28125,
+            "left": 6
+          }
+        }
+      ]
+    }
+  ],
+  "noWrites": true,
+  "matchedStateVerified": false,
+  "scope": "固定同层级文档；截图仍需独立几何/像素验收；微调等未完成状态没有获得资格",
+  "consoleOrPageErrors": []
+}

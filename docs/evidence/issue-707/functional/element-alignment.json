@@ -1,0 +1,189 @@
+{
+  "scope": "固定来源和受控HTTP真实React/Worker/浏览器；不是完整鉴权服务、Agent或性能资格。",
+  "qualified": false,
+  "source": "source-element-alignment.json",
+  "checks": {
+    "geometry-140": [
+      "align-top",
+      "align-right",
+      "align-center",
+      "align-left",
+      "align-bottom",
+      "align-middle"
+    ],
+    "geometry-154": [
+      "align-top",
+      "align-right",
+      "align-center",
+      "align-left",
+      "align-bottom",
+      "align-middle"
+    ],
+    "history-140": [
+      "align-top",
+      "align-right",
+      "align-center",
+      "align-left",
+      "align-bottom",
+      "align-middle"
+    ],
+    "history-154": [
+      "align-top",
+      "align-right",
+      "align-center",
+      "align-left",
+      "align-bottom",
+      "align-middle"
+    ],
+    "drag-140": [
+      "align-right",
+      "align-center",
+      "align-left"
+    ],
+    "drag-154": [
+      "align-right",
+      "align-center",
+      "align-left"
+    ],
+    "resize-140": [
+      "align-right",
+      "align-center"
+    ],
+    "resize-154": [
+      "align-right",
+      "align-center"
+    ],
+    "cancel-drag-140": [
+      "align-right",
+      "align-left"
+    ],
+    "cancel-drag-154": [
+      "align-right",
+      "align-left"
+    ],
+    "cancel-resize-154": [
+      "align-right",
+      "align-center"
+    ],
+    "resize50-140": [
+      "align-right",
+      "align-center"
+    ],
+    "resize50-154": [
+      "align-right",
+      "align-center"
+    ],
+    "relative-154": [
+      "align-right",
+      "align-center",
+      "align-left"
+    ],
+    "inline-154": [
+      "align-right",
+      "align-center",
+      "align-left"
+    ],
+    "width-154": [
+      "align-right",
+      "align-center",
+      "align-left"
+    ],
+    "height-154": [
+      "align-bottom",
+      "align-middle"
+    ],
+    "keyboard-154": [
+      "base"
+    ]
+  },
+  "referenceCases": {
+    "relative": 3,
+    "geometry": 6,
+    "chain": 4,
+    "inline": 3,
+    "position": 4,
+    "width": 3,
+    "height": 2,
+    "resize50": 2,
+    "keyboard": 1,
+    "focus": 1,
+    "hover": 1,
+    "dark-focus": 1,
+    "dark-hover": 1
+  },
+  "geometry": {
+    "matchedCases": 13,
+    "fields": [
+      "width",
+      "height",
+      "position",
+      "left",
+      "top",
+      "minWidth",
+      "maxWidth",
+      "minHeight",
+      "maxHeight",
+      "right",
+      "bottom"
+    ],
+    "receipt": "functional/element-alignment/computed-geometry-comparison.json"
+  },
+  "controls": {
+    "containers": 8,
+    "controlsPerContainer": 6,
+    "rectToleranceCssPixels": 1,
+    "colorsMatched": true,
+    "receipt": "functional/element-alignment/control-geometry-comparison.json"
+  },
+  "visual": "visual/element-alignment/differences/raw-pixel-results.json",
+  "failuresRetained": [
+    {
+      "case": "history initial harness",
+      "reason": "在未经确认的宽度输入中发送撤销，输入保留浏览器编辑历史；改为聚焦编辑器后测试共享历史，未改产品快捷键。"
+    },
+    {
+      "case": "reference handles at 22%",
+      "reason": "来源启用手柄的最小缩放为25%，改用真实50%菜单及空格拖动画布使元素进入可见区域；未放松尺寸断言。"
+    },
+    {
+      "case": "save synthetic composition 140",
+      "reason": "最初一次多出操作，带逐事件与操作收据的独立复跑通过；首因未证实，不能声明间歇失败已解决。"
+    }
+  ],
+  "knownGaps": [
+    "多选与混合尺寸、父级流式约束及CSS位移重置仍待逐项核对。",
+    "低于25%的原生元素手柄启用条件与来源不同，尚未验收。",
+    "内容盒边框补偿、旋转、矢量点缩放及零尺寸选择状态尚未完整覆盖。",
+    "尚无本项缩略图和全部导出视觉资格；不以浏览器持久化结果代替。",
+    "八对原始整图均未通过0.5%像素门槛；中文和LingxiLoop替换未掩码。"
+  ],
+  "unit": {
+    "passed": 50,
+    "newTests": 11,
+    "regressionFirst": [
+      "相对定位对齐未还原左侧偏移",
+      "CSS锚点缩放丢失连接线坐标"
+    ],
+    "command": "node --import tsx --test src/features/artifacts/native/element-positioning.test.ts src/features/artifacts/native/element-alignment.test.ts src/features/artifacts/native/editor-copy.test.ts src/features/artifacts/native/element-sizing.test.ts src/features/artifacts/native/inspector-code-edit.test.ts shared/artifact-operations.test.ts"
+  },
+  "ciOrchestrationContractsPassed": 15,
+  "localOwningChecks": {
+    "lint": {
+      "passed": true,
+      "warnings": 43,
+      "infos": 4
+    },
+    "typecheck": {
+      "passed": false,
+      "diagnostics": 76,
+      "changedNativeDiagnostics": 0,
+      "reason": "本地缺少精确私有LingxiOS依赖，相关级联诊断未消除；正式CI安装原发布依赖后验证。"
+    },
+    "webTest": {
+      "passed": false,
+      "passedTests": 290,
+      "failedTests": 7,
+      "reason": "失败涉及既有聊天运行时私有LingxiOS导出；不将本地完整web检查报为通过。"
+    }
+  }
+}

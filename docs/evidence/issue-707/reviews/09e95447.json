@@ -1,0 +1,120 @@
+{
+  "commit": "09e954472985629596d220386cf5b59086ca390a",
+  "baseCommit": "305ee08977f7694ce7346f6f6cdcccb0727d5fd4",
+  "reviewer": "/root/independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "独立冻结worktree，只审拖动修复及新中文代码面板的输入/恢复/操作语义。未修改产品文件，未合并部署；受控HTTP浏览器/CDP检查不冒充真实授权服务或物理OS输入法。",
+  "closedPreviousFindings": [
+    "css-drag-uses-authored-base-instead-of-painted-frame：pointerDown改为复用paintedCodeNode，Chrome154 Design/Slides实际鼠标拖动与共享undo回归通过。"
+  ],
+  "findings": [
+    {
+      "id": "code-composition-access-loss-drops-raw-draft",
+      "severity": "P2",
+      "title": "访问丢失卸载控件时保留正在组字的原始代码草稿",
+      "file": "src/features/artifacts/native/InspectorCode.tsx",
+      "line": 36,
+      "related": [
+        {
+          "file": "src/features/artifacts/native/InspectorCode.tsx",
+          "line": 55
+        }
+      ],
+      "failure": "save在composing=true时只设置afterComposition并返回；但useLocalDraft卸载时随后注销唯一草稿，组件局部draftRef没有owner级恢复副本。Chrome154使用CDP Input.imeSetComposition产生isTrusted=true的compositionstart并输入中文，保存状态为draft；随后正常changes403使代码控件卸载，没有compositionend，最终界面只有“重试/下载原始文件”，下载本地副本按钮0，服务端无本地文字、receipts0。retainDraft未被调用，因为流程在构造/分派操作之前就返回了。",
+      "smallestCorrection": "在owner级保留原始输入文字、初始CAS快照及组字标记，卸载/访问丢失时能下载或重开恢复；不能要求组件收到之后不会再来的compositionend，也不能提前提交未完成组字。加入真实浏览器组字过程中DOM因403移除的回归。",
+      "reproduction": [
+        "/tmp/lingxi-review-probe-09/probe.mjs",
+        "/tmp/lingxi-review-09-ime-access154/design.json",
+        "/tmp/lingxi-review-09-ime-access154/composition-access-recovery.png"
+      ],
+      "observed": {
+        "compositionEvents": [
+          {
+            "type": "compositionstart",
+            "trusted": true,
+            "data": ""
+          }
+        ],
+        "beforeSaveState": "draft",
+        "backupButtonsAfterAccessLoss": 0,
+        "serverContainsLocalText": false,
+        "committedBatches": 0,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "id": "code-line-height-px-converted-to-unitless-multiplier",
+      "severity": "P2",
+      "title": "转换原生无单位样式时保留CSS单位含义",
+      "file": "src/features/artifacts/native/inspector-code-edit.ts",
+      "line": 41,
+      "related": [
+        {
+          "file": "src/features/artifacts/native/inspector-code-edit.ts",
+          "line": 44
+        }
+      ],
+      "failure": "pixel()对带px和无单位数都返回同一个数值，然后line-height被写入原生style.lineHeight。代码输入合法line-height:2px并保存后，模型变成lineHeight=2且css=null，48px文字的实际computedLineHeight=96px，输入框却仍显示2px。用户声明2px被成功保存为两倍字号。",
+      "smallestCorrection": "无单位字段只将真正无单位数映射为原生值；带px的line-height应保留CSS含义，或者转换成等价原生值。补像素值与无单位值的实际计算样式回归，避免对所有numeric字段统一剥除px。",
+      "reproduction": [
+        "/tmp/lingxi-review-09-lineheight154/design.json",
+        "/tmp/lingxi-review-09-lineheight154/line-height-result.png"
+      ],
+      "observed": {
+        "typed": "line-height: 2px;",
+        "modelLineHeight": 2,
+        "css": null,
+        "computedLineHeight": "96px",
+        "committedBatches": 1,
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "逐行解析/模型校验/共享操作/代码映射/session定向单测",
+      "result": "passed",
+      "count": 72
+    },
+    {
+      "check": "Chrome154 Design/Slides旧CSS拖动P2复查",
+      "result": "passed",
+      "receipts": [
+        "/tmp/lingxi-review-09-drag154/design.json",
+        "/tmp/lingxi-review-09-drag154/slides.json"
+      ]
+    },
+    {
+      "check": "Chrome154中文代码面板主流程",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-09-code154/design.json",
+      "includes": [
+        "保存/重开",
+        "同焦点重复保存",
+        "无效语法blur恢复",
+        "活动属性拒绝",
+        "共享undo"
+      ]
+    },
+    {
+      "check": "Chrome154可信浏览器组字中403卸载恢复",
+      "result": "failed",
+      "receipt": "/tmp/lingxi-review-09-ime-access154/design.json"
+    },
+    {
+      "check": "Chrome154代码像素行高保存语义",
+      "result": "failed",
+      "receipt": "/tmp/lingxi-review-09-lineheight154/design.json"
+    }
+  ],
+  "analysis": [
+    "未将明确pending的声明删除、任意布局/变换、媒体、继承或完整源码匹配作为本提交伪称完成的缺陷；两条发现分别属于实际草稿恢复与已接线原生样式转换。",
+    "原生操作版本保护与反向操作单测继续通过；本次没有发现活动属性校验绕过。"
+  ],
+  "unverified": [
+    "未独立运行全部118定向单位、15合约、web/server全量检查、Chrome140或正式CI。",
+    "新增API/真实PostgreSQL集成用例未在本地执行，仍待正式CI；本机正式SDK缺失不是通过证据。",
+    "CDP可信composition不代表物理OS输入法全面验收；完整D20功能/视觉、真实授权服务和最终性能门槛仍未取得。"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "kind": "isolated-svg-font-export-diagnostic",
+  "mode": "slides",
+  "fontFamily": "\"LingxiLoopEditor Merriweather\", serif",
+  "htmlPreservesText": true,
+  "sourceUnchanged": true,
+  "canvasFontQualified": false,
+  "scope": "actual static SVG export and font readiness; data-image canvas fonts remain a separate gate",
+  "consoleOrPageErrors": []
+}

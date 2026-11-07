@@ -1,0 +1,97 @@
+{
+  "commit": "6309676879853f9252526467b37d847589da8fee",
+  "baseCommit": "658310eafee5c0a1cef4852d28e5d28650a6d8ef",
+  "reviewer": "independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": true,
+  "scope": "精确冻结detached checkout；三项高度适配P2修复、Source普通高度资格/四像素增长政策、隐藏祖先过滤和旧稿数值展示。未混入后续样式WIP；未修改产品文件、提交、合并或部署。",
+  "findings": [],
+  "closedFindings": [
+    {
+      "id": "658310ea/P2-1",
+      "status": "已关闭",
+      "reason": "测量不派发；lazy表单只在Source普通资格和超过4px增长阈值时patch。140/154重复已适配操作不写历史，普通1100/1400高画板不缩。"
+    },
+    {
+      "id": "658310ea/P2-2",
+      "status": "已关闭",
+      "reason": "bounds排除hidden及scope canvas祖先链；140/154真实图层隐藏组合→240px→Fit保持240，不再因隐藏子项增至560。"
+    },
+    {
+      "id": "658310ea/P2-3",
+      "status": "已关闭",
+      "reason": "Flow/frameless/已推断纸张和readonly不提供普通高度入口，140/154资格与只读定向回归通过。"
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "140正式design-artboard五项",
+      "cases": [
+        "fit-repeat",
+        "fit-hidden",
+        "fit-policy",
+        "readonly",
+        "default"
+      ],
+      "result": "五项通过，无页面错误。",
+      "evidencePattern": "/tmp/lingxi-review-630-{case}-140/design.json"
+    },
+    {
+      "check": "154正式四项修复/资格及default重跑",
+      "cases": [
+        "fit-repeat",
+        "fit-hidden",
+        "fit-policy",
+        "readonly"
+      ],
+      "result": "四项通过；default单独重跑通过。默认首轮失败另列，未伪报通过。",
+      "evidencePattern": "/tmp/lingxi-review-630-{case}-154/design.json",
+      "defaultRetry": "/tmp/lingxi-review-630-default154-retry/design.json"
+    },
+    {
+      "check": "154旧native sizing自动增长",
+      "result": "通过；真实canvas-flow高度1002px、其他画布哈希不变，无页面错误。",
+      "evidence": "/tmp/lingxi-review-630-oldflow154/design.json"
+    },
+    {
+      "check": "154独立小数旧稿展示",
+      "result": "初始旧稿width1920.4/height1080.4，UI显示1920/1080；聚焦、Control+S、Tab及关闭面板后仍存1920.4/1080.4，0操作写入，无页面错误。",
+      "evidence": "/tmp/lingxi-review-630-round-display154/design.json",
+      "script": "/tmp/lingxi-review-probe-630/probe.mjs"
+    },
+    {
+      "check": "helper、编排合同及中文文案",
+      "result": "5项纸张/高度helper加23项CI/存储/错误投影合同共28项通过；中文组件文案2项通过，共30项、0失败。",
+      "evidence": [
+        "/tmp/lingxi-review-630-unit.log",
+        "/tmp/lingxi-review-630-copy.log"
+      ]
+    },
+    {
+      "check": "固定Source纯函数oracle",
+      "result": "10994断言全部一致；包括普通高度资格及四像素增长规则，固定原JS SHA256核验通过。",
+      "evidence": "/tmp/lingxi-review-630-oracle.json"
+    }
+  ],
+  "failedRunsAndLimits": [
+    {
+      "check": "154 default首轮",
+      "result": "失败；既有line441纸张redo断言undefined != A4，无页面错误。该步骤仅等data-save-state=saved，未等history响应或纸张状态；单独重跑通过。不能将首轮记通过，也未据此判本次产品P2。根线程已确认后续候选会补真实history响应/单选状态等待，本冻结提交尚未修改该等待。",
+      "evidence": [
+        "/tmp/lingxi-review-630-default-154/design-failure.json",
+        "/tmp/lingxi-review-630-default-154/design-failure.png"
+      ]
+    }
+  ],
+  "analysis": [
+    "Root只读当前几何/实际DOM并返回测量值；lazy表单使用同页props和现有inspectDispatch/CAS链派发真正变化，避免空历史。加载/权限条件仍来自既有writable，不新增服务或持久化路径。",
+    "canFit和nextHeight与固定源普通非fill上下文对齐；旧sizing flow沿用原自动增长。没有把Source expand-fill第三参数的120px缩小规则错误套到普通画板。",
+    "Math.round仅用于字段value展示，模型/快照未做读取时归一化；实际旧小数稿无写回，节点和其他页面不受影响。",
+    "本提交未修改模型schema、API、PDF导出或数据库服务；基准658已独立通过的真实18项PG及PDF物理尺寸证据未在本轮重复记为重跑。"
+  ],
+  "unverified": [
+    "完整expand-fill模型与缩小策略仍未实现，已登记为后续范围；本审查通过不表示所有原版适配状态完整。",
+    "未独立重跑完整PDF/五格式、两编辑器50页、服务授权/Agent或完整lint/typecheck/build/正式CI；本地缺准确SDK的类型检查不作通过证据。",
+    "未完成任意CSS布局/变换等所有内容测量状态和全部视觉/参考线卡片/弹窗；整体像素、完整功能/服务与正式10组AB/BA性能资格仍false。"
+  ]
+}

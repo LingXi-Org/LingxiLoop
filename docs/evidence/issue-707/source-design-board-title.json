@@ -1,0 +1,1044 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceResourceHashesVerified": 12,
+  "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "lookup": "mega-artboard-rename-",
+  "runner": "scripts/native-editor-board-title-reference.mjs",
+  "runtime": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "referenceResourceHashesVerified": 12,
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "theme": "light",
+    "cases": [
+      {
+        "name": "enter",
+        "initial": "Page 1",
+        "style": {
+          "rect": {
+            "x": 48,
+            "y": 387.052978515625,
+            "width": 418.4062805175781,
+            "height": 18,
+            "top": 387.052978515625,
+            "right": 466.4062805175781,
+            "bottom": 405.052978515625,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "rgb(16, 16, 16) none 1px",
+          "selection": [
+            0,
+            6
+          ]
+        },
+        "after": {
+          "v": 3,
+          "attachments": {},
+          "boards": {
+            "Page1.dc.html": {
+              "h": 1080,
+              "title": "中文画板",
+              "w": 1920,
+              "x": 0,
+              "y": 0
+            },
+            "Page2.dc.html": {
+              "h": 1080,
+              "title": "Page 2",
+              "w": 1920,
+              "x": 2080,
+              "y": 0
+            },
+            "Page3.dc.html": {
+              "h": 1080,
+              "title": "Page 3",
+              "w": 1920,
+              "x": 4160,
+              "y": 0
+            }
+          },
+          "designSystems": [],
+          "launch": {
+            "view": "canvas"
+          },
+          "notes": {},
+          "order": [
+            "Page1.dc.html",
+            "Page2.dc.html",
+            "Page3.dc.html"
+          ],
+          "pages": [],
+          "title": "LingxiLoop"
+        },
+        "display": "中文画板\n\n",
+        "inputClosed": true
+      },
+      {
+        "name": "escape",
+        "initial": "Page 1",
+        "style": {
+          "rect": {
+            "x": 48,
+            "y": 387.052978515625,
+            "width": 418.4062805175781,
+            "height": 18,
+            "top": 387.052978515625,
+            "right": 466.4062805175781,
+            "bottom": 405.052978515625,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "rgb(16, 16, 16) none 1px",
+          "selection": [
+            0,
+            6
+          ]
+        },
+        "after": {
+          "v": 3,
+          "title": "LingxiLoop",
+          "launch": {
+            "view": "canvas"
+          },
+          "pages": [],
+          "boards": {
+            "Page1.dc.html": {
+              "x": 0,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 1"
+            },
+            "Page2.dc.html": {
+              "x": 2080,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 2"
+            },
+            "Page3.dc.html": {
+              "x": 4160,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 3"
+            }
+          },
+          "order": [
+            "Page1.dc.html",
+            "Page2.dc.html",
+            "Page3.dc.html"
+          ],
+          "notes": {},
+          "designSystems": []
+        },
+        "display": "Page 1\n\n",
+        "inputClosed": true
+      },
+      {
+        "name": "blur",
+        "initial": "Page 1",
+        "style": {
+          "rect": {
+            "x": 48,
+            "y": 387.052978515625,
+            "width": 418.4062805175781,
+            "height": 18,
+            "top": 387.052978515625,
+            "right": 466.4062805175781,
+            "bottom": 405.052978515625,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "rgb(16, 16, 16) none 1px",
+          "selection": [
+            0,
+            6
+          ]
+        },
+        "after": {
+          "v": 3,
+          "attachments": {},
+          "boards": {
+            "Page1.dc.html": {
+              "h": 1080,
+              "title": "中文画板",
+              "w": 1920,
+              "x": 0,
+              "y": 0
+            },
+            "Page2.dc.html": {
+              "h": 1080,
+              "title": "Page 2",
+              "w": 1920,
+              "x": 2080,
+              "y": 0
+            },
+            "Page3.dc.html": {
+              "h": 1080,
+              "title": "Page 3",
+              "w": 1920,
+              "x": 4160,
+              "y": 0
+            }
+          },
+          "designSystems": [],
+          "launch": {
+            "view": "canvas"
+          },
+          "notes": {},
+          "order": [
+            "Page1.dc.html",
+            "Page2.dc.html",
+            "Page3.dc.html"
+          ],
+          "pages": [],
+          "title": "LingxiLoop"
+        },
+        "display": "中文画板\n\n",
+        "inputClosed": true
+      },
+      {
+        "name": "blank",
+        "initial": "Page 1",
+        "style": {
+          "rect": {
+            "x": 48,
+            "y": 387.052978515625,
+            "width": 418.4062805175781,
+            "height": 18,
+            "top": 387.052978515625,
+            "right": 466.4062805175781,
+            "bottom": 405.052978515625,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "rgb(16, 16, 16) none 1px",
+          "selection": [
+            0,
+            6
+          ]
+        },
+        "after": {
+          "v": 3,
+          "title": "LingxiLoop",
+          "launch": {
+            "view": "canvas"
+          },
+          "pages": [],
+          "boards": {
+            "Page1.dc.html": {
+              "x": 0,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 1"
+            },
+            "Page2.dc.html": {
+              "x": 2080,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 2"
+            },
+            "Page3.dc.html": {
+              "x": 4160,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 3"
+            }
+          },
+          "order": [
+            "Page1.dc.html",
+            "Page2.dc.html",
+            "Page3.dc.html"
+          ],
+          "notes": {},
+          "designSystems": []
+        },
+        "display": "Page 1\n\n",
+        "inputClosed": true
+      },
+      {
+        "name": "spaces",
+        "initial": "Page 1",
+        "style": {
+          "rect": {
+            "x": 48,
+            "y": 387.052978515625,
+            "width": 418.4062805175781,
+            "height": 18,
+            "top": 387.052978515625,
+            "right": 466.4062805175781,
+            "bottom": 405.052978515625,
+            "left": 48
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+          "fontSize": "12px",
+          "lineHeight": "16px",
+          "padding": "1px 4px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "borderRadius": "4px",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(249, 249, 249)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "outline": "rgb(16, 16, 16) none 1px",
+          "selection": [
+            0,
+            6
+          ]
+        },
+        "after": {
+          "v": 3,
+          "title": "LingxiLoop",
+          "launch": {
+            "view": "canvas"
+          },
+          "pages": [],
+          "boards": {
+            "Page1.dc.html": {
+              "x": 0,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 1"
+            },
+            "Page2.dc.html": {
+              "x": 2080,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 2"
+            },
+            "Page3.dc.html": {
+              "x": 4160,
+              "y": 0,
+              "w": 1920,
+              "h": 1080,
+              "title": "Page 3"
+            }
+          },
+          "order": [
+            "Page1.dc.html",
+            "Page2.dc.html",
+            "Page3.dc.html"
+          ],
+          "notes": {},
+          "designSystems": []
+        },
+        "display": "Page 1\n\n",
+        "inputClosed": true
+      }
+    ]
+  },
+  "responsive": [
+    {
+      "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "referenceResourceHashesVerified": 12,
+      "viewport": {
+        "width": 1920,
+        "height": 1200
+      },
+      "theme": "light",
+      "cases": [
+        {
+          "name": "enter",
+          "initial": "Page 1",
+          "style": {
+            "rect": {
+              "x": 48,
+              "y": 446.0015869140625,
+              "width": 569.9994506835938,
+              "height": 17.999969482421875,
+              "top": 446.0015869140625,
+              "right": 617.9994506835938,
+              "bottom": 464.0015563964844,
+              "left": 48
+            },
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "padding": "1px 4px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "borderRadius": "4px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "background": "rgb(249, 249, 249)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+            "outline": "rgb(16, 16, 16) none 1px",
+            "selection": [
+              0,
+              6
+            ]
+          },
+          "after": {
+            "v": 3,
+            "attachments": {},
+            "boards": {
+              "Page1.dc.html": {
+                "h": 1080,
+                "title": "中文画板",
+                "w": 1920,
+                "x": 0,
+                "y": 0
+              },
+              "Page2.dc.html": {
+                "h": 1080,
+                "title": "Page 2",
+                "w": 1920,
+                "x": 2080,
+                "y": 0
+              },
+              "Page3.dc.html": {
+                "h": 1080,
+                "title": "Page 3",
+                "w": 1920,
+                "x": 4160,
+                "y": 0
+              }
+            },
+            "designSystems": [],
+            "launch": {
+              "view": "canvas"
+            },
+            "notes": {},
+            "order": [
+              "Page1.dc.html",
+              "Page2.dc.html",
+              "Page3.dc.html"
+            ],
+            "pages": [],
+            "title": "LingxiLoop"
+          },
+          "display": "中文画板\n\n",
+          "inputClosed": true
+        }
+      ]
+    },
+    {
+      "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "referenceResourceHashesVerified": 12,
+      "viewport": {
+        "width": 1920,
+        "height": 1200
+      },
+      "theme": "dark",
+      "cases": [
+        {
+          "name": "enter",
+          "initial": "Page 1",
+          "style": {
+            "rect": {
+              "x": 48,
+              "y": 446.0015869140625,
+              "width": 569.9994506835938,
+              "height": 17.999969482421875,
+              "top": 446.0015869140625,
+              "right": 617.9994506835938,
+              "bottom": 464.0015563964844,
+              "left": 48
+            },
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "padding": "1px 4px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "borderRadius": "4px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "background": "rgb(11, 11, 11)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+            "outline": "rgb(238, 238, 238) none 1px",
+            "selection": [
+              0,
+              6
+            ]
+          },
+          "after": {
+            "v": 3,
+            "attachments": {},
+            "boards": {
+              "Page1.dc.html": {
+                "h": 1080,
+                "title": "中文画板",
+                "w": 1920,
+                "x": 0,
+                "y": 0
+              },
+              "Page2.dc.html": {
+                "h": 1080,
+                "title": "Page 2",
+                "w": 1920,
+                "x": 2080,
+                "y": 0
+              },
+              "Page3.dc.html": {
+                "h": 1080,
+                "title": "Page 3",
+                "w": 1920,
+                "x": 4160,
+                "y": 0
+              }
+            },
+            "designSystems": [],
+            "launch": {
+              "view": "canvas"
+            },
+            "notes": {},
+            "order": [
+              "Page1.dc.html",
+              "Page2.dc.html",
+              "Page3.dc.html"
+            ],
+            "pages": [],
+            "title": "LingxiLoop"
+          },
+          "display": "中文画板\n\n",
+          "inputClosed": true
+        }
+      ]
+    },
+    {
+      "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "referenceResourceHashesVerified": 12,
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "cases": [
+        {
+          "name": "enter",
+          "initial": "Page 1",
+          "style": {
+            "rect": {
+              "x": 48,
+              "y": 387.052978515625,
+              "width": 418.4062805175781,
+              "height": 18,
+              "top": 387.052978515625,
+              "right": 466.4062805175781,
+              "bottom": 405.052978515625,
+              "left": 48
+            },
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "padding": "1px 4px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "borderRadius": "4px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "background": "rgb(249, 249, 249)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+            "outline": "rgb(16, 16, 16) none 1px",
+            "selection": [
+              0,
+              6
+            ]
+          },
+          "after": {
+            "v": 3,
+            "attachments": {},
+            "boards": {
+              "Page1.dc.html": {
+                "h": 1080,
+                "title": "中文画板",
+                "w": 1920,
+                "x": 0,
+                "y": 0
+              },
+              "Page2.dc.html": {
+                "h": 1080,
+                "title": "Page 2",
+                "w": 1920,
+                "x": 2080,
+                "y": 0
+              },
+              "Page3.dc.html": {
+                "h": 1080,
+                "title": "Page 3",
+                "w": 1920,
+                "x": 4160,
+                "y": 0
+              }
+            },
+            "designSystems": [],
+            "launch": {
+              "view": "canvas"
+            },
+            "notes": {},
+            "order": [
+              "Page1.dc.html",
+              "Page2.dc.html",
+              "Page3.dc.html"
+            ],
+            "pages": [],
+            "title": "LingxiLoop"
+          },
+          "display": "中文画板\n\n",
+          "inputClosed": true
+        }
+      ]
+    },
+    {
+      "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "referenceResourceHashesVerified": 12,
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "cases": [
+        {
+          "name": "enter",
+          "initial": "Page 1",
+          "style": {
+            "rect": {
+              "x": 48,
+              "y": 387.052978515625,
+              "width": 418.4062805175781,
+              "height": 18,
+              "top": 387.052978515625,
+              "right": 466.4062805175781,
+              "bottom": 405.052978515625,
+              "left": 48
+            },
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "padding": "1px 4px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "borderRadius": "4px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "background": "rgb(11, 11, 11)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+            "outline": "rgb(238, 238, 238) none 1px",
+            "selection": [
+              0,
+              6
+            ]
+          },
+          "after": {
+            "v": 3,
+            "attachments": {},
+            "boards": {
+              "Page1.dc.html": {
+                "h": 1080,
+                "title": "中文画板",
+                "w": 1920,
+                "x": 0,
+                "y": 0
+              },
+              "Page2.dc.html": {
+                "h": 1080,
+                "title": "Page 2",
+                "w": 1920,
+                "x": 2080,
+                "y": 0
+              },
+              "Page3.dc.html": {
+                "h": 1080,
+                "title": "Page 3",
+                "w": 1920,
+                "x": 4160,
+                "y": 0
+              }
+            },
+            "designSystems": [],
+            "launch": {
+              "view": "canvas"
+            },
+            "notes": {},
+            "order": [
+              "Page1.dc.html",
+              "Page2.dc.html",
+              "Page3.dc.html"
+            ],
+            "pages": [],
+            "title": "LingxiLoop"
+          },
+          "display": "中文画板\n\n",
+          "inputClosed": true
+        }
+      ]
+    },
+    {
+      "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "referenceResourceHashesVerified": 12,
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "theme": "light",
+      "cases": [
+        {
+          "name": "enter",
+          "initial": "Page 1",
+          "style": {
+            "rect": {
+              "x": 48,
+              "y": 456.5266418457031,
+              "width": 206.20314025878906,
+              "height": 18,
+              "top": 456.5266418457031,
+              "right": 254.20314025878906,
+              "bottom": 474.5266418457031,
+              "left": 48
+            },
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "padding": "1px 4px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "borderRadius": "4px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "background": "rgb(249, 249, 249)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+            "outline": "rgb(16, 16, 16) none 1px",
+            "selection": [
+              0,
+              6
+            ]
+          },
+          "after": {
+            "v": 3,
+            "attachments": {},
+            "boards": {
+              "Page1.dc.html": {
+                "h": 1080,
+                "title": "中文画板",
+                "w": 1920,
+                "x": 0,
+                "y": 0
+              },
+              "Page2.dc.html": {
+                "h": 1080,
+                "title": "Page 2",
+                "w": 1920,
+                "x": 2080,
+                "y": 0
+              },
+              "Page3.dc.html": {
+                "h": 1080,
+                "title": "Page 3",
+                "w": 1920,
+                "x": 4160,
+                "y": 0
+              }
+            },
+            "designSystems": [],
+            "launch": {
+              "view": "canvas"
+            },
+            "notes": {},
+            "order": [
+              "Page1.dc.html",
+              "Page2.dc.html",
+              "Page3.dc.html"
+            ],
+            "pages": [],
+            "title": "LingxiLoop"
+          },
+          "display": "中文画板\n\n",
+          "inputClosed": true
+        }
+      ]
+    },
+    {
+      "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "referenceResourceHashesVerified": 12,
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "theme": "dark",
+      "cases": [
+        {
+          "name": "enter",
+          "initial": "Page 1",
+          "style": {
+            "rect": {
+              "x": 48,
+              "y": 456.5266418457031,
+              "width": 206.20314025878906,
+              "height": 18,
+              "top": 456.5266418457031,
+              "right": 254.20314025878906,
+              "bottom": 474.5266418457031,
+              "left": 48
+            },
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "padding": "1px 4px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "borderRadius": "4px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "background": "rgb(11, 11, 11)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+            "outline": "rgb(238, 238, 238) none 1px",
+            "selection": [
+              0,
+              6
+            ]
+          },
+          "after": {
+            "v": 3,
+            "attachments": {},
+            "boards": {
+              "Page1.dc.html": {
+                "h": 1080,
+                "title": "中文画板",
+                "w": 1920,
+                "x": 0,
+                "y": 0
+              },
+              "Page2.dc.html": {
+                "h": 1080,
+                "title": "Page 2",
+                "w": 1920,
+                "x": 2080,
+                "y": 0
+              },
+              "Page3.dc.html": {
+                "h": 1080,
+                "title": "Page 3",
+                "w": 1920,
+                "x": 4160,
+                "y": 0
+              }
+            },
+            "designSystems": [],
+            "launch": {
+              "view": "canvas"
+            },
+            "notes": {},
+            "order": [
+              "Page1.dc.html",
+              "Page2.dc.html",
+              "Page3.dc.html"
+            ],
+            "pages": [],
+            "title": "LingxiLoop"
+          },
+          "display": "中文画板\n\n",
+          "inputClosed": true
+        }
+      ]
+    },
+    {
+      "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "referenceResourceHashesVerified": 12,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "cases": [
+        {
+          "name": "enter",
+          "initial": "Page 1",
+          "style": {
+            "rect": {
+              "x": 48,
+              "y": 398.8553466796875,
+              "width": 86.8282470703125,
+              "height": 18.000030517578125,
+              "top": 398.8553466796875,
+              "right": 134.8282470703125,
+              "bottom": 416.8553771972656,
+              "left": 48
+            },
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "padding": "1px 4px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "borderRadius": "4px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "background": "rgb(249, 249, 249)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+            "outline": "rgb(16, 16, 16) none 1px",
+            "selection": [
+              0,
+              6
+            ]
+          },
+          "after": {
+            "v": 3,
+            "attachments": {},
+            "boards": {
+              "Page1.dc.html": {
+                "h": 1080,
+                "title": "中文画板",
+                "w": 1920,
+                "x": 0,
+                "y": 0
+              },
+              "Page2.dc.html": {
+                "h": 1080,
+                "title": "Page 2",
+                "w": 1920,
+                "x": 2080,
+                "y": 0
+              },
+              "Page3.dc.html": {
+                "h": 1080,
+                "title": "Page 3",
+                "w": 1920,
+                "x": 4160,
+                "y": 0
+              }
+            },
+            "designSystems": [],
+            "launch": {
+              "view": "canvas"
+            },
+            "notes": {},
+            "order": [
+              "Page1.dc.html",
+              "Page2.dc.html",
+              "Page3.dc.html"
+            ],
+            "pages": [],
+            "title": "LingxiLoop"
+          },
+          "display": "中文画板\n\n",
+          "inputClosed": true
+        }
+      ]
+    },
+    {
+      "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+      "referenceResourceHashesVerified": 12,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "cases": [
+        {
+          "name": "enter",
+          "initial": "Page 1",
+          "style": {
+            "rect": {
+              "x": 48,
+              "y": 398.8553466796875,
+              "width": 86.8282470703125,
+              "height": 18.000030517578125,
+              "top": 398.8553466796875,
+              "right": 134.8282470703125,
+              "bottom": 416.8553771972656,
+              "left": 48
+            },
+            "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "padding": "1px 4px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "borderRadius": "4px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "background": "rgb(11, 11, 11)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+            "outline": "rgb(238, 238, 238) none 1px",
+            "selection": [
+              0,
+              6
+            ]
+          },
+          "after": {
+            "v": 3,
+            "attachments": {},
+            "boards": {
+              "Page1.dc.html": {
+                "h": 1080,
+                "title": "中文画板",
+                "w": 1920,
+                "x": 0,
+                "y": 0
+              },
+              "Page2.dc.html": {
+                "h": 1080,
+                "title": "Page 2",
+                "w": 1920,
+                "x": 2080,
+                "y": 0
+              },
+              "Page3.dc.html": {
+                "h": 1080,
+                "title": "Page 3",
+                "w": 1920,
+                "x": 4160,
+                "y": 0
+              }
+            },
+            "designSystems": [],
+            "launch": {
+              "view": "canvas"
+            },
+            "notes": {},
+            "order": [
+              "Page1.dc.html",
+              "Page2.dc.html",
+              "Page3.dc.html"
+            ],
+            "pages": [],
+            "title": "LingxiLoop"
+          },
+          "display": "中文画板\n\n",
+          "inputClosed": true
+        }
+      ]
+    }
+  ],
+  "scope": "原始固定发布包独立只读运行；每状态新建项目；不将专有脚本或字体引入产品。",
+  "markers": [
+    {
+      "lookup": "mega-artboard-title-",
+      "start": 5159719,
+      "end": 5159739,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "lookup": "mega-artboard-rename-",
+      "start": 5161258,
+      "end": 5161279,
+      "offsetUnit": "UTF-16 code units"
+    }
+  ]
+}

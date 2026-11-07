@@ -1,6 +1,15 @@
-import { memo, useEffect, useState, type ReactNode } from 'react'
-import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme } from '../../../../shared/artifact-document'
+import {artifactLinkPreview,type LinkPreviewRun} from '../../../../shared/artifact-link-preview'
+import {pageRadiusCss,pageRadiusPath} from '../../../../shared/artifact-page-radius'
+import { useArtifactAssetRead } from './asset-read-context'
+import type { AssetRead } from './asset-reads'
+import { artifactShapeGeometry } from '../../../../shared/artifact-shapes'
+import { editorFontFamily } from './editor-fonts'
+import { SvgImage } from './SvgImage'
+import { inheritedSvgFont } from './svg-presentation'
+import { memo, useEffect, useState, useId, type ReactNode } from 'react'
+import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme, type ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
+import {codeStyleProperties} from '../../../../shared/artifact-node-code'
 
 const CACHE_ENTRIES = 128, CACHE_BYTES = 2 * 1024 * 1024
 /** The caches retain small previews, not documents, page renderers or executable content. */
@@ -35,10 +44,13 @@ function imageKey(documentId: string, asset: ArtifactAsset) {
 }
 
 interface PreviewNode {
+  linked?:boolean;linkLines?:LinkPreviewRun[][];textDecoration?:ArtifactStyle['textDecoration']
+  css?: ArtifactNode['css']
   id: string; type: ArtifactNode['type']; x: number; y: number; width: number; height: number; rotation: number
   fill: string; color: string; stroke: string; strokeWidth: number; opacity: number; radius: number
-  fontSize: number; fontWeight: number; text: string; shape?: ArtifactNode['shape']; points?: string
-  assetId?: string; imageKey?: string; crop?: ArtifactNode['crop']; svg?: string; cells?: string[][]; children?: PreviewNode[]
+  fontSize: number; fontWeight: number; fontFamily: string; text: string; shape?: ArtifactNode['shape']; path?: ArtifactNode['path']; points?: string
+  gradient?: ArtifactStyle['gradient']; shadow?: ArtifactStyle['shadow']; flipX?: boolean; flipY?: boolean
+  assetId?: string; imageKey?: string; crop?: ArtifactNode['crop']; svg?: string; svgFontFamily?:string; cells?: string[][]; tableHeader?: boolean; children?: PreviewNode[]
 }
 interface Preview { width: number; height: number; background: string; nodes: PreviewNode[] }
 const previews = new PreviewCache<Preview>()
@@ -65,28 +77,31 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
   const children = new Map<string | null, ArtifactNode[]>()
   for (const id of page.nodeOrder) {
     const node = page.nodes[id]
-    if (!node || node.hidden) continue
+    if (!node || node.hidden || node.attributes?.hidden!==undefined) continue
     const list = children.get(node.parentId) ?? []; list.push(node); children.set(node.parentId, list)
   }
   let remaining = 96
-  const describe = (node: ArtifactNode, x = node.x, y = node.y): PreviewNode => {
+  const describe = (node: ArtifactNode, x = node.x, y = node.y, inheritedLink=false): PreviewNode => {
     remaining--
     const style = artifactResolvedStyle(node.style, document)
-    const assetId = node.assetId ?? node.embed?.previewAssetId
+    const assetId = (node.type === 'video' ? node.posterAssetId : node.assetId) ?? node.embed?.previewAssetId
     const asset = assetId ? document.assets[assetId] : undefined
+    const linked=inheritedLink||!!node.attributes?.href,decoration=artifactLinkPreview(node.richText)
     const preview: PreviewNode = {
+      ...(linked?{linked:true}:{}),...(decoration?{linkLines:decoration.lines}:{}),textDecoration:style.textDecoration,
+      ...(node.css?{css:node.css}:{}),
       id: node.id, type: node.type, x, y, width: node.width, height: node.height, rotation: node.rotation,
       fill: safeColor(style.fill ?? style.backgroundColor, node.type === 'shape' ? '#d6e6ff' : 'transparent'),
       color: safeColor(style.color, '#222'),
       stroke: safeColor(style.stroke ?? style.borderColor, node.type === 'line' ? '#333' : 'transparent'),
       strokeWidth: style.strokeWidth ?? style.borderWidth ?? (node.type === 'line' ? 3 : 1),
-      opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
+      fontFamily:editorFontFamily(style.fontFamily)??'sans-serif', opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
       text: (node.type === 'math' ? node.source ?? '' : node.text ?? plainText(node.richText)).slice(0, 512),
-      shape: node.shape, crop: node.crop,
+      shape: node.shape, crop: node.crop, gradient: style.gradient, shadow: style.shadow, flipX: node.flipX, flipY: node.flipY,
       ...(asset ? { assetId, imageKey: imageKey(document.id, asset) } : {}),
-      ...(node.type === 'line' ? { points: (node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ') } : {}),
-      ...(node.type === 'svg' && node.svg && isSafeArtifactSvg(node.svg) ? { svg: node.svg } : {}),
-      ...(node.type === 'table' ? { cells: node.cells?.slice(0, 12).map(row => row.slice(0, 8).map(cell => cell.slice(0, 48))) } : {}),
+      ...(node.type === 'line' || node.type === 'drawing' ? { path:node.path, points: (node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ') } : {}),
+      ...(node.type === 'svg' && node.svg && isSafeArtifactSvg(node.svg) ? { svg: node.svg, svgFontFamily:inheritedSvgFont(node,page,document) } : {}),
+      ...(node.type === 'table' ? { tableHeader:node.tableHeader, cells: node.cells?.slice(0, 12).map(row => row.slice(0, 8).map(cell => cell.slice(0, 48))) } : {}),
     }
     if (node.type === 'group') {
       const members = children.get(node.id) ?? [], layout = node.layout
@@ -99,14 +114,14 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
         if (remaining <= 0) return []
         if (layout?.mode === 'flex') {
           const horizontal = layout.direction === 'row'
-          const item = describe(child, horizontal ? cursor : padding, horizontal ? padding : cursor)
+          const item = describe(child, horizontal ? cursor : padding, horizontal ? padding : cursor,linked)
           cursor += (horizontal ? child.width : child.height) + gap
           return [item]
         }
         if (layout?.mode === 'grid') return [describe(child,
           padding + index % columns * ((node.width - 2 * padding + gap) / columns),
-          padding + Math.floor(index / columns) * ((node.height - 2 * padding + gap) / gridRows))]
-        return [describe(child)]
+          padding + Math.floor(index / columns) * ((node.height - 2 * padding + gap) / gridRows),linked)]
+        return [describe(child,child.x,child.y,linked)]
       })
     }
     return preview
@@ -126,7 +141,7 @@ function scheduleImage<T>(signal: AbortSignal, work: () => Promise<T>): Promise<
     let started = false
     const task: ImageTask = {
       start() {
-        if (signal.aborted) { reject(new DOMException('Cancelled', 'AbortError')); return }
+        if (signal.aborted) { reject(new DOMException('资源读取已取消', 'AbortError')); return }
         started = true; activeImages++
         signal.removeEventListener('abort', task.cancel)
         void work().then(resolve, reject).finally(() => { activeImages--; pumpImages() })
@@ -136,7 +151,7 @@ function scheduleImage<T>(signal: AbortSignal, work: () => Promise<T>): Promise<
         const index = imageQueue.indexOf(task)
         if (index >= 0) imageQueue.splice(index, 1)
         signal.removeEventListener('abort', task.cancel)
-        reject(new DOMException('Cancelled', 'AbortError'))
+        reject(new DOMException('资源读取已取消', 'AbortError'))
       },
     }
     if (signal.aborted) { task.cancel(); return }
@@ -144,24 +159,23 @@ function scheduleImage<T>(signal: AbortSignal, work: () => Promise<T>): Promise<
     imageQueue.push(task); pumpImages()
   })
 }
-async function loadImage(asset: ArtifactAsset, artifactId: string, key: string, signal: AbortSignal) {
+async function loadImage(asset: ArtifactAsset, artifactId: string, key: string, signal: AbortSignal, readAsset: AssetRead) {
   return scheduleImage(signal, async () => {
     const cached = images.get(key)
     if (cached) return cached
-    const { fetchArtifactAsset } = await import('./assets')
-    const blob = await fetchArtifactAsset(asset, artifactId, signal)
-    if (signal.aborted) throw new DOMException('Cancelled', 'AbortError')
+    const blob = await readAsset(asset, artifactId, signal)
+    if (signal.aborted) throw new DOMException('资源读取已取消', 'AbortError')
     const ratio = asset.width && asset.height ? Math.min(1, 160 / asset.width, 90 / asset.height) : null
     const bitmap = await createImageBitmap(blob, ratio ? { resizeWidth: Math.max(1, Math.round(asset.width! * ratio)), resizeHeight: Math.max(1, Math.round(asset.height! * ratio)), resizeQuality: 'low' } : undefined)
     try {
-      if (signal.aborted) throw new DOMException('Cancelled', 'AbortError')
+      if (signal.aborted) throw new DOMException('资源读取已取消', 'AbortError')
       const scale = Math.min(1, 160 / bitmap.width, 90 / bitmap.height)
       const canvas = window.document.createElement('canvas')
       canvas.width = Math.max(1, Math.round(bitmap.width * scale)); canvas.height = Math.max(1, Math.round(bitmap.height * scale))
       const context = canvas.getContext('2d')
-      if (!context) throw new Error('Thumbnail canvas unavailable')
+      if (!context) throw new Error('无法生成页面缩略图。')
       context.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-      const source = canvas.toDataURL('image/webp', .65)
+      const source = canvas.toDataURL('image/png')
       images.set(key, source, source.length * 2)
       canvas.width = 0; canvas.height = 0
       return source
@@ -175,6 +189,7 @@ function ThumbnailImage({ node, document, loaded }: { node: PreviewNode; documen
     return source && node.imageKey ? { key: node.imageKey, source } : null
   })
   const asset = node.assetId ? document.assets[node.assetId] : undefined
+  const readAsset = useArtifactAssetRead()
   useEffect(() => {
     const key = node.imageKey
     if (!key) return
@@ -182,11 +197,11 @@ function ThumbnailImage({ node, document, loaded }: { node: PreviewNode; documen
     if (cached) { setState({ key, source: cached }); return }
     if (!loaded || !asset) return
     const controller = new AbortController()
-    void loadImage(asset, document.id, key, controller.signal).then(source => {
+    void loadImage(asset, document.id, key, controller.signal, readAsset).then(source => {
       if (!controller.signal.aborted) setState({ key, source })
     }).catch(() => { /* An unavailable image remains a neutral thumbnail shape. */ })
     return () => controller.abort()
-  }, [node.imageKey, asset, loaded, document.id])
+  }, [node.imageKey, asset, loaded, document.id, readAsset])
   const source = state && state.key === node.imageKey ? state.source : node.imageKey ? images.get(node.imageKey) : undefined
   if (!source) return <rect width={node.width} height={node.height} fill="#e1e5eb" />
   const crop = node.crop ?? { x: 0, y: 0, width: 1, height: 1 }
@@ -198,31 +213,37 @@ function ThumbnailImage({ node, document, loaded }: { node: PreviewNode; documen
 function PreviewShape({ node, document, loaded }: { node: PreviewNode; document: ArtifactDocument; loaded: boolean }) {
   const { width: w, height: h } = node
   let content: ReactNode
-  const paint = { fill: node.fill, stroke: node.stroke, strokeWidth: node.strokeWidth }
-  if (node.type === 'image' || node.type === 'embed' && node.imageKey) content = <ThumbnailImage node={node} document={document} loaded={loaded} />
-  else if (node.type === 'svg' && node.svg) content = <image href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(node.svg)}`} width={w} height={h} />
-  else if (node.type === 'line') content = <polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
-  else if (node.type === 'shape') content = node.shape === 'ellipse' ? <ellipse cx={w / 2} cy={h / 2} rx={w / 2} ry={h / 2} {...paint} />
-    : node.shape === 'triangle' ? <polygon points={`${w / 2},0 ${w},${h} 0,${h}`} {...paint} />
-      : node.shape === 'diamond' ? <polygon points={`${w / 2},0 ${w},${h / 2} ${w / 2},${h} 0,${h / 2}`} {...paint} />
-        : node.shape === 'arrow' ? <polygon points={`0,${h * .3} ${w * .65},${h * .3} ${w * .65},0 ${w},${h / 2} ${w * .65},${h} ${w * .65},${h * .7} 0,${h * .7}`} {...paint} />
-          : <rect width={w} height={h} rx={node.radius} {...paint} />
+  const decoration=[node.linked||node.textDecoration==='underline'?'underline':'',node.textDecoration==='line-through'?'line-through':''].filter(Boolean).join(' ')||undefined
+  const gradientId = `preview-gradient-${document.id}-${node.id}`
+  const paint = { fill: node.gradient ? `url(#${gradientId})` : node.fill, stroke: node.stroke, strokeWidth: node.strokeWidth }
+  if (node.type === 'image' || node.type === 'video' && node.imageKey || node.type === 'embed' && node.imageKey) content = <ThumbnailImage node={node} document={document} loaded={loaded} />
+  else if (node.type === 'svg' && node.svg) content = <SvgImage source={node.svg} alt="图形" fontFamily={node.svgFontFamily} thumbnail={{width:w,height:h}} />
+  else if ((node.type === 'line' || node.type === 'drawing')) content = node.path?<svg width={node.width} height={node.height} viewBox={`0 0 ${node.path.width} ${node.path.height}`} preserveAspectRatio="none" overflow="visible"><path d={node.path.d} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" /></svg>:<polyline points={node.points} fill="none" stroke={node.stroke} strokeWidth={node.strokeWidth} />
+  else if (node.type === 'shape') {const {tag:Shape,attributes}=artifactShapeGeometry(node.shape,w,h,node.radius);content=<Shape {...attributes} {...paint} />}
   else if (node.type === 'table') {
-    const rows = node.cells ?? [], cols = Math.max(1, ...rows.map(row => row.length)), rowHeight = h / Math.max(1, rows.length), columnWidth = w / cols
-    content = rows.map((row, rowIndex) => row.map((cell, colIndex) => <g key={`${rowIndex}-${colIndex}`} transform={`translate(${colIndex * columnWidth} ${rowIndex * rowHeight})`}>
-      <rect width={columnWidth} height={rowHeight} fill={rowIndex === 0 ? '#e6e9ef' : '#fff'} stroke={node.stroke === 'transparent' ? '#adb5c2' : node.stroke} strokeWidth={1} />
-      <text x={4} y={Math.min(node.fontSize, rowHeight * .7)} fill={node.color} fontSize={Math.min(node.fontSize, rowHeight * .65)}>{cell.slice(0, 24)}</text>
-    </g>))
+    const rows=node.cells??[],cols=Math.max(1,...rows.map(row=>row.length)),rowHeight=Math.max(0,h-2)/Math.max(1,rows.length),columnWidth=Math.max(0,w-2)/cols
+    const stroke=`color-mix(in srgb,${node.color} 22%,transparent)`
+    content=<><path d={`M1 ${h} V1 H${w}`} fill="none" stroke={stroke} strokeWidth={2} />{rows.map((row,rowIndex)=>row.map((cell,colIndex)=><g key={`${rowIndex}-${colIndex}`} transform={`translate(${2+colIndex*columnWidth} ${2+rowIndex*rowHeight})`}>
+      <rect width={columnWidth} height={rowHeight} fill={rowIndex===0&&node.tableHeader?`color-mix(in srgb,${node.color} 8%,transparent)`:'transparent'} />
+      <path d={`M${columnWidth-1} 0 V${rowHeight-1} H0`} fill="none" stroke={stroke} strokeWidth={2} />
+      <text x={node.fontSize*.6} y={Math.min(node.fontSize*1.35,rowHeight-2)} fill={node.color} fontSize={Math.min(node.fontSize,rowHeight*.65)} fontWeight={rowIndex===0&&node.tableHeader?600:node.fontWeight}>{cell.slice(0,24)}</text>
+    </g>))}</>
   } else if (node.type === 'group') content = <><rect width={w} height={h} rx={node.radius} {...paint} />{node.children?.map(child => <PreviewShape key={child.id} node={child} document={document} loaded={loaded} />)}</>
-  else content = <><rect width={w} height={h} rx={node.radius} {...paint} />{(node.type === 'embed' ? ['交互内容'] : node.text.split('\n').slice(0, 4)).map((line, index) => <text key={index} x={0} y={node.fontSize * (index * 1.2 + 1)} fill={node.color} fontSize={node.fontSize} fontWeight={node.fontWeight}>{line.slice(0, 100)}</text>)}</>
-  return <g transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2})`} opacity={node.opacity}>{content}</g>
+  else content = <><rect width={w} height={h} rx={node.radius} {...paint} />{(node.type === 'embed' ? ['交互内容'] : node.linkLines??node.text.split('\n').slice(0, 4).map(text=>[{text:text.slice(0,100),underline:false}])).map((line, index) => <text key={index} x={0} y={node.fontSize * (index * 1.2 + 1)} fill={node.color} fontSize={node.fontSize} fontWeight={node.fontWeight} textDecoration={decoration}>{typeof line==='string'?line:line.map((run,index)=><tspan key={index} textDecoration={run.underline?[...new Set([...(decoration?.split(' ')??[]),'underline'])].join(' '):decoration}>{run.text}</tspan>)}</text>)}</>
+  return <g fontFamily={node.fontFamily} transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2}) translate(${node.flipX ? w : 0} ${node.flipY ? h : 0}) scale(${node.flipX ? -1 : 1} ${node.flipY ? -1 : 1})`} opacity={node.opacity}>{node.gradient && <defs>{node.gradient.type === 'radial' ? <radialGradient id={gradientId}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</radialGradient> : <linearGradient id={gradientId} gradientTransform={`rotate(${node.gradient.angle-90} .5 .5)`}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</linearGradient>}</defs>}{node.css?<foreignObject width={w} height={h} overflow="visible"><div style={{width:w,height:h,...codeStyleProperties(node.css)}}><svg width="100%" height="100%" overflow="visible">{content}</svg></div></foreignObject>:content}</g>
 }
 
 /** A lightweight visual summary; it never mounts an editor or executes an embed. */
+function hasEditorFonts(nodes: PreviewNode[]): boolean {
+  return nodes.some(node => node.fontFamily.includes('LingxiLoopEditor ') || (node.children && hasEditorFonts(node.children)))
+}
 export const PageThumbnail = memo(function PageThumbnail({ page, document, loaded }: { page: ArtifactPage; document: ArtifactDocument; loaded: boolean }) {
   const preview = loaded ? describePage(page, document) : previews.get(`${document.id}:${page.id}`)
+  const clipId=useId(),rounded=!!pageRadiusCss(page.radius)
+  const content=<><rect width={preview?.width ?? page.width} height={preview?.height ?? page.height} fill={preview?.background ?? safeColor(artifactPageBackground(page, document), '#fff')} />{preview?.nodes.map(node => <PreviewShape key={node.id} node={node} document={document} loaded={loaded} />)}</>
+  const needsFonts = !!preview && hasEditorFonts(preview.nodes)
+  useEffect(() => { if (needsFonts) void import('./editor-fonts.css').catch(() => {}) }, [needsFonts])
   return <svg aria-hidden="true" focusable="false" width="64" height="40" viewBox={`0 0 ${preview?.width ?? page.width} ${preview?.height ?? page.height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', width: 64, height: 40, flexShrink: 0, borderRadius: 3, overflow: 'hidden', background: '#e8eaee' }}>
-    <rect width={preview?.width ?? page.width} height={preview?.height ?? page.height} fill={preview?.background ?? safeColor(artifactPageBackground(page, document), '#fff')} />
-    {preview?.nodes.map(node => <PreviewShape key={node.id} node={node} document={document} loaded={loaded} />)}
+    {rounded?<><defs><clipPath id={clipId}><path d={pageRadiusPath(page.radius,preview?.width??page.width,preview?.height??page.height)}/></clipPath></defs><g clipPath={`url(#${clipId})`}>{content}</g></>:content}
   </svg>
 })

@@ -1,4 +1,5 @@
 import type { Bounds, BoundsIssue, ComputeMessage, ComputeResponse, ComputeTask, ComputeValue, MathResult, Point, Rect, ThemeResult, ThemeTokens } from './compute-protocol'
+import type {PenGeometry} from '../../../../shared/artifact-pen'
 export type { Bounds, BoundsIssue, MathResult, Point, Rect, ThemeResult, ThemeTokens } from './compute-protocol'
 
 interface Pending {
@@ -109,6 +110,9 @@ export class NativeCompute {
   }
   math(source: string, display: boolean, revision: number, signal?: AbortSignal) {
     return this.request<MathResult>({ kind: 'math', source, display }, revision, signal)
+  }
+  pen(points:Point[],tolerance:number,revision:number,signal?:AbortSignal){
+    return this.request<PenGeometry|null>({kind:'pen',points,tolerance},revision,signal)
   }
   dispose() { this.disposed = true; this.rejectAll(aborted()); this.worker?.terminate(); this.worker = undefined }
 }

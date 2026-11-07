@@ -1,0 +1,4432 @@
+{
+  "kind": "isolated-native-editor-default-visual-diagnostic",
+  "mode": "design",
+  "screenshots": [
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "path": "design-1920-light.png",
+      "controls": [
+        {
+          "label": "页面菜单",
+          "role": "summary",
+          "rect": {
+            "x": 17,
+            "y": 17,
+            "width": 64.828125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择 (V)",
+          "role": "button",
+          "rect": {
+            "x": 94.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgb(228, 239, 251)",
+          "border": "0px none rgb(23, 87, 172)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "手型工具 (H)",
+          "role": "button",
+          "rect": {
+            "x": 122.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "文本",
+          "role": "button",
+          "rect": {
+            "x": 150.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "添加画板",
+          "role": "button",
+          "rect": {
+            "x": 178.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "便签 (N)",
+          "role": "button",
+          "rect": {
+            "x": 206.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "铅笔",
+          "role": "button",
+          "rect": {
+            "x": 234.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "绘图工具",
+          "role": "summary",
+          "rect": {
+            "x": 260.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "矩形工具",
+          "role": "button",
+          "rect": {
+            "x": 280.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "插入图形",
+          "role": "summary",
+          "rect": {
+            "x": 306.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出格式",
+          "role": "summary",
+          "rect": {
+            "x": 1672.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "版本历史",
+          "role": "button",
+          "rect": {
+            "x": 1700.875,
+            "y": 17.5,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论",
+          "role": "button",
+          "rect": {
+            "x": 1732.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论选项",
+          "role": "summary",
+          "rect": {
+            "x": 1756.875,
+            "y": 17.5,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "播放",
+          "role": "summary",
+          "rect": {
+            "x": 1785.875,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "显示属性",
+          "role": "button",
+          "rect": {
+            "x": 1813.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "画布缩放",
+          "role": "summary",
+          "rect": {
+            "x": 1841.875,
+            "y": 17.5,
+            "width": 61.125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 1",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 447,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 1",
+          "role": "button",
+          "rect": {
+            "x": 578,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 1",
+          "role": "summary",
+          "rect": {
+            "x": 604,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 2",
+          "role": "button",
+          "rect": {
+            "x": 672,
+            "y": 447,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 1202,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 2",
+          "role": "summary",
+          "rect": {
+            "x": 1228,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 3",
+          "role": "button",
+          "rect": {
+            "x": 1296,
+            "y": 447,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 1826,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 3",
+          "role": "summary",
+          "rect": {
+            "x": 1852,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        }
+      ]
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "path": "design-1920-dark.png",
+      "controls": [
+        {
+          "label": "页面菜单",
+          "role": "summary",
+          "rect": {
+            "x": 17,
+            "y": 17,
+            "width": 64.828125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择 (V)",
+          "role": "button",
+          "rect": {
+            "x": 94.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgb(228, 239, 251)",
+          "border": "0px none rgb(23, 87, 172)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "手型工具 (H)",
+          "role": "button",
+          "rect": {
+            "x": 122.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "文本",
+          "role": "button",
+          "rect": {
+            "x": 150.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "添加画板",
+          "role": "button",
+          "rect": {
+            "x": 178.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "便签 (N)",
+          "role": "button",
+          "rect": {
+            "x": 206.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "铅笔",
+          "role": "button",
+          "rect": {
+            "x": 234.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "绘图工具",
+          "role": "summary",
+          "rect": {
+            "x": 260.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "矩形工具",
+          "role": "button",
+          "rect": {
+            "x": 280.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "插入图形",
+          "role": "summary",
+          "rect": {
+            "x": 306.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出格式",
+          "role": "summary",
+          "rect": {
+            "x": 1672.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "版本历史",
+          "role": "button",
+          "rect": {
+            "x": 1700.875,
+            "y": 17.5,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论",
+          "role": "button",
+          "rect": {
+            "x": 1732.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论选项",
+          "role": "summary",
+          "rect": {
+            "x": 1756.875,
+            "y": 17.5,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "播放",
+          "role": "summary",
+          "rect": {
+            "x": 1785.875,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "显示属性",
+          "role": "button",
+          "rect": {
+            "x": 1813.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "画布缩放",
+          "role": "summary",
+          "rect": {
+            "x": 1841.875,
+            "y": 17.5,
+            "width": 61.125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 1",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 447,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 1",
+          "role": "button",
+          "rect": {
+            "x": 578,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 1",
+          "role": "summary",
+          "rect": {
+            "x": 604,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 2",
+          "role": "button",
+          "rect": {
+            "x": 672,
+            "y": 447,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 1202,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 2",
+          "role": "summary",
+          "rect": {
+            "x": 1228,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 3",
+          "role": "button",
+          "rect": {
+            "x": 1296,
+            "y": 447,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 1826,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 3",
+          "role": "summary",
+          "rect": {
+            "x": 1852,
+            "y": 445,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "path": "design-1440-light.png",
+      "controls": [
+        {
+          "label": "页面菜单",
+          "role": "summary",
+          "rect": {
+            "x": 17,
+            "y": 17,
+            "width": 64.828125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择 (V)",
+          "role": "button",
+          "rect": {
+            "x": 94.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgb(228, 239, 251)",
+          "border": "0px none rgb(23, 87, 172)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "手型工具 (H)",
+          "role": "button",
+          "rect": {
+            "x": 122.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "文本",
+          "role": "button",
+          "rect": {
+            "x": 150.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "添加画板",
+          "role": "button",
+          "rect": {
+            "x": 178.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "便签 (N)",
+          "role": "button",
+          "rect": {
+            "x": 206.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "铅笔",
+          "role": "button",
+          "rect": {
+            "x": 234.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "绘图工具",
+          "role": "summary",
+          "rect": {
+            "x": 260.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "矩形工具",
+          "role": "button",
+          "rect": {
+            "x": 280.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "插入图形",
+          "role": "summary",
+          "rect": {
+            "x": 306.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出格式",
+          "role": "summary",
+          "rect": {
+            "x": 1192.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "版本历史",
+          "role": "button",
+          "rect": {
+            "x": 1220.875,
+            "y": 17.5,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论",
+          "role": "button",
+          "rect": {
+            "x": 1252.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论选项",
+          "role": "summary",
+          "rect": {
+            "x": 1276.875,
+            "y": 17.5,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "播放",
+          "role": "summary",
+          "rect": {
+            "x": 1305.875,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "显示属性",
+          "role": "button",
+          "rect": {
+            "x": 1333.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "画布缩放",
+          "role": "summary",
+          "rect": {
+            "x": 1361.875,
+            "y": 17.5,
+            "width": 61.125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 1",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 388.046875,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 1",
+          "role": "button",
+          "rect": {
+            "x": 426.40625,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 1",
+          "role": "summary",
+          "rect": {
+            "x": 452.40625,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 2",
+          "role": "button",
+          "rect": {
+            "x": 507.78125,
+            "y": 388.046875,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 886.1875,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 2",
+          "role": "summary",
+          "rect": {
+            "x": 912.1875,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 3",
+          "role": "button",
+          "rect": {
+            "x": 967.578125,
+            "y": 388.046875,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 1345.984375,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 3",
+          "role": "summary",
+          "rect": {
+            "x": 1371.984375,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "path": "design-1440-dark.png",
+      "controls": [
+        {
+          "label": "页面菜单",
+          "role": "summary",
+          "rect": {
+            "x": 17,
+            "y": 17,
+            "width": 64.828125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择 (V)",
+          "role": "button",
+          "rect": {
+            "x": 94.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgb(228, 239, 251)",
+          "border": "0px none rgb(23, 87, 172)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "手型工具 (H)",
+          "role": "button",
+          "rect": {
+            "x": 122.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "文本",
+          "role": "button",
+          "rect": {
+            "x": 150.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "添加画板",
+          "role": "button",
+          "rect": {
+            "x": 178.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "便签 (N)",
+          "role": "button",
+          "rect": {
+            "x": 206.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "铅笔",
+          "role": "button",
+          "rect": {
+            "x": 234.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "绘图工具",
+          "role": "summary",
+          "rect": {
+            "x": 260.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "矩形工具",
+          "role": "button",
+          "rect": {
+            "x": 280.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "插入图形",
+          "role": "summary",
+          "rect": {
+            "x": 306.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出格式",
+          "role": "summary",
+          "rect": {
+            "x": 1192.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "版本历史",
+          "role": "button",
+          "rect": {
+            "x": 1220.875,
+            "y": 17.5,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论",
+          "role": "button",
+          "rect": {
+            "x": 1252.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论选项",
+          "role": "summary",
+          "rect": {
+            "x": 1276.875,
+            "y": 17.5,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "播放",
+          "role": "summary",
+          "rect": {
+            "x": 1305.875,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "显示属性",
+          "role": "button",
+          "rect": {
+            "x": 1333.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "画布缩放",
+          "role": "summary",
+          "rect": {
+            "x": 1361.875,
+            "y": 17.5,
+            "width": 61.125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 1",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 388.046875,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 1",
+          "role": "button",
+          "rect": {
+            "x": 426.40625,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 1",
+          "role": "summary",
+          "rect": {
+            "x": 452.40625,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 2",
+          "role": "button",
+          "rect": {
+            "x": 507.78125,
+            "y": 388.046875,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 886.1875,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 2",
+          "role": "summary",
+          "rect": {
+            "x": 912.1875,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 3",
+          "role": "button",
+          "rect": {
+            "x": 967.578125,
+            "y": 388.046875,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 1345.984375,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 3",
+          "role": "summary",
+          "rect": {
+            "x": 1371.984375,
+            "y": 386.046875,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "path": "design-768-light.png",
+      "controls": [
+        {
+          "label": "页面菜单",
+          "role": "summary",
+          "rect": {
+            "x": 17,
+            "y": 17,
+            "width": 64.828125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择 (V)",
+          "role": "button",
+          "rect": {
+            "x": 94.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgb(228, 239, 251)",
+          "border": "0px none rgb(23, 87, 172)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "手型工具 (H)",
+          "role": "button",
+          "rect": {
+            "x": 122.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "文本",
+          "role": "button",
+          "rect": {
+            "x": 150.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "添加画板",
+          "role": "button",
+          "rect": {
+            "x": 178.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "便签 (N)",
+          "role": "button",
+          "rect": {
+            "x": 206.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "铅笔",
+          "role": "button",
+          "rect": {
+            "x": 234.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "绘图工具",
+          "role": "summary",
+          "rect": {
+            "x": 260.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "矩形工具",
+          "role": "button",
+          "rect": {
+            "x": 280.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "插入图形",
+          "role": "summary",
+          "rect": {
+            "x": 306.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出格式",
+          "role": "summary",
+          "rect": {
+            "x": 520.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "版本历史",
+          "role": "button",
+          "rect": {
+            "x": 548.875,
+            "y": 17.5,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论",
+          "role": "button",
+          "rect": {
+            "x": 580.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论选项",
+          "role": "summary",
+          "rect": {
+            "x": 604.875,
+            "y": 17.5,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "播放",
+          "role": "summary",
+          "rect": {
+            "x": 633.875,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "显示属性",
+          "role": "button",
+          "rect": {
+            "x": 661.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "画布缩放",
+          "role": "summary",
+          "rect": {
+            "x": 689.875,
+            "y": 17.5,
+            "width": 61.125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 1",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 457.515625,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 1",
+          "role": "button",
+          "rect": {
+            "x": 214.203125,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 1",
+          "role": "summary",
+          "rect": {
+            "x": 240.203125,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 2",
+          "role": "button",
+          "rect": {
+            "x": 277.890625,
+            "y": 457.515625,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 444.09375,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 2",
+          "role": "summary",
+          "rect": {
+            "x": 470.09375,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 277.890625,
+            "y": 481.515625,
+            "width": 212.21051025390625,
+            "height": 119.368408203125
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(250, 248, 244)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 3",
+          "role": "button",
+          "rect": {
+            "x": 507.78125,
+            "y": 457.515625,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 673.984375,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 3",
+          "role": "summary",
+          "rect": {
+            "x": 699.984375,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 507.78125,
+            "y": 481.515625,
+            "width": 212.21051025390625,
+            "height": 119.368408203125
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(250, 248, 244)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "path": "design-768-dark.png",
+      "controls": [
+        {
+          "label": "页面菜单",
+          "role": "summary",
+          "rect": {
+            "x": 17,
+            "y": 17,
+            "width": 64.828125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择 (V)",
+          "role": "button",
+          "rect": {
+            "x": 94.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgb(228, 239, 251)",
+          "border": "0px none rgb(23, 87, 172)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "手型工具 (H)",
+          "role": "button",
+          "rect": {
+            "x": 122.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "文本",
+          "role": "button",
+          "rect": {
+            "x": 150.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "添加画板",
+          "role": "button",
+          "rect": {
+            "x": 178.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "便签 (N)",
+          "role": "button",
+          "rect": {
+            "x": 206.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "铅笔",
+          "role": "button",
+          "rect": {
+            "x": 234.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "绘图工具",
+          "role": "summary",
+          "rect": {
+            "x": 260.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "矩形工具",
+          "role": "button",
+          "rect": {
+            "x": 280.828125,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "插入图形",
+          "role": "summary",
+          "rect": {
+            "x": 306.828125,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出格式",
+          "role": "summary",
+          "rect": {
+            "x": 520.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "版本历史",
+          "role": "button",
+          "rect": {
+            "x": 548.875,
+            "y": 17.5,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论",
+          "role": "button",
+          "rect": {
+            "x": 580.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论选项",
+          "role": "summary",
+          "rect": {
+            "x": 604.875,
+            "y": 17.5,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "播放",
+          "role": "summary",
+          "rect": {
+            "x": 633.875,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "显示属性",
+          "role": "button",
+          "rect": {
+            "x": 661.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "画布缩放",
+          "role": "summary",
+          "rect": {
+            "x": 689.875,
+            "y": 17.5,
+            "width": 61.125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 1",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 457.515625,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 1",
+          "role": "button",
+          "rect": {
+            "x": 214.203125,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 1",
+          "role": "summary",
+          "rect": {
+            "x": 240.203125,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 2",
+          "role": "button",
+          "rect": {
+            "x": 277.890625,
+            "y": 457.515625,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 444.09375,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 2",
+          "role": "summary",
+          "rect": {
+            "x": 470.09375,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 277.890625,
+            "y": 481.515625,
+            "width": 212.21051025390625,
+            "height": 119.368408203125
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgb(250, 248, 244)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 3",
+          "role": "button",
+          "rect": {
+            "x": 507.78125,
+            "y": 457.515625,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 673.984375,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 3",
+          "role": "summary",
+          "rect": {
+            "x": 699.984375,
+            "y": 455.515625,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 507.78125,
+            "y": 481.515625,
+            "width": 212.21051025390625,
+            "height": 119.368408203125
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgb(250, 248, 244)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "path": "design-390-light.png",
+      "controls": [
+        {
+          "label": "页面菜单",
+          "role": "summary",
+          "rect": {
+            "x": 13,
+            "y": 17,
+            "width": 40,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择 (V)",
+          "role": "button",
+          "rect": {
+            "x": 66,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgb(228, 239, 251)",
+          "border": "0px none rgb(23, 87, 172)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "手型工具 (H)",
+          "role": "button",
+          "rect": {
+            "x": 94,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "文本",
+          "role": "button",
+          "rect": {
+            "x": 122,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "添加画板",
+          "role": "button",
+          "rect": {
+            "x": 150,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "便签 (N)",
+          "role": "button",
+          "rect": {
+            "x": 178,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "铅笔",
+          "role": "button",
+          "rect": {
+            "x": 206,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "绘图工具",
+          "role": "summary",
+          "rect": {
+            "x": 232,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "矩形工具",
+          "role": "button",
+          "rect": {
+            "x": 252,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "插入图形",
+          "role": "summary",
+          "rect": {
+            "x": 278,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "更多编辑工具",
+          "role": "button",
+          "rect": {
+            "x": 112.875,
+            "y": 17,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出格式",
+          "role": "summary",
+          "rect": {
+            "x": 146.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "版本历史",
+          "role": "button",
+          "rect": {
+            "x": 174.875,
+            "y": 17.5,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论",
+          "role": "button",
+          "rect": {
+            "x": 206.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论选项",
+          "role": "summary",
+          "rect": {
+            "x": 230.875,
+            "y": 17.5,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "播放",
+          "role": "summary",
+          "rect": {
+            "x": 259.875,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "显示属性",
+          "role": "button",
+          "rect": {
+            "x": 287.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "画布缩放",
+          "role": "summary",
+          "rect": {
+            "x": 315.875,
+            "y": 17.5,
+            "width": 61.125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 1",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 399.84375,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 1",
+          "role": "button",
+          "rect": {
+            "x": 118,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 1",
+          "role": "summary",
+          "rect": {
+            "x": 144,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 2",
+          "role": "button",
+          "rect": {
+            "x": 148.578125,
+            "y": 399.84375,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 218.578125,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 2",
+          "role": "summary",
+          "rect": {
+            "x": 244.578125,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 148.578125,
+            "y": 423.84375,
+            "width": 92.84210205078125,
+            "height": 52.22369384765625
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(250, 248, 244)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 3",
+          "role": "button",
+          "rect": {
+            "x": 249.15625,
+            "y": 399.84375,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.55)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.55)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 319.15625,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 3",
+          "role": "summary",
+          "rect": {
+            "x": 345.15625,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 249.15625,
+            "y": 423.84375,
+            "width": 92.84210205078125,
+            "height": 52.22369384765625
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.9)",
+          "background": "rgb(250, 248, 244)",
+          "border": "0px none rgba(0, 0, 0, 0.9)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "path": "design-390-dark.png",
+      "controls": [
+        {
+          "label": "页面菜单",
+          "role": "summary",
+          "rect": {
+            "x": 13,
+            "y": 17,
+            "width": 40,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择 (V)",
+          "role": "button",
+          "rect": {
+            "x": 66,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgb(23, 87, 172)",
+          "background": "rgb(228, 239, 251)",
+          "border": "0px none rgb(23, 87, 172)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "手型工具 (H)",
+          "role": "button",
+          "rect": {
+            "x": 94,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "文本",
+          "role": "button",
+          "rect": {
+            "x": 122,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "添加画板",
+          "role": "button",
+          "rect": {
+            "x": 150,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "便签 (N)",
+          "role": "button",
+          "rect": {
+            "x": 178,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "铅笔",
+          "role": "button",
+          "rect": {
+            "x": 206,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "绘图工具",
+          "role": "summary",
+          "rect": {
+            "x": 232,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "矩形工具",
+          "role": "button",
+          "rect": {
+            "x": 252,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "插入图形",
+          "role": "summary",
+          "rect": {
+            "x": 278,
+            "y": 17,
+            "width": 14,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "更多编辑工具",
+          "role": "button",
+          "rect": {
+            "x": 112.875,
+            "y": 17,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出格式",
+          "role": "summary",
+          "rect": {
+            "x": 146.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "版本历史",
+          "role": "button",
+          "rect": {
+            "x": 174.875,
+            "y": 17.5,
+            "width": 28,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "14px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论",
+          "role": "button",
+          "rect": {
+            "x": 206.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "评论选项",
+          "role": "summary",
+          "rect": {
+            "x": 230.875,
+            "y": 17.5,
+            "width": 16,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "播放",
+          "role": "summary",
+          "rect": {
+            "x": 259.875,
+            "y": 17,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "显示属性",
+          "role": "button",
+          "rect": {
+            "x": 287.875,
+            "y": 17.5,
+            "width": 24,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "画布缩放",
+          "role": "summary",
+          "rect": {
+            "x": 315.875,
+            "y": 17.5,
+            "width": 61.125,
+            "height": 24
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "435",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "6px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 1",
+          "role": "button",
+          "rect": {
+            "x": 48,
+            "y": 399.84375,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 1",
+          "role": "button",
+          "rect": {
+            "x": 118,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 1",
+          "role": "summary",
+          "rect": {
+            "x": 144,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 2",
+          "role": "button",
+          "rect": {
+            "x": 148.578125,
+            "y": 399.84375,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 218.578125,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 2",
+          "role": "summary",
+          "rect": {
+            "x": 244.578125,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择画板 Page 2",
+          "role": "button",
+          "rect": {
+            "x": 148.578125,
+            "y": 423.84375,
+            "width": 92.84210205078125,
+            "height": 52.22369384765625
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgb(250, 248, 244)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "Page 3",
+          "role": "button",
+          "rect": {
+            "x": 249.15625,
+            "y": 399.84375,
+            "width": 64,
+            "height": 16
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgb(165, 164, 158)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgb(165, 164, 158)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "全窗口查看画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 319.15625,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "400",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "导出画板 Page 3",
+          "role": "summary",
+          "rect": {
+            "x": 345.15625,
+            "y": 397.84375,
+            "width": 20,
+            "height": 20
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "12px",
+          "fontWeight": "435",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "background": "rgba(0, 0, 0, 0)",
+          "border": "0px none rgba(0, 0, 0, 0.6)",
+          "shadow": "none",
+          "radius": "5px",
+          "cursor": "pointer",
+          "transition": "none"
+        },
+        {
+          "label": "选择画板 Page 3",
+          "role": "button",
+          "rect": {
+            "x": 249.15625,
+            "y": 423.84375,
+            "width": 92.84210205078125,
+            "height": 52.22369384765625
+          },
+          "fontFamily": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif",
+          "fontSize": "13px",
+          "fontWeight": "400",
+          "color": "rgba(255, 255, 255, 0.93)",
+          "background": "rgb(250, 248, 244)",
+          "border": "0px none rgba(255, 255, 255, 0.93)",
+          "shadow": "none",
+          "radius": "0px",
+          "cursor": "pointer",
+          "transition": "none"
+        }
+      ]
+    }
+  ],
+  "scope": "只记录默认界面，不替代菜单/面板或像素验收",
+  "consoleOrPageErrors": []
+}

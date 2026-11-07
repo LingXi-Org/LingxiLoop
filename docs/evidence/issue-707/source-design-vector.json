@@ -1,0 +1,947 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceFile": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "offsetUnit": "UTF-16 code units",
+  "locations": {
+    "vectorGeometry": 3905254,
+    "vectorInteraction": 3916706,
+    "vectorParsing": 3928691,
+    "canvasCommit": 5139136
+  },
+  "limits": {
+    "precisions": [
+      3,
+      2,
+      1
+    ],
+    "minimumBox": 2,
+    "maximumCoordinate": 8000,
+    "maximumPathCharacters": 24000,
+    "lineRun": 12,
+    "minimumPointScreenDistance": 4,
+    "mouseCloseRadius": 10,
+    "touchCloseRadius": 20
+  },
+  "cases": [
+    {
+      "name": "折线",
+      "anchors": [
+        {
+          "x": 0,
+          "y": 40
+        },
+        {
+          "x": 50,
+          "y": 0
+        },
+        {
+          "x": 100,
+          "y": 50
+        }
+      ],
+      "result": {
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 50,
+        "d": "M0 40 L50 0 L100 50"
+      },
+      "preview": "M0 40 L50 0 L100 50"
+    },
+    {
+      "name": "闭合折线",
+      "closed": true,
+      "anchors": [
+        {
+          "x": 0,
+          "y": 40
+        },
+        {
+          "x": 50,
+          "y": 0
+        },
+        {
+          "x": 100,
+          "y": 50
+        }
+      ],
+      "result": {
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 50,
+        "d": "M0 40 L50 0 L100 50 L0 40"
+      },
+      "preview": "M0 40 L50 0 L100 50 Z"
+    },
+    {
+      "name": "起点切线",
+      "anchors": [
+        {
+          "x": 0,
+          "y": 40,
+          "out": {
+            "x": 20,
+            "y": 20
+          }
+        },
+        {
+          "x": 50,
+          "y": 0
+        },
+        {
+          "x": 100,
+          "y": 50
+        }
+      ],
+      "result": {
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 50,
+        "d": "M0 40 C20 20 50 0 50 0 L100 50"
+      },
+      "preview": "M0 40 C20 20 50 0 50 0 L100 50"
+    },
+    {
+      "name": "中点对称切线",
+      "anchors": [
+        {
+          "x": 0,
+          "y": 40
+        },
+        {
+          "x": 50,
+          "y": 0,
+          "out": {
+            "x": 70,
+            "y": -20
+          }
+        },
+        {
+          "x": 100,
+          "y": 50
+        }
+      ],
+      "result": {
+        "x": 0,
+        "y": -3.6,
+        "w": 100,
+        "h": 53.594,
+        "d": "M0 43.594 C0 43.594 30 23.594 50 3.594 C52.5 1.094 55.156 0 57.891 0 C77.031 0 100 53.594 100 53.594"
+      },
+      "preview": "M0 40 C0 40 30 20 50 0 C70 -20 100 50 100 50"
+    },
+    {
+      "name": "两点闭合曲线",
+      "closed": true,
+      "anchors": [
+        {
+          "x": 0,
+          "y": 0,
+          "out": {
+            "x": -50,
+            "y": -50
+          }
+        },
+        {
+          "x": 100,
+          "y": 20,
+          "out": {
+            "x": 150,
+            "y": 70
+          }
+        }
+      ],
+      "result": {
+        "x": -13.6,
+        "y": -29,
+        "w": 127.254,
+        "h": 77.924,
+        "d": "M13.627 28.962 C4.078 19.413 0 12.417 0 7.696 C0 2.437 5.059 0 13.253 0 C36.22 0 83.813 19.148 113.627 48.962 C123.176 58.511 127.254 65.507 127.254 70.229 C127.254 75.488 122.195 77.924 114.001 77.924 C91.034 77.924 43.442 58.777 13.627 28.962"
+      },
+      "preview": "M0 0 C-50 -50 50 -30 100 20 C150 70 50 50 0 0 Z"
+    },
+    {
+      "name": "连续折线",
+      "anchors": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 10
+        },
+        {
+          "x": 20,
+          "y": 0
+        },
+        {
+          "x": 30,
+          "y": 10
+        },
+        {
+          "x": 40,
+          "y": 0
+        },
+        {
+          "x": 50,
+          "y": 10
+        },
+        {
+          "x": 60,
+          "y": 0
+        },
+        {
+          "x": 70,
+          "y": 10
+        },
+        {
+          "x": 80,
+          "y": 0
+        },
+        {
+          "x": 90,
+          "y": 10
+        },
+        {
+          "x": 100,
+          "y": 0
+        },
+        {
+          "x": 110,
+          "y": 10
+        },
+        {
+          "x": 120,
+          "y": 0
+        },
+        {
+          "x": 130,
+          "y": 10
+        },
+        {
+          "x": 140,
+          "y": 0
+        }
+      ],
+      "result": {
+        "x": 0,
+        "y": 0,
+        "w": 140,
+        "h": 10,
+        "d": "M0 0 L10 10 L20 0 L30 10 L40 0 L50 10 L60 0 L70 10 L80 0 L90 10 L100 0 C100 0 110 10 110 10 L120 0 L130 10 L140 0"
+      },
+      "preview": "M0 0 L10 10 L20 0 L30 10 L40 0 L50 10 L60 0 L70 10 L80 0 L90 10 L100 0 L110 10 L120 0 L130 10 L140 0"
+    },
+    {
+      "name": "小数与负世界坐标",
+      "anchors": [
+        {
+          "x": -15.55555,
+          "y": -40.98765,
+          "out": {
+            "x": 10.12345,
+            "y": -60.22222
+          }
+        },
+        {
+          "x": 100.12345,
+          "y": 80.76543,
+          "out": {
+            "x": 120.33333,
+            "y": 45.55555
+          }
+        },
+        {
+          "x": 150.66666,
+          "y": -70.99999
+        }
+      ],
+      "result": {
+        "x": -15.6,
+        "y": -71,
+        "w": 166.222,
+        "h": 156.432,
+        "d": "M0 30.012 C1.336 29.012 2.791 28.54 4.353 28.54 C30.067 28.54 84.576 156.432 108.975 156.432 C111.576 156.432 113.834 154.98 115.679 151.765 C135.889 116.556 166.222 0 166.222 0"
+      },
+      "preview": "M-15.55555 -40.98765 C10.12345 -60.22222 79.91357 115.97531 100.12345 80.76543 C120.33333 45.55555 150.66666 -70.99999 150.66666 -70.99999"
+    },
+    {
+      "name": "超大路径拒绝",
+      "anchors": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 9000,
+          "y": 9000
+        }
+      ],
+      "result": null,
+      "preview": "M0 0 L9000 9000"
+    }
+  ],
+  "runtimeCases": [
+    {
+      "name": "open-enter",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0 L452.381 226.19",
+          "h": 226.19,
+          "kind": "pen",
+          "w": 452.381,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "open-escape",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "Escape"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0 L452.381 226.19",
+          "h": 226.19,
+          "kind": "pen",
+          "w": 452.381,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "single-escape",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "key",
+          "Escape"
+        ]
+      ],
+      "added": []
+    },
+    {
+      "name": "closed",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "click",
+          600,
+          300
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0 L452.381 226.19 L0 180.952",
+          "h": 226.19,
+          "kind": "pen",
+          "w": 452.381,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "first-handle",
+      "steps": [
+        [
+          "drag",
+          600,
+          300,
+          620,
+          280
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 C90.476 90.476 226.19 0 226.19 0 L452.381 226.19",
+          "h": 226.19,
+          "kind": "pen",
+          "w": 452.381,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "middle-handle",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "drag",
+          650,
+          260,
+          670,
+          240
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 197.21 C0 197.21 135.714 106.734 226.19 16.257 C237.5 4.948 249.516 0 261.886 0 C348.475 0 452.381 242.448 452.381 242.448",
+          "h": 242.448,
+          "kind": "pen",
+          "w": 452.381,
+          "x": 2497.1,
+          "y": -1377.1
+        }
+      ]
+    },
+    {
+      "name": "shift-angle",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "keyDown",
+          "Shift"
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "keyUp",
+          "Shift"
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 204.824 L204.824 0 L452.381 250.062",
+          "h": 250.062,
+          "kind": "pen",
+          "w": 452.381,
+          "x": 2497.1,
+          "y": -1384.7
+        }
+      ]
+    },
+    {
+      "name": "backspace",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "Backspace"
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0",
+          "h": 180.952,
+          "kind": "pen",
+          "w": 226.19,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "switch-tool",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "select"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0",
+          "h": 180.952,
+          "kind": "pen",
+          "w": 226.19,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "near-point",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          603,
+          302
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0",
+          "h": 180.952,
+          "kind": "pen",
+          "w": 226.19,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "oversize",
+      "steps": [
+        [
+          "zoom",
+          "25%"
+        ],
+        [
+          "key",
+          "ControlOrMeta+-"
+        ],
+        [
+          "key",
+          "ControlOrMeta+-"
+        ],
+        [
+          "key",
+          "ControlOrMeta+-"
+        ],
+        [
+          "key",
+          "ControlOrMeta+-"
+        ],
+        [
+          "click",
+          100,
+          200
+        ],
+        [
+          "click",
+          1000,
+          200
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [],
+      "draftPaths": 0,
+      "selectionTool": "false",
+      "warning": "That path is too large to keep. Draw it smaller, or in pieces."
+    },
+    {
+      "name": "draft-undo",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "ControlOrMeta+z"
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0",
+          "h": 180.952,
+          "kind": "pen",
+          "w": 226.19,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "draft-redo",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "ControlOrMeta+Shift+z"
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0 L452.381 226.19",
+          "h": 226.19,
+          "kind": "pen",
+          "w": 452.381,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "draft-delete",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "Delete"
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0",
+          "h": 180.952,
+          "kind": "pen",
+          "w": 226.19,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    },
+    {
+      "name": "draft-save",
+      "steps": [
+        [
+          "click",
+          600,
+          300
+        ],
+        [
+          "click",
+          650,
+          260
+        ],
+        [
+          "key",
+          "ControlOrMeta+s"
+        ],
+        [
+          "click",
+          700,
+          310
+        ],
+        [
+          "key",
+          "Enter"
+        ]
+      ],
+      "added": [
+        {
+          "d": "M0 180.952 L226.19 0 L452.381 226.19",
+          "h": 226.19,
+          "kind": "pen",
+          "w": 452.381,
+          "x": 2497.1,
+          "y": -1360.9
+        }
+      ]
+    }
+  ],
+  "visualQualified": false,
+  "functionalQualified": false,
+  "previewStyles": [
+    {
+      "theme": "light",
+      "stroke": "rgb(37, 125, 224)",
+      "strokeWidth": "1px",
+      "nearby": [
+        {
+          "tag": "line",
+          "r": null,
+          "width": null,
+          "fill": "rgb(0, 0, 0)",
+          "stroke": "rgb(255, 255, 255)",
+          "strokeWidth": "3px"
+        },
+        {
+          "tag": "line",
+          "r": null,
+          "width": null,
+          "fill": "rgb(0, 0, 0)",
+          "stroke": "rgb(37, 125, 224)",
+          "strokeWidth": "1px"
+        },
+        {
+          "tag": "circle",
+          "r": "4",
+          "width": null,
+          "fill": "rgb(255, 255, 255)",
+          "stroke": "rgb(37, 125, 224)",
+          "strokeWidth": "1.25px"
+        },
+        {
+          "tag": "circle",
+          "r": "4",
+          "width": null,
+          "fill": "rgb(255, 255, 255)",
+          "stroke": "rgb(37, 125, 224)",
+          "strokeWidth": "1.25px"
+        },
+        {
+          "tag": "circle",
+          "r": "10",
+          "width": null,
+          "fill": "none",
+          "stroke": "rgb(37, 125, 224)",
+          "strokeWidth": "1px"
+        },
+        {
+          "tag": "rect",
+          "r": null,
+          "width": "7",
+          "fill": "rgb(37, 125, 224)",
+          "stroke": "none",
+          "strokeWidth": "1px"
+        },
+        {
+          "tag": "rect",
+          "r": null,
+          "width": "7",
+          "fill": "rgb(37, 125, 224)",
+          "stroke": "none",
+          "strokeWidth": "1px"
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "stroke": "rgb(37, 125, 224)",
+      "strokeWidth": "1px",
+      "nearby": [
+        {
+          "tag": "line",
+          "r": null,
+          "width": null,
+          "fill": "rgb(0, 0, 0)",
+          "stroke": "rgb(31, 31, 31)",
+          "strokeWidth": "3px"
+        },
+        {
+          "tag": "line",
+          "r": null,
+          "width": null,
+          "fill": "rgb(0, 0, 0)",
+          "stroke": "rgb(37, 125, 224)",
+          "strokeWidth": "1px"
+        },
+        {
+          "tag": "circle",
+          "r": "4",
+          "width": null,
+          "fill": "rgb(31, 31, 31)",
+          "stroke": "rgb(37, 125, 224)",
+          "strokeWidth": "1.25px"
+        },
+        {
+          "tag": "circle",
+          "r": "4",
+          "width": null,
+          "fill": "rgb(31, 31, 31)",
+          "stroke": "rgb(37, 125, 224)",
+          "strokeWidth": "1.25px"
+        },
+        {
+          "tag": "circle",
+          "r": "10",
+          "width": null,
+          "fill": "none",
+          "stroke": "rgb(37, 125, 224)",
+          "strokeWidth": "1px"
+        },
+        {
+          "tag": "rect",
+          "r": null,
+          "width": "7",
+          "fill": "rgb(37, 125, 224)",
+          "stroke": "none",
+          "strokeWidth": "1px"
+        },
+        {
+          "tag": "rect",
+          "r": null,
+          "width": "7",
+          "fill": "rgb(37, 125, 224)",
+          "stroke": "none",
+          "strokeWidth": "1px"
+        }
+      ]
+    }
+  ]
+}

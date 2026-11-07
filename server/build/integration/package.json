@@ -38,7 +38,12 @@
     "zod": "^4.4.3",
     "@assistant-ui/react": "0.15.31",
     "@tiptap/y-tiptap": "3.0.3",
-    "katex": "0.16.47"
+    "hono": "^4.13.5",
+    "better-auth": "^1.7.2",
+    "drizzle-orm": "^0.45.2",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "katex": "0.16.47",
+    "miniflare": "4.20251217.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.8",

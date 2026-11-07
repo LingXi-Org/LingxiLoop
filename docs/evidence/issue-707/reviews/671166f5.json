@@ -1,0 +1,25 @@
+{
+  "candidateCommit": "671166f5637179c46c896e20d2525582cefbb0cc",
+  "reviewer": "/root/independent_review",
+  "mode": "独立只读",
+  "independentlyRun": [
+    "34项聚焦测试",
+    "原四便签第二行滚动",
+    "旋转37度及父翻转、子旋转和翻转、分数像素网格",
+    "两列三行混合便签/形状网格切画布"
+  ],
+  "closed": [
+    "原四便签第二行及旋转几何，DOM/Worker差异扣padding后小于0.006画布像素"
+  ],
+  "finding": {
+    "priority": "P2",
+    "scenario": "第三行形状本来仍有586px可见，新建画布再返回后形状卸载；非便签探针被跳过，布局缓存失效无法恢复。",
+    "reproduced": true,
+    "correction": "完整流式布局单元的子节点都能只读补测，含无便签单元；不加载媒体或执行内容。补测造成临时边界缩小时保留待恢复世界视角，避免浏览器截断记忆位置。",
+    "fixIndependentVerification": "待新候选复审"
+  },
+  "owningCI": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42164926405",
+  "owningCIStatus": "通过",
+  "visualQualified": false,
+  "performanceQualified": false
+}

@@ -1,0 +1,71 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "locations": [
+    {
+      "symbol": "defaultCanvasPage",
+      "offset": 5488635,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "designPageId",
+      "offset": 2570240,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "canvasPageDeleteSnapshot",
+      "offset": 4970366,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "PageMenuName",
+      "offset": 5873308,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "dc-pages",
+      "offset": 5825765,
+      "offsetUnit": "UTF-16 code units"
+    }
+  ],
+  "observations": [
+    "Design 页面菜单管理自由画布页面，独立于画板。画布页面有稳定 id/name，画板和自由画布对象通过 page 归属。",
+    "没有显式页面列表时使用隐式默认页面；单个未修改的默认页面可省略持久化列表。",
+    "新建页面、页面重命名和删除在页面菜单操作；最后一个页面不能删除。删除同时移除页面中的画板和自由对象，确认文案显示数量，并支持撤销。",
+    "来源运行确认各页面独立记忆相机：第一页 22%、第二页 133%，往返分别恢复；菜单在容器宽度小于 600px 时显示图标和页数。",
+    "原生 pageOrder 仍表示画板；新增可选 canvasPages 与 canvasPageId 独立表示 Design 页面，不使用幻灯片 section。",
+    "源码最大页面数 40；重命名输入最多 120 字符。旧文档缺省页面元数据不改写，首次编辑后显式持久化。",
+    "来源重命名对话框初始全选名称，Enter 提交但忽略中文组合态与重复键；删除对话框首先聚焦取消。",
+    "来源 requestCopyPageLink / canvasPagePlaceFragment / pageLinkFragment 将页面或画板稳定身份映射到链接；原生通过现有项目与会话导航只读匹配已有 Design，不创建稿件，页面目标为 canvasPage 稳定标识。"
+  ],
+  "implementation": "src/features/artifacts/native/NativeEditor.tsx",
+  "result": "部分实现：独立页面、默认 800×600 画板、名称/删除/共享撤销、每页视图、窄容器及名称冲突回归通过受控检查；真实 API 待 owning CI，完整视觉和其余页面能力未通过。",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "remaining": [
+    "来源 annotations 已有部分转换及独立对象层；完整颜色/裁切、文字和笔路径仍待还原。",
+    "内部页面链接已实现复制、稳定标识定位、刷新、中文删除反馈及登录返回参数；真实授权工作区浏览器端验收仍待完成。",
+    "跨页移动画板尚无 UI；跨页评论/相机定位尚待完整验收。",
+    "来源页面动作菜单现补复制链接；所有图标和状态仍未通过完整视觉验收。"
+  ],
+  "evidence": {
+    "reference": [
+      "visual/reference/canvas-page-states-light.json",
+      "visual/reference/canvas-page-states-dark.json"
+    ],
+    "native": [
+      "visual/native/canvas-page-states-light.json",
+      "visual/native/canvas-page-states-dark.json"
+    ],
+    "functional": [
+      "functional/canvas-pages-light.json",
+      "functional/canvas-pages-dark.json",
+      "functional/canvas-pages-cas.json",
+      "functional/canvas-private-links.json",
+      "functional/canvas-private-link-page-menu.json"
+    ],
+    "model": "shared/artifact-canvas-pages.test.ts",
+    "api": "server/src/__integration__/artifact-app-boundary.test.ts（新用例待 CI）"
+  }
+}

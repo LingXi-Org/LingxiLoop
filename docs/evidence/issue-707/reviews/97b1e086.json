@@ -1,0 +1,63 @@
+{
+  "审查对象": {
+    "候选提交": "97b1e086fcf141417b8e351a959fa70a07bd1065",
+    "基线提交": "39654c0b76c9eeb9bd98288e89b119595285cb28",
+    "独立工作树": "/workspace/lingxi-issue707-scratch/review-97b1e086",
+    "技能": ".agents/skills/repository-review/SKILL.md",
+    "范围": "仅CHROMIUM_PATH初始化顺序修复及失败/审查证据归档。",
+    "隔离": "detached精确提交，只读；未看根WIP，未改产品、提交、推送、外发或部署。审查前后工作树干净。"
+  },
+  "结论": "本批配置局部复审通过。未发现新增可复现P1/P2。顺序修复消除了新增导航命令读取未初始化变量的已知原因；未将完整诊断或性能门槛列为通过。",
+  "发现": [],
+  "核对结果": [
+    {
+      "位置": ".github/workflows/native-artifact-acceptance.yml:102",
+      "结果": "唯一的export CHROMIUM_PATH被移到Verify real worker script accounting before production measurements步骤第一条命令，内容逐字未改。新增navigation-readiness-check在第108行才使用--browser \"$CHROMIUM_PATH\"。所有消费仍在同一run块/同一bash shell，export对子进程有效。"
+    },
+    {
+      "项目": "两臂和门槛",
+      "结果": "逐字比较证明，从新旧workflow各移除这一条完全相同的export行后，剩余文件完全相同。因此本修复没有改变两臂分支、计量、就绪断言、超时、阈值、运行命令或后续测量步骤。初始化发生在共享前置阶段，未按baseline/candidate分叉。"
+    },
+    {
+      "项目": "浏览器安装顺序",
+      "结果": "workflow前一安装步骤仍固定playwright==1.55.0并执行python -m playwright install --with-deps chromium，然后初始化同一Python Playwright的executable_path；未新增另一套浏览器。"
+    },
+    {
+      "项目": "失败收据",
+      "结果": "两轮明确qualified:false、productionMeasurementStarted:false和performanceSamples:0。eec的15秒Worker超时原因仍明确未知，没有把本机通过解释为正式环境原因已查明。396的空浏览器路径定位与初始化顺序静态事实相符。原始GitHub日志本轮未另行抓取，收据内容不当作独立CI复跑。"
+    },
+    {
+      "项目": "审查归档",
+      "结果": "docs/evidence/issue-707/reviews/39654c0b.json与本人原/tmp/lingxi-review-39654c0b.json逐字节一致。README未将两轮前置失败或零样本视为性能资格。"
+    }
+  ],
+  "实际独立检查": [
+    {
+      "项目": "YAML/唯一性/差异解析",
+      "结果": "使用PyYAML读取measure步骤并断言初始化为该run第一条命令；新旧各恰好一个export且内容一致，删除该行后workflow逐字相同；通过。",
+      "收据": "/workspace/lingxi-issue707-scratch/review-97-init-check.json"
+    },
+    {
+      "项目": "真实Bash子进程初始化",
+      "结果": "在bash --noprofile --norc -eo pipefail中执行从workflow提取的原命令，再由Python子进程读取环境，得到非空、绝对的CHROMIUM_PATH。当前机器Python Playwright默认浏览器文件未安装，executable:false，因此本次未用该路径运行浏览器，不隐瞒这一环境限制。CI已有安装前置，本地缺包不属于本次顺序改动的新增缺陷。",
+      "收据": "/workspace/lingxi-issue707-scratch/review-97-init-check.json"
+    },
+    {
+      "项目": "编排合同",
+      "命令": "node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs",
+      "结果": "23/23通过，无跳过。",
+      "收据": "/tmp/lingxi-review-97-contracts.log"
+    },
+    {
+      "项目": "git检查",
+      "结果": "git diff --check 39654c0b HEAD无输出；精确HEAD匹配，git status --short为空。仅五个声明文件变化。"
+    }
+  ],
+  "未验证": [
+    "未在本机安装另一套Playwright浏览器或重跑完整前置/新精确候选正式诊断。既有140/154导航结果属于前次冻结提交，本次不重复计为新候选浏览器通过。",
+    "未独立查询父线程刚发起的GitHub诊断结果；不得把排队或运行中写成成功。",
+    "没有产品实现改动，因此没有重跑PG、OSIME、全格式导出、50页或其他无关编辑器回归。",
+    "两次失败均未生产性能样本；最终候选10组AB/BA、脚本量/PSS/输入响应和完整视觉服务门槛依然未通过。"
+  ],
+  "新失败": "本次静态/合同检查无失败；本机默认浏览器缺失明确限制真实启动验证。"
+}

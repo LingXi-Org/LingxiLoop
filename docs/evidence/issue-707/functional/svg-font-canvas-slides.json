@@ -1,0 +1,92 @@
+{
+  "kind": "isolated-svg-font-export-diagnostic",
+  "mode": "slides",
+  "fontFamily": "\"LingxiLoopEditor Merriweather\", serif",
+  "htmlPreservesText": true,
+  "sourceUnchanged": true,
+  "canvasFontQualified": false,
+  "localFontPaintVerified": true,
+  "inheritedGroupFontEmbedded": true,
+  "inertImageRetained": true,
+  "raster": {
+    "actual": {
+      "left": 19,
+      "right": 220,
+      "top": 33,
+      "bottom": 100,
+      "width": 202,
+      "height": 68
+    },
+    "expected": {
+      "left": 19,
+      "right": 220,
+      "top": 33,
+      "bottom": 100,
+      "width": 202,
+      "height": 68
+    },
+    "loadedFaces": 1
+  },
+  "inheritedRasters": {
+    "inherited-svg": {
+      "actual": {
+        "left": 19,
+        "right": 220,
+        "top": 33,
+        "bottom": 100,
+        "width": 202,
+        "height": 68
+      },
+      "expected": {
+        "left": 19,
+        "right": 220,
+        "top": 33,
+        "bottom": 100,
+        "width": 202,
+        "height": 68
+      },
+      "loadedFaces": 1
+    },
+    "svg-root-inherit": {
+      "actual": {
+        "left": 19,
+        "right": 220,
+        "top": 33,
+        "bottom": 100,
+        "width": 202,
+        "height": 68
+      },
+      "expected": {
+        "left": 19,
+        "right": 220,
+        "top": 33,
+        "bottom": 100,
+        "width": 202,
+        "height": 68
+      },
+      "loadedFaces": 1
+    },
+    "svg-root-unset": {
+      "actual": {
+        "left": 19,
+        "right": 220,
+        "top": 33,
+        "bottom": 100,
+        "width": 202,
+        "height": 68
+      },
+      "expected": {
+        "left": 19,
+        "right": 220,
+        "top": 33,
+        "bottom": 100,
+        "width": 202,
+        "height": 68
+      },
+      "loadedFaces": 1
+    }
+  },
+  "thumbnailFontEmbedded": true,
+  "scope": "actual SVG image font packing, bitmap ink bounds versus a loaded local font, thumbnail and static SVG export; controlled HTTP fixture, not complete visual qualification",
+  "consoleOrPageErrors": []
+}

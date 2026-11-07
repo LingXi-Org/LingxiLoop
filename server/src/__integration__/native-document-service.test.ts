@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises'
 import { after, before, test } from 'node:test'
 import { Pool } from 'pg'
 import { createNode, createPage } from '../../../shared/artifact-document.js'
+import { duplicatePages } from '../../../shared/artifact-editor-actions.js'
 import { type ArtifactOperation, prepareBatch } from '../../../shared/artifact-operations.js'
 import { withTransaction } from '../db/transaction.js'
 import { artifactKind } from '../modules/artifacts/kinds.js'
@@ -415,4 +416,106 @@ test('unknown schema remains read-only and no operation can silently downgrade i
   await db.query('UPDATE artifact_document_state SET schema_version=2 WHERE artifact_id=$1', [item.id])
   await assert.rejects(readNativeDocument(db, item.id), { code: 'unsupported_schema' })
   await assert.rejects(apply(item.id, prepareBatch(current.document, [{ type: 'document.patch', patch: { title: 'Wrong version' } }])), { code: 'unsupported_schema' })
+})
+
+
+test('设计播放属性真实持久化、复制与撤销重做，并保留历史页哈希', async () => {
+  const item=await artifact('design'),initial=await snapshot(item.id),before=JSON.stringify(initial.document)
+  const edited=await apply(item.id,prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{interactive:true,frameless:true}}],'playback-flags'))
+  const reopened=await snapshot(item.id)
+  assert.equal(reopened.document.pages['page-1'].interactive,true);assert.equal(reopened.document.pages['page-1'].frameless,true)
+  assert.notEqual(reopened.pageVersions['page-1'],initial.pageVersions['page-1']);assert.equal(JSON.stringify(initial.document),before)
+  const pinned=await readNativePageSnapshot(db,item.id,'page-1',initial.pageVersions['page-1'],initial.document.seq)
+  assert.equal(pinned?.page.interactive,undefined);assert.equal(pinned?.page.frameless,undefined)
+  const undone=await apply(item.id,{operationId:'undo-playback-flags',kind:'undo',targetOperationId:'playback-flags',expectedHistoryVersion:edited.history.version})
+  assert.equal(undone.document.pages['page-1'].interactive,undefined);assert.equal(undone.document.pages['page-1'].frameless,undefined)
+  const redone=await apply(item.id,{operationId:'redo-playback-flags',kind:'redo',targetOperationId:'playback-flags',expectedHistoryVersion:undone.history.version})
+  assert.equal(redone.document.pages['page-1'].interactive,true);assert.equal(redone.document.pages['page-1'].frameless,true)
+  let next=0;const copied=await apply(item.id,prepareBatch(redone.document,duplicatePages(redone.document,['page-1'],()=>`playback-copy-${++next}`),'copy-playback-board'))
+  const duplicate=copied.document.pages[copied.document.pageOrder[1]]
+  assert.equal(duplicate.interactive,true);assert.equal(duplicate.frameless,true)
+})
+
+test('幻灯片神奇移动身份与转场真实持久化，复制可编辑并保留历史页哈希', async () => {
+  const item=await artifact('slides'),initial=await snapshot(item.id)
+  const node={...createNode('text','motion-heading'),text:'移动标题'}
+  const edited=await apply(item.id,prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{transition:'magic'}},{type:'node.insert',pageId:'page-1',node}],'slide-motion'))
+  let next=0
+  const copied=await apply(item.id,prepareBatch(edited.document,duplicatePages(edited.document,['page-1'],()=>`slide-motion-${++next}`),'copy-motion'))
+  const copyId=copied.document.pageOrder[1],copy=copied.document.pages[copyId],paired=Object.values(copy.nodes).find(node=>node.motionId==='motion-heading')!
+  assert.ok(paired);assert.notEqual(paired.id,node.id);assert.equal(copy.transition,'magic')
+  const moved=await apply(item.id,prepareBatch(copied.document,[{type:'node.patch',pageId:copyId,nodeId:paired.id,patch:{x:200}},{type:'page.patch',pageId:copyId,patch:{transition:'push'}}],'move-motion'))
+  const reopened=await snapshot(item.id)
+  assert.equal(reopened.document.pages[copyId].nodes[paired.id].motionId,node.id);assert.equal(reopened.document.pages[copyId].nodes[paired.id].x,200);assert.equal(reopened.document.pages[copyId].transition,'push')
+  assert.equal(reopened.pageVersions['page-1'],edited.pageVersions['page-1'])
+  const pinned=await readNativePageSnapshot(db,item.id,copyId,copied.pageVersions[copyId],copied.document.seq)
+  assert.equal(pinned?.page.nodes[paired.id].x,node.x);assert.equal(pinned?.page.transition,'magic')
+  const undone=await apply(item.id,{operationId:'undo-move-motion',kind:'undo',targetOperationId:'move-motion',expectedHistoryVersion:moved.history.version})
+  assert.equal(undone.document.pages[copyId].transition,'magic');assert.equal(undone.document.pages[copyId].nodes[paired.id].x,node.x)
+  const redone=await apply(item.id,{operationId:'redo-move-motion',kind:'redo',targetOperationId:'move-motion',expectedHistoryVersion:undone.history.version})
+  assert.equal(redone.document.pages[copyId].transition,'push');assert.equal(redone.document.pages[copyId].nodes[paired.id].motionId,node.id)
+  const identity=await apply(item.id,prepareBatch(redone.document,[{type:'node.patch',pageId:'page-1',nodeId:node.id,patch:{motionId:'renamed-motion'}}],'set-first-motion-id'))
+  const clear=await apply(item.id,{operationId:'undo-first-motion-id',kind:'undo',targetOperationId:'set-first-motion-id',expectedHistoryVersion:identity.history.version})
+  assert.equal(clear.document.pages['page-1'].nodes[node.id].motionId,undefined)
+  const restore=await apply(item.id,{operationId:'redo-first-motion-id',kind:'redo',targetOperationId:'set-first-motion-id',expectedHistoryVersion:clear.history.version})
+  assert.equal(restore.document.pages['page-1'].nodes[node.id].motionId,'renamed-motion')
+  const unset=await apply(item.id,prepareBatch(restore.document,[{type:'node.patch',pageId:'page-1',nodeId:node.id,patch:{},unset:['motionId']}],'unset-motion-id'))
+  assert.equal((await snapshot(item.id)).document.pages['page-1'].nodes[node.id].motionId,undefined)
+  const restored=await apply(item.id,{operationId:'undo-unset-motion-id',kind:'undo',targetOperationId:'unset-motion-id',expectedHistoryVersion:unset.history.version})
+  assert.equal(restored.document.pages['page-1'].nodes[node.id].motionId,'renamed-motion')
+})
+
+test('画板四角持久化到不可变页快照、共享历史和页面副本',async()=>{
+  const item=await artifact('design'),initial=await snapshot(item.id),oldHash=initial.pageVersions['page-1']
+  const old=await readNativePage(db,item.id,'page-1',oldHash),oldBytes=JSON.stringify(old)
+  const request=prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{radius:[10,20,30,40]}}],'radius')
+  const saved=await apply(item.id,request)
+  assert.deepEqual((await snapshot(item.id)).document.pages['page-1'].radius,[10,20,30,40])
+  assert.deepEqual((await readNativePage(db,item.id,'page-1',saved.pageVersions['page-1']))?.radius,[10,20,30,40])
+  assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
+  assert.equal((await apply(item.id,request)).deduplicated,true)
+  const undone=await apply(item.id,{operationId:'undo-radius',kind:'undo',targetOperationId:'radius',expectedHistoryVersion:saved.history.version})
+  assert.equal(Object.hasOwn(undone.document.pages['page-1'],'radius'),false)
+  const redone=await apply(item.id,{operationId:'redo-radius',kind:'redo',targetOperationId:'radius',expectedHistoryVersion:undone.history.version})
+  assert.deepEqual(redone.document.pages['page-1'].radius,[10,20,30,40])
+  const copy=await apply(item.id,prepareBatch(redone.document,duplicatePages(redone.document,['page-1'],()=> 'radius-copy'),'copy-radius'))
+  assert.deepEqual(copy.document.pages['radius-copy'].radius,[10,20,30,40])
+  assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
+})
+
+test('画板元素自适应尺寸保存重开、复制和共享历史保留可选标记及原始页快照',async()=>{
+  const item=await artifact('design'),initial=await snapshot(item.id),node=createNode('text','sizing-text')
+  const inserted=await apply(item.id,prepareBatch(initial.document,[{type:'node.insert',pageId:'page-1',node}],'insert-sizing'))
+  const oldHash=inserted.pageVersions['page-1'],oldBytes=JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash))
+  const request=prepareBatch(inserted.document,[{type:'node.patch',pageId:'page-1',nodeId:node.id,patch:{css:{width:'auto',height:'auto','max-width':'90%'},implicitWidth:true,implicitHeight:true}}],'hug-sizing')
+  const saved=await apply(item.id,request),reopened=(await snapshot(item.id)).document.pages['page-1'].nodes[node.id]
+  assert.equal(reopened.implicitWidth,true);assert.equal(reopened.implicitHeight,true)
+  assert.deepEqual(reopened.css,{width:'auto',height:'auto','max-width':'90%'})
+  assert.deepEqual((await readNativePage(db,item.id,'page-1',saved.pageVersions['page-1']))?.nodes[node.id],reopened)
+  assert.equal((await apply(item.id,request)).deduplicated,true)
+  const resized=await apply(item.id,prepareBatch(saved.document,[{type:'node.patch',pageId:'page-1',nodeId:node.id,patch:{width:800}}],'resize-sizing'))
+  assert.equal(resized.document.pages['page-1'].nodes[node.id].implicitWidth,undefined)
+  assert.equal(resized.document.pages['page-1'].nodes[node.id].implicitHeight,true)
+  const undone=await apply(item.id,{operationId:'undo-sizing',kind:'undo',targetOperationId:'resize-sizing',expectedHistoryVersion:resized.history.version})
+  assert.deepEqual(undone.document.pages['page-1'].nodes[node.id],reopened)
+  const copied=await apply(item.id,prepareBatch(undone.document,duplicatePages(undone.document,['page-1'],()=> 'sizing-copy'),'copy-sizing'))
+  const copy=Object.values(copied.document.pages['sizing-copy'].nodes).find(value=>value.type==='text')
+  assert.equal(copy?.implicitWidth,true);assert.equal(copy?.implicitHeight,true);assert.deepEqual(copy?.css,reopened.css)
+  assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
+})
+
+test('画板打印设置独立持久化、撤销重做与复制，旧页快照不变',async()=>{
+  const item=await artifact('design'),initial=await snapshot(item.id),page=initial.document.pages['page-1'],oldHash=initial.pageVersions['page-1'],oldBytes=JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash))
+  const request=prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{print:'flow',paper:'A4'}}],'print-settings')
+  const saved=await apply(item.id,request),reopened=(await snapshot(item.id)).document.pages['page-1']
+  assert.equal(reopened.print,'flow');assert.equal(reopened.paper,'A4');assert.equal(reopened.sizing,page.sizing)
+  assert.deepEqual([reopened.width,reopened.height],[page.width,page.height]);assert.deepEqual(reopened.nodes,page.nodes)
+  assert.equal((await readNativePage(db,item.id,'page-1',saved.pageVersions['page-1']))?.print,'flow')
+  assert.equal((await apply(item.id,request)).deduplicated,true)
+  const undone=await apply(item.id,{operationId:'undo-print',kind:'undo',targetOperationId:'print-settings',expectedHistoryVersion:saved.history.version})
+  assert.equal(Object.hasOwn(undone.document.pages['page-1'],'print'),false)
+  const redone=await apply(item.id,{operationId:'redo-print',kind:'redo',targetOperationId:'print-settings',expectedHistoryVersion:undone.history.version})
+  const copied=await apply(item.id,prepareBatch(redone.document,duplicatePages(redone.document,['page-1'],()=> 'print-copy'),'copy-print'))
+  assert.equal(copied.document.pages['print-copy'].print,'flow');assert.equal(copied.document.pages['print-copy'].paper,'A4')
+  assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
 })

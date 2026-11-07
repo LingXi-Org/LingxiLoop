@@ -1,0 +1,27 @@
+{
+  "kind": "画板变换回归",
+  "scenario": "edge-ne",
+  "scale": 0.221044921875,
+  "previewGeometry": [
+    {
+      "frame": {
+        "x": 48,
+        "y": 442.109375,
+        "width": 459.78125,
+        "height": 208.671875
+      },
+      "heading": {
+        "x": 48,
+        "y": 414.109375,
+        "width": 459.78125,
+        "height": 24
+      },
+      "ghost": null
+    }
+  ],
+  "savedAndReopened": true,
+  "nodesUnchanged": true,
+  "committedBatches": 1,
+  "scope": "真实组件与可信输入，受控HTTP文档服务，不代替真实授权API或完整视觉验收",
+  "consoleOrPageErrors": []
+}

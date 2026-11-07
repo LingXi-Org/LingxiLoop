@@ -1,0 +1,9 @@
+{
+  "kind": "isolated-svg-font-cancellation-diagnostic",
+  "mode": "slides",
+  "fontFetchActuallyHeld": true,
+  "sourceChangedDuringLoad": true,
+  "lateImageDoesNotReplaceNewSource": true,
+  "scope": "actual React image and shared refresh; controlled HTTP font delay",
+  "consoleOrPageErrors": []
+}

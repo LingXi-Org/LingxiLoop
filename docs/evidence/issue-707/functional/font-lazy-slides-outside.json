@@ -1,0 +1,10 @@
+{
+  "kind": "isolated-font-lazy-cancellation-diagnostic",
+  "mode": "slides",
+  "cancelAction": "outside",
+  "actualModuleHeld": true,
+  "pendingSessionCancelled": true,
+  "lateModuleDoesNotStealFocus": true,
+  "cachedReentryFocus": true,
+  "consoleOrPageErrors": []
+}

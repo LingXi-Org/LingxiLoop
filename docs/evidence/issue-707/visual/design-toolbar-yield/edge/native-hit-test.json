@@ -1,0 +1,32 @@
+[
+  {
+    "name": "播放",
+    "box": {
+      "x": 42,
+      "y": 17,
+      "width": 24,
+      "height": 24
+    },
+    "hit": true
+  },
+  {
+    "name": "显示属性",
+    "box": {
+      "x": 70,
+      "y": 17,
+      "width": 24,
+      "height": 24
+    },
+    "hit": true
+  },
+  {
+    "name": "画布缩放",
+    "box": {
+      "x": 98,
+      "y": 17,
+      "width": 61.125,
+      "height": 24
+    },
+    "hit": true
+  }
+]

@@ -1,0 +1,72 @@
+{
+  "kind": "延迟画布内容首次视角局部回归",
+  "failureBeforeFix": "受控延迟接口返回后，远处画布对象仍未挂载；等待3秒失败。",
+  "chromium154": [
+    {
+      "kind": "isolated-fit-partial-canvas-diagnostic",
+      "scenario": "first",
+      "loadedContentBeforeRememberingFirstFit": true,
+      "objectWithin1CssPx": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-fit-partial-canvas-diagnostic",
+      "scenario": "rapid",
+      "loadedContentBeforeRememberingFirstFit": true,
+      "objectWithin1CssPx": true,
+      "staleLoadDoesNotSwitchCanvas": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-fit-partial-canvas-diagnostic",
+      "scenario": "restored",
+      "loadedContentBeforeRememberingFirstFit": true,
+      "objectWithin1CssPx": true,
+      "userCameraRestored": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    }
+  ],
+  "chromium140": [
+    {
+      "kind": "isolated-fit-partial-canvas-diagnostic",
+      "scenario": "first",
+      "loadedContentBeforeRememberingFirstFit": true,
+      "objectWithin1CssPx": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-fit-partial-canvas-diagnostic",
+      "scenario": "rapid",
+      "loadedContentBeforeRememberingFirstFit": true,
+      "objectWithin1CssPx": true,
+      "staleLoadDoesNotSwitchCanvas": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-fit-partial-canvas-diagnostic",
+      "scenario": "restored",
+      "loadedContentBeforeRememberingFirstFit": true,
+      "objectWithin1CssPx": true,
+      "userCameraRestored": true,
+      "noWrites": true,
+      "consoleOrPageErrors": []
+    }
+  ],
+  "otherLocalChecks": [
+    "70项聚焦单元",
+    "非原点画板首次切页",
+    "页面菜单",
+    "私有页面链接",
+    "1440浅色同文档相机和同缩放平移后适配",
+    "NativeEditor聚焦lint"
+  ],
+  "typecheck": "本地缺少正式私有SDK；76项缺包及级联错误，原生编辑器与共享模型无错误；不算完整通过。",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

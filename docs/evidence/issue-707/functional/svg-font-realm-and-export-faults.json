@@ -1,0 +1,136 @@
+{
+  "scope": "真实生产构建、Chromium、固定50页夹具的第1/25/50页；故障辅助检查，不是性能资格",
+  "browser": "Chrome/154.0.8037.57",
+  "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
+  "cases": [
+    {
+      "case": "realmLoad",
+      "failureRejected": true,
+      "retryCompleted": true,
+      "originalImmutable": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    },
+    {
+      "case": "lazyModule",
+      "failureRejected": true,
+      "retryCompleted": true,
+      "originalImmutable": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    },
+    {
+      "case": "sharedDependency",
+      "failureRejected": true,
+      "retryCompleted": true,
+      "originalImmutable": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    },
+    {
+      "case": "innerLazyModule",
+      "failureRejected": true,
+      "retryCompleted": true,
+      "originalImmutable": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    },
+    {
+      "case": "resourceFailure",
+      "failureRejected": true,
+      "retryCompleted": true,
+      "originalImmutable": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    },
+    {
+      "case": "packingCancellation",
+      "failureRejected": true,
+      "retryCompleted": true,
+      "originalImmutable": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    }
+  ],
+  "cancellation": [
+    {
+      "format": "html",
+      "aborted": true,
+      "retryCompleted": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    },
+    {
+      "format": "pdf",
+      "aborted": true,
+      "retryCompleted": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    },
+    {
+      "format": "pptx",
+      "aborted": true,
+      "retryCompleted": true,
+      "remainingRealms": 0,
+      "remainingWorkers": 0
+    }
+  ],
+  "localFontRecovery": {
+    "italicFailed": true,
+    "italicRecovered": true,
+    "loadedFaces": [
+      "KaTeX_Main|normal|400",
+      "KaTeX_Math|italic|400",
+      "Noto Sans SC|normal|400 600",
+      "LingxiLoopEditor Inter|italic|100 900"
+    ],
+    "normalFontRecovered": true,
+    "selfContainedFontFaces": 10
+  },
+  "svgFonts": [
+    {
+      "format": "html",
+      "mode": "inherited",
+      "bytes": 271677,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "svgTextPreserved": true,
+      "interFaces": 2,
+      "notoFaces": 0,
+      "allFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    },
+    {
+      "format": "html",
+      "mode": "explicit",
+      "bytes": 271686,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "svgTextPreserved": true,
+      "interFaces": 2,
+      "notoFaces": 0,
+      "allFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    },
+    {
+      "format": "html",
+      "mode": "nested",
+      "bytes": 508703,
+      "immutable": true,
+      "mountedPages": 0,
+      "realms": 0,
+      "svgTextPreserved": true,
+      "interFaces": 2,
+      "notoFaces": 3,
+      "allFontData": true,
+      "remoteFontReferences": false,
+      "workers": 0
+    }
+  ],
+  "uncaughtExceptions": 0,
+  "qualified": false
+}

@@ -1,0 +1,65 @@
+{
+  "kind": "isolated-font-picker-diagnostic",
+  "mode": "design",
+  "chineseChoices": 29,
+  "searchAndKeyboardSelection": true,
+  "fontGeometry": {
+    "x": 1209,
+    "y": 209,
+    "width": 187,
+    "height": 28
+  },
+  "fontPopupGeometry": {
+    "x": 1209,
+    "y": 241,
+    "width": 192,
+    "height": 350
+  },
+  "searchGeometry": {
+    "x": 1253,
+    "y": 251,
+    "width": 126,
+    "height": 28
+  },
+  "fontRequestsBeforeOpening": 0,
+  "selectedFamily": "Merriweather",
+  "supportedFacesOnly": true,
+  "familyFaceFallbackAndSharedUndo": true,
+  "fontAssets": [
+    "/fonts/editors/bebas-neue-latin-400-normal-a7c90c89240c.woff2",
+    "/fonts/editors/caveat-latin-wght-normal-891951df5e8b.woff2",
+    "/fonts/editors/dm-sans-latin-wght-normal-9fea608a947e.woff2",
+    "/fonts/editors/inter-latin-wght-normal-3100e775e861.woff2",
+    "/fonts/editors/lato-latin-400-normal-918b7dc3e2e2.woff2",
+    "/fonts/editors/lora-latin-wght-normal-ddb8c6603510.woff2",
+    "/fonts/editors/manrope-latin-wght-normal-a30ddcd34970.woff2",
+    "/fonts/editors/merriweather-latin-wght-normal-4fbe8dd9c23b.woff2",
+    "/fonts/editors/montserrat-latin-wght-normal-06b16db7a969.woff2",
+    "/fonts/editors/nunito-latin-wght-normal-ba344451eab2.woff2",
+    "/fonts/editors/open-sans-latin-wght-normal-d8e4fe0452aa.woff2",
+    "/fonts/editors/playfair-display-latin-wght-normal-e0c764a8e9e1.woff2",
+    "/fonts/editors/poppins-latin-400-normal-7d93459d8658.woff2",
+    "/fonts/editors/raleway-latin-wght-normal-b1bef1f03a77.woff2",
+    "/fonts/editors/roboto-latin-wght-normal-1404ca348bd7.woff2",
+    "/fonts/editors/space-grotesk-latin-wght-normal-0640890476fc.woff2",
+    "/fonts/editors/work-sans-latin-wght-normal-1dd49afc07fb.woff2",
+    "/fonts/editors/merriweather-latin-wght-italic-caa1da88ecea.woff2"
+  ],
+  "savedAndReopened": true,
+  "emptySearchChinese": true,
+  "escapeRestoresFocus": true,
+  "narrowPopupBounds": {
+    "x": 163.5,
+    "y": 241,
+    "width": 192,
+    "height": 350
+  },
+  "offlineFontPacking": {
+    "loadedFaces": 1,
+    "externalRequests": 0,
+    "localFileOpening": false
+  },
+  "chineseOnlyFallbackReady": true,
+  "scope": "actual React, self-hosted font loading and shared reducer; controlled HTTP fixture; packed HTML font loading is not file-URL opening",
+  "consoleOrPageErrors": []
+}

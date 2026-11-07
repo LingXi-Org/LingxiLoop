@@ -1,0 +1,65 @@
+{
+  "审查提交": "bd29d74b1587e35712bf3d3d9e857b2dc1ff7e51",
+  "比较基线": "5e97ffdcf709483691c946b8bcdc1877c327094d",
+  "审查方式": "依据repository-review技能，在/workspace/lingxi-issue707-scratch/review-bd29d74b独立detached checkout。未修改产品文件、提交、合并或发布外部消息；没有混入root标题宽度、尺寸面板或性能前置WIP。",
+  "结论": "5e97同节点内联链接遮挡P2已独立复验关闭；本次局部层级修复未发现新的可复现P1/P2。原失败报告保持失败状态，不用后续修复覆盖。完整还原资格仍未通过。",
+  "发现": [],
+  "已关闭问题": [
+    {
+      "原问题": "同一文字节点attributes.href的整体命中层遮住richText中的子链接",
+      "复验": "140/154的实际离线HTML及Native全窗口预览，父/子区域的真实mouse.click均返回各自URL，isTrusted=true。相对定位及z-index仅提升非整体锚点，命中栈中子链接位于整体透明层之上。",
+      "原始失败探针重放": "另将独立5e复现脚本只改冻结产品路径，不依赖新增正式断言，154两处点击均从parent改为child，可信输入无错误。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-bd29-same140/design-same-node.json",
+        "/workspace/lingxi-issue707-scratch/review-bd29-same154/design-same-node.json",
+        "/workspace/lingxi-issue707-scratch/review-bd29-original154/design-same-node.json"
+      ]
+    }
+  ],
+  "实际验证": [
+    {
+      "项目": "Chrome140同节点父/子三格式及可信点击",
+      "结果": "实际下载HTML/PDF/PPTX；组结构唯一、成员完整，离线HTML及Native预览各父/子可信click正确。PDF含两URI；PPTX子链接offY409575，小于slide高10287000。exit0，无页面或控制台错误。",
+      "收据": "/tmp/lingxi-review-bd29-same140.log",
+      "目录": "/workspace/lingxi-issue707-scratch/review-bd29-same140"
+    },
+    {
+      "项目": "Chrome154同节点父/子三格式及可信点击",
+      "结果": "相同检查全部通过，exit0，无错误。",
+      "收据": "/tmp/lingxi-review-bd29-same154.log",
+      "目录": "/workspace/lingxi-issue707-scratch/review-bd29-same154"
+    },
+    {
+      "项目": "Chrome154原组合父/子三格式回归",
+      "结果": "nested-export通过；HTML唯一组合DIV、3个成员，父/子命中及可信点击正确，PDF两URI，PPTX子链接在页内。",
+      "收据": "/tmp/lingxi-review-bd29-nested154.log",
+      "目录": "/workspace/lingxi-issue707-scratch/review-bd29-nested154"
+    },
+    {
+      "项目": "独立原始失败脚本",
+      "结果": "同一文字节点“子链接其他文字”及整体/内联双URL；HTML与真实Native预览的elementFromPoint与可信click均为child，无console错误。capture仅记录和preventDefault阻止外跳，不更改命中。",
+      "探针": "/workspace/lingxi-issue707-scratch/review-bd29-probe/same-node.mjs",
+      "收据": "/tmp/lingxi-review-bd29-original154.log"
+    },
+    {
+      "项目": "定向owning单元",
+      "结果": "所选36/36通过。",
+      "命令": "node --import tsx --test shared/artifact-element-link.test.ts shared/artifact-links.test.ts shared/artifact-previews.test.ts src/features/artifacts/native/export/export.test.ts src/features/artifacts/native/thumbnail.test.tsx",
+      "收据": "/tmp/lingxi-review-bd29-owning.log"
+    },
+    {
+      "项目": "冻结/只读/补丁检查",
+      "结果": "完整SHA匹配，git status --short空，git diff --check 5e97ffdc通过。"
+    }
+  ],
+  "代码追踪": "产品变更仅为Native活动链接与export局部选择器提升非整体a的相对定位及层级；整体透明层仍为absolute，不再遮住本节点inline链接。Native选择器仅匹配预览/放映的data-native-link-active，编辑态保持既有命中规则；原组合不同子节点层级也经实际回归验证。没有修改持久化模型、操作、版本读依赖、草稿或服务接口。",
+  "未验证与剩余门槛": [
+    "本轮是同节点/原组合的定向复审，未重跑全部22UI、所有RTE输入、真实OS-IME、两模式六格式、50页及完整权限/CAS交叉状态。",
+    "9fc首次140 RTE焦点超时没有在本轮单独归因；不能用本轮链接命中通过抹去旧记录。",
+    "真实授权API/跨租户、外部Agent模型和服务全周期均未在本轮执行；HTTP夹具不代表这些验收。",
+    "未独立完整lint/typecheck/build或拉取正式CI结果；准确SDK缺失仍以正式CI为准。",
+    "未复测完整像素门槛或正式10组AB/BA/基线5%/输入p95；root提及的标题宽度Source不一致及尺寸面板工作不属于本候选修复，不能视为通过。"
+  ],
+  "局部审查通过": true,
+  "完整还原资格通过": false
+}

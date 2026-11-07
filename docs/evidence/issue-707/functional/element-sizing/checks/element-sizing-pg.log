@@ -1,0 +1,16 @@
+[env] Missing required environment variable: WUKONG_USER_TOKEN_SECRET
+✖ server/src/__integration__/native-document-service.test.ts (827.501575ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 837.95859
+
+✖ failing tests:
+
+test at server/src/__integration__/native-document-service.test.ts:1:1
+✖ server/src/__integration__/native-document-service.test.ts (827.501575ms)
+  'test failed'

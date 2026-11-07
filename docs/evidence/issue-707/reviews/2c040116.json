@@ -1,0 +1,66 @@
+{
+  "commit": "2c040116f4d774b1e29024044c6fcdeaf1fc5a01",
+  "baseCommit": "ee3cc0098d68bd5e3415a86a6c5174b0936926ca",
+  "reviewer": "independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "冻结detached checkout；仅单位/优先级映射、无效CSS替换、原生与离线导出一致性及测试标准模式修正。未修改产品文件、提交、合并或部署。",
+  "findings": [
+    {
+      "id": "P2-1",
+      "severity": "P2",
+      "title": "无效background-color覆盖会在离线导出中复活旧背景色",
+      "file": "src/features/artifacts/native/export/render.ts",
+      "line": 134,
+      "relatedLocation": "同文件44行textStyle将style.backgroundColor生成background简写；renderer.tsx中applyCodeStyle清除的是background-color。",
+      "scenario": "Design代码面板先保存background-color: #123456，再改为background-color: 480 !important。前者映射原生style.backgroundColor，后者保存在raw css。画布删除旧background-color后浏览器拒绝无效新值，正确显示透明；导出只删除完全同名生成声明，旧background:#123456仍在，浏览器拒绝无效longhand后保留蓝色。该离线HTML是其他栅格格式共用的渲染输入；本次实际验证到HTML声明解析，未声称独立复现PDF/PPTX。",
+      "reproduction": "在冻结checkout运行/tmp/lingxi-review-probe-2c/probe.mjs，参数--mode=design --checks=inspector-code --code-case=unitless-length --browser=/usr/bin/chromium；使用PLAYWRIGHT_MODULE=/tmp/lingxi-browser-tools/node_modules/playwright/index.mjs及node --import tsx。探针通过真实代码面板两次Ctrl+S，再调用真实renderPageHtml并由浏览器DOMParser标准模式解析。",
+      "observed": {
+        "nativeBefore": "rgb(18, 52, 86)",
+        "nativeAfter": "rgba(0, 0, 0, 0)",
+        "exportedAfter": "rgb(18, 52, 86)",
+        "savedNativeBackground": "#123456",
+        "savedRawBackground": "480 !important"
+      },
+      "evidence": [
+        "/tmp/lingxi-review-2c-background154/design.json",
+        "/tmp/lingxi-review-probe-2c/probe.mjs"
+      ],
+      "minimalFix": "让导出生成的背景色属性与原生使用相同background-color，或依据CSSOM简写/长写关系清除被raw声明替换的旧生成值；增加真实浏览器的无效background-color替换回归，确认画布和离线HTML一致。"
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "140/154正式inspector-code unitless-length",
+      "result": "两浏览器通过；非零无单位宽度保留raw并被标准模式浏览器忽略，0px字号保留，important保存重开、共享撤销/重做及离线HTML浏览器解析通过。",
+      "evidence": [
+        "/tmp/lingxi-review-2c-units140/design.json",
+        "/tmp/lingxi-review-2c-units154/design.json"
+      ]
+    },
+    {
+      "check": "node --import tsx --test src/features/artifacts/native/inspector-code-edit.test.ts src/features/artifacts/native/export/export.test.ts scripts/native-artifact-ci.test.mjs",
+      "result": "39项通过，0失败。",
+      "evidence": "/tmp/lingxi-review-2c-unit.log"
+    },
+    {
+      "check": "独立154无效背景长写替换探针",
+      "result": "复现P2-1；真实UI保存成功且无页面/控制台错误，原生透明、导出保留旧色。"
+    },
+    {
+      "check": "标准模式默认截图证据完整性",
+      "result": "53个manifest哈希全部吻合；Pillow独立重算16对参考/原生截图，差异像素计数全部一致；0/16达到0.5%，qualified=false登记准确。"
+    }
+  ],
+  "analysis": [
+    "pixel仅映射显式px和合法无单位零，SVG stroke-width另允许无单位数值；范围不适合原生模型的值转入rawCSS，避免拒绝0px字号和低权重等合法CSS。important通过raw保存，不再丢失优先级。原有重点回归独立通过。",
+    "新增doctype及CSS1Compat断言使该UI夹具与产品/固定来源模式一致；50页主题定位由button修为tab，与现行界面语义相符。历史BackCompat截图不能作为同模式完整视觉证据。",
+    "未发现本次引入新的权限、CAS或可执行内容通道；此判断基于局部代码检查及上述focused回归，不代替完整服务验收。"
+  ],
+  "unverified": [
+    "完整代码编辑能力、任意布局/继承/媒体、全部视觉状态和16对默认像素资格未通过。",
+    "未在本审查运行全部127项单位、全部50页流程、生产五格式、真实授权API/数据库集成及正式CI。根线程运行结果不记为本审查独立通过。",
+    "未运行完整typecheck/build/lint；SDK缺失相关错误不能计作类型检查通过。",
+    "当前候选正式10组AB/BA性能门槛未验证。"
+  ]
+}

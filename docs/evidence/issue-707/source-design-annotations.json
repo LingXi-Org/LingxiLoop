@@ -1,0 +1,212 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceFile": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "locations": [
+    {
+      "symbol": "function Fr(",
+      "offset": 2543105,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "function oc(",
+      "offset": 2544832,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "W={note:",
+      "offset": 2586999,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "Xe={rect:",
+      "offset": 2589022,
+      "offsetUnit": "UTF-16 code units"
+    }
+  ],
+  "actualSavedSourceAnnotations": {
+    "note-mymb0c": {
+      "text": "画布便签",
+      "w": 240,
+      "x": 688,
+      "y": -778
+    },
+    "shape-azq1wd": {
+      "h": 452,
+      "kind": "rect",
+      "w": 452,
+      "x": 1366,
+      "y": -1102
+    },
+    "shape-czgp9h": {
+      "kind": "arrow",
+      "x": 2045,
+      "x2": 2724,
+      "y": -1264,
+      "y2": -812
+    }
+  },
+  "measuredNote": {
+    "fontSize": 14,
+    "lineHeight": 1.45,
+    "padding": "10px 12px",
+    "minimumHeight": 40,
+    "fill": "#fef3a2",
+    "text": "#4a4220",
+    "radius": 2
+  },
+  "measuredDefaultRectangle": {
+    "fill": "#b6b0a7",
+    "radius": 8
+  },
+  "nativeLocations": [
+    "shared/artifact-canvas-import.ts",
+    "shared/artifact-canvas-pages.ts",
+    "src/features/artifacts/native/NativeEditor.tsx",
+    "src/features/artifacts/native/renderer.tsx"
+  ],
+  "nativeFunctionalEvidence": [
+    "functional/canvas-contents-light.json",
+    "functional/canvas-contents-dark.json"
+  ],
+  "screenshotStatesPaired": false,
+  "visualQualified": false,
+  "remaining": [
+    "自由图形的完整拖绘及专用工具条",
+    "来源调色板、标题缩放和裁切边界",
+    "线箭头、路径、媒体、链接的来源转换",
+    "自由对象在各格式中的选区导出",
+    "完整来源同态截图和差异门槛"
+  ],
+  "textMetricsReverseEngineering": {
+    "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+    "offsetUnit": "UTF-16 code units",
+    "locations": {
+      "legacyTextDefaults": 2586999,
+      "annotationTextStyle": 2587160,
+      "fontMetrics": 2588262,
+      "textStyleCSS": 3828428
+    },
+    "fontMetrics": {
+      "lineHeight": "clamp(1.45 - (fontSize - 14) * 0.006, 1.1, 1.45)",
+      "paddingX": "round(12 + (fontSize - 14) * 0.2)",
+      "paddingY": "round(10 + (fontSize - 14) * 0.11)",
+      "letterSpacing": "fontSize >= 64: -0.02em; fontSize >= 36: -0.01em; otherwise unset",
+      "minHeight": "round(fontSize * lineHeight) + 2 * paddingY"
+    },
+    "toolTextDefaults": {
+      "size": 24,
+      "bold": false,
+      "width": 240,
+      "paintWidth": "max-content",
+      "whiteSpace": "pre",
+      "lineHeight": 1.39,
+      "padding": "11px 14px",
+      "minHeight": 55,
+      "lightColor": "rgba(0,0,0,0.9)",
+      "darkColor": "rgba(255,255,255,0.93)"
+    },
+    "legacyMissingTitleDefaults": {
+      "size": 72,
+      "bold": true
+    },
+    "qualified": false,
+    "implementationStatus": "已接入新标题内容宽度、文字指标、字号联动、浅深色、保存重开、撤销及样式导出；完整来源控件与标题缩放/裁切仍未通过。",
+    "defaultWidthLimit": 2000,
+    "explicitMaxWPreserved": true,
+    "observedTextCases": [
+      {
+        "case": "long",
+        "textLength": 400,
+        "fontSize": 24,
+        "maxW": null,
+        "measured": {
+          "outerStyle": "left: 2950px; top: -1386px; width: 2000px; isolation: isolate; --hair: calc(1px * var(--mega-inv-scale)); --mega-scale: 0.22105263157894736; --mega-inv-scale: 4.523809523809524; height: 189px;",
+          "textStyle": "color: var(--cds-text-primary); font-size: 24px; line-height: 1.39; padding: 11px 14px; min-height: 55px;",
+          "screen": {
+            "width": 442.10528564453125,
+            "height": 41.7789306640625
+          },
+          "computed": {
+            "font": "",
+            "whiteSpace": "pre-wrap",
+            "padding": "11px 14px",
+            "maxWidth": "none",
+            "width": "2000px",
+            "height": "188.797px",
+            "overflow": "visible"
+          }
+        }
+      },
+      {
+        "case": "multiline",
+        "textLength": 7,
+        "fontSize": 24,
+        "maxW": null,
+        "measured": {
+          "outerStyle": "left: 2950px; top: -1386px; width: max-content; isolation: isolate; --hair: calc(1px * var(--mega-inv-scale)); --mega-scale: 0.22105263157894736; --mega-inv-scale: 4.523809523809524;",
+          "textStyle": "color: var(--cds-text-primary); font-size: 24px; line-height: 1.39; padding: 11px 14px; min-height: 55px; white-space: pre;",
+          "screen": {
+            "width": 22.105224609375,
+            "height": 19.61151123046875
+          },
+          "computed": {
+            "font": "",
+            "whiteSpace": "pre",
+            "padding": "11px 14px",
+            "maxWidth": "none",
+            "width": "100px",
+            "height": "88.7188px",
+            "overflow": "visible"
+          }
+        }
+      },
+      {
+        "case": "bounded",
+        "textLength": 200,
+        "fontSize": 24,
+        "maxW": 300,
+        "measured": {
+          "outerStyle": "left: 2950px; top: -1386px; width: 300px; isolation: isolate; --hair: calc(1px * var(--mega-inv-scale)); --mega-scale: 0.22105263157894736; --mega-inv-scale: 4.523809523809524; height: 656px;",
+          "textStyle": "color: var(--cds-text-primary); font-size: 24px; line-height: 1.39; padding: 11px 14px; min-height: 55px;",
+          "screen": {
+            "width": 66.3157958984375,
+            "height": 145.01052856445312
+          },
+          "computed": {
+            "font": "",
+            "whiteSpace": "pre-wrap",
+            "padding": "11px 14px",
+            "maxWidth": "none",
+            "width": "300px",
+            "height": "655.828px",
+            "overflow": "visible"
+          }
+        }
+      },
+      {
+        "case": "text-kind",
+        "textLength": 4,
+        "fontSize": 24,
+        "maxW": null,
+        "measured": {
+          "outerStyle": "left: 2950px; top: -1386px; width: 240px; background: rgb(254, 243, 162); isolation: isolate;",
+          "textStyle": "color: rgb(74, 66, 32); font-size: 24px; line-height: 1.39; padding: 11px 14px; min-height: 55px;",
+          "screen": {
+            "width": 53.0526123046875,
+            "height": 12.237335205078125
+          },
+          "computed": {
+            "font": "24px / 33.36px ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif",
+            "whiteSpace": "pre-wrap",
+            "padding": "11px 14px",
+            "maxWidth": "none",
+            "width": "240px",
+            "height": "55.3594px",
+            "overflow": "visible"
+          }
+        }
+      }
+    ]
+  }
+}

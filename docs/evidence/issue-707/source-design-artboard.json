@@ -1,0 +1,264 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "referenceHashesVerified": 12,
+  "oracle": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+    "offsetUnit": "UTF-16 code units",
+    "module": {
+      "name": "K4",
+      "start": 2742059,
+      "end": 2744401,
+      "sha256": "6501e593492fd8b95d9104549ed387fd6f3cf5d0f66c84ec9c4f95eb718c3d16"
+    },
+    "comparedAssertions": 10492,
+    "allEqual": true,
+    "scope": "只验证来源的纸张语言/尺寸推断与打印页高；不代替UI、PDF内容、完整视觉或性能资格。",
+    "qualified": false
+  },
+  "uiOffsets": {
+    "start": 4579499,
+    "end": 4583400,
+    "meaning": "画板打印、纸张、尺寸与外观表单"
+  },
+  "pdfPhysicalPaperOffset": 3473412,
+  "runtime": [
+    {
+      "state": "height240",
+      "board": {
+        "h": 240,
+        "title": "Page 1",
+        "w": 1920,
+        "x": 0,
+        "y": 0
+      },
+      "radios": [
+        {
+          "text": "Flow",
+          "checked": "false",
+          "disabled": null
+        },
+        {
+          "text": "Fixed",
+          "checked": "true",
+          "disabled": null
+        },
+        {
+          "text": "Letter",
+          "checked": "false",
+          "disabled": "true"
+        },
+        {
+          "text": "A4",
+          "checked": "false",
+          "disabled": "true"
+        }
+      ],
+      "frame": {
+        "box": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 53.052642822265625,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 465.10528564453125,
+          "left": 48
+        },
+        "parent": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 53.052642822265625,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 465.10528564453125,
+          "left": 48
+        },
+        "bodyHeight": 1080
+      }
+    },
+    {
+      "state": "flow240",
+      "board": {
+        "h": 240,
+        "title": "Page 1",
+        "w": 1920,
+        "x": 0,
+        "y": 0
+      },
+      "radios": [
+        {
+          "text": "Flow",
+          "checked": "true",
+          "disabled": null
+        },
+        {
+          "text": "Fixed",
+          "checked": "false",
+          "disabled": null
+        },
+        {
+          "text": "Letter",
+          "checked": "false",
+          "disabled": null
+        },
+        {
+          "text": "A4",
+          "checked": "false",
+          "disabled": null
+        }
+      ],
+      "frame": {
+        "box": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 53.052642822265625,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 465.10528564453125,
+          "left": 48
+        },
+        "parent": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 53.052642822265625,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 465.10528564453125,
+          "left": 48
+        },
+        "bodyHeight": 1080
+      }
+    },
+    {
+      "state": "a4",
+      "board": {
+        "h": 240,
+        "title": "Page 1",
+        "w": 1920,
+        "x": 0,
+        "y": 0
+      },
+      "radios": [
+        {
+          "text": "Flow",
+          "checked": "true",
+          "disabled": null
+        },
+        {
+          "text": "Fixed",
+          "checked": "false",
+          "disabled": null
+        },
+        {
+          "text": "Letter",
+          "checked": "false",
+          "disabled": null
+        },
+        {
+          "text": "A4",
+          "checked": "true",
+          "disabled": null
+        }
+      ],
+      "frame": {
+        "box": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 53.052642822265625,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 465.10528564453125,
+          "left": 48
+        },
+        "parent": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 53.052642822265625,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 465.10528564453125,
+          "left": 48
+        },
+        "bodyHeight": 1080
+      }
+    },
+    {
+      "state": "saved",
+      "board": {
+        "h": 240,
+        "paper": "a4",
+        "print": "flow",
+        "title": "Page 1",
+        "w": 1920,
+        "x": 0,
+        "y": 0
+      },
+      "radios": [
+        {
+          "text": "Flow",
+          "checked": "true",
+          "disabled": null
+        },
+        {
+          "text": "Fixed",
+          "checked": "false",
+          "disabled": null
+        },
+        {
+          "text": "Letter",
+          "checked": "false",
+          "disabled": null
+        },
+        {
+          "text": "A4",
+          "checked": "true",
+          "disabled": null
+        }
+      ],
+      "frame": {
+        "box": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 53.052642822265625,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 465.10528564453125,
+          "left": 48
+        },
+        "parent": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 53.052642822265625,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 465.10528564453125,
+          "left": 48
+        },
+        "bodyHeight": 1080
+      }
+    }
+  ],
+  "observations": [
+    "画板1920×240、内容1080高，选择流式和A4后画板/iframe仍保持240高；显式保存后print=flow、paper=a4写入原版画板元数据。",
+    "原版纸张语言/尺寸推断及页高10492项断言一致。",
+    "流式PDF实际使用纸张点数，固定模式使用画板CSS像素转点数。",
+    "原版普通固定画板已适配或大于内容时不写入/不缩小；fill分页另有120px缩小阈值。",
+    "流式打印不显示高度操作按钮；只读覆盖onFitHeight为空，亦不渲染该入口。"
+  ],
+  "qualified": false,
+  "fitPolicyEvidence": "functional/design-artboard-fit-fixes.json",
+  "fitControllerOffsets": {
+    "start": 5753571,
+    "description": "Dv只在resolveMeasuredExportHeight给出数值时写入；Da仅用于fill分页；hc以needsPagedExport控制入口。"
+  },
+  "readOnlyFitSourceOffset": 4579499
+}

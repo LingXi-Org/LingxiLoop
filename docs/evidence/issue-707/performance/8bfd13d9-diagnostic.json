@@ -1,0 +1,113 @@
+{
+  "candidateCommit": "8bfd13d90f66d7e7721f47fb414f9dc8b5c46ce7",
+  "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "runId": 42315857980,
+  "workflowConclusion": "success",
+  "diagnosticPassed": true,
+  "qualified": false,
+  "archiveSha256": "fb7f9b119796933ca2247855b4fd5a9041eb7daa34550615e64e5f3433eb1f02",
+  "fixtureComparison": {
+    "design": true,
+    "slides": true
+  },
+  "samples": 8,
+  "summary": [
+    {
+      "kind": "design",
+      "mode": "fullNavigation",
+      "samplesPerArm": 1,
+      "metrics": {
+        "editableMs": {
+          "baseline": 9881.6,
+          "candidate": 9023.6,
+          "ratio": 0.9131719559585493
+        },
+        "scriptTransferBytes": {
+          "baseline": 1279443,
+          "candidate": 1339277,
+          "ratio": 1.0467656628704836
+        },
+        "pssDeltaBytes": {
+          "baseline": 415228519,
+          "candidate": 408284774,
+          "ratio": 0.9832772926659211
+        }
+      },
+      "inputFeedbackP95Ms": 34.9000000001397
+    },
+    {
+      "kind": "design",
+      "mode": "workbenchOpen",
+      "samplesPerArm": 1,
+      "metrics": {
+        "editableMs": {
+          "baseline": 6882,
+          "candidate": 5477.1,
+          "ratio": 0.7958587619877943
+        },
+        "scriptTransferBytes": {
+          "baseline": 242587,
+          "candidate": 298111,
+          "ratio": 1.228882833787466
+        },
+        "pssDeltaBytes": {
+          "baseline": 417637786,
+          "candidate": 423799398,
+          "ratio": 1.0147534830576848
+        }
+      },
+      "inputFeedbackP95Ms": 41.5
+    },
+    {
+      "kind": "slides",
+      "mode": "fullNavigation",
+      "samplesPerArm": 1,
+      "metrics": {
+        "editableMs": {
+          "baseline": 6715.2,
+          "candidate": 8674.9,
+          "ratio": 1.2918304741482012
+        },
+        "scriptTransferBytes": {
+          "baseline": 1303840,
+          "candidate": 1363542,
+          "ratio": 1.0457893606577495
+        },
+        "pssDeltaBytes": {
+          "baseline": 299037286,
+          "candidate": 389046476,
+          "ratio": 1.3009965452936862
+        }
+      },
+      "inputFeedbackP95Ms": 32.60000000009313
+    },
+    {
+      "kind": "slides",
+      "mode": "workbenchOpen",
+      "samplesPerArm": 1,
+      "metrics": {
+        "editableMs": {
+          "baseline": 4577.3,
+          "candidate": 6258,
+          "ratio": 1.3671815262272518
+        },
+        "scriptTransferBytes": {
+          "baseline": 642527,
+          "candidate": 698271,
+          "ratio": 1.0867574436560643
+        },
+        "pssDeltaBytes": {
+          "baseline": 293978522,
+          "candidate": 345590579,
+          "ratio": 1.175564040015141
+        }
+      },
+      "inputFeedbackP95Ms": 33.299999999813735
+    }
+  ],
+  "limitations": [
+    "每个场景每个版本仅一组样本，不构成十组交替验收。",
+    "基线整稿导出有六次超时；候选六次整稿导出通过。",
+    "Slides 启动及内存指标仍超出预算。"
+  ]
+}

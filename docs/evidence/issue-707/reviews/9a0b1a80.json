@@ -1,0 +1,41 @@
+{
+  "commit": "9a0b1a804f12b86dab15e4595a01a45668da45a9",
+  "baseCommit": "6309676879853f9252526467b37d847589da8fee",
+  "reviewer": "independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": true,
+  "scope": "精确冻结detached checkout；唯一产品变化为Design属性面板外阴影移除，另审默认纸张history等待修复。未混入后续标题/选框WIP；未修改产品文件、提交、合并或部署。",
+  "findings": [],
+  "independentChecks": [
+    {
+      "check": "154四尺寸双主题visual入口",
+      "result": "8项全部通过；1920×1200、1440×1000、768×1024、390×844的属性面板computed box-shadow均none，0写入、0页面错误。",
+      "evidencePattern": "/tmp/lingxi-review-9a-shadow-{1920,1440,768,390}-{light,dark}/design.json"
+    },
+    {
+      "check": "140/154默认画板属性流程",
+      "result": "两项通过；undo/redo等待匹配/operations POST kind响应200及A4 aria-checked变化，随后共享文档核对通过，无页面错误。",
+      "evidence": [
+        "/tmp/lingxi-review-9a-default140/design.json",
+        "/tmp/lingxi-review-9a-default154/design.json"
+      ]
+    },
+    {
+      "check": "八对已归档截图差异独立重算",
+      "result": "Pillow逐像素重算8对reference/native截图，与raw-pixel-results.json计数全部吻合；0/8达0.5%，qualified=false准确。"
+    },
+    {
+      "check": "node --check scripts/native-editor-ui-acceptance.mjs",
+      "result": "语法检查通过。"
+    }
+  ],
+  "analysis": [
+    "样式只匹配.native-kind-design下.native-inspector本体，box-shadow非继承属性，不改变其他编辑器、内部字段/焦点环或弹窗阴影。实测浅深色及侧栏/底部面板均命中none。",
+    "history等待先绑定匹配的HTTP响应再发送快捷键；响应后等待实际纸张单选状态变化，保持面板挂载，避免之前仅等saved而提前读取文档。该修复没有修改产品历史逻辑或减少原数据断言。",
+    "候选无模型/API/后端或导出产品变更；没有发现本局部新的数据、授权或交互P1/P2。"
+  ],
+  "unverified": [
+    "未运行完整lint/typecheck/build、数据库、五格式导出或正式CI，本次按最小受影响范围验证。",
+    "八对默认整图仍0/8通过，其他视觉/交互状态、完整功能/服务与正式10组AB/BA性能资格仍false；局部阴影和时序检查通过不代表完整还原完成。"
+  ]
+}

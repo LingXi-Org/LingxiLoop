@@ -168,7 +168,7 @@ export function createArtifactWorkspacesApplication(context: ArtifactWorkspacesA
       const artifact = await startAgentWorkspace(transactionDb, {
         artifactId: input.artifactId,
         companyId: input.companyId,
-        title: input.title.trim().slice(0, 200) || 'Agent workspace',
+        title: input.title.trim().slice(0, 200) || '智能体工作区',
         conversationId: input.conversationId,
         triggerClientMsgNo: input.triggerClientMsgNo,
         goal: input.goal.trim(),

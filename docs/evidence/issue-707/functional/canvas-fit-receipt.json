@@ -1,0 +1,131 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "source": "../source-design-fit-camera.json",
+  "scope": "同一三画板与一个钢笔注释文档，仅初始控制点模式、平移及同缩放适配；不代替完整状态视觉或性能",
+  "beforeMaxObservedCssPx": 4.6407,
+  "sourceMathCases": 28,
+  "focusedUnits": 70,
+  "matchedPairs": [
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "maxAnchorDeltaCssPx": 0.010148746671511643,
+      "maxBoardDeltaCssPx": 0.010009765625,
+      "sourceImage": "../visual/fit-camera/reference/design-1920-light.png",
+      "nativeImage": "../visual/fit-camera/native/design-1920-light.png",
+      "sourceSha256": "a004f9429d80b063e89b517d86753a2a9efd640c8f75d74fc07cb175067a399f",
+      "nativeSha256": "8615dbc37cd992c8dea514fc7d976cc0906e0ed74d5ebfd5882d93c06ff82bba"
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "maxAnchorDeltaCssPx": 0.010148746671511643,
+      "maxBoardDeltaCssPx": 0.010009765625,
+      "sourceImage": "../visual/fit-camera/reference/design-1920-dark.png",
+      "nativeImage": "../visual/fit-camera/native/design-1920-dark.png",
+      "sourceSha256": "8330308e36ff0c1f905f56ad1f2bb513346fdf2c685e33cb92ca4d60965beb3e",
+      "nativeSha256": "81634cb13986842ec8b8ac64644c73ba8fa042c0eff30a7d1a7e2e389046896e"
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "maxAnchorDeltaCssPx": 0.0001373291015625,
+      "maxBoardDeltaCssPx": 0.01483154296875,
+      "sourceImage": "../visual/fit-camera/reference/design-1440-light.png",
+      "nativeImage": "../visual/fit-camera/native/design-1440-light.png",
+      "sourceSha256": "2cee7b1b2fe1454ed121d4b90e76dd9cc729a8a56f782230635c492c119a50f8",
+      "nativeSha256": "b26c63de0990fcd0686eca95cb4e658507c5f3207f0f210fddd918fa64c8454a"
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "maxAnchorDeltaCssPx": 0.0001373291015625,
+      "maxBoardDeltaCssPx": 0.01483154296875,
+      "sourceImage": "../visual/fit-camera/reference/design-1440-dark.png",
+      "nativeImage": "../visual/fit-camera/native/design-1440-dark.png",
+      "sourceSha256": "63f3e3cd49d6a317d5d4931c27c134281224e3bd8f1213fd6d611e5506af1f1f",
+      "nativeSha256": "038837b26ac2e19d20f05462f3b88ec30c69a963fc6baad58f95585c2c6ab13a"
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "maxAnchorDeltaCssPx": 0.007873594298621141,
+      "maxBoardDeltaCssPx": 0.009033203125,
+      "sourceImage": "../visual/fit-camera/reference/design-768-light.png",
+      "nativeImage": "../visual/fit-camera/native/design-768-light.png",
+      "sourceSha256": "ebafb367745b00bbfc28e797ebc36689dcc5df0fae48ed13efe95b27e1f241f4",
+      "nativeSha256": "c8ddbad252d50776c3e0b4168f99cbad16732262b842e45460d615a9377e84e8"
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "maxAnchorDeltaCssPx": 0.007873594298621141,
+      "maxBoardDeltaCssPx": 0.009033203125,
+      "sourceImage": "../visual/fit-camera/reference/design-768-dark.png",
+      "nativeImage": "../visual/fit-camera/native/design-768-dark.png",
+      "sourceSha256": "7eae1971fc410255c9c8b32b17e84f66f32bab045f09987d147c4245ef7365e7",
+      "nativeSha256": "00e02c88a03154558cae8069f1107b44151086fa481563342ea370c049c21fc3"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "maxAnchorDeltaCssPx": 0.010192896791528527,
+      "maxBoardDeltaCssPx": 0.01397705078125,
+      "sourceImage": "../visual/fit-camera/reference/design-390-light.png",
+      "nativeImage": "../visual/fit-camera/native/design-390-light.png",
+      "sourceSha256": "80885d9e043fea23e91bb07be8abaff68023327129a195c63fd83b578225304a",
+      "nativeSha256": "730d70414086393567a5d94a4591d01841659b2216db33eb7413577b46e241b8"
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "maxAnchorDeltaCssPx": 0.010192896791528527,
+      "maxBoardDeltaCssPx": 0.01397705078125,
+      "sourceImage": "../visual/fit-camera/reference/design-390-dark.png",
+      "nativeImage": "../visual/fit-camera/native/design-390-dark.png",
+      "sourceSha256": "dff6cc9f21043c9c0fe290152862c90323a048e91085feb38af0677142986794",
+      "nativeSha256": "7c9b1ed2c0bad014443ae881ff2179b971f16e408de9ab7441e7cbe89b1408ad"
+    }
+  ],
+  "rawPixel": {
+    "file": "../visual/fit-camera/raw-pixel-results.json",
+    "pairs": 8,
+    "rawPassed": 0,
+    "masks": [],
+    "antialiasExclusions": false
+  },
+  "otherPassed": [
+    "浅深各17控制点场景",
+    "12个CAS/几何场景",
+    "5个权限/平移/双触点场景",
+    "15个钢笔创建和8个保留场景",
+    "页面菜单与相机恢复",
+    "可见区域旧响应零额外加载",
+    "两编辑器各50页且47个未修改页哈希保持",
+    "首次切换非原点画板、相机位置与缩放恢复",
+    "私有页面链接切换与重开"
+  ],
+  "owningTypecheck": {
+    "localPassed": false,
+    "sdkUnavailable": true,
+    "errors": 76,
+    "nativeOrSharedErrors": 0
+  },
+  "visualQualified": false,
+  "performanceQualified": false,
+  "referenceResourceHashesVerified": 12,
+  "remaining": [
+    "全部可达状态视觉",
+    "初次加载较复杂画布内容后的完整相机行为",
+    "全部缩放及动画状态",
+    "至少十组最终候选性能"
+  ]
+}

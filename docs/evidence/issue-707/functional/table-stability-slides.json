@@ -1,0 +1,54 @@
+{
+  "kind": "isolated-table-stability-diagnostic",
+  "mode": "slides",
+  "remoteHeaderPreservesDraftAndFocus": true,
+  "continuedDraftSaved": true,
+  "raggedRows": {
+    "native": [
+      {
+        "x": 133.62384033203125,
+        "y": 388.9898681640625
+      },
+      {
+        "x": 450.8340148925781,
+        "y": 388.9898681640625
+      },
+      {
+        "x": 133.62384033203125,
+        "y": 437.8695373535156
+      },
+      {
+        "x": 133.62384033203125,
+        "y": 486.7602844238281
+      },
+      {
+        "x": 450.8340148925781,
+        "y": 486.7602844238281
+      }
+    ],
+    "html": [
+      {
+        "x": 138,
+        "y": 445.1875
+      },
+      {
+        "x": 587,
+        "y": 445.1875
+      },
+      {
+        "x": 138,
+        "y": 514.375
+      },
+      {
+        "x": 138,
+        "y": 583.578125
+      },
+      {
+        "x": 587,
+        "y": 583.578125
+      }
+    ]
+  },
+  "scope": "actual React editing, shared reducer and HTML export; controlled HTTP fixture",
+  "consoleOrPageErrors": []
+}

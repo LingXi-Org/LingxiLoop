@@ -95,13 +95,20 @@ byte counts and SHA-256 hashes. This is a resource subset; the former bundled
 editors, recovered application source, compiler and duplicate editor archives
 have been removed.
 
-The repository is MIT licensed, Copyright (c) Jim Liu; the license is retained at
-`third_party/baoyu-design/LICENSE`. The original `artifact-type/reference/`
+Jim Liu’s local tooling is MIT licensed; the license is retained at
+`third_party/baoyu-design/LICENSE`. The pinned upstream [NOTICE.md](https://github.com/JimLiu/baoyu-design/blob/016b39d7fdcc30bfacee31ea5541498ac53921c6/NOTICE.md)
+separately identifies the reconstructed Anthropic editors, reference material and
+Anthropicons as material outside that MIT license. LingxiLoop’s native editor
+implementation uses the existing React/Base UI ecosystem and Lucide’s ISC-licensed
+icons; it does not redistribute the upstream executable editors or Anthropicons. The original `artifact-type/reference/`
 pages follow the claude.ai Design and Slides artifact types. The Claude-style
 built-in tokens were extracted from the pinned Slides distribution, while Ember
 and Seazar are the upstream design-system examples; their source pointers remain
 in the retained token files. Native compatibility adapters preserve these format
-semantics without importing the former editor runtime.
+semantics without importing the former editor runtime. Native editor behavior and
+regression oracles are compared with the pinned distribution in a separate
+reference environment; source locations and hashes are retained in
+`docs/evidence/issue-707/`.
 
 ## Bible Strong Avatar
 
@@ -339,3 +346,42 @@ Chat/composer metrics and typography fallbacks are adapted from [Caho1/open-clau
 ## react-syntax-highlighter
 
 Code blocks use [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) 16.1.2, its asynchronous light Prism renderer and One Light/One Dark themes. Copyright (c) 2019 Conor Hastings, MIT; full license: [public/licenses/react-syntax-highlighter.txt](public/licenses/react-syntax-highlighter.txt).
+
+## 原生编辑器字体
+
+Design 与 Slides 的中文字体选择器保留固定 baoyu-design 版本的字体目录顺序。
+其中十七种开源字体使用 Fontsource 5.3.0 的原始 WOFF2 资源，遵循各字体的
+SIL Open Font License 1.1；原始署名和许可随字体发布于
+`public/fonts/editors/*-OFL.txt`。来源、版本、发布包完整性值、每个文件的
+SHA-256 及字体别名适配见 [字体说明](third_party/editor-fonts/README.md)
+和 [资源清单](third_party/editor-fonts/manifest.json)。没有分发原版私有图标字体。
+
+
+## JSZip 3.10.1
+
+画板网页压缩包在隔离导出环境按需使用 [JSZip](https://github.com/Stuk/jszip/tree/v3.10.1)。
+版本沿用现有锁文件中的 3.10.1，本项目选择其 MIT 许可。
+[上游许可](https://github.com/Stuk/jszip/blob/v3.10.1/LICENSE.markdown)全文中的 MIT 部分如下：
+
+The MIT License
+===============
+
+Copyright (c) 2009-2016 Stuart Knightley, David Duponchel, Franz Buchinger, António Afonso
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.

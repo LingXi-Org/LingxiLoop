@@ -1,0 +1,23 @@
+{
+  "candidateCommit": "2e17fbb019c74977a3fd748f8f9dee5615a65f27",
+  "reviewer": "/root/independent_review",
+  "mode": "独立只读",
+  "independentlyRun": [
+    "混合及纯形状网格恢复",
+    "深滚切画布位置完全一致且内容体不变",
+    "浅深色标题编辑、字号联动、2000折行及重开",
+    "31项聚焦测试",
+    "140及修正fontconfig下五种生产导出"
+  ],
+  "finding": {
+    "priority": "P2",
+    "scenario": "标题统一内边距设为30后实时显示30px，保存重开回到11px/14px；存储同时含padding30与旧paddingX14/Y11，React更新历史决定shorthand和logical轴优先级。",
+    "reproduced": true,
+    "correction": "统一内边距动作显式更新两个轴；共享纯函数只解析一次最终内边距，原生/HTML/PPTX使用同一结果；不同轴的控件显示中文混合。",
+    "fixIndependentVerification": "待新候选复审"
+  },
+  "owningCI": "https://github.com/LingXi-Org/LingxiLoop/actions/runs/42168211101",
+  "owningCIStatus": "通过",
+  "visualQualified": false,
+  "performanceQualified": false
+}
