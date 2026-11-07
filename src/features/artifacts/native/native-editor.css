@@ -178,3 +178,16 @@
 .native-inspector-tabs{display:flex;align-items:center;gap:4px}.native-inspector-tabs>.native-panel-tab{flex:none;border-radius:6px;padding:4px 8px;font-weight:435;white-space:nowrap}.native-inspector-tabs>.native-panel-tab[aria-selected=true]{background:var(--native-hover);color:var(--native-fg)}.native-inspector-tabs>.native-panel-tab:focus-visible{outline:2px solid var(--native-accent);outline-offset:2px}
 .native-code-pane{display:flex;flex:1;flex-direction:column;min-height:160px;background:var(--native-panel)}.native-code-subject{display:flex;gap:8px;overflow:hidden;padding:10px 14px 0;color:var(--native-muted);font-family:monospace;font-size:11px;line-height:17px;white-space:nowrap}.native-code-subject>span:last-child{overflow:hidden;text-overflow:ellipsis;font-family:inherit}.native-code-pane textarea{display:block;width:100%;min-height:96px;field-sizing:content;flex-shrink:0;resize:none;overflow:hidden;box-sizing:border-box;padding:12px 14px;border:0;border-radius:0;background:transparent;color:var(--native-fg);font:11.5px/1.55 monospace;white-space:pre-wrap;overflow-wrap:anywhere;outline:none;tab-size:2}.native-code-pane textarea[aria-invalid=true]{box-shadow:inset -3px 0 0 #b42318}.native-code-pane textarea::placeholder{color:var(--native-muted)}
 .native-code-pane textarea:focus-visible{outline:none}
+
+/* 固定来源的幻灯片工具栏在窄容器内仍距顶部12px；读数宽度为三位数预留。 */
+.native-kind-slides .native-toolbar{inset-block-start:12px;inset-inline-start:12px;inset-inline-end:calc(12px + var(--native-sidebar-width,0px))}
+.native-kind-slides .native-toolbar-island{gap:4px}
+.native-kind-slides .native-toolbar .native-menu>summary{font-size:14px}
+.native-kind-slides .native-toolbar-separator{margin-inline:2px}
+.native-kind-slides .native-export-menu>summary,.native-kind-slides .native-present-menu>summary{width:28px;padding:0}
+.native-kind-slides .native-zoom-menu>summary{gap:4px;padding:0 8px 0 9px;font-weight:435;font-variant-numeric:tabular-nums}
+.native-kind-slides .native-zoom-menu .native-menu-text{display:inline-flex;flex-direction:column;align-items:center}
+.native-kind-slides .native-zoom-menu .native-menu-text::before{content:attr(data-readout-sizer);visibility:hidden;height:0}
+.native-kind-slides .native-zoom-menu .native-menu-readout-caret{display:flex;align-items:center;justify-content:center;width:12px;height:12px;margin-inline:-2px;color:rgb(0 0 0 / .467)}
+.dark .native-kind-slides .native-zoom-menu .native-menu-readout-caret,.native-kind-slides[data-theme=dark] .native-zoom-menu .native-menu-readout-caret{color:rgb(255 255 255 / .467)}
+@container(max-width:767px){.native-kind-slides .native-toolbar{inset-inline-start:8px;inset-inline-end:8px}}
