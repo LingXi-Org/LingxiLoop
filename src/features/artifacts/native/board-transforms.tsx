@@ -14,7 +14,9 @@ interface Options {
   notice(message:string):void
 }
 interface Preview {frames:Record<string,BoardRect>;activeIds:string[];retainedIds:string[];copy:boolean;guides:BoardSnap[]}
-interface Drag {base:ArtifactDocument;ids:string[];pages:ArtifactPage[];others:ArtifactPage[];scale:number;x:number;y:number;pointer:number;target:HTMLElement;handle?:BoardHandle;copy:boolean;moved:boolean;frames:Record<string,BoardRect>;stop():void}
+type BoardPointer=Pick<PointerEvent,'clientX'|'clientY'|'altKey'|'ctrlKey'|'metaKey'|'shiftKey'>
+const pointerState=(event:BoardPointer):BoardPointer=>({clientX:event.clientX,clientY:event.clientY,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey})
+interface Drag {last:BoardPointer;base:ArtifactDocument;ids:string[];pages:ArtifactPage[];others:ArtifactPage[];scale:number;x:number;y:number;pointer:number;target:HTMLElement;handle?:BoardHandle;copy:boolean;moved:boolean;frames:Record<string,BoardRect>;stop():void}
 const empty:Preview={frames:{},activeIds:[],retainedIds:[],copy:false,guides:[]}
 const handles:BoardHandle[]=['n','e','s','w','nw','ne','se','sw']
 const names:Record<BoardHandle,string>={n:'上边',e:'右边',s:'下边',w:'左边',nw:'左上角',ne:'右上角',se:'右下角',sw:'左下角'}
@@ -26,7 +28,7 @@ export function useBoardTransforms(options:Options){
   const cancel=()=>{const drag=active.current;finishing.current=null;suppress.current=false;if(drag){active.current=null;drag.stop()}setPreview(empty)}
   useEffect(()=>()=>{const drag=active.current;active.current=null;finishing.current=null;drag?.stop()},[])
   useEffect(()=>{if(!options.enabled||!options.writable||active.current&&(options.document?.id!==active.current.base.id||active.current.ids.some(id=>!options.document?.pages[id]||!options.ids.includes(id))))cancel()},[options.enabled,options.writable,options.document,options.ids])
-  const calculate=(drag:Drag,event:PointerEvent)=>{
+  const calculate=(drag:Drag,event:BoardPointer)=>{
     const dx=(event.clientX-drag.x)/drag.scale,dy=(event.clientY-drag.y)/drag.scale,targets=event.ctrlKey||event.metaKey?[]:drag.copy?[...drag.others,...drag.pages]:drag.others
     const result=drag.handle?(()=>{const value=resizeBoardRect(drag.pages[0],drag.handle!,dx,dy,targets,drag.scale,event.shiftKey);return{rects:[value.rect],guides:value.guides}})():moveBoardRects(drag.pages,dx,dy,targets,drag.scale,drag.copy)
     return{frames:Object.fromEntries(drag.ids.map((id,index)=>[id,result.rects[index]])),guides:result.guides}
@@ -45,15 +47,17 @@ export function useBoardTransforms(options:Options){
     if(!opts.writable){suppress.current=true;if(deferredSelection)opts.select(pageId,event.shiftKey,false);return}
     finishing.current=null;suppress.current=true
     const ids=handle?[pageId]:selected,pages=ids.map(id=>base.pages[id]),target=event.currentTarget,editor=target.closest<HTMLElement>('[data-native-artifact-editor]')
-    const drag:Drag={base,ids,pages,others:opts.ids.filter(id=>!ids.includes(id)).map(id=>base.pages[id]),scale:opts.scale,x:event.clientX,y:event.clientY,pointer:event.pointerId,target,handle,copy:!handle&&event.altKey,moved:false,frames:{},stop:()=>{}}
+    const drag:Drag={last:pointerState(event),base,ids,pages,others:opts.ids.filter(id=>!ids.includes(id)).map(id=>base.pages[id]),scale:opts.scale,x:event.clientX,y:event.clientY,pointer:event.pointerId,target,handle,copy:!handle&&event.altKey,moved:false,frames:{},stop:()=>{}}
+    const show=(position:BoardPointer)=>{
+      drag.copy=!drag.handle&&position.altKey
+      const result=calculate(drag,position);drag.frames=result.frames
+      setPreview(previous=>({...previous,frames:result.frames,guides:result.guides,copy:drag.copy}))
+    }
     const move=(event:PointerEvent)=>{
       if(active.current!==drag||event.pointerId!==drag.pointer)return
-      event.preventDefault();event.stopPropagation()
+      event.preventDefault();event.stopPropagation();drag.last=pointerState(event)
       if(Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>3)drag.moved=true
-      if(!drag.moved)return
-      drag.copy=!drag.handle&&event.altKey
-      const result=calculate(drag,event);drag.frames=result.frames
-      setPreview(previous=>({...previous,frames:result.frames,guides:result.guides,copy:drag.copy}))
+      if(drag.moved)show(drag.last)
     }
     const finish=async(event:PointerEvent)=>{
       if(active.current!==drag||event.pointerId!==drag.pointer)return
@@ -80,11 +84,18 @@ export function useBoardTransforms(options:Options){
       }catch{latest.current.notice('画板修改未能保存，请重试。')}
       finally{if(finishing.current===token){finishing.current=null;setPreview(empty)}}
     }
-    const key=(event:KeyboardEvent)=>{if(event.key==='Escape'&&!event.isComposing){event.preventDefault();event.stopPropagation();cancel();suppress.current=false}}
+    const key=(event:KeyboardEvent)=>{
+      if(active.current!==drag)return
+      if(event.key==='Escape'&&!event.isComposing){event.preventDefault();event.stopPropagation();cancel();return}
+      if(['Alt','Shift','Control','Meta'].includes(event.key)){
+        event.preventDefault();drag.last={...drag.last,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey}
+        if(drag.moved)show(drag.last)
+      }
+    }
     const lost=()=>cancel()
-    drag.stop=()=>{window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',finish,true);window.removeEventListener('pointercancel',lost,true);window.removeEventListener('keydown',key,true);window.removeEventListener('blur',lost);if(target.hasPointerCapture(drag.pointer))target.releasePointerCapture(drag.pointer)}
+    drag.stop=()=>{window.removeEventListener('pointermove',move,true);window.removeEventListener('pointerup',finish,true);window.removeEventListener('pointercancel',lost,true);window.removeEventListener('keydown',key,true);window.removeEventListener('keyup',key,true);window.removeEventListener('blur',lost);if(target.hasPointerCapture(drag.pointer))target.releasePointerCapture(drag.pointer)}
     active.current=drag;target.setPointerCapture(drag.pointer)
-    window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',finish,true);window.addEventListener('pointercancel',lost,true);window.addEventListener('keydown',key,true);window.addEventListener('blur',lost)
+    window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',finish,true);window.addEventListener('pointercancel',lost,true);window.addEventListener('keydown',key,true);window.addEventListener('keyup',key,true);window.addEventListener('blur',lost)
     setPreview({frames:{},activeIds:ids,retainedIds:opts.visibleIds(),copy:drag.copy,guides:[]})
   }
   const key=(event:ReactKeyboardEvent,pageId:string,handle?:BoardHandle)=>{

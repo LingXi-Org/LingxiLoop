@@ -9503,6 +9503,12 @@
         "functional": "functional/design-board-scope.json",
         "review": "reviews/c9219138.json",
         "qualified": false
+      },
+      "stationaryModifierEvidence": {
+        "functional": "functional/design-board-alt-still.json",
+        "reference": "source-design-board-alt-still.json",
+        "review": "reviews/dd7672e9.json",
+        "qualified": false
       }
     },
     {

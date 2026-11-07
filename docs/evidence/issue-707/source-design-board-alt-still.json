@@ -1,0 +1,241 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceResourceHashesVerified": 12,
+  "browser": "154.0.8037.57",
+  "fixture": "native-editor-visual-fixture.mjs",
+  "scope": "鼠标停在半程，仅切换Alt；固定参考等待120ms后截图与实际保存，未证明完整输入延迟指标。",
+  "results": [
+    {
+      "scenario": {
+        "name": "copy-late-still",
+        "phase": "press",
+        "stationary": true
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1-c3xq.dc.html": {
+            "h": 1080,
+            "title": "Page 1 copy",
+            "w": 1920,
+            "x": 90,
+            "y": 68
+          },
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html",
+          "Page1-c3xq.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": [
+        {
+          "rect": {
+            "x": 67.89473724365234,
+            "y": 427.084228515625,
+            "width": 424.4210510253906,
+            "height": 238.73681640625,
+            "top": 427.084228515625,
+            "right": 492.31578826904297,
+            "bottom": 665.821044921875,
+            "left": 67.89473724365234
+          },
+          "background": "oklab(0.591645 -0.0448253 -0.164977 / 0.05)",
+          "border": "2px dashed oklab(0.591645 -0.0448253 -0.164977 / 0.7)",
+          "borderRadius": "4px"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "copy-release-still",
+        "modifier": "Alt",
+        "phase": "release",
+        "stationary": true
+      },
+      "bounds": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "frame": {
+        "x": 67.89473724365234,
+        "y": 427.084228515625,
+        "width": 424.42105865478516,
+        "height": 238.73681640625
+      },
+      "heading": {
+        "x": 67.89473724365234,
+        "y": 399.08453369140625,
+        "width": 424.40628814697266,
+        "height": 24.000030517578125
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 90,
+            "y": 68
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": []
+    }
+  ],
+  "qualified": false
+}

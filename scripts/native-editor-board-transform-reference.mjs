@@ -26,7 +26,7 @@ const scenarios=[
   {name:'resize',resize:true},{name:'resize-unsnapped',resize:true,modifier:'Control'},{name:'resize-shift',resize:true,modifier:'Shift'},{name:'resize-alt',resize:true,modifier:'Alt'},
   {name:'minimum',resize:true,dx:-500,dy:-300},{name:'minimum-shift',resize:true,dx:-500,dy:-300,modifier:'Shift'},
   {name:'maximum',resize:true,dx:3000,dy:2000},
-  {name:'copy',modifier:'Alt'},{name:'copy-late',phase:'press'},{name:'copy-release',modifier:'Alt',phase:'release'},{name:'copy-multi',modifier:'Alt',multi:true,selectionModifier:'Shift'},{name:'cancel',cancel:true},{name:'copy-cancel',modifier:'Alt',cancel:true},
+  {name:'copy',modifier:'Alt'},{name:'copy-late',phase:'press'},{name:'copy-late-still',phase:'press',stationary:true},{name:'copy-release-still',modifier:'Alt',phase:'release',stationary:true},{name:'copy-release',modifier:'Alt',phase:'release'},{name:'copy-multi',modifier:'Alt',multi:true,selectionModifier:'Shift'},{name:'cancel',cancel:true},{name:'copy-cancel',modifier:'Alt',cancel:true},
 ]
 const results=[]
 await mkdir(output,{recursive:true})
@@ -48,7 +48,7 @@ try{
       const handle=scenario.handle??'se'
       const start=scenario.resize?{x:bounds.x+(handle.includes('w')?0:handle.includes('e')?bounds.width:bounds.width/2),y:bounds.y+(handle.includes('n')?0:handle.includes('s')?bounds.height:bounds.height/2)}:{x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2}
       if(scenario.modifier)await page.keyboard.down(scenario.modifier)
-      await page.mouse.move(start.x,start.y);await page.mouse.down();if(scenario.phase){await page.mouse.move(start.x+(scenario.dx??40)/2,start.y+(scenario.dy??30)/2,{steps:3});if(scenario.phase==='press')await page.keyboard.down('Alt');else await page.keyboard.up('Alt')}await page.mouse.move(start.x+(scenario.dx??40),start.y+(scenario.dy??30),{steps:5})
+      await page.mouse.move(start.x,start.y);await page.mouse.down();if(scenario.phase){await page.mouse.move(start.x+(scenario.dx??40)/2,start.y+(scenario.dy??30)/2,{steps:3});if(scenario.phase==='press')await page.keyboard.down('Alt');else await page.keyboard.up('Alt')}if(!scenario.stationary)await page.mouse.move(start.x+(scenario.dx??40),start.y+(scenario.dy??30),{steps:5})
       await page.waitForTimeout(120)
       const frame=await (scenario.group?page.locator('[data-testid="mega-set-box"],[data-testid="mega-group-box"]'):page.getByTestId('mega-artboard-resize-'+(scenario.targetFile??'Page1.dc.html'))).boundingBox(),heading=await page.getByTestId('mega-artboard-title-'+(scenario.targetFile??'Page1.dc.html')).boundingBox()
       const selections=scenario.group?await page.locator('[style*="outline-width"],[data-mega-chrome="group-resize"]').evaluateAll(nodes=>nodes.map(element=>{const style=getComputedStyle(element);return{tag:element.tagName,cls:String(element.className),style:element.getAttribute('style'),rect:element.getBoundingClientRect().toJSON(),outline:style.outline}})):undefined
