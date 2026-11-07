@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {profileOpeningChunks} from './native-artifact-bundle-profile.mjs'
+import {readFileSync} from 'node:fs'
+import {profileOpeningChunks,openingModuleRoles} from './native-artifact-bundle-profile.mjs'
 const chunk=(fileName,imports,modules,code='export const value=1;')=>({type:'chunk',fileName,imports,modules,code})
 test('opening profile subtracts warm application chunks and includes the text editor only once',()=>{
  const bundle={
@@ -26,4 +27,10 @@ test('profile exposes module sizes and project paths, without code or private pa
  assert.equal(report.nativeIncremental.modules.find(item=>item.label==='dependency:@lingxi-org/lingxios').renderedCodeUnits,20)
  assert.ok(!json.includes('DO_NOT_EXPORT'));assert.ok(!json.includes('private-entry'));assert.ok(!json.includes('/repo/'))
  assert.equal(report.qualified,false)
+})
+
+test('every actual boot preload is subtracted as an application root',()=>{
+ const config=readFileSync(new URL('../vite.config.ts',import.meta.url),'utf8'),declaration=config.match(/const BOOT_ROUTE_MODULES = (\[[^\n]+\])/);assert.ok(declaration)
+ const modules=JSON.parse(declaration[1].replaceAll("'",'"'))
+ for(const module of modules)assert.ok(openingModuleRoles.application.includes('/'+module),`Missing actual warm boot root: ${module}`)
 })

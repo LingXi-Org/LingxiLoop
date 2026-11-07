@@ -25,9 +25,10 @@
     "专用分支、仅相关文件变化触发两次真实生产构建，Node22和各自锁文件，使用现有只读包权限；不运行服务、发布或部署。"
   ],
   "checks": {
-    "syntheticGraphTestsPassed": 2,
+    "syntheticGraphTestsPassed": 3,
     "scriptSyntax": true,
-    "actualProductionProfiles": "待正式工作流执行，本地缺少正式私有SDK，未伪造替代。"
+    "actualProductionProfiles": "首轮已运行但根集合不完整；修复轮待重新执行。",
+    "actualBootPreloadsRegistered": true
   },
   "previousCandidate": {
     "commit": "af2ae0e8a233ec55ff3f5978283ec6f5444f2214",
@@ -36,6 +37,14 @@
     "review": "reviews/af2ae0e8.json",
     "reviewPassed": true
   },
-  "newProfileCandidateCI": "待运行",
-  "newProfileCandidateIndependentReview": "待运行"
+  "newProfileCandidateCI": "e3bc15de正常CI42404947387通过；本次补根新候选待运行。",
+  "newProfileCandidateIndependentReview": "e3bc15de审查P3采集缺口已归档，补根候选待复审。",
+  "firstProfile": {
+    "collectorCommit": "e3bc15de5d1bbe408a155283ada8e6db51824ef4",
+    "run": 42404943973,
+    "success": true,
+    "qualified": false,
+    "receipt": "performance/static-profile-e3bc15de-incomplete.json",
+    "finding": "P3：实际启动GlobalInteractionProvider预热根遗漏，保留原数据，补根重采后才能用于完整归属。"
+  }
 }

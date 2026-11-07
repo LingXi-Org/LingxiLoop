@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { build } from 'vite'
-import {profileOpeningChunks} from './native-artifact-bundle-profile.mjs'
+import {profileOpeningChunks,openingModuleRoles} from './native-artifact-bundle-profile.mjs'
 
 const output = resolve(process.argv[2] ?? '/tmp/lingxi-native-bundle-audit.json')
 const outDir = resolve(process.argv[3] ?? '/tmp/lingxi-native-production-dist')
@@ -30,14 +30,12 @@ await build({
     generateBundle(_options, bundle) {
       const chunks = Object.values(bundle).filter(value => value.type === 'chunk')
       const owns = (chunk, suffix) => chunk.moduleIds.some(id => id.replaceAll('\\', '/').endsWith(suffix))
-      const rootModules = ['/src/main.tsx', '/src/App.tsx', '/src/AuthedApp.tsx', '/src/desktop/DesktopApp.tsx',
-        '/src/desktop/ChatPane.tsx', '/src/features/artifacts/native/NativeEditor.tsx',
-        '/src/features/artifacts/native/RichTextEditor.tsx']
-      const roots = rootModules.map(module => {
-        const chunk = chunks.find(value => owns(value, module))
-        assert.ok(chunk, `Missing production root: ${module}`)
+      const rootChunks = Object.fromEntries(Object.entries(openingModuleRoles).map(([role,modules])=>[role,modules.map(module=>{
+        const chunk=chunks.find(value=>owns(value,module))
+        assert.ok(chunk,`Missing production root: ${module}`)
         return chunk.fileName
-      })
+      })]))
+      const roots=Object.values(rootChunks).flat()
       const reached = new Set()
       const visit = name => {
         if (reached.has(name)) return
@@ -66,7 +64,7 @@ await build({
         roots: [...new Set(roots)].sort(),
         staticChunks: [...reached].sort(),
         staticModuleCount: modules.length,
-        openingProfile:profileOpeningChunks(bundle,roots.slice(0,5),roots.slice(5),process.cwd()),
+        openingProfile:profileOpeningChunks(bundle,rootChunks.application,rootChunks.native,process.cwd()),
         forbiddenCompatibilityOrExportModules: forbidden,
         exportRealm: realm.fileName,
         exportHtmlPreloadsApplication: false,

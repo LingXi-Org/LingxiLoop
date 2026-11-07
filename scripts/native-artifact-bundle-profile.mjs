@@ -2,6 +2,11 @@ import assert from 'node:assert/strict'
 import {relative} from 'node:path'
 import {gzipSync} from 'node:zlib'
 
+export const openingModuleRoles={
+ application:['/src/main.tsx','/src/App.tsx','/src/components/GlobalInteractionProvider.tsx','/src/AuthedApp.tsx','/src/desktop/DesktopApp.tsx','/src/desktop/ChatPane.tsx'],
+ native:['/src/features/artifacts/native/NativeEditor.tsx','/src/features/artifacts/native/RichTextEditor.tsx'],
+}
+
 /** Build metadata only. Actual browser transfer, Workers and timing stay separate. */
 export function profileOpeningChunks(bundle,applicationRoots,nativeRoots,repositoryRoot){
  const closure=roots=>{
