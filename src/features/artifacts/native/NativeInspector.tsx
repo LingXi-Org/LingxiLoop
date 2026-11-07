@@ -8,10 +8,13 @@ import { FontField, FontVariantField } from './FontField'
 import TextAreaField from './TextAreaField'
 import { useLocalDraft } from './draft-context'
 import { editorFontFacePatch, type EditorFont } from './editor-fonts'
+import InspectorCode from './InspectorCode'
 
 interface Props {
-  inspectorTab: 'properties' | 'theme'
-  setInspectorTab(tab: 'properties' | 'theme'): void
+  inspectorTab: 'properties' | 'code' | 'theme'
+  setInspectorTab(tab: 'properties' | 'code' | 'theme'): void
+  onNotice(message:string):void
+  commitCode(operations:ArtifactOperation[],base:ArtifactDocument):void
   setInspectorOpen(open: boolean): void
   doc: ArtifactDocument
   primary?: ArtifactNode
@@ -56,7 +59,9 @@ function Field({ label, value, onChange, type = 'text', min, max, placeholder }:
   return type==='color'?<ColorField label={label} value={String(value)} onChange={onChange} />:<label className="native-field"><span>{label}</span><input aria-label={label} placeholder={placeholder} type={type} min={min} max={max} value={draft} onFocus={() => { focused.current = true }} onChange={event => change(event.target.value)} onCompositionStart={() => { composing.current = true; markDirty(true) }} onCompositionEnd={event => { composing.current = false; change(event.currentTarget.value); if (flushAfterComposition.current) { flushAfterComposition.current = false; queueMicrotask(save) } }} onBlur={() => { focused.current = false; save(); if (!composing.current) setDraft(latest.current.value) }} onKeyDown={event => { if (event.key === 'Enter' && !event.nativeEvent.isComposing) event.currentTarget.blur() }} /></label>
 }
 
-export default function NativeInspector({inspectorTab, setInspectorTab, setInspectorOpen, doc, primary, current, primaryPadding, kind, canvasContentId, writable, selected, setSelected, inspectorBase, fileInput, replaceImage, getBase, beginInspector, dispatch, inspectDispatch, patchNode, beginCrop, reorderLayer, ungroup, groupSelection, align, distribute, deleteSelection, pasteNodes, selectedWithChildren}: Props) {
+export default function NativeInspector({inspectorTab, setInspectorTab, setInspectorOpen, doc, primary, current, primaryPadding, kind, canvasContentId, writable, selected, setSelected, inspectorBase, fileInput, replaceImage, getBase, beginInspector, dispatch, inspectDispatch, patchNode, beginCrop, reorderLayer, ungroup, groupSelection, align, distribute, deleteSelection, pasteNodes, selectedWithChildren,onNotice,commitCode}: Props) {
+  const codeField=useRef<HTMLTextAreaElement|null>(null),codeFocus=useRef(false)
+  const tabs=[{id:'properties' as const,name:'属性'},...(kind==='design'?[{id:'code' as const,name:'代码'}]:[]),{id:'theme' as const,name:'主题'}]
   const changeFont = (font: EditorFont) => {
     if (!primary || !current || !doc) return
     const initial = inspectorBase.current?.pages[current.id]?.nodes[primary.id] ?? primary
@@ -64,7 +69,8 @@ export default function NativeInspector({inspectorTab, setInspectorTab, setInspe
     const family = artifactResolvedStyle({ ...initial.style, ...choice, ...(font.theme ? { fontFamily: undefined } : {}) }, doc).fontFamily ?? font.family
     patchNode({ style: { ...choice, ...editorFontFacePatch(family, initial.style) } }, font.theme ? ['style.fontFamily'] : ['style.themeFont', 'style.themeFontFallback'])
   }
-  return <aside className="native-inspector" aria-label="属性面板" onFocusCapture={beginInspector}><header className="native-inspector-header"><button type="button" className="native-panel-tab" aria-pressed={inspectorTab==='properties'} onClick={()=>setInspectorTab('properties')}>属性</button><button type="button" className="native-panel-tab" aria-pressed={inspectorTab==='theme'} onClick={()=>setInspectorTab('theme')}>主题</button><span style={{flex:1}} /><IconButton icon="close" label="关闭属性" onClick={() => setInspectorOpen(false)} /></header>
+  return <aside className="native-inspector" aria-label="属性面板" onFocusCapture={beginInspector}><header className="native-inspector-header"><div role="tablist" aria-label="属性选项卡" className="native-inspector-tabs">{tabs.map((tab,index)=><button key={tab.id} type="button" role="tab" className="native-panel-tab" aria-selected={inspectorTab===tab.id} tabIndex={inspectorTab===tab.id?0:-1} onClick={()=>{if(tab.id==='code'){if(inspectorTab==='code')codeField.current?.focus();else codeFocus.current=true}setInspectorTab(tab.id)}} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();event.stopPropagation();const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;codeFocus.current=false;setInspectorTab(tabs[next].id);event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role=tab]')[next]?.focus()}}>{tab.name}</button>)}</div><span style={{flex:1}} /><IconButton icon="close" label="关闭属性" onClick={() => setInspectorOpen(false)} /></header>
+      {inspectorTab==='code'&&current&&<InspectorCode key={`${current.id}:${selected.join('|')}`} document={doc} pageId={current.id} selected={selected} readOnly={!writable} field={codeField} requestFocus={codeFocus} getBase={getBase} dispatch={commitCode} onNotice={onNotice}/>}
       {inspectorTab === 'theme' && <div className="native-theme-picker" aria-label="主题选择"><button type="button" aria-pressed={!doc.themeId} disabled={!writable} onClick={()=>dispatch([{type:'document.patch',patch:{themeId:null}}])}>默认主题</button>{Object.values(doc.themes).map(theme=><button type="button" key={theme.id} aria-label={`使用主题 ${theme.name}`} disabled={!writable} aria-pressed={doc.themeId===theme.id} onClick={()=>dispatch([{type:'document.patch',patch:{themeId:theme.id}}])}><span className="native-theme-preview" style={{background:String(theme.tokens.background??'#faf8f4'),color:String(theme.tokens.text??'#141413')}}>文字</span>{theme.name}</button>)}</div>}
       <div hidden={inspectorTab!=='properties'}><fieldset disabled={!writable}>
         {primary ? <>

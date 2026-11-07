@@ -126,11 +126,12 @@ export function parseInspectorCode(source: string, previous?: ReadonlyMap<string
   return { ok: true, entries }
 }
 
-export function serializeInspectorCode(entries: readonly InspectorCodeEntry[]) {
+export function serializeInspectorCode(entries: readonly InspectorCodeEntry[],mixed:readonly string[]=[]) {
   const styles: string[] = [], attributes: string[] = []
   for (const { name, value } of entries) {
     if (name.startsWith('@')) attributes.push(`${name}: ${value}`.trimEnd())
     else styles.push(`${name}: ${value};`)
   }
+  for(const name of mixed)(name.startsWith('@')?attributes:styles).push(`// ${name}: （混合值）`)
   return [styles.join('\n'), attributes.join('\n')].filter(Boolean).join('\n\n')
 }

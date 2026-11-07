@@ -47,7 +47,7 @@ import { IconButton, Menu, MenuItem, Modal, EditorIcon, ToolbarTools } from './E
 import { PageThumbnail } from './thumbnail'
 import { EditorPaletteContext, EditorColorSessionContext } from './ColorField'
 import { readNodeFrame, anchorInFrame, pointInFrame, type RenderedNodeFrame } from './rendered-geometry'
-import {useCodeSelection} from './use-code-selection'
+import {useCodeSelection,paintedCodeNode} from './use-code-selection'
 import { PageRail } from './PageRail'
 import { duplicateNodes, duplicatePages, distributeNodes, resizeSelection, drawingNode, canvasShapeNode, ungroupNodes, appendDrawingPoint, appendCanvasPenPoint, canvasPenNode, layoutSlide, SLIDE_LAYOUTS, type ResizeHandle } from '../../../../shared/artifact-editor-actions'
 import { decodeCommentAnchor, commentPoint, commentAnchorAtPoint, type NativeCommentAnchor } from '../../../../shared/artifact-comment-anchor'
@@ -76,6 +76,7 @@ interface Props { revisionSeq?:string; artifactId: string; kind: 'design' | 'sli
 export default function NativeEditor({ revisionSeq, artifactId, kind, title, visible = true, agentWorking = false, exitPresentation = 0, onEditorContext }: Props) {
   const session = useMemo(() => new NativeDocumentSession(nativeTransport(artifactId,revisionSeq)), [artifactId,revisionSeq])
   const state = useSyncExternalStore(session.subscribe, session.getSnapshot)
+  const retainedDrafts=session.hasRetainedDrafts
   const drafts = useMemo(() => new NativeDrafts(), [artifactId])
   const draftCount = useSyncExternalStore(drafts.subscribe, drafts.getSnapshot)
   const flushText = useCallback(() => drafts.flush(), [drafts])
@@ -135,7 +136,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const [exporting, setExporting] = useState('')
   const [notice, setNotice] = useState('')
   const [announcement,setAnnouncement]=useState({id:0,text:''})
-  const [inspectorTab, setInspectorTab] = useState<'properties'|'theme'>('properties')
+  const [inspectorTab, setInspectorTab] = useState<'properties'|'code'|'theme'>('properties')
   const [inspectorOpen, setInspectorOpen] = useState(false)
   const closeInspector=()=>{setInspectorOpen(false);queueMicrotask(()=>editorRoot.current?.querySelector<HTMLElement>('[aria-label="显示属性"]')?.focus({preventScroll:true}))}
   const [NativeInspector,setNativeInspector]=useState<typeof import('./NativeInspector').default|null>(null)
@@ -256,6 +257,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const currentRef = useRef(current); currentRef.current = current
   const selectedRef = useRef(selected); selectedRef.current = selected
   const dispatch = useCallback((ops: ArtifactOperation[], base?: ArtifactDocument) => { try { session.dispatch(ops, base) } catch (error) { setNotice(editorError(error, '无法应用修改，请重试。')) } }, [session])
+  const commitCode=useCallback((ops:ArtifactOperation[],base:ArtifactDocument)=>{const snapshot=session.getSnapshot();if(!snapshot.write||!snapshot.document)session.retainDraft(ops);else dispatch(ops,base)},[session,dispatch])
   const commitSpeakerNote=useCallback((pageId:string,notes:string,base:ArtifactDocument)=>{
     const snapshot=session.getSnapshot()
     if(snapshot.document?.pages[pageId]?.notes===notes){setSpeakerNoteError('');return true}
@@ -277,7 +279,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   useEffect(()=>{if(!visible||!authorized||revisionSeq!==undefined)return;const controller=new AbortController();void refreshComments(controller.signal).catch(()=>{});const stop=ws.on(event=>{if(event.type==='artifact.changed'&&event.artifactId===artifactId)void refreshComments(controller.signal).catch(()=>{})});return()=>{controller.abort();stop()}},[visible,authorized,revisionSeq,refreshComments,artifactId])
   useEffect(() => ws.on(event => { if (event.type === 'artifact.changed' && event.artifactId === artifactId) void session.refresh() }), [session, artifactId])
   useEffect(() => { if (!doc) return; if (!pageId || !boardIds.includes(pageId)&&pageId!==canvasContentId) { setPageId(boardIds[0] ?? null); setSelected([]); setEditingId(null) } }, [doc, pageId, boardIds,canvasContentId])
-  useEffect(() => { if (!state.pending && !draftCount) return; const warn = (event: BeforeUnloadEvent) => { flushText(); event.preventDefault(); event.returnValue = '' }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn) }, [state.pending, draftCount, flushText])
+  useEffect(() => { if (!state.pending && !draftCount && !retainedDrafts) return; const warn = (event: BeforeUnloadEvent) => { flushText(); event.preventDefault(); event.returnValue = '' }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn) }, [state.pending, draftCount, retainedDrafts, flushText])
   useEffect(() => { if (presenting && !SlidesPresentation) editorRoot.current?.focus({ preventScroll: true }) }, [presenting,speakerWindow,SlidesPresentation])
   useEffect(() => { if (exitPresentation) setPresenting(false) }, [exitPresentation])
   useEffect(()=>{if(!state.document&&!state.loading&&state.error)setPresenting(false)},[state.document,state.loading,state.error])
@@ -458,7 +460,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     dispatch(selectedNodes.map(node => ({ type: 'node.patch', pageId: current.id, nodeId: node.id, patch: direction === 'left' ? { x: bounds.x } : direction === 'center' ? { x: bounds.x + (bounds.width - node.width) / 2 } : direction === 'right' ? { x: bounds.x + bounds.width - node.width } : direction === 'top' ? { y: bounds.y } : direction === 'middle' ? { y: bounds.y + (bounds.height - node.height) / 2 } : { y: bounds.y + bounds.height - node.height } })))
   }
   const recovery=()=>({...session.recovery(),commentDrafts:commentDrafts.recovery(),vectorDrafts:vectorDrafts.recovery(),vectorEditDrafts:vectorEditDrafts.recovery(),speakerNoteDrafts:speakerNoteDrafts.recovery()})
-  const retainedRecovery=state.pending>0||draftCount>0||vectorDrafts.size>0||vectorEditDrafts.size>0||speakerNoteDrafts.size>0
+  const retainedRecovery=retainedDrafts||state.pending>0||draftCount>0||vectorDrafts.size>0||vectorEditDrafts.size>0||speakerNoteDrafts.size>0
   const downloadRecovery=()=>download(new Blob([JSON.stringify(recovery())],{type:'application/json'}),`${title}.lingxi-recovery.json`)
   const recoverAndReload=()=>{downloadRecovery();vectorTool.current?.discard();pointEditor.current?.discard();vectorDrafts.clear();vectorEditDrafts.clear();speakerNoteDrafts.clear();setSpeakerNoteError('');setPointEditing(null);setTool('select');void session.discardAfterRecovery()}
   async function downloadSource() { try { const source = await http<unknown>(`/artifacts/${encodeURIComponent(artifactId)}/source`); download(new Blob([JSON.stringify(source)], { type: 'application/json' }), `${title}.lingxi-source.json`) } catch { setNotice('原始文件暂时无法下载，请重试。') } }
@@ -540,7 +542,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     if (node) { next = event.shiftKey ? selected.includes(node.id) ? selected.filter(value => value !== node.id) : [...selected, node.id] : selected.includes(node.id) && current?.id === page.id ? selected : [node.id]; setSelected(next) }
     else { next = []; setSelected([]) }
     if (!writable) return
-    const nodes = next.flatMap(value => page.nodes[value] && !page.nodes[value].locked ? [page.nodes[value]] : [])
+    const nodes = next.flatMap(value => page.nodes[value] && !page.nodes[value].locked ? [paintedCodeNode(page,page.nodes[value],viewportRef.current,scale)] : [])
     gesture.current = { base: session.getSnapshot().document!, type: node ? 'move' : 'marquee', startX: event.clientX, startY: event.clientY, pageId: page.id, nodes, moved: false, canvas }
     event.preventDefault()
   }
@@ -739,7 +741,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       <span className="native-save-status" role="status">{!state.write ? '仅查看' : state.conflict ? '有冲突，修改未保存' : state.pending ? `正在保存 ${state.pending} 项修改` : draftCount ? '有未保存的修改' : ''}{agentWorking ? ' · 智能体正在编辑' : ''}</span>
       <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/avif,image/svg+xml,video/mp4,video/webm,video/ogg" hidden onChange={event => { const file = event.target.files?.[0]; if (file) void uploadImage(file); event.target.value = '' }} />
     </header>}
-    {(state.error || notice || exporting || blockedVectorDrafts || blockedSpeakerNotes) && <div className="native-notice" role={state.error||blockedSpeakerNotes ? 'alert' : 'status'}>{state.error || notice || exporting || (blockedSpeakerNotes?'当前无法保存，本地修改已保留。可下载本地副本。':undefined) || (vectorEditDrafts.blocked?'未保存的控制点修改已保留。请返回原路径继续编辑，或下载本地副本。':'未保存的钢笔路径已保留。请返回原页面并选择钢笔继续编辑，或下载本地副本。')}{exporting && <button type="button" onClick={() => exportingAbort.current?.abort()}>取消导出</button>}{(state.error||blockedVectorDrafts||blockedSpeakerNotes) && <><button type="button" onClick={() => download(new Blob([JSON.stringify(recovery())], { type: 'application/json' }), `${title}.lingxi-recovery.json`)}>下载本地副本</button>{blockedVectorDrafts&&<button type="button" onClick={()=>{vectorTool.current?.discard();pointEditor.current?.discard();vectorDrafts.clear();vectorEditDrafts.clear();setPointEditing(null);setTool('select')}}>丢弃未保存路径</button>}{(state.conflict||blockedSpeakerNotes) ? <button type="button" onClick={recoverAndReload}>保留副本并重新载入</button> : <button type="button" disabled={!state.write} onClick={()=>{drafts.flush('save');void session.retry()}}>重试保存</button>}</>}{notice && <button type="button" onClick={() => setNotice('')}>关闭</button>}</div>}
+    {(state.error || notice || exporting || blockedVectorDrafts || blockedSpeakerNotes || retainedDrafts) && <div className="native-notice" role={state.error||blockedSpeakerNotes||retainedDrafts ? 'alert' : 'status'}>{state.error || notice || exporting || (blockedSpeakerNotes||retainedDrafts?'当前无法保存，本地修改已保留。可下载本地副本。':undefined) || (vectorEditDrafts.blocked?'未保存的控制点修改已保留。请返回原路径继续编辑，或下载本地副本。':'未保存的钢笔路径已保留。请返回原页面并选择钢笔继续编辑，或下载本地副本。')}{exporting && <button type="button" onClick={() => exportingAbort.current?.abort()}>取消导出</button>}{(state.error||blockedVectorDrafts||blockedSpeakerNotes||retainedDrafts) && <><button type="button" onClick={() => download(new Blob([JSON.stringify(recovery())], { type: 'application/json' }), `${title}.lingxi-recovery.json`)}>下载本地副本</button>{blockedVectorDrafts&&<button type="button" onClick={()=>{vectorTool.current?.discard();pointEditor.current?.discard();vectorDrafts.clear();vectorEditDrafts.clear();setPointEditing(null);setTool('select')}}>丢弃未保存路径</button>}{(state.conflict||blockedSpeakerNotes||retainedDrafts) ? <button type="button" onClick={recoverAndReload}>保留副本并重新载入</button> : <button type="button" disabled={!state.write} onClick={()=>{drafts.flush('save');void session.retry()}}>重试保存</button>}</>}{notice && <button type="button" onClick={() => setNotice('')}>关闭</button>}</div>}
     <div inert={!!focusedBoardId} className="native-workspace">
       {!presenting && layersOpen && current && <aside className="native-layers" aria-label="图层"><header><h3>图层</h3><IconButton icon="close" label="关闭图层" onClick={() => setLayersOpen(false)} /></header>{[...current.nodeOrder].reverse().map(value => { const n = current.nodes[value]; return <div className="native-layer" key={value} data-selected={selected.includes(value)}><button type="button" style={{ paddingInlineStart: n.parentId ? 24 : 8 }} onClick={e => setSelected(e.shiftKey ? [...new Set([...selected,value])] : [value])}><EditorIcon name={n.type === 'text' ? 'text' : n.type === 'image' ? 'image' : n.type === 'group' ? 'layers' : n.type === 'note' ? 'note' : 'square'} size={15} /><span>{n.name || n.text || nodeTypeLabels[n.type]}</span></button><IconButton icon="eye" label={n.hidden ? '显示图层' : '隐藏图层'} active={!n.hidden} disabled={!writable} onClick={() => dispatch([{ type:'node.patch',pageId:current.id,nodeId:value,patch:{hidden:!n.hidden} }])} /><IconButton icon="lock" label={n.locked ? '解锁图层' : '锁定图层'} active={n.locked} disabled={!writable} onClick={() => dispatch([{type:'node.patch',pageId:current.id,nodeId:value,patch:{locked:!n.locked}}])} /></div> })}</aside>}
 
@@ -766,7 +768,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
         </div>
       </>}</div>
       {!presenting && view === 'grid' && <PageRail grid document={doc} current={pageId} selected={pageSelection} loadedPageIds={state.loadedPageIds} previews={state.previews} writable={writable} onSelect={choosePage} onOpen={value => { selectPage(value); setView('slide') }} onReorder={pageIds => dispatch([{ type: 'pages.reorder', pageIds }])} onAction={pageAction} onVisible={()=>{}} />}
-      {!presenting && inspectorOpen && (NativeInspector ? <NativeInspector inspectorTab={inspectorTab} setInspectorTab={setInspectorTab} setInspectorOpen={open=>{if(open)setInspectorOpen(true);else closeInspector()}} doc={doc} primary={primary} current={current} primaryPadding={primaryPadding} kind={kind} canvasContentId={canvasContentId} writable={writable} selected={selected} setSelected={setSelected} inspectorBase={inspectorBase} fileInput={fileInput} replaceImage={replaceImage} dispatch={dispatch} inspectDispatch={inspectDispatch} patchNode={patchNode} beginCrop={beginCrop} reorderLayer={reorderLayer} ungroup={ungroup} groupSelection={groupSelection} align={align} distribute={distribute} deleteSelection={deleteSelection} pasteNodes={pasteNodes} selectedWithChildren={selectedWithChildren} getBase={()=>session.getSnapshot().document} beginInspector={()=>{if(!editorRoot.current?.querySelector('.native-color-popover,.native-font-popup,.native-font-variants details[open]'))inspectorBase.current=session.getSnapshot().document}} /> : <aside className="native-inspector" aria-label="属性面板"><div role="status" className="native-loading">正在加载属性…</div><IconButton icon="close" label="关闭属性" onClick={closeInspector}/></aside>)}
+      {!presenting && inspectorOpen && (NativeInspector ? <NativeInspector commitCode={commitCode} onNotice={setNotice} inspectorTab={inspectorTab} setInspectorTab={setInspectorTab} setInspectorOpen={open=>{if(open)setInspectorOpen(true);else closeInspector()}} doc={doc} primary={primary} current={current} primaryPadding={primaryPadding} kind={kind} canvasContentId={canvasContentId} writable={writable} selected={selected} setSelected={setSelected} inspectorBase={inspectorBase} fileInput={fileInput} replaceImage={replaceImage} dispatch={dispatch} inspectDispatch={inspectDispatch} patchNode={patchNode} beginCrop={beginCrop} reorderLayer={reorderLayer} ungroup={ungroup} groupSelection={groupSelection} align={align} distribute={distribute} deleteSelection={deleteSelection} pasteNodes={pasteNodes} selectedWithChildren={selectedWithChildren} getBase={()=>session.getSnapshot().document} beginInspector={()=>{if(!editorRoot.current?.querySelector('.native-color-popover,.native-font-popup,.native-font-variants details[open]'))inspectorBase.current=session.getSnapshot().document}} /> : <aside className="native-inspector" aria-label="属性面板"><div role="status" className="native-loading">正在加载属性…</div><IconButton icon="close" label="关闭属性" onClick={closeInspector}/></aside>)}
 
 
     </div>

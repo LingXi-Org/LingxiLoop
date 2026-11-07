@@ -222,6 +222,14 @@ export class NativeDocumentSession {
       this.accept(await this.transport.history(kind, target, this.state.history.version, crypto.randomUUID()))
     } catch (error) { this.failure(error) }
   }
+  get hasRetainedDrafts(){return this.rejectedDrafts.size>0}
+  /** Preserve an already edited control after access changes; never send it automatically. */
+  retainDraft(operations:ArtifactOperation[]){
+    if(!operations.length)return
+    const key='retained:'+operations.map(operation=>`${operation.type}:${'pageId' in operation?operation.pageId:''}:${'nodeId' in operation?operation.nodeId:''}`).join('|')
+    this.rejectedDrafts.set(key,structuredClone(operations))
+    this.update({pending:this.queue.length+this.rejectedDrafts.size,error:'当前无法保存，本地修改已保留。可下载本地副本。'})
+  }
   recovery() { return { format: 'lingxi-native-recovery-v1', document: this.state.document, operations: this.queue, drafts: [...this.rejectedDrafts.values()] } }
   async discardAfterRecovery() { if (this.sending) await this.sending; this.queue = []; this.predictions.clear(); this.batchAnchors.clear(); this.snapshotAnchors = new WeakMap(); this.rejectedDrafts.clear(); this.update({ conflict: false, error: '', pending: 0 }); await this.open() }
   dispose() { this.disposed = true; this.controller.abort(); this.listeners.clear() }

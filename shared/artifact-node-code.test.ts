@@ -11,3 +11,8 @@ test('代码属性使用原生数据与可访问属性；事件、隔离内容�
   for(const [name,value] of [['data-label','中文测试'],['aria-label','中文说明'],['title','说明'],['href','https://example.test/'],['href','#page-one'],['hidden','']]) assert.equal(isNativeCodeAttribute(name,value),true,name)
   for(const [name,value] of [['onclick','alert(1)'],['srcdoc','<script>'],['style','color:red'],['data-node-id','another'],['data-native-target','another'],['href','javascript:alert(1)'],['href','java\nscript:alert(1)'],['href','//untrusted.test'],['target','popup']]) assert.equal(isNativeCodeAttribute(name,value),false,name)
 })
+
+test('页面、画板和运动身份由编辑器保留，粘贴声明不能覆盖评论与选择的定位标记',()=>{
+  for(const name of ['data-page-id','data-artboard-id','data-motion-id','data-motion-root','data-canvas-page-id','data-page-target','data-save-state','data-revision'])assert.equal(isNativeCodeAttribute(name,'other'),false,name)
+  assert.equal(isNativeCodeAttribute('data-page-name','作者自己的中文标签'),true)
+})

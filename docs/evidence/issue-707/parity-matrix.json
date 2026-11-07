@@ -1048,20 +1048,21 @@
             }
           }
         ],
-        "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明"
+        "reachability": "已截图状态可确认，其他条目仍需运行入口回溯；文案命中不作为功能证明",
+        "runtimeEvidence": "source-design-code.json"
       },
-      "implementation": "src/features/artifacts/native/NativeEditor.tsx",
+      "implementation": "src/features/artifacts/native/InspectorCode.tsx",
       "screenshots": {
-        "reference": null,
-        "native": null,
+        "reference": "visual/code-inspector/reference-root-selection.png",
+        "native": "visual/code-inspector/native-heading-edit.png",
         "matchedStateVerified": false
       },
-      "result": "未实现",
+      "result": "已接入中文逐行声明面板并局部验证；图层布局、删除/继承/媒体等完整语义及配对视觉未完成。",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
-        "receipt": null,
-        "scope": "待逐项执行并登记"
+        "receipt": "functional/code-inspector.json",
+        "scope": "受控HTTP/共享reducer/浏览器；正式授权数据库接口集成待CI。"
       }
     },
     {
@@ -9311,6 +9312,10 @@
     {
       "area": "放映控制条及悬浮提示中文文案",
       "reason": "上一页/下一页、显示/隐藏讲者备注、全屏及退出说明全部中文，保留物理键名；仅登记替换，本次24对比较没有排除这些区域或图标。"
+    },
+    {
+      "area": "代码面板中文文案",
+      "reason": "标签、空选择、只读、格式错误、恢复与智能体修改指引及混合值注释全部中文；CSS语法与作者数据保留。登记不代表通过像素或完整功能验收。"
     }
   ],
   "removedServiceEntrances": [

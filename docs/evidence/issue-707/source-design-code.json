@@ -54,5 +54,23 @@
       "path": "skills/claude-slides/scripts/editor/node/compiler.cjs",
       "offsetUtf16": 2453255
     }
-  }
+  },
+  "selectionSerialization": {
+    "offsetUtf16": 4437764,
+    "behavior": "共有声明在前，样式和属性的混合值分别使用注释；原版(mixed)在产品中译为（混合值）。"
+  },
+  "applicationDelayMs": 220,
+  "tabsObserved": {
+    "design": [
+      "Properties",
+      "Code",
+      "Tweaks",
+      "Theme"
+    ],
+    "slides": [
+      "Properties",
+      "Theme"
+    ]
+  },
+  "referenceScreenshotDocumentPaintReadinessVerified": false
 }

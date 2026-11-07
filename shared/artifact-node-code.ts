@@ -1,6 +1,7 @@
-import { parseInspectorCode } from './artifact-inspector-code'
+import { parseInspectorCode } from './artifact-inspector-code.js'
 
 const reserved = new Set(['__proto__','prototype','constructor'])
+const editorAttributes=new Set(['data-page-id','data-artboard-id','data-motion-id','data-motion-root','data-canvas-page-id','data-page-target','data-save-state','data-revision'])
 const decodeCss = (value:string) => value.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\\([0-9a-f]{1,6})\s?|\\([^\r\n\f])/gi,(_,hex:string,char:string)=>hex?String.fromCodePoint(Math.min(0x10ffff,parseInt(hex,16))):char)
 
 /** Inline declarations only: selectors, handlers and executable sources stay isolated. */
@@ -12,7 +13,7 @@ export function isNativeCodeStyle(name:string,value:string):boolean {
 }
 
 export function isNativeCodeAttribute(name:string,value:string):boolean {
-  if(value.length>10000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)||reserved.has(name))return false
+  if(value.length>10000||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)||reserved.has(name)||editorAttributes.has(name))return false
   if(/^data-(?!native(?:-|$)|node-(?:id|type)$|content-layer$)[a-z][a-z0-9-]*$/.test(name)||/^aria-[a-z][a-z-]*$/.test(name))return true
   if(['title','lang','role','id'].includes(name))return true
   if(name==='dir')return ['ltr','rtl','auto'].includes(value)

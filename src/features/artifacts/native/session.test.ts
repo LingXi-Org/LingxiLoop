@@ -34,6 +34,25 @@ function harness() {
   return { session: new NativeDocumentSession(transport), transport, ids, get document() { return document }, failNext() { failures++ }, blockNext(fn: () => Promise<void>) { block = fn }, remote(text: string) { document = applyOperations(document, prepareBatch(document, [{ type: 'node.patch', pageId: 'page-one', nodeId: 'page-one-text', patch: { text } }])).document } }
 }
 
+test('权限变化前的代码草稿只保存在恢复数据中，重试不绕过授权或自动覆盖',async()=>{
+  const h=harness(),read=h.transport.read
+  h.transport.read=async()=>({...await read(),write:false})
+  await h.session.open()
+  const operations=[{type:'node.patch' as const,pageId:'page-one',nodeId:'page-one-text',patch:{attributes:{'data-label':'中文权限草稿'}}}]
+  h.session.retainDraft(operations)
+  operations[0].patch.attributes['data-label']='不能改写恢复副本'
+  assert.equal(h.session.hasRetainedDrafts,true)
+  assert.ok(JSON.stringify(h.session.recovery()).includes('中文权限草稿'))
+  await h.session.retry();assert.equal(h.ids.length,0)
+  h.transport.read=read;await h.session.open()
+  assert.equal(h.session.hasRetainedDrafts,true)
+  await assert.rejects(h.session.flush())
+  assert.equal(h.ids.length,0)
+  await h.session.discardAfterRecovery()
+  assert.equal(h.session.hasRetainedDrafts,false)
+  h.session.dispose()
+})
+
 test('geometry read dependencies reject a peer transform arriving after the client snapshot',async()=>{
   let document=fixture()
   const receipt=():DocumentReceipt=>({document,write:true,history:{version:0,undo:null,redo:null}})

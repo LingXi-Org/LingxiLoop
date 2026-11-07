@@ -51,3 +51,9 @@ test('未改动的旧值可保留；新增同值仍需校验，结构错误始�
   assert.equal(parseInspectorCode('background: url(a b.png)').ok, false)
   assert.equal(parseInspectorCode('width: calc(100%', new Map([['width', 'calc(100%']])).ok, false)
 })
+
+test('混合值以中文注释分别列在样式与属性之后，不成为可执行声明',()=>{
+  const text=serializeInspectorCode([{name:'position',value:'absolute'},{name:'@title',value:'中文'}],['width','@data-label'])
+  assert.equal(text,'position: absolute;\n// width: （混合值）\n\n@title: 中文\n// @data-label: （混合值）')
+  assert.deepEqual(parseInspectorCode(text),{ok:true,entries:[{name:'position',value:'absolute'},{name:'@title',value:'中文'}]})
+})

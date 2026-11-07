@@ -261,6 +261,36 @@ test('a conversation Design opens as native data with all-or-nothing saves and i
   }
 })
 
+test('代码声明经授权接口持久化、共享撤销重做及几何同步，跨租户修改被拒绝',async()=>{
+  const response=await api(`/projects/${projectId}/slides`,'POST',{title:'代码声明持久化验收'})
+  assert.equal(response.status,201)
+  const deck=await response.json() as {id:string},initial=await document(deck.id),pageId=initial.pageOrder[0]
+  const node={...createNode('text','code-node'),x:760,text:'中文代码验收'}
+  assert.equal((await operate(deck.id,initial,[{type:'node.insert',pageId,node}])).status,200)
+  const before=await document(deck.id),css={left:'120px !important',filter:'blur(1px)'},attributes={'data-label':'中文测试',title:'中文提示'}
+  const changed=await operate(deck.id,before,[{type:'node.patch',pageId,nodeId:node.id,patch:{css,attributes}}])
+  assert.equal(changed.status,200)
+  const receipt=await changed.json() as {history:{version:number;undo:string}},saved=await document(deck.id)
+  assert.deepEqual(saved.pages[pageId].nodes[node.id].css,css)
+  assert.deepEqual(saved.pages[pageId].nodes[node.id].attributes,attributes)
+  const undo=await api(`/artifacts/${deck.id}/operations`,'POST',{operationId:randomUUID(),kind:'undo',targetOperationId:receipt.history.undo,expectedHistoryVersion:receipt.history.version})
+  assert.equal(undo.status,200)
+  const undone=await document(deck.id),undoReceipt=await undo.json() as {history:{version:number;redo:string}}
+  assert.equal(undone.pages[pageId].nodes[node.id].css,undefined)
+  assert.equal(undone.pages[pageId].nodes[node.id].attributes,undefined)
+  assert.equal((await api(`/artifacts/${deck.id}/operations`,'POST',{operationId:randomUUID(),kind:'redo',targetOperationId:undoReceipt.history.redo,expectedHistoryVersion:undoReceipt.history.version})).status,200)
+  const restored=await document(deck.id)
+  assert.deepEqual(restored.pages[pageId].nodes[node.id].css,css)
+  assert.equal((await operate(deck.id,restored,[{type:'node.patch',pageId,nodeId:node.id,patch:{x:121}}])).status,200)
+  const moved=await document(deck.id)
+  assert.equal(moved.pages[pageId].nodes[node.id].css?.left,'121px !important')
+  assert.equal((await operate(deck.id,restored,[{type:'node.patch',pageId,nodeId:node.id,patch:{css:{left:'99px'}}}])).status,409)
+  assert.ok([403,404].includes((await api(`/artifacts/${deck.id}/operations`,'POST',prepareBatch(moved,[{type:'node.patch',pageId,nodeId:node.id,patch:{css:{left:'1px'}}}],randomUUID()),{'x-company-id':'another-company'})).status))
+  assert.deepEqual(await document(deck.id),moved)
+  assert.equal(before.pages[pageId].nodes[node.id].css,undefined)
+  assert.equal((await api(`/artifacts/${deck.id}`,'DELETE')).status,200)
+})
+
 test('native table headers persist through authorized operations and conflict independently from cell content', async () => {
   const response=await api(`/projects/${projectId}/slides`,'POST',{title:'表格持久化验收'})
   assert.equal(response.status,201)
