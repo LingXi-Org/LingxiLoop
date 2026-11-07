@@ -1,0 +1,127 @@
+{
+  "scope": "真实Chromium可信触摸与CDP笔输入、原生共享操作链路，受控HTTP；不计完整服务或性能资格",
+  "sourceLocation": "固定compiler.cjs:240950–240960 touch/pen调用show-controls",
+  "reviewedCommit": "bc3716ac3e3e8306d24275461b193ca48c3c8810",
+  "reviewPassed": false,
+  "before": "390×844控制条1800ms隐藏后，真实触摸翻到page-2，data-controls-visible仍false。正式新增harness先失败。",
+  "after": [
+    {
+      "browserMajor": "140",
+      "input": "touch",
+      "receipt": {
+        "kind": "isolated-presentation-pointer-controls",
+        "input": "touch",
+        "pointers": [
+          {
+            "type": "touch",
+            "trusted": true
+          },
+          {
+            "type": "touch",
+            "trusted": true
+          }
+        ],
+        "trustedInputAfterIdle": true,
+        "pageAdvanced": true,
+        "controlsRevealed": true,
+        "trustedInputExit": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "140",
+      "input": "pen",
+      "receipt": {
+        "kind": "isolated-presentation-pointer-controls",
+        "input": "pen",
+        "pointers": [
+          {
+            "type": "pen",
+            "trusted": true
+          },
+          {
+            "type": "pen",
+            "trusted": true
+          }
+        ],
+        "trustedInputAfterIdle": true,
+        "pageAdvanced": true,
+        "controlsRevealed": true,
+        "trustedInputExit": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "input": "touch",
+      "receipt": {
+        "kind": "isolated-presentation-pointer-controls",
+        "input": "touch",
+        "pointers": [
+          {
+            "type": "touch",
+            "trusted": true
+          },
+          {
+            "type": "touch",
+            "trusted": true
+          }
+        ],
+        "trustedInputAfterIdle": true,
+        "pageAdvanced": true,
+        "controlsRevealed": true,
+        "trustedInputExit": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    },
+    {
+      "browserMajor": "154",
+      "input": "pen",
+      "receipt": {
+        "kind": "isolated-presentation-pointer-controls",
+        "input": "pen",
+        "pointers": [
+          {
+            "type": "pen",
+            "trusted": true
+          },
+          {
+            "type": "pen",
+            "trusted": true
+          }
+        ],
+        "trustedInputAfterIdle": true,
+        "pageAdvanced": true,
+        "controlsRevealed": true,
+        "trustedInputExit": true,
+        "noWrites": true,
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "mouseKeyboard": {
+    "kind": "isolated-slide-presentation-controls",
+    "fixtureSemanticSha256": "ffd7ae10f978403e9d8e046a82f25c9cc2b628027452421225922cae36ae87b6",
+    "theme": "light",
+    "regularAutoFullscreen": true,
+    "fullscreenToggle": true,
+    "popupFromPresentation": true,
+    "returnClickDoesNotAdvance": true,
+    "stageLeftBackRightNext": true,
+    "controlsGeometry": {
+      "x": 611.5,
+      "y": 940,
+      "width": 217,
+      "height": 40
+    },
+    "idleHidden": true,
+    "keyboardFocusVisibleAndTrapped": true,
+    "exitCleansFullscreen": true,
+    "noWrites": true,
+    "consoleOrPageErrors": []
+  },
+  "qualified": false
+}

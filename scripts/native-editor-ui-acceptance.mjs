@@ -189,7 +189,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const delayedPageId=speakerPreviewFailure?'page-3':options.checks==='canvas-fit-body'?'positioned-body':options['preview-body-delay']==='true'?'page-2':null
   const snapshot = () => ({ document:delayedPageId&&!canvasBodyLoaded?{...document,pages:{...document.pages,[delayedPageId]:{...document.pages[delayedPageId],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:delayedPageId&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!==delayedPageId):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
-  const page = await browser.newPage({ hasTouch:options['speaker-case']==='coarse', viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:options.checks==='slide-transitions'?'no-preference':'reduce' })
+  const page = await browser.newPage({ hasTouch:options['speaker-case']==='coarse'||options['presentation-case']==='touch', viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:options.checks==='slide-transitions'?'no-preference':'reduce' })
   if (options.checks === 'slides-skipped-export') await page.addInitScript(() => {
     window.__exportDownloadAttempts = []
     const click = HTMLAnchorElement.prototype.click
@@ -339,6 +339,28 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
     if (options.checks === 'slides-present-controls') {
       const width=Number(options.width??1440),height=Number(options.height??1000)
+      if(['touch','pen'].includes(options['presentation-case'])){
+        const input=options['presentation-case']
+        if(input==='touch')await page.getByRole('button',{name:'放映',exact:true}).click();else await startSlides()
+        await page.evaluate(()=>{window.__presentationPointers=[];document.addEventListener('pointerdown',event=>window.__presentationPointers.push({type:event.pointerType,trusted:event.isTrusted}),true)})
+        const inputSession=input==='pen'?await page.context().newCDPSession(page):null
+        const tap=async(x,y)=>{if(!inputSession)return page.touchscreen.tap(x,y);await inputSession.send('Input.dispatchMouseEvent',{type:'mousePressed',x,y,button:'left',buttons:1,clickCount:1,pointerType:'pen'});await inputSession.send('Input.dispatchMouseEvent',{type:'mouseReleased',x,y,button:'left',buttons:0,clickCount:1,pointerType:'pen'})}
+        const presentation=page.getByRole('region',{name:'幻灯片放映',exact:true})
+        await presentation.waitFor()
+        await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-present-controls')).opacity==='0')
+        const stage=await page.locator('.native-slides-presentation-stage').boundingBox()
+        await tap(stage.x+stage.width*.8,stage.y+stage.height/2)
+        await page.waitForFunction(()=>document.querySelector('[data-current-page]')?.dataset.currentPage==='page-2')
+        assert.equal(await page.locator('.native-present-controls').getAttribute('data-controls-visible'),'true','真实指针翻页必须唤回控制条')
+        assert.equal(await page.locator('.native-present-controls').evaluate(element=>getComputedStyle(element).opacity),'1')
+        const exit=await presentation.getByRole('button',{name:'退出放映',exact:true}).boundingBox()
+        await tap(exit.x+exit.width/2,exit.y+exit.height/2)
+        await presentation.waitFor({state:'detached'})
+        await page.waitForFunction(()=>!document.fullscreenElement)
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        const pointers=await page.evaluate(()=>window.__presentationPointers);assert.equal(pointers.length,2);assert.ok(pointers.every(event=>event.type===input&&event.trusted));await inputSession?.detach()
+        return{kind:'isolated-presentation-pointer-controls',input,pointers,trustedInputAfterIdle:true,pageAdvanced:true,controlsRevealed:true,trustedInputExit:true,noWrites:true,consoleOrPageErrors:errors}
+      }
       if(options['presentation-case']==='initial-speaker'){
         await page.getByLabel('放映',{exact:true}).click()
         const opening=page.waitForEvent('popup')

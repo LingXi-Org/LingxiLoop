@@ -1,0 +1,114 @@
+{
+  "commit": "bc3716ac3e3e8306d24275461b193ca48c3c8810",
+  "baseCommit": "8bfd13d90f66d7e7721f47fb414f9dc8b5c46ce7",
+  "reviewer": "/root/independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "独立冻结worktree，只审本提交的全屏/控件/窗口流程；真实浏览器使用受控HTTP夹具，不代表真实授权服务或完整视觉资格。",
+  "findings": [
+    {
+      "id": "presentation-touch-cannot-reveal-hidden-controls",
+      "severity": "P2",
+      "title": "触摸画面时唤回已自动隐藏的放映控制条",
+      "file": "src/features/artifacts/native/SlidesPresentation.tsx",
+      "line": 396,
+      "related": [
+        {
+          "file": "src/features/artifacts/native/SlidesPresentation.tsx",
+          "line": 391
+        }
+      ],
+      "failure": "390×844、hasTouch=true且(pointer:coarse)实际为true时，等待1800ms控制条隐藏后用真实touchscreen.tap轻点画面，能够从page-1翻到page-2，但controlsVisible仍false、实际opacity=0。浏览器事件只有pointerdown(touch,buttons=1)及click(touch,buttons=0)，没有可触发onPointerMove的悬停事件；现有画面onClick只翻页而不显示控件，因此普通触摸无法唤回退出/备注/全屏按钮。",
+      "reference": "固定v2.8.0可读compiler.cjs:240930–240960记录触点类型，并在touch/pen点击及cancel时调用callback4显示控制条，随后保留左右翻页。该参考行为只读检查，没有将参考运行包引入产品。",
+      "smallestCorrection": "记录可信pointerType并在touch/pen的画面点击及取消时showControls，保留左右半屏导航。加入真实hasTouch/touchscreen.tap且等待自动隐藏后的回归，不能仅用鼠标设置窄viewport。",
+      "reproduction": [
+        "/tmp/lingxi-review-probe-bc/probe.mjs",
+        "/tmp/lingxi-review-bc-touch154/slides.json",
+        "/tmp/lingxi-review-bc-touch154/after-touch-hidden-controls.png"
+      ],
+      "observed": {
+        "coarse": true,
+        "currentPage": "page-2",
+        "controlsVisible": "false",
+        "opacity": "0",
+        "events": [
+          {
+            "type": "pointerdown",
+            "pointerType": "touch",
+            "buttons": 1
+          },
+          {
+            "type": "click",
+            "pointerType": "touch",
+            "buttons": 0
+          }
+        ],
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "Chrome154普通全屏/控件主流程",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-bc-controls154/slides.json",
+      "includes": [
+        "可信点击立即全屏",
+        "全屏开关和放映中打开/关闭讲者窗口",
+        "返回全屏首击不翻页",
+        "左右半屏导航",
+        "1800ms隐藏及Tab唤回",
+        "焦点循环、中文tooltip、退出全屏清理",
+        "无文档写入"
+      ]
+    },
+    {
+      "check": "Chrome140初始演讲者窗口流程",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-bc-initial140/slides.json"
+    },
+    {
+      "check": "Chrome154全屏拒绝",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-bc-denied154/slides.json"
+    },
+    {
+      "check": "Chrome154放映模块失败清理",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-bc-module154/slides.json",
+      "expectedNetworkFailure": true,
+      "unexpectedErrors": []
+    },
+    {
+      "check": "Chrome154owner卸载清理",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-bc-owner154/slides.json"
+    },
+    {
+      "check": "Chrome154演讲者弹窗受阻的停靠备注回退",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-bc-blocked154/slides.json"
+    },
+    {
+      "check": "Chrome154备注403完整访问丢失/窗口恢复备份",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-bc-notes-denied154/slides.json",
+      "expected403": true,
+      "unexpectedErrors": []
+    },
+    {
+      "check": "Chrome154真实触摸唤回隐藏控制条",
+      "result": "failed",
+      "receipt": "/tmp/lingxi-review-bc-touch154/slides.json"
+    }
+  ],
+  "analysis": [
+    "窗口改为getter传递后，上述关闭/失败/owner卸载及403恢复实测未再出现Window.caches SecurityError；没有发现错误被全局屏蔽。",
+    "本次父线程明确登记完整媒体、停靠备注视觉、超链接等仍未取得完整资格；未把这些pending项目当作本提交伪称完成的缺陷。"
+  ],
+  "unverified": [
+    "未独立运行全部92单测、15合约、owning全量检查或正式CI。",
+    "未独立重新计算24对raw视觉差异或全面重跑单变换后的全部媒体/混合尺寸状态。",
+    "完整功能/视觉矩阵、真实授权服务、物理输入法及最终性能门槛仍未验收；不将本次局部流程通过升级为整体完成。"
+  ]
+}

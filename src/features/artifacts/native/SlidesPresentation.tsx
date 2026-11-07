@@ -115,6 +115,7 @@ export default function SlidesPresentation({
   const [fullscreenDenied, setFullscreenDenied] = useState(false)
   const [controlsVisible, setControlsVisible] = useState(true)
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pointerType = useRef<string | null>(null)
   const fullscreenLifetime = useRef<object | null>(null)
   const deferFullscreen = useRef(false), requestingFullscreen = useRef(false),
     intentionalFullscreenExit = useRef(false), fullscreenEnteredAt = useRef(0)
@@ -389,6 +390,15 @@ export default function SlidesPresentation({
           tabIndex={0}
           onKeyDown={keyDown}
           onPointerMove={event => { if (!event.buttons) showControls() }}
+          onPointerDownCapture={event => { pointerType.current = event.pointerType }}
+          onPointerCancelCapture={event => {
+            pointerType.current = null
+            if (event.pointerType === 'touch' || event.pointerType === 'pen') showControls()
+          }}
+          onClickCapture={() => {
+            if (pointerType.current === 'touch' || pointerType.current === 'pen') showControls()
+            pointerType.current = null
+          }}
           onFocusCapture={event => { if (root.current?.contains(event.target as Node) && controls.current?.contains(event.target as Node)) showControls() }}
         >
           <div
