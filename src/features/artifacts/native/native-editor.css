@@ -339,3 +339,5 @@
 
 .native-kind-design .native-board-heading{min-width:0;clip-path:inset(-100vmax 0 -100vmax -8px)}
 .native-kind-design .native-board-heading>.native-board-label{min-width:0;flex:1;text-overflow:ellipsis}
+
+.native-board-member-selection{position:absolute;inset:0;pointer-events:none;outline:1px solid #257de0;z-index:12}.native-board-group-selection{pointer-events:none;z-index:12}

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import {moveBoardRects,resizeBoardRect,type BoardHandle} from './artifact-board-transform.js'
+import {moveBoardRects,resizeBoardRect,resizeBoardSelection,type BoardHandle} from './artifact-board-transform.js'
 const first={x:0,y:0,width:1920,height:1080},others=[{...first,x:2080},{...first,x:4160}],scale=420/1900
 
 test('固定来源标题拖动吸附、非吸附阈值及原对象不变',()=>{
@@ -42,4 +42,21 @@ test('只吸附同类型，未触及的小数坐标和尺寸不写成整数',()=
   assert.deepEqual(moveBoardRects([fraction],40,0,[],1).rects[0],{...fraction,x:40})
   assert.equal(resizeBoardRect(fraction,'n',40,30,[],1).rect.width,fraction.width)
   assert.equal(resizeBoardRect(fraction,'n',40,30,[],1).rect.x,fraction.x)
+})
+
+test('原版多选统一外框的普通、等比和最小值实际保存结果',()=>{
+  const pages=[first,others[0]],snapshot=JSON.stringify(pages)
+  for(const [ratio,dx,dy,width,height,x]of [[false,40,30,1997,1216,2163],[true,40,30,2161,1216,2341],[false,-1000,-500,120,120,130]] as const){
+    const result=resizeBoardSelection(pages,'se',dx/scale,dy/scale,[others[1]],scale,ratio)
+    assert.deepEqual(result.rects,[{x:0,y:0,width,height},{x,y:0,width,height}])
+  }
+  assert.equal(JSON.stringify(pages),snapshot)
+})
+
+test('组缩放不改无边框页尺寸，未触及轴和舍入后相同的小数值保留',()=>{
+  const pages=[{...first,x:.4,width:1920.4,frameless:true},{...first,x:2080.4,width:1920.4}]
+  const result=resizeBoardSelection(pages,'n',0,30,[],1)
+  assert.equal(result.rects[0].width,pages[0].width);assert.equal(result.rects[0].height,pages[0].height)
+  assert.equal(result.rects[0].x,pages[0].x);assert.equal(result.rects[1].x,pages[1].x)
+  assert.equal(result.rects[1].width,pages[1].width)
 })

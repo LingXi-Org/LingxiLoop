@@ -2,7 +2,7 @@ import {useEffect,useRef,useState,type PointerEvent as ReactPointerEvent,type Mo
 import type {ArtifactDocument,ArtifactPage} from '../../../../shared/artifact-document'
 import type {ArtifactOperation} from '../../../../shared/artifact-operations'
 import {duplicatePages} from '../../../../shared/artifact-editor-actions'
-import {moveBoardRects,resizeBoardRect,type BoardRect,type BoardHandle,type BoardSnap} from '../../../../shared/artifact-board-transform'
+import {moveBoardRects,resizeBoardRect,resizeBoardSelection,type BoardRect,type BoardHandle,type BoardSnap} from '../../../../shared/artifact-board-transform'
 
 interface Options {
   document:ArtifactDocument|null;ids:string[];selected:string[];nodeSelected:boolean;enabled:boolean;writable:boolean;scale:number
@@ -13,10 +13,10 @@ interface Options {
   dispatch(operations:ArtifactOperation[],base:ArtifactDocument):void
   notice(message:string):void
 }
-interface Preview {frames:Record<string,BoardRect>;activeIds:string[];retainedIds:string[];copy:boolean;guides:BoardSnap[]}
+interface Preview {frames:Record<string,BoardRect>;activeIds:string[];retainedIds:string[];copy:boolean;guides:BoardSnap[];groupFrame?:BoardRect}
 type BoardPointer=Pick<PointerEvent,'clientX'|'clientY'|'altKey'|'ctrlKey'|'metaKey'|'shiftKey'>
 const pointerState=(event:BoardPointer):BoardPointer=>({clientX:event.clientX,clientY:event.clientY,altKey:event.altKey,ctrlKey:event.ctrlKey,metaKey:event.metaKey,shiftKey:event.shiftKey})
-interface Drag {last:BoardPointer;base:ArtifactDocument;ids:string[];pages:ArtifactPage[];others:ArtifactPage[];scale:number;x:number;y:number;pointer:number;target:HTMLElement;handle?:BoardHandle;copy:boolean;moved:boolean;frames:Record<string,BoardRect>;stop():void}
+interface Drag {last:BoardPointer;base:ArtifactDocument;ids:string[];pages:ArtifactPage[];others:ArtifactPage[];scale:number;x:number;y:number;pointer:number;target:HTMLElement;handle?:BoardHandle;group:boolean;copy:boolean;moved:boolean;frames:Record<string,BoardRect>;stop():void}
 const empty:Preview={frames:{},activeIds:[],retainedIds:[],copy:false,guides:[]}
 const handles:BoardHandle[]=['n','e','s','w','nw','ne','se','sw']
 const names:Record<BoardHandle,string>={n:'上边',e:'右边',s:'下边',w:'左边',nw:'左上角',ne:'右上角',se:'右下角',sw:'左下角'}
@@ -30,10 +30,13 @@ export function useBoardTransforms(options:Options){
   useEffect(()=>{if(!options.enabled||!options.writable||active.current&&(options.document?.id!==active.current.base.id||active.current.ids.some(id=>!options.document?.pages[id]||!options.ids.includes(id))))cancel()},[options.enabled,options.writable,options.document,options.ids])
   const calculate=(drag:Drag,event:BoardPointer)=>{
     const dx=(event.clientX-drag.x)/drag.scale,dy=(event.clientY-drag.y)/drag.scale,targets=event.ctrlKey||event.metaKey?[]:drag.copy?[...drag.others,...drag.pages]:drag.others
-    const result=drag.handle?(()=>{const value=resizeBoardRect(drag.pages[0],drag.handle!,dx,dy,targets,drag.scale,event.shiftKey);return{rects:[value.rect],guides:value.guides}})():moveBoardRects(drag.pages,dx,dy,targets,drag.scale,drag.copy)
-    return{frames:Object.fromEntries(drag.ids.map((id,index)=>[id,result.rects[index]])),guides:result.guides}
+    let result:{rects:BoardRect[];guides:BoardSnap[];groupFrame?:BoardRect}
+    if(!drag.handle)result=moveBoardRects(drag.pages,dx,dy,targets,drag.scale,drag.copy)
+    else if(drag.group){const value=resizeBoardSelection(drag.pages,drag.handle,dx,dy,targets,drag.scale,event.shiftKey);result={rects:value.rects,guides:value.guides,groupFrame:value.rect}}
+    else{const value=resizeBoardRect(drag.pages[0],drag.handle,dx,dy,targets,drag.scale,event.shiftKey);result={rects:[value.rect],guides:value.guides}}
+    return{frames:Object.fromEntries(drag.ids.map((id,index)=>[id,result.rects[index]])),guides:result.guides,groupFrame:result.groupFrame}
   }
-  const start=(event:ReactPointerEvent<HTMLElement>,pageId:string,handle?:BoardHandle)=>{
+  const start=(event:ReactPointerEvent<HTMLElement>,pageId:string,handle?:BoardHandle,group=false)=>{
     const opts=latest.current
     if(!opts.enabled||event.button!==0||!event.isPrimary)return
     if(!handle&&(event.target as Element).closest('.native-board-heading-actions'))return
@@ -46,12 +49,12 @@ export function useBoardTransforms(options:Options){
     if(!opts.selected.includes(pageId)||opts.nodeSelected)opts.select(pageId,event.shiftKey,false)
     if(!opts.writable){suppress.current=true;if(deferredSelection)opts.select(pageId,event.shiftKey,false);return}
     finishing.current=null;suppress.current=true
-    const ids=handle?[pageId]:selected,pages=ids.map(id=>base.pages[id]),target=event.currentTarget,editor=target.closest<HTMLElement>('[data-native-artifact-editor]')
-    const drag:Drag={last:pointerState(event),base,ids,pages,others:opts.ids.filter(id=>!ids.includes(id)).map(id=>base.pages[id]),scale:opts.scale,x:event.clientX,y:event.clientY,pointer:event.pointerId,target,handle,copy:!handle&&event.altKey,moved:false,frames:{},stop:()=>{}}
+    const ids=handle&&!group?[pageId]:selected,pages=ids.map(id=>base.pages[id]),target=event.currentTarget,editor=target.closest<HTMLElement>('[data-native-artifact-editor]')
+    const drag:Drag={last:pointerState(event),base,ids,pages,others:opts.ids.filter(id=>!ids.includes(id)).map(id=>base.pages[id]),scale:opts.scale,x:event.clientX,y:event.clientY,pointer:event.pointerId,target,handle,group:!!handle&&group&&ids.length>1,copy:!handle&&event.altKey,moved:false,frames:{},stop:()=>{}}
     const show=(position:BoardPointer)=>{
       drag.copy=!drag.handle&&position.altKey
       const result=calculate(drag,position);drag.frames=result.frames
-      setPreview(previous=>({...previous,frames:result.frames,guides:result.guides,copy:drag.copy}))
+      setPreview(previous=>({...previous,frames:result.frames,guides:result.guides,groupFrame:result.groupFrame,copy:drag.copy}))
     }
     const move=(event:PointerEvent)=>{
       if(active.current!==drag||event.pointerId!==drag.pointer)return
@@ -98,15 +101,16 @@ export function useBoardTransforms(options:Options){
     window.addEventListener('pointermove',move,true);window.addEventListener('pointerup',finish,true);window.addEventListener('pointercancel',lost,true);window.addEventListener('keydown',key,true);window.addEventListener('keyup',key,true);window.addEventListener('blur',lost)
     setPreview({frames:{},activeIds:ids,retainedIds:opts.visibleIds(),copy:drag.copy,guides:[]})
   }
-  const key=(event:ReactKeyboardEvent,pageId:string,handle?:BoardHandle)=>{
+  const key=(event:ReactKeyboardEvent,pageId:string,handle?:BoardHandle,group=false)=>{
     const opts=latest.current,base=opts.getDocument(),page=base?.pages[pageId]
     if(!opts.enabled||!opts.writable||!base||!page||event.ctrlKey||event.metaKey||event.altKey||event.nativeEvent.isComposing||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return
     event.preventDefault();event.stopPropagation()
     const step=event.shiftKey?10:1,dx=event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0,dy=event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0
-    const ids=handle?[pageId]:opts.selected.includes(pageId)?opts.selected.filter(id=>opts.ids.includes(id)):[pageId]
-    const operations:ArtifactOperation[]=ids.flatMap(id=>{
+    const ids=handle&&!group?[pageId]:opts.selected.includes(pageId)?opts.selected.filter(id=>opts.ids.includes(id)):[pageId]
+    const groupFrames=handle&&group&&ids.length>1?resizeBoardSelection(ids.map(id=>base.pages[id]),handle,dx,dy,[],1).rects:undefined
+    const operations:ArtifactOperation[]=ids.flatMap((id,index)=>{
       const item=base.pages[id];if(!item)return[]
-      const frame=handle?resizeBoardRect(item,handle,dx,dy,[],1).rect:{...item,x:item.x+dx,y:item.y+dy}
+      const frame=groupFrames?.[index]??(handle?resizeBoardRect(item,handle,dx,dy,[],1).rect:{...item,x:item.x+dx,y:item.y+dy})
       const patch=Object.fromEntries((['x','y','width','height'] as const).filter(field=>frame[field]!==item[field]).map(field=>[field,frame[field]]))
       return Object.keys(patch).length?[{type:'page.patch' as const,pageId:id,patch}]:[]
     })
@@ -116,6 +120,6 @@ export function useBoardTransforms(options:Options){
   return{preview,start,click,key,cancel}
 }
 
-export function BoardTransformHandles({page,start,onKey}:{page:ArtifactPage;onKey(event:ReactKeyboardEvent,pageId:string,handle:BoardHandle):void;start(event:ReactPointerEvent<HTMLElement>,pageId:string,handle:BoardHandle):void}){
-  return <div className="native-board-selection" data-board-selection={page.id}>{handles.map(handle=><button type="button" key={handle} className={`native-board-resize native-board-resize-${handle}`} aria-label={`调整画板${names[handle]} ${page.title}`} data-board-handle={handle} onKeyDown={event=>onKey(event,page.id,handle)} onPointerDown={event=>start(event,page.id,handle)}>{handle.length===2&&<span/>}</button>)}</div>
+export function BoardTransformHandles({page,start,onKey,writable=true,group=false}:{page:ArtifactPage;writable?:boolean;group?:boolean;onKey(event:ReactKeyboardEvent,pageId:string,handle:BoardHandle,group?:boolean):void;start(event:ReactPointerEvent<HTMLElement>,pageId:string,handle:BoardHandle,group?:boolean):void}){
+  return <div className="native-board-selection" data-board-selection={page.id}>{writable&&handles.map(handle=><button type="button" key={handle} className={`native-board-resize native-board-resize-${handle}`} aria-label={`调整${group?'所选画板':'画板'}${names[handle]} ${page.title}`} data-board-handle={handle} onKeyDown={event=>onKey(event,page.id,handle,group)} onPointerDown={event=>start(event,page.id,handle,group)}>{handle.length===2&&<span/>}</button>)}</div>
 }

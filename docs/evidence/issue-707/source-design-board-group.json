@@ -715,5 +715,42 @@
     }
   ],
   "qualified": false,
-  "nativeStatus": "尚未实现统一多选外框/组缩放与属性空态；仅原版实际观测。"
+  "nativeStatus": "已实现列明的统一外框、组缩放、属性空态及本轮回归；完整多选/混合与视觉仍未验收。",
+  "pureGeometryOracle": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+    "offsetUnit": "UTF-16 code units",
+    "modules": [
+      {
+        "name": "Sz",
+        "start": 3147037,
+        "end": 3148757,
+        "sha256": "358ab584262962ea3098b8166e264c452a4bbd893634e4e2d21ccfd32d7960c3"
+      },
+      {
+        "name": "wz",
+        "start": 3148757,
+        "end": 3150798,
+        "sha256": "eba1af74a8b616f508ec56952283aa680d16cc0051f1689adb08f3e89da186c9"
+      },
+      {
+        "name": "eU",
+        "start": 5073877,
+        "end": 5076690,
+        "sha256": "2400cf14dc118589b53ee6a950325c2ee11f1f095a3b1121ad3e3597f7d4d115"
+      },
+      {
+        "name": "U9",
+        "start": 5015588,
+        "end": 5019712,
+        "sha256": "3d91dbe84b0a92523271db9010efd756a31b06e895e04b0b87f5a2f8e1d2817c"
+      }
+    ],
+    "comparedAssertions": 21420,
+    "individualAssertions": 9900,
+    "groupAssertions": 11520,
+    "allEqual": true,
+    "scope": "单画板/多选组的八向几何、角等比、小数与旧越界值保留、无边框页、边/中心吸附及有效辅助线；未覆盖等距分布、触摸与完整编辑器视觉。",
+    "qualified": false
+  }
 }

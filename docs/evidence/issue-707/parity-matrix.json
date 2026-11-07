@@ -9555,7 +9555,12 @@
       "groupReferenceEvidence": {
         "reference": "source-design-board-group.json",
         "screenshots": "visual/design-board-group/reference/",
-        "nativeStatus": "尚未实现统一外框/成员1px边框、组缩放与多选属性空态"
+        "nativeStatus": "已实现列明统一外框/整体缩放与空态，完整资格仍未通过"
+      },
+      "groupFunctionalEvidence": {
+        "receipt": "functional/design-board-group.json",
+        "visual": "visual/design-board-group/manifest.json",
+        "qualified": false
       }
     },
     {
