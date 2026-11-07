@@ -49,3 +49,24 @@ test('chunk ownership separates static edges, lazy routes and co-located project
  assert.equal(details.find(item=>item.fileName==='thread.js').dependencyPackages[0].label,'dependency:lexical')
  assert.ok(!JSON.stringify(profile).includes('private.js'))
 })
+
+
+test('binding counts distinguish hoisted edges and expose only allowlisted public module metadata',()=>{
+ const bundle={
+  'native.js':{...chunk('native.js',['thread.js','hoisted.js'],{
+   '/repo/node_modules/lucide-react/dist/esm/icons/align-left.mjs':{renderedLength:17,originalLength:30,renderedExports:['AlignLeft']},
+   '/repo/node_modules/zustand/esm/react.mjs':{renderedLength:18,originalLength:31,renderedExports:['useStore']},
+   '/repo/node_modules/zod/v4/core/index.js':{renderedLength:19,originalLength:32,renderedExports:['parse']},
+   '/repo/node_modules/@lingxi-org/lingxios/dist/private-entry.js':{renderedLength:20,originalLength:33,renderedExports:['PRIVATE_EXPORT']},
+  }),importedBindings:{'thread.js':['publicAlias','otherAlias']}},
+  'thread.js':chunk('thread.js',[],{}),
+  'hoisted.js':chunk('hoisted.js',[],{}),
+ }
+ const report=profileOpeningChunks(bundle,[],['native.js'],'/repo'),row=report.nativeIncremental.chunkDetails.find(item=>item.fileName==='native.js')
+ assert.deepEqual(row.staticImportBindings,[{fileName:'thread.js',importedBindingCount:2},{fileName:'hoisted.js',importedBindingCount:0}])
+ assert.deepEqual(row.publicDependencyModules.map(item=>item.packageName).sort(),['lucide-react','zod','zustand'])
+ assert.deepEqual(row.publicDependencyModules.find(item=>item.packageName==='lucide-react'),{packageName:'lucide-react',packageRelativeModulePath:'dist/esm/icons/align-left.mjs',renderedCodeUnits:17,renderedExports:['AlignLeft']})
+ assert.ok(!JSON.stringify(report).includes('PRIVATE_EXPORT'))
+ assert.ok(!JSON.stringify(report).includes('private-entry'))
+ assert.ok(!JSON.stringify(report).includes('/repo/'))
+})
