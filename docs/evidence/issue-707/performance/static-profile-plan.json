@@ -25,7 +25,7 @@
     "专用分支、仅相关文件变化触发两次真实生产构建，Node22和各自锁文件，使用现有只读包权限；不运行服务、发布或部署。"
   ],
   "checks": {
-    "syntheticGraphTestsPassed": 6,
+    "syntheticGraphTestsPassed": 8,
     "scriptSyntax": true,
     "actualProductionProfiles": "补根和逐块元数据两轮真实生产构建均通过；新增绑定计数与公开包模块白名单待新一轮采集。",
     "actualBootPreloadsRegistered": true
@@ -58,7 +58,7 @@
     "review": "reviews/8ebdf7d1.json",
     "rootFindingClosed": true
   },
-  "nextCollection": "只把已经核实的Bot/Image两个公开leaf模块置于显式共享块，onlyExplicitManualChunks保持依赖的正常归属。生产审计验证新块仅2个模块且不吸收React，并拒绝Native静态启动闭包包含会话组件。固定基线与新候选真实构建待执行；实际网络、PSS、时延和10组门槛未通过。",
+  "nextCollection": "追加已实际核对的chevron-down/ellipsis两个公开leaf到同一共享块，避免两图标连带预览/Markdown。补sourceFingerprint覆盖配置helper并回归。启动审计增加CodeBlock排除，新共享块仅4leaf，其他原隔离断言保持。8合成+1映射通过，真实新构建待运行。",
   "scopeLimit": "Design实际工作区先加载会话；静态启动根不是所有路由预热根，不能将604KB静态估算当成Design实际新增传输。Mermaid命名块只是包装模块，不能凭名字声称加载了引擎。",
   "chunkOwnershipProfile": {
     "collectorCommit": "387c018d649433d7e83133a270956a93050628f3",
@@ -78,5 +78,20 @@
     "qualified": false,
     "receipt": "performance/static-profile-bb4107e1.json",
     "normalCI": 42409760818
+  },
+  "twoIconProfile": {
+    "commit": "da2552a624b398d9e63f6727923d07fd007afeb9",
+    "run": 42410540031,
+    "job": 128517510008,
+    "passed": true,
+    "qualified": false,
+    "receipt": "performance/static-profile-da2552a6.json",
+    "gzipBytes": 378616,
+    "chunks": 24,
+    "threadPresent": false,
+    "iconChunkBytes": 903,
+    "iconChunkGzipBytes": 444,
+    "review": "reviews/da2552a6.json",
+    "finding": "P3新配置helper缺少构建指纹覆盖，修复后须重采"
   }
 }

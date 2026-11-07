@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {readFileSync} from 'node:fs'
-import {profileOpeningChunks,openingModuleRoles,assertNativeConversationIsolation} from './native-artifact-bundle-profile.mjs'
+import {profileOpeningChunks,openingModuleRoles,assertNativeOpeningIsolation} from './native-artifact-bundle-profile.mjs'
 const chunk=(fileName,imports,modules,code='export const value=1;')=>({type:'chunk',fileName,imports,modules,code})
 test('native opening rejects co-located conversation UI but allows lazy comments',()=>{
  const bundle={
@@ -9,9 +9,13 @@ test('native opening rejects co-located conversation UI but allows lazy comments
   'thread.js':chunk('thread.js',[],{'/repo/src/features/chat/components/ConversationThread.tsx':{renderedLength:30},'/repo/node_modules/lucide-react/dist/esm/icons/bot.mjs':{renderedLength:10}}),
   'comments.js':chunk('comments.js',[],{'/repo/src/features/artifacts/native/CommentsPanel.tsx':{renderedLength:40}}),
  }
- assert.throws(()=>assertNativeConversationIsolation(profileOpeningChunks(bundle,[],['native.js'],'/repo')),/会话界面/)
+ assert.throws(()=>assertNativeOpeningIsolation(profileOpeningChunks(bundle,[],['native.js'],'/repo')),/会话界面/)
  bundle['native.js'].imports=[]
- assert.doesNotThrow(()=>assertNativeConversationIsolation(profileOpeningChunks(bundle,[],['native.js'],'/repo')))
+ assert.doesNotThrow(()=>assertNativeOpeningIsolation(profileOpeningChunks(bundle,[],['native.js'],'/repo')))
+})
+test('native opening also rejects the observed co-located markdown preview UI',()=>{
+ const bundle={'native.js':chunk('native.js',['preview.js'],{}),'preview.js':chunk('preview.js',[],{'/repo/src/components/CodeBlock.tsx':{renderedLength:30}})}
+ assert.throws(()=>assertNativeOpeningIsolation(profileOpeningChunks(bundle,[],['native.js'],'/repo')),/启动块/)
 })
 test('opening profile subtracts warm application chunks and includes the text editor only once',()=>{
  const bundle={
@@ -43,6 +47,12 @@ test('every actual boot preload is subtracted as an application root',()=>{
  const config=readFileSync(new URL('../vite.config.ts',import.meta.url),'utf8'),declaration=config.match(/const BOOT_ROUTE_MODULES = (\[[^\n]+\])/);assert.ok(declaration)
  const modules=JSON.parse(declaration[1].replaceAll("'",'"'))
  for(const module of modules)assert.ok(openingModuleRoles.application.includes('/'+module),`Missing actual warm boot root: ${module}`)
+})
+test('build configuration script imports are included in the source fingerprint',()=>{
+ const config=readFileSync(new URL('../vite.config.ts',import.meta.url),'utf8'),audit=readFileSync(new URL('./native-artifact-bundle-audit.mjs',import.meta.url),'utf8')
+ const declaration=audit.match(/const inputs = (\[[\s\S]*?\])/);assert.ok(declaration)
+ const inputs=JSON.parse(declaration[1].replaceAll("'",'"'))
+ for(const [,path]of config.matchAll(/from ['"]\.\/(scripts\/[^'"]+)['"]/g))assert.ok(inputs.includes(path+'.ts'),`Missing build configuration input: ${path}`)
 })
 
 test('chunk ownership separates static edges, lazy routes and co-located project utilities',()=>{

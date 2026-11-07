@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {nativeSharedIconChunk} from './native-artifact-shared-icons'
 
-test('only the two measured shared public icons receive an explicit chunk',()=>{
- for(const icon of ['bot','image']){
+test('only the measured shared public icons receive an explicit chunk',()=>{
+ for(const icon of ['bot','image','chevron-down','ellipsis']){
   assert.equal(nativeSharedIconChunk(`/repo/node_modules/lucide-react/dist/esm/icons/${icon}.mjs`),'artifact-shared-icons')
   assert.equal(nativeSharedIconChunk(`C:\\repo\\node_modules\\lucide-react\\dist\\esm\\icons\\${icon}.mjs`),'artifact-shared-icons')
  }

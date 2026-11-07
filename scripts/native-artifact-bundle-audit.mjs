@@ -6,14 +6,14 @@ import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { build } from 'vite'
-import {profileOpeningChunks,openingModuleRoles,assertNativeConversationIsolation} from './native-artifact-bundle-profile.mjs'
+import {profileOpeningChunks,openingModuleRoles,assertNativeOpeningIsolation} from './native-artifact-bundle-profile.mjs'
 
 const output = resolve(process.argv[2] ?? '/tmp/lingxi-native-bundle-audit.json')
 const outDir = resolve(process.argv[3] ?? '/tmp/lingxi-native-production-dist')
 function sourceFingerprint() {
   const inputs = ['src', 'shared', 'public', 'third_party/assistant-ui/streaming-text', 'third_party/baoyu-design/host',
     'package.json', 'package-lock.json', 'index.html', 'artifact-export.html', 'vite.config.ts',
-    'tsconfig.json', 'tsconfig.node.json', 'postcss.config.js', 'tailwind.config.ts']
+    'tsconfig.json', 'tsconfig.node.json', 'postcss.config.js', 'tailwind.config.ts', 'scripts/native-artifact-shared-icons.ts']
   const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', ...inputs], { encoding: 'utf8' })
     .split('\0').filter(file => file && existsSync(file)).sort()
   const hash = createHash('sha256')
@@ -31,8 +31,8 @@ await build({
       const chunks = Object.values(bundle).filter(value => value.type === 'chunk')
       const sharedIcons=chunks.find(chunk=>chunk.name==='artifact-shared-icons')
       if(sharedIcons){
-        assert.equal(sharedIcons.moduleIds.length,2,'The measured shared icon chunk must own only two leaf modules')
-        assert.ok(sharedIcons.moduleIds.every(id=>/\/node_modules\/lucide-react\/dist\/esm\/icons\/(bot|image)\.mjs$/.test(id.replaceAll('\\','/'))),'The shared icon chunk must not absorb React or other dependencies')
+        assert.equal(sharedIcons.moduleIds.length,4,'The measured shared icon chunk must own only four leaf modules')
+        assert.ok(sharedIcons.moduleIds.every(id=>/\/node_modules\/lucide-react\/dist\/esm\/icons\/(bot|image|chevron-down|ellipsis)\.mjs$/.test(id.replaceAll('\\','/'))),'The shared icon chunk must not absorb React or other dependencies')
       }
       const owns = (chunk, suffix) => chunk.moduleIds.some(id => id.replaceAll('\\', '/').endsWith(suffix))
       const rootChunks = Object.fromEntries(Object.entries(openingModuleRoles).map(([role,modules])=>[role,modules.map(module=>{
@@ -74,7 +74,7 @@ await build({
         exportRealm: realm.fileName,
         exportHtmlPreloadsApplication: false,
       }
-      assertNativeConversationIsolation(report.openingProfile)
+      assertNativeOpeningIsolation(report.openingProfile)
     },
   }],
 })

@@ -1,0 +1,45 @@
+{
+  "candidate": "f4b79c47c526f3ea4da74b1265268ed5f5996dc2",
+  "baseline": "bb4107e101f33eb9a274d802ea852e207e6d9c2a",
+  "scope": "独立detached只读局部审查：Design画板元素25%手柄显示门槛及来源采集；未读取根工作区WIP",
+  "result": "本次范围未发现新增P1/P2",
+  "findings": [],
+  "verified": [
+    {
+      "check": "原生Chrome140/154真实UI缩放往返",
+      "result": "均为50%=9、25%=9、20%=0、25%=9；零操作写入、文档不变、无页面/控制台错误",
+      "logs": [
+        "/tmp/lingxi-review-f4-scale140.log",
+        "/tmp/lingxi-review-f4-scale154.log"
+      ],
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-f4-scale140",
+        "/workspace/lingxi-issue707-scratch/review-f4-scale154"
+      ]
+    },
+    {
+      "check": "固定Source实际25%重放",
+      "result": {
+        "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+        "hashesVerified": 12,
+        "scale": 0.25,
+        "handleAreas": 10
+      },
+      "output": "/workspace/lingxi-issue707-scratch/review-f4-source25/reference.json"
+    },
+    {
+      "check": "10项定向单元",
+      "result": "全部通过",
+      "log": "/tmp/lingxi-review-f4-units.log"
+    },
+    {
+      "check": "精确产品差异和格式",
+      "result": "删除新增条件后NativeEditor与基线字节一致；Slides/自由画布分支不受门槛限制；选择框不随手柄消失；git diff --check通过"
+    }
+  ],
+  "unverified": [
+    "未独立重跑来源22.105%状态；来源25%10个命中区域与原生9个按钮形态仍不一致，证据未声称完全还原",
+    "本次未重做Slides/自由画布运行态、完整触摸/键盘、所有容器主题、真实授权服务、最终10组ABBA与实际传输/PSS",
+    "本局部通过不代表全计划或最终候选验收通过"
+  ]
+}

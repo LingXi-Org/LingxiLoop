@@ -465,3 +465,7 @@ bb4107e1正常CI42409760818与[生产绑定元数据采集](performance/static-p
 [71个静态第一方文件的公开消费者核对](performance/shared-icon-consumers.json)确认Thread中32个Lucide模块与Native实际值导入严格交集仅Bot/Image，与实际2个绑定数量吻合；未发现Native使用Thread里的ZodIssueCode或shallow。现最小实验只将这两个公开leaf模块置于共享块，启用onlyExplicitManualChunks，保留原Lucide组件及共享React，不复制图标、不升级依赖。新增生产断言：共享块只能拥有这两个leaf，原生启动闭包不得含会话UI；真实旧bb数据复现断言失败、固定721数据通过。6采集测试和1定向映射测试、构建配置类型检查及lint通过。曾因构建配置TS默认lib不含replaceAll而报错，改用等价replace后实际重跑通过。本候选完整生产构建、原功能视觉和实际性能尚待验证，不能预报收益。
 
 bb4107e1[冻结独立复审](reviews/bb4107e1.json)通过，5合成检查及额外白名单/隐私/旧字段不漂移核对通过。f4b79c47手柄门槛候选正常CI42410241340通过。低缩放修正也使旧缩放探针在22%下等待手柄30秒超时，保留失败后仅将4项实际使用手柄的旧探针默认通过菜单切50%；显式缩放参数优先，普通尺寸/视觉样稿不变。140/154各4旧场景+门槛新场景5/5、23CI编排契约通过，并将门槛检查接入既有真实应用前置检查，原手势/取消/重开/历史断言未删除。见functional/selection-scale.json。
+
+da2552a6[真实生产采集](performance/static-profile-da2552a6.json)42410540031通过：Native/RTE均无Thread路径，两图标共享块903raw/444gzip且仅2leaf，原生静态gzip604237→378616（30→24块），不是实际网络收益。正常CI42410545786被下一推送取消，不记通过。独立[复审](reviews/da2552a6.json)无P1/P2但发现P3：构建指纹遗漏新配置helper。保留原数据及限定，新增实际配置导入覆盖测试先失败后通过，将helper纳入指纹；新候选须重采。
+
+第二处实际共置为Native→protected-file-links两个绑定，对应[公开ChevronDown/MoreHorizontal消费者](performance/shared-preview-icon-consumers.json)，连带CodeBlock/streamdown/parse5；仅追加chevron-down/ellipsis两个leaf到同一共享块，未扩成57图标整包。生产审计检查4leaf且无React，并排除启动CodeBlock。对应映射及预览共置回归先失败后通过，现8采集+1映射、构建配置类型检查通过。f4手柄独立复审通过，bf实际应用诊断42410966590正在运行（两图标版本，指纹覆盖限定同da）；不是最终候选或10组资格。

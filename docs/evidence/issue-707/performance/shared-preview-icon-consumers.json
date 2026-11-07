@@ -1,0 +1,1047 @@
+{
+  "candidate": "da2552a624b398d9e63f6727923d07fd007afeb9",
+  "inputSha256": "02e69a8d52dbb6638dedd84e6b1a92a0ec51c12d346bf0308290f0f389d8bd05",
+  "scope": "冻结公开元数据和未变更第一方AST；未读取生成JS/私包源码",
+  "oldNativeGzip": 604237,
+  "newNativeGzip": 378616,
+  "oldChunks": 30,
+  "newChunks": 24,
+  "shared": {
+    "fileName": "assets/artifact-shared-icons-CmuppR0e.js",
+    "imports": [
+      "assets/createLucideIcon-BU90S_bt.js"
+    ],
+    "staticImportBindings": [
+      {
+        "fileName": "assets/createLucideIcon-BU90S_bt.js",
+        "importedBindingCount": 1
+      }
+    ],
+    "dynamicImports": [],
+    "externalDynamicImportCount": 0,
+    "isDynamicEntry": false,
+    "codeBytes": 903,
+    "gzipBytes": 444,
+    "projectModules": [],
+    "dependencyPackages": [
+      {
+        "label": "dependency:lucide-react",
+        "moduleCount": 2,
+        "renderedCodeUnits": 1040,
+        "originalCodeUnits": 1300
+      }
+    ],
+    "publicDependencyModules": [
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/bot.mjs",
+        "renderedCodeUnits": 561,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ]
+      },
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/image.mjs",
+        "renderedCodeUnits": 479,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ]
+      }
+    ]
+  },
+  "nativeStaticClosureHasThread": false,
+  "protected": {
+    "fileName": "assets/protected-file-links-BMqVSLgu.js",
+    "imports": [
+      "assets/createLucideIcon-BU90S_bt.js",
+      "assets/index-DxfTQiZg.js",
+      "assets/input-CsmSX3lG.js",
+      "assets/index-CT2cbx4f.js",
+      "assets/index-j5mmW1YC.js",
+      "assets/tooltip-BPiQmuIQ.js",
+      "assets/preload-helper-BxaVoaJg.js",
+      "assets/store-B6FZxCU-.js",
+      "assets/_commonjsHelpers-BosuxZz1.js",
+      "assets/drafts-D-AvCwbQ.js",
+      "assets/card-CY65H8mk.js"
+    ],
+    "staticImportBindings": [
+      {
+        "fileName": "assets/createLucideIcon-BU90S_bt.js",
+        "importedBindingCount": 1
+      },
+      {
+        "fileName": "assets/index-DxfTQiZg.js",
+        "importedBindingCount": 7
+      },
+      {
+        "fileName": "assets/input-CsmSX3lG.js",
+        "importedBindingCount": 8
+      },
+      {
+        "fileName": "assets/index-CT2cbx4f.js",
+        "importedBindingCount": 6
+      },
+      {
+        "fileName": "assets/index-j5mmW1YC.js",
+        "importedBindingCount": 3
+      },
+      {
+        "fileName": "assets/tooltip-BPiQmuIQ.js",
+        "importedBindingCount": 4
+      },
+      {
+        "fileName": "assets/preload-helper-BxaVoaJg.js",
+        "importedBindingCount": 1
+      },
+      {
+        "fileName": "assets/store-B6FZxCU-.js",
+        "importedBindingCount": 12
+      },
+      {
+        "fileName": "assets/_commonjsHelpers-BosuxZz1.js",
+        "importedBindingCount": 2
+      },
+      {
+        "fileName": "assets/drafts-D-AvCwbQ.js",
+        "importedBindingCount": 3
+      },
+      {
+        "fileName": "assets/card-CY65H8mk.js",
+        "importedBindingCount": 3
+      }
+    ],
+    "dynamicImports": [
+      "assets/highlighted-body-KPVGNVTW-CsLg-lgm.js",
+      "assets/mermaid-HWGCJPDP-_v988lpQ.js",
+      "assets/abap-Dh0V8dAw.js",
+      "assets/abnf-ByBmZo4A.js",
+      "assets/actionscript-BN8I5vI2.js",
+      "assets/ada-CU0KiQTr.js",
+      "assets/agda-k_jjgnDe.js",
+      "assets/al-CPjAbOMM.js",
+      "assets/antlr4-CuC5mCZ4.js",
+      "assets/apacheconf-BmW01Dy1.js",
+      "assets/apex-Bn83CbHF.js",
+      "assets/apl-CuyPV94V.js",
+      "assets/applescript-D1zNfg-D.js",
+      "assets/aql-D62mW5Kv.js",
+      "assets/arduino-BBNUJDvA.js",
+      "assets/arff-D9pTofUM.js",
+      "assets/armasm-CubR9n-k.js",
+      "assets/arturo-BgHHcRA7.js",
+      "assets/asciidoc-m5ZR-IYf.js",
+      "assets/asm6502-BNjdFOYJ.js",
+      "assets/asmatmel-KXtF3iCh.js",
+      "assets/aspnet-DZxOJ8FA.js",
+      "assets/autohotkey-BF4MK5yp.js",
+      "assets/autoit-xYi3PElL.js",
+      "assets/avisynth-De584Ifk.js",
+      "assets/avro-idl-BkPpH45Y.js",
+      "assets/awk-RejkSNHS.js",
+      "assets/bash-CG6S6Dwl.js",
+      "assets/basic-Dv_zySWb.js",
+      "assets/batch-BglyQmEq.js",
+      "assets/bbcode-Djednklw.js",
+      "assets/bbj-Dj0P-6Nu.js",
+      "assets/bicep-aCcM1RLN.js",
+      "assets/birb-Cy5ftJ-X.js",
+      "assets/bison-DMDDe1Zp.js",
+      "assets/bnf-D1cGEi7p.js",
+      "assets/bqn-DNQe0Rn0.js",
+      "assets/brainfuck-DtVLjakj.js",
+      "assets/brightscript-Be8ttFK-.js",
+      "assets/bro-gsWPzb9I.js",
+      "assets/bsl-DpGauClE.js",
+      "assets/c-XQKAasRE.js",
+      "assets/cfscript-CuXjmkkj.js",
+      "assets/chaiscript-KMcRiNOR.js",
+      "assets/cil-DqGDQlp5.js",
+      "assets/cilkc-DR-qRlYh.js",
+      "assets/cilkcpp-YxHuQB5N.js",
+      "assets/clike-BF_vhPOR.js",
+      "assets/clojure-BISWNLrf.js",
+      "assets/cmake-Bnw4AgQs.js",
+      "assets/cobol-1M_I0R5F.js",
+      "assets/coffeescript-3z9846co.js",
+      "assets/concurnas-CHjsOZBA.js",
+      "assets/cooklang-CPkIs1GA.js",
+      "assets/coq-DWQHNVHz.js",
+      "assets/cpp-BuBgU4ZA.js",
+      "assets/crystal-jHZZ-_tL.js",
+      "assets/csharp-CIQ22zFb.js",
+      "assets/cshtml-B5i-9lel.js",
+      "assets/csp-BZ4Xwly5.js",
+      "assets/css-extras-CUU2o91P.js",
+      "assets/css-B-uKvPiS.js",
+      "assets/csv-Dw8LZ_Eu.js",
+      "assets/cue-Rr9CICnW.js",
+      "assets/cypher-HWlOXrx_.js",
+      "assets/d-Dwhud0iu.js",
+      "assets/dart-orPEVY8X.js",
+      "assets/dataweave-CcC7SfmY.js",
+      "assets/dax-B_CPaQ5Q.js",
+      "assets/dhall-DzGXc3_x.js",
+      "assets/diff-DU2I1BEy.js",
+      "assets/django-mMH9CoRm.js",
+      "assets/dns-zone-file-Bw5UZhG6.js",
+      "assets/docker-BMVWpjzh.js",
+      "assets/dot-DGlek7oi.js",
+      "assets/ebnf-DO_PsQkW.js",
+      "assets/editorconfig-R8mkNbUP.js",
+      "assets/eiffel-BKuK1Wqv.js",
+      "assets/ejs-Biq602i-.js",
+      "assets/elixir-CKmXB6gz.js",
+      "assets/elm-DGnLacLx.js",
+      "assets/erb-ZaL07ThK.js",
+      "assets/erlang-BpB3ElcB.js",
+      "assets/etlua-DWJv-fgW.js",
+      "assets/excel-formula-BqQTSGo9.js",
+      "assets/factor-CMYHRXyr.js",
+      "assets/false-BiQbvuNO.js",
+      "assets/firestore-security-rules-B0JuUxYT.js",
+      "assets/flow-Cg5UkQx_.js",
+      "assets/fortran-CnsXb_bq.js",
+      "assets/fsharp-BvbkTRRc.js",
+      "assets/ftl-De5Bo3ag.js",
+      "assets/gap-DW9OqWJ2.js",
+      "assets/gcode-BatMDML4.js",
+      "assets/gdscript-DkB3jY81.js",
+      "assets/gedcom-yhN6cO2u.js",
+      "assets/gettext-Cf4WLCVC.js",
+      "assets/gherkin-BwKR3_MM.js",
+      "assets/git-DQPXVJgu.js",
+      "assets/glsl-azhlFVZl.js",
+      "assets/gml-llpCvO2f.js",
+      "assets/gn-BrxZGIXV.js",
+      "assets/go-module-D2YD1GIq.js",
+      "assets/go-xWYv4r-F.js",
+      "assets/gradle-G74UfK3p.js",
+      "assets/graphql-BHrXtyM8.js",
+      "assets/groovy-BFOBf8xF.js",
+      "assets/haml-Csox-Nn_.js",
+      "assets/handlebars-BA7Al183.js",
+      "assets/haskell-DmX_adzH.js",
+      "assets/haxe-ChMCX2vV.js",
+      "assets/hcl-DXafqayE.js",
+      "assets/hlsl-BmZgt2gR.js",
+      "assets/hoon-C_YqcpSB.js",
+      "assets/hpkp-CSIckPMp.js",
+      "assets/hsts-FU3CX1wQ.js",
+      "assets/http-BFkS8JQr.js",
+      "assets/ichigojam-D0FOfbQl.js",
+      "assets/icon-DKJcGS9E.js",
+      "assets/icu-message-format-CJshnXOG.js",
+      "assets/idris-BvO_nhXe.js",
+      "assets/iecst-s_73LwCg.js",
+      "assets/ignore-BqXAsjMb.js",
+      "assets/inform7-DwZs4OHA.js",
+      "assets/ini-DeUbYg71.js",
+      "assets/io-C5TFFSe8.js",
+      "assets/j-Bn8iV7pN.js",
+      "assets/java-BZ9mwHVw.js",
+      "assets/javadoc-CzX69MoM.js",
+      "assets/javadoclike-DpeksqCO.js",
+      "assets/javascript-CEvf9hWA.js",
+      "assets/javastacktrace-DocRCbwu.js",
+      "assets/jexl-Dooz6QYL.js",
+      "assets/jolie-C6xUasI6.js",
+      "assets/jq-QEdLrmO9.js",
+      "assets/js-extras-CqXnxclj.js",
+      "assets/js-templates-CFr7r91-.js",
+      "assets/jsdoc-DXKpX8b0.js",
+      "assets/json-unC8z3UW.js",
+      "assets/json5-CJ7Jj7k1.js",
+      "assets/jsonp-fyhmRqi4.js",
+      "assets/jsstacktrace-CqWoPoNb.js",
+      "assets/jsx-l1ECA4SV.js",
+      "assets/julia-D2MtGQrh.js",
+      "assets/keepalived-ClhmJ79p.js",
+      "assets/keyman-BsEmspV4.js",
+      "assets/kotlin-D8-DXHYr.js",
+      "assets/kumir-qaC2asBW.js",
+      "assets/kusto-Caq171lo.js",
+      "assets/latex-BYrRujF3.js",
+      "assets/latte-CzNQ_UG0.js",
+      "assets/less-DRLW25Ni.js",
+      "assets/lilypond-IfTEI1Tl.js",
+      "assets/linker-script-Bo2Cg2RB.js",
+      "assets/liquid-Cjd8E3Xj.js",
+      "assets/lisp-CelBU7BP.js",
+      "assets/livescript-Dm_jgrZD.js",
+      "assets/llvm-DfhNGoLY.js",
+      "assets/log-CwE7CYDt.js",
+      "assets/lolcode-B_gW1Awe.js",
+      "assets/lua-DkSH5e9Z.js",
+      "assets/magma-Dur57XNM.js",
+      "assets/makefile-BQ0VlwQL.js",
+      "assets/markdown-K7dAfYyi.js",
+      "assets/markup-templating-DBaZ9pD9.js",
+      "assets/markup-BHKKUsMC.js",
+      "assets/mata-BewqVM6b.js",
+      "assets/matlab-t_kQDiye.js",
+      "assets/maxscript-x9V8ivOu.js",
+      "assets/mel-CPhtU48D.js",
+      "assets/mermaid-Cgf6z3Ba.js",
+      "assets/metafont-B6Kn28aj.js",
+      "assets/mizar-BSFjByd4.js",
+      "assets/mongodb-ClzE8Hk0.js",
+      "assets/monkey-DsZRYNO_.js",
+      "assets/moonscript-CS3NypUo.js",
+      "assets/n1ql-Ba5gUkJI.js",
+      "assets/n4js-Cq2Kw5oW.js",
+      "assets/nand2tetris-hdl-iPf-TLUa.js",
+      "assets/naniscript-Bd7v2B5D.js",
+      "assets/nasm-D0gYjmoW.js",
+      "assets/neon-Db-JNE2d.js",
+      "assets/nevod-YwlSH_sQ.js",
+      "assets/nginx-CoBZ6AFK.js",
+      "assets/nim-BJEp5zPr.js",
+      "assets/nix-8IeMySzo.js",
+      "assets/nsis-9QnAse1Y.js",
+      "assets/objectivec-C86xFqEx.js",
+      "assets/ocaml-CAGXjUUl.js",
+      "assets/odin-CZSoG9XB.js",
+      "assets/opencl-BrC7lc_T.js",
+      "assets/openqasm-DjNCnqOa.js",
+      "assets/oz-B6RkJNvq.js",
+      "assets/parigp-BaEI7xsP.js",
+      "assets/parser-CuOAJttr.js",
+      "assets/pascal-DCkNCawS.js",
+      "assets/pascaligo-B6CkPS4l.js",
+      "assets/pcaxis-27Yn2hgx.js",
+      "assets/peoplecode-BiCKMt4Z.js",
+      "assets/perl-bCxz9luI.js",
+      "assets/php-extras-VUox3jmv.js",
+      "assets/php-B-k-GCl2.js",
+      "assets/phpdoc-ByGkreip.js",
+      "assets/plant-uml-CIbGCVwY.js",
+      "assets/plsql-ByrBg1Ji.js",
+      "assets/powerquery-DMH-D30c.js",
+      "assets/powershell-xVQxnjOw.js",
+      "assets/processing-CibeK1XN.js",
+      "assets/prolog-DtGWfV1o.js",
+      "assets/promql-HOgcUVtw.js",
+      "assets/properties-CIcMWrfC.js",
+      "assets/protobuf-BLDK6AwP.js",
+      "assets/psl-QmaS5USn.js",
+      "assets/pug-a-8JQfoZ.js",
+      "assets/puppet-C82q2pbX.js",
+      "assets/pure-BTn3ApSk.js",
+      "assets/purebasic-CIH01SI7.js",
+      "assets/purescript-BaYvFDOi.js",
+      "assets/python-3xaErVbm.js",
+      "assets/q-C3Ngj0Xe.js",
+      "assets/qml-CJW8kVnK.js",
+      "assets/qore-Bv5lumkO.js",
+      "assets/qsharp-BCY1NCWa.js",
+      "assets/r-C3cUB5Zv.js",
+      "assets/racket-ahDxqqJG.js",
+      "assets/reason-yuaWFTBk.js",
+      "assets/regex-DfYL9OeF.js",
+      "assets/rego-DOEblCYd.js",
+      "assets/renpy-5g7V3xQX.js",
+      "assets/rescript-CJ7wE1M8.js",
+      "assets/rest-m34Yb57X.js",
+      "assets/rip-CYCKi2kX.js",
+      "assets/roboconf-DW_t4B6S.js",
+      "assets/robotframework-DtNr46ds.js",
+      "assets/ruby-zb9B6mm0.js",
+      "assets/rust-Dc-T0lHc.js",
+      "assets/sas-OeW-BDaB.js",
+      "assets/sass-SngKNQWT.js",
+      "assets/scala-BvqXaOVv.js",
+      "assets/scheme-BDxDT0na.js",
+      "assets/scss-B7E2Cygf.js",
+      "assets/shell-session-CZfZFnUd.js",
+      "assets/smali-uc0A7z4n.js",
+      "assets/smalltalk-DSGDd11X.js",
+      "assets/smarty-agxifH5d.js",
+      "assets/sml-Bh8Euk3Q.js",
+      "assets/solidity-B5PqugHz.js",
+      "assets/solution-file-DmMuq2VX.js",
+      "assets/soy-DBT5BPMj.js",
+      "assets/sparql-CGZ43eCZ.js",
+      "assets/splunk-spl-X50Ciclr.js",
+      "assets/sqf-BuQvrlNg.js",
+      "assets/sql-KgLHHO9i.js",
+      "assets/squirrel-DvH0yNzu.js",
+      "assets/stan-BmHGfHPY.js",
+      "assets/stata-BtzOw19R.js",
+      "assets/stylus-CEuyh1z1.js",
+      "assets/supercollider-Cvvpnkmn.js",
+      "assets/swift-CbdPJeH2.js",
+      "assets/systemd-DQ1JyINt.js",
+      "assets/t4-cs-BQG0AyNC.js",
+      "assets/t4-templating-DXZYDXwi.js",
+      "assets/t4-vb-DPofzH2i.js",
+      "assets/tap-35ktNyxF.js",
+      "assets/tcl-B8EePcGy.js",
+      "assets/textile-wcTJSlud.js",
+      "assets/toml-kBSn_XrP.js",
+      "assets/tremor-CLlbITYT.js",
+      "assets/tsx-DwRdkF7o.js",
+      "assets/tt2-CT41MN11.js",
+      "assets/turtle-CA6p8Xl5.js",
+      "assets/twig-aM4Q4mkz.js",
+      "assets/typescript-ByO-ha0F.js",
+      "assets/typoscript-DKzEdnAv.js",
+      "assets/unrealscript-CIDc_bJb.js",
+      "assets/uorazor-DTH8ge0i.js",
+      "assets/uri-u-1XSfqy.js",
+      "assets/v-BqoLjdDc.js",
+      "assets/vala-CwKU0Vct.js",
+      "assets/vbnet-DfXcBIcZ.js",
+      "assets/velocity-D_nCCzSc.js",
+      "assets/verilog-CizQ1yAh.js",
+      "assets/vhdl-Cb0lHbls.js",
+      "assets/vim-C_CWJcZr.js",
+      "assets/visual-basic-B-FkFmyZ.js",
+      "assets/warpscript-D23ofe9C.js",
+      "assets/wasm-lhfMQC1w.js",
+      "assets/web-idl-0kxN3IRj.js",
+      "assets/wgsl-C0A1i6i2.js",
+      "assets/wiki-Cd1dq2Al.js",
+      "assets/wolfram-CqWV1pYw.js",
+      "assets/wren-Ct5GyfWS.js",
+      "assets/xeora-FHrGNPrj.js",
+      "assets/xml-doc-DxzhJsBg.js",
+      "assets/xojo-DfPGhlcN.js",
+      "assets/xquery-DS7RmwTF.js",
+      "assets/yaml-JfT7KDqq.js",
+      "assets/yang-CGTsAcEt.js",
+      "assets/zig-CzVrjVAZ.js",
+      "assets/core-DYCMFGLw.js",
+      "assets/file-preview-dialog-CA0S_HYp.js"
+    ],
+    "externalDynamicImportCount": 0,
+    "isDynamicEntry": false,
+    "codeBytes": 486094,
+    "gzipBytes": 144995,
+    "projectModules": [
+      "src/components/CodeBlock.tsx",
+      "src/components/retab/ui/lazy-file-preview-dialog.tsx",
+      "src/components/retab/ui/protected-file-links.tsx",
+      "src/components/ui/popover.tsx"
+    ],
+    "dependencyPackages": [
+      {
+        "label": "dependency:parse5",
+        "moduleCount": 16,
+        "renderedCodeUnits": 340310,
+        "originalCodeUnits": 345109
+      },
+      {
+        "label": "dependency:streamdown",
+        "moduleCount": 3,
+        "renderedCodeUnits": 225238,
+        "originalCodeUnits": 223690
+      },
+      {
+        "label": "dependency:react-syntax-highlighter",
+        "moduleCount": 9,
+        "renderedCodeUnits": 136746,
+        "originalCodeUnits": 117960
+      },
+      {
+        "label": "dependency:mdast-util-to-hast",
+        "moduleCount": 28,
+        "renderedCodeUnits": 39418,
+        "originalCodeUnits": 49995
+      },
+      {
+        "label": "dependency:property-information",
+        "moduleCount": 18,
+        "renderedCodeUnits": 33119,
+        "originalCodeUnits": 35533
+      },
+      {
+        "label": "dependency:vfile",
+        "moduleCount": 5,
+        "renderedCodeUnits": 31269,
+        "originalCodeUnits": 31509
+      },
+      {
+        "label": "dependency:unified",
+        "moduleCount": 2,
+        "renderedCodeUnits": 29880,
+        "originalCodeUnits": 41644
+      },
+      {
+        "label": "dependency:hast-util-to-jsx-runtime",
+        "moduleCount": 1,
+        "renderedCodeUnits": 19371,
+        "originalCodeUnits": 19753
+      },
+      {
+        "label": "dependency:hast-util-raw",
+        "moduleCount": 1,
+        "renderedCodeUnits": 18766,
+        "originalCodeUnits": 19698
+      },
+      {
+        "label": "dependency:@babel/runtime",
+        "moduleCount": 42,
+        "renderedCodeUnits": 17951,
+        "originalCodeUnits": 18697
+      },
+      {
+        "label": "dependency:hast-util-sanitize",
+        "moduleCount": 2,
+        "renderedCodeUnits": 17506,
+        "originalCodeUnits": 23548
+      },
+      {
+        "label": "dependency:remend",
+        "moduleCount": 1,
+        "renderedCodeUnits": 13470,
+        "originalCodeUnits": 13303
+      },
+      {
+        "label": "dependency:@radix-ui/react-popover",
+        "moduleCount": 1,
+        "renderedCodeUnits": 12511,
+        "originalCodeUnits": 15830
+      },
+      {
+        "label": "dependency:rehype-harden",
+        "moduleCount": 1,
+        "renderedCodeUnits": 11883,
+        "originalCodeUnits": 11989
+      },
+      {
+        "label": "dependency:hastscript",
+        "moduleCount": 3,
+        "renderedCodeUnits": 9082,
+        "originalCodeUnits": 11059
+      },
+      {
+        "label": "dependency:hast-util-from-parse5",
+        "moduleCount": 1,
+        "renderedCodeUnits": 7866,
+        "originalCodeUnits": 8455
+      },
+      {
+        "label": "dependency:@ungap/structured-clone",
+        "moduleCount": 4,
+        "renderedCodeUnits": 7563,
+        "originalCodeUnits": 8004
+      },
+      {
+        "label": "dependency:vfile-message",
+        "moduleCount": 1,
+        "renderedCodeUnits": 7482,
+        "originalCodeUnits": 8199
+      },
+      {
+        "label": "dependency:react-markdown",
+        "moduleCount": 1,
+        "renderedCodeUnits": 7212,
+        "originalCodeUnits": 12792
+      },
+      {
+        "label": "dependency:hast-util-to-parse5",
+        "moduleCount": 1,
+        "renderedCodeUnits": 6699,
+        "originalCodeUnits": 7906
+      },
+      {
+        "label": "dependency:inline-style-parser",
+        "moduleCount": 1,
+        "renderedCodeUnits": 5044,
+        "originalCodeUnits": 5099
+      },
+      {
+        "label": "dependency:trough",
+        "moduleCount": 1,
+        "renderedCodeUnits": 5005,
+        "originalCodeUnits": 4995
+      },
+      {
+        "label": "dependency:remark-rehype",
+        "moduleCount": 1,
+        "renderedCodeUnits": 4786,
+        "originalCodeUnits": 5357
+      },
+      {
+        "label": "dependency:zwitch",
+        "moduleCount": 1,
+        "renderedCodeUnits": 3774,
+        "originalCodeUnits": 3767
+      },
+      {
+        "label": "dependency:extend",
+        "moduleCount": 1,
+        "renderedCodeUnits": 3371,
+        "originalCodeUnits": 3321
+      },
+      {
+        "label": "dependency:hast-util-parse-selector",
+        "moduleCount": 1,
+        "renderedCodeUnits": 2413,
+        "originalCodeUnits": 2405
+      },
+      {
+        "label": "dependency:vfile-location",
+        "moduleCount": 1,
+        "renderedCodeUnits": 2389,
+        "originalCodeUnits": 2382
+      },
+      {
+        "label": "dependency:style-to-js",
+        "moduleCount": 3,
+        "renderedCodeUnits": 2284,
+        "originalCodeUnits": 2368
+      },
+      {
+        "label": "dependency:unist-util-position",
+        "moduleCount": 1,
+        "renderedCodeUnits": 1907,
+        "originalCodeUnits": 1924
+      },
+      {
+        "label": "dependency:comma-separated-tokens",
+        "moduleCount": 1,
+        "renderedCodeUnits": 1594,
+        "originalCodeUnits": 1592
+      },
+      {
+        "label": "dependency:trim-lines",
+        "moduleCount": 1,
+        "renderedCodeUnits": 1541,
+        "originalCodeUnits": 1530
+      },
+      {
+        "label": "dependency:micromark-util-sanitize-uri",
+        "moduleCount": 1,
+        "renderedCodeUnits": 1528,
+        "originalCodeUnits": 3155
+      },
+      {
+        "label": "dependency:style-to-object",
+        "moduleCount": 2,
+        "renderedCodeUnits": 1325,
+        "originalCodeUnits": 1402
+      },
+      {
+        "label": "dependency:remark-gfm",
+        "moduleCount": 1,
+        "renderedCodeUnits": 1169,
+        "originalCodeUnits": 1277
+      },
+      {
+        "label": "dependency:remark-parse",
+        "moduleCount": 1,
+        "renderedCodeUnits": 1041,
+        "originalCodeUnits": 1200
+      },
+      {
+        "label": "dependency:hast-util-whitespace",
+        "moduleCount": 1,
+        "renderedCodeUnits": 882,
+        "originalCodeUnits": 885
+      },
+      {
+        "label": "dependency:estree-util-is-identifier-name",
+        "moduleCount": 1,
+        "renderedCodeUnits": 756,
+        "originalCodeUnits": 1855
+      },
+      {
+        "label": "dependency:lucide-react",
+        "moduleCount": 2,
+        "renderedCodeUnits": 749,
+        "originalCodeUnits": 1032
+      },
+      {
+        "label": "dependency:rehype-raw",
+        "moduleCount": 1,
+        "renderedCodeUnits": 657,
+        "originalCodeUnits": 782
+      },
+      {
+        "label": "dependency:html-url-attributes",
+        "moduleCount": 1,
+        "renderedCodeUnits": 630,
+        "originalCodeUnits": 637
+      },
+      {
+        "label": "dependency:space-separated-tokens",
+        "moduleCount": 1,
+        "renderedCodeUnits": 537,
+        "originalCodeUnits": 551
+      },
+      {
+        "label": "dependency:rehype-sanitize",
+        "moduleCount": 1,
+        "renderedCodeUnits": 515,
+        "originalCodeUnits": 574
+      },
+      {
+        "label": "dependency:web-namespaces",
+        "moduleCount": 1,
+        "renderedCodeUnits": 351,
+        "originalCodeUnits": 358
+      },
+      {
+        "label": "dependency:is-plain-obj",
+        "moduleCount": 1,
+        "renderedCodeUnits": 328,
+        "originalCodeUnits": 344
+      },
+      {
+        "label": "dependency:html-void-elements",
+        "moduleCount": 1,
+        "renderedCodeUnits": 309,
+        "originalCodeUnits": 316
+      },
+      {
+        "label": "dependency:bail",
+        "moduleCount": 1,
+        "renderedCodeUnits": 199,
+        "originalCodeUnits": 207
+      }
+    ],
+    "publicDependencyModules": [
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/chevron-down.mjs",
+        "renderedCodeUnits": 312,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ]
+      },
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/ellipsis.mjs",
+        "renderedCodeUnits": 437,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ]
+      }
+    ]
+  },
+  "intersection": [
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ChevronDown",
+      "module": "dist/esm/icons/chevron-down.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "MoreHorizontal",
+      "module": "dist/esm/icons/ellipsis.mjs"
+    }
+  ],
+  "uniqueIntersection": [
+    "dist/esm/icons/chevron-down.mjs",
+    "dist/esm/icons/ellipsis.mjs"
+  ],
+  "intersectionOwners": {
+    "dist/esm/icons/chevron-down.mjs": [
+      "assets/protected-file-links-BMqVSLgu.js"
+    ],
+    "dist/esm/icons/ellipsis.mjs": [
+      "assets/protected-file-links-BMqVSLgu.js"
+    ]
+  },
+  "rootBindings": [
+    {
+      "fileName": "assets/NativeEditor-zgdLeQHg.js",
+      "bindings": [
+        {
+          "fileName": "assets/preload-helper-BxaVoaJg.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/index-DxfTQiZg.js",
+          "importedBindingCount": 3
+        },
+        {
+          "fileName": "assets/svg-presentation-BHrRsi0H.js",
+          "importedBindingCount": 27
+        },
+        {
+          "fileName": "assets/artifact-appearance-Wub4GTIy.js",
+          "importedBindingCount": 14
+        },
+        {
+          "fileName": "assets/createLucideIcon-BU90S_bt.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/arrow-right-DDX5GMSY.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/minus-MAg1M23z.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/arrow-up-CjEkvXzX.js",
+          "importedBindingCount": 2
+        },
+        {
+          "fileName": "assets/trash-2-CyPdpZ9g.js",
+          "importedBindingCount": 3
+        },
+        {
+          "fileName": "assets/loader-circle-BUTR8dVG.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/check-BksWrDig.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/protected-file-links-BMqVSLgu.js",
+          "importedBindingCount": 2
+        },
+        {
+          "fileName": "assets/useQuery-kVm7XaNl.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/transport-Ca48T80q.js",
+          "importedBindingCount": 2
+        },
+        {
+          "fileName": "assets/minimize-2-BSpv4egj.js",
+          "importedBindingCount": 3
+        },
+        {
+          "fileName": "assets/plus-B31R9tuA.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/artifact-shared-icons-CmuppR0e.js",
+          "importedBindingCount": 2
+        },
+        {
+          "fileName": "assets/panel-right-CFj_2Gkf.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/play-CQdibJ5Y.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/rotate-ccw-clock-CtkWN126.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/mermaid-HWGCJPDP-_v988lpQ.js",
+          "importedBindingCount": 2
+        },
+        {
+          "fileName": "assets/search-CqydfmqK.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/link-2-CUwRVqVQ.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/artifact-links-C8nEqoVQ.js",
+          "importedBindingCount": 2
+        },
+        {
+          "fileName": "assets/card-CY65H8mk.js",
+          "importedBindingCount": 4
+        },
+        {
+          "fileName": "assets/realtime-DGqgBgOF.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/schemas-CTCd7ha7.js",
+          "importedBindingCount": 8
+        },
+        {
+          "fileName": "assets/svg-image-cache-DaG9nm7s.js",
+          "importedBindingCount": 3
+        }
+      ]
+    },
+    {
+      "fileName": "assets/RichTextEditor-Do4p3YIG.js",
+      "bindings": [
+        {
+          "fileName": "assets/index-DxfTQiZg.js",
+          "importedBindingCount": 2
+        },
+        {
+          "fileName": "assets/artifact-links-C8nEqoVQ.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/index-TPs_MEvG.js",
+          "importedBindingCount": 3
+        },
+        {
+          "fileName": "assets/NativeEditor-zgdLeQHg.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/createLucideIcon-BU90S_bt.js",
+          "importedBindingCount": 1
+        },
+        {
+          "fileName": "assets/preload-helper-BxaVoaJg.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/_commonjsHelpers-BosuxZz1.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/with-selector-yr9jXbYX.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/index-BewBsE4c.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/svg-presentation-BHrRsi0H.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/schemas-CTCd7ha7.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/artifact-appearance-Wub4GTIy.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/arrow-right-DDX5GMSY.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/minus-MAg1M23z.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/arrow-up-CjEkvXzX.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/trash-2-CyPdpZ9g.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/loader-circle-BUTR8dVG.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/check-BksWrDig.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/protected-file-links-BMqVSLgu.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/input-CsmSX3lG.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/index-CT2cbx4f.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/index-j5mmW1YC.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/tooltip-BPiQmuIQ.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/store-B6FZxCU-.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/card-CY65H8mk.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/realtime-DGqgBgOF.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/avatarCache-SdJMDZ4c.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/index-BT8IfeqB.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/_commonjs-dynamic-modules-TDtrdbi3.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/drafts-D-AvCwbQ.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/useQuery-kVm7XaNl.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/transport-Ca48T80q.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/minimize-2-BSpv4egj.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/plus-B31R9tuA.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/artifact-shared-icons-CmuppR0e.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/panel-right-CFj_2Gkf.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/play-CQdibJ5Y.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/rotate-ccw-clock-CtkWN126.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/mermaid-HWGCJPDP-_v988lpQ.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/search-CqydfmqK.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/link-2-CUwRVqVQ.js",
+          "importedBindingCount": 0
+        },
+        {
+          "fileName": "assets/svg-image-cache-DaG9nm7s.js",
+          "importedBindingCount": 0
+        }
+      ]
+    }
+  ]
+}
