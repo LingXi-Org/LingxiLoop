@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { Readable } from 'node:stream'
 import { isolatedEditor } from './shared/artifact-editor-origin'
+import {nativeSharedIconChunk} from './scripts/native-artifact-shared-icons'
 
 // Every signed-in start renders these route modules, but each is discovered only
 // after its parent executes. Preloading them from the document turns that serial
@@ -70,7 +71,7 @@ export default defineConfig({
   // Retab format workers lazy-load their parsers as native ES modules.
   worker: { format: 'es' },
   build: {
-    rollupOptions: { input: { index: path.resolve(__dirname, 'index.html'), artifactExport: path.resolve(__dirname, 'artifact-export.html') } },
+    rollupOptions: { input: { index: path.resolve(__dirname, 'index.html'), artifactExport: path.resolve(__dirname, 'artifact-export.html') },output:{manualChunks:nativeSharedIconChunk,onlyExplicitManualChunks:true} },
   },
   // Disposable API fixtures use distinct caches. Concurrent dev servers with
   // different proxy defines must not replace each other's optimized modules.

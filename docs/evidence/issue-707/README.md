@@ -461,3 +461,5 @@ e3bc15de正常CI42404947387与静态构建采集42404943973通过，但[独立�
 bb4107e1正常CI42409760818与[生产绑定元数据采集](performance/static-profile-bb4107e1.json)42409755975通过。Native→ConversationThread有2个绑定，RTE该边为0（传递展开），不能把两者同称直接消费。公开模块白名单确认Thread包含Bot/Image等32图标、Zod兼容IssueCode和两个Zustand shallow模块；具体共享消费者仍在只读核验，未改变运行时分块或宣布性能改善。
 
 画板DOM元素补充[缩放手柄门槛](functional/selection-scale.json)：原版资源12项哈希核对，22.105%无手柄、25%出现命中区域；原生先在20%复现9个手柄，修正后140/154各50%→25%→20%→25%通过，低于门槛保留轮廓、零文档写入。10项文案/定位测试和lint通过。来源25%有10个命中区域，原生9个按钮，形态和整体视觉仍未完全还原。自由画布和Slides未改变；新候选CI和独立复审待运行。
+
+[71个静态第一方文件的公开消费者核对](performance/shared-icon-consumers.json)确认Thread中32个Lucide模块与Native实际值导入严格交集仅Bot/Image，与实际2个绑定数量吻合；未发现Native使用Thread里的ZodIssueCode或shallow。现最小实验只将这两个公开leaf模块置于共享块，启用onlyExplicitManualChunks，保留原Lucide组件及共享React，不复制图标、不升级依赖。新增生产断言：共享块只能拥有这两个leaf，原生启动闭包不得含会话UI；真实旧bb数据复现断言失败、固定721数据通过。6采集测试和1定向映射测试、构建配置类型检查及lint通过。曾因构建配置TS默认lib不含replaceAll而报错，改用等价replace后实际重跑通过。本候选完整生产构建、原功能视觉和实际性能尚待验证，不能预报收益。

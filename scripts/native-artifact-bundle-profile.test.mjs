@@ -1,8 +1,18 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {readFileSync} from 'node:fs'
-import {profileOpeningChunks,openingModuleRoles} from './native-artifact-bundle-profile.mjs'
+import {profileOpeningChunks,openingModuleRoles,assertNativeConversationIsolation} from './native-artifact-bundle-profile.mjs'
 const chunk=(fileName,imports,modules,code='export const value=1;')=>({type:'chunk',fileName,imports,modules,code})
+test('native opening rejects co-located conversation UI but allows lazy comments',()=>{
+ const bundle={
+  'native.js':{...chunk('native.js',['thread.js'],{}),dynamicImports:['comments.js']},
+  'thread.js':chunk('thread.js',[],{'/repo/src/features/chat/components/ConversationThread.tsx':{renderedLength:30},'/repo/node_modules/lucide-react/dist/esm/icons/bot.mjs':{renderedLength:10}}),
+  'comments.js':chunk('comments.js',[],{'/repo/src/features/artifacts/native/CommentsPanel.tsx':{renderedLength:40}}),
+ }
+ assert.throws(()=>assertNativeConversationIsolation(profileOpeningChunks(bundle,[],['native.js'],'/repo')),/会话界面/)
+ bundle['native.js'].imports=[]
+ assert.doesNotThrow(()=>assertNativeConversationIsolation(profileOpeningChunks(bundle,[],['native.js'],'/repo')))
+})
 test('opening profile subtracts warm application chunks and includes the text editor only once',()=>{
  const bundle={
   'app.js':chunk('app.js',['common.js'],{'/repo/src/App.tsx':{renderedLength:10,originalLength:20}}),

@@ -1,0 +1,470 @@
+{
+  "candidateCommit": "bb4107e101f33eb9a274d802ea852e207e6d9c2a",
+  "scope": "冻结第一方AST+已安装锁定公共Lucide barrel别名+真实安全模块元数据；无构建JS或私包源码",
+  "firstPartyFilesChecked": 71,
+  "lucideNamedImports": [
+    {
+      "file": "src/features/artifacts/native/RichTextEditor.tsx",
+      "line": 2,
+      "symbol": "Bold",
+      "module": "dist/esm/icons/bold.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/RichTextEditor.tsx",
+      "line": 2,
+      "symbol": "Italic",
+      "module": "dist/esm/icons/italic.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/RichTextEditor.tsx",
+      "line": 2,
+      "symbol": "Underline",
+      "module": "dist/esm/icons/underline.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "BookText",
+      "module": "dist/esm/icons/book-text.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Minimize2",
+      "module": "dist/esm/icons/minimize-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ChevronLeft",
+      "module": "dist/esm/icons/chevron-left.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ChevronRight",
+      "module": "dist/esm/icons/chevron-right.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Monitor",
+      "module": "dist/esm/icons/monitor.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "History",
+      "module": "dist/esm/icons/rotate-ccw-clock.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Bot",
+      "module": "dist/esm/icons/bot.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ArrowDownToLine",
+      "module": "dist/esm/icons/arrow-down-to-line.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Play",
+      "module": "dist/esm/icons/play.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "PanelRight",
+      "module": "dist/esm/icons/panel-right.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ChevronDown",
+      "module": "dist/esm/icons/chevron-down.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "MousePointer2",
+      "module": "dist/esm/icons/mouse-pointer-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Hand",
+      "module": "dist/esm/icons/hand.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Type",
+      "module": "dist/esm/icons/type.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Frame",
+      "module": "dist/esm/icons/frame.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "StickyNote",
+      "module": "dist/esm/icons/sticky-note.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Pencil",
+      "module": "dist/esm/icons/pencil.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "PenTool",
+      "module": "dist/esm/icons/pen-tool.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Square",
+      "module": "dist/esm/icons/square.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Image",
+      "module": "dist/esm/icons/image.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Table2",
+      "module": "dist/esm/icons/table-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Shapes",
+      "module": "dist/esm/icons/shapes.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Undo2",
+      "module": "dist/esm/icons/undo-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Redo2",
+      "module": "dist/esm/icons/redo-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Plus",
+      "module": "dist/esm/icons/plus.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "MessageCircle",
+      "module": "dist/esm/icons/message-circle.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Layers",
+      "module": "dist/esm/icons/layers.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Maximize2",
+      "module": "dist/esm/icons/maximize-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Grid2X2",
+      "module": "dist/esm/icons/grid-2x2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "BookOpen",
+      "module": "dist/esm/icons/book-open.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "X",
+      "module": "dist/esm/icons/x.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "MoreHorizontal",
+      "module": "dist/esm/icons/ellipsis.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Check",
+      "module": "dist/esm/icons/check.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Trash2",
+      "module": "dist/esm/icons/trash-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Copy",
+      "module": "dist/esm/icons/copy.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Lock",
+      "module": "dist/esm/icons/lock.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Eye",
+      "module": "dist/esm/icons/eye.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ArrowUp",
+      "module": "dist/esm/icons/arrow-up.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ArrowDown",
+      "module": "dist/esm/icons/arrow-down.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "FlipHorizontal2",
+      "module": "dist/esm/icons/flip-horizontal-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "FlipVertical2",
+      "module": "dist/esm/icons/flip-vertical-2.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Crop",
+      "module": "dist/esm/icons/crop.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "AlignLeft",
+      "module": "dist/esm/icons/text-align-start.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "AlignCenter",
+      "module": "dist/esm/icons/text-align-center.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "AlignRight",
+      "module": "dist/esm/icons/text-align-end.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "AlignStartVertical",
+      "module": "dist/esm/icons/align-start-vertical.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "AlignCenterVertical",
+      "module": "dist/esm/icons/align-center-vertical.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "AlignEndVertical",
+      "module": "dist/esm/icons/align-end-vertical.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Minus",
+      "module": "dist/esm/icons/minus.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Circle",
+      "module": "dist/esm/icons/circle.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Triangle",
+      "module": "dist/esm/icons/triangle.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Diamond",
+      "module": "dist/esm/icons/diamond.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ArrowRight",
+      "module": "dist/esm/icons/arrow-right.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "ScanLine",
+      "module": "dist/esm/icons/scan-line.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Palette",
+      "module": "dist/esm/icons/palette.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Search",
+      "module": "dist/esm/icons/search.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Link2",
+      "module": "dist/esm/icons/link-2.mjs"
+    }
+  ],
+  "lucideUniqueSymbols": 60,
+  "unresolvedPublicAliases": [],
+  "threadIntersection": [
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Bot",
+      "module": "dist/esm/icons/bot.mjs"
+    },
+    {
+      "file": "src/features/artifacts/native/EditorPrimitives.tsx",
+      "line": 11,
+      "symbol": "Image",
+      "module": "dist/esm/icons/image.mjs"
+    }
+  ],
+  "uniquePublicModuleIntersection": [
+    "dist/esm/icons/bot.mjs",
+    "dist/esm/icons/image.mjs"
+  ],
+  "moduleOwners": [
+    {
+      "module": "dist/esm/icons/bot.mjs",
+      "owners": [
+        "assets/ConversationThread-DMcyiqQn.js"
+      ]
+    },
+    {
+      "module": "dist/esm/icons/image.mjs",
+      "owners": [
+        "assets/ConversationThread-DMcyiqQn.js"
+      ]
+    }
+  ],
+  "zodRefs": [
+    {
+      "file": "shared/artifact-document.ts",
+      "properties": [
+        "NEVER",
+        "array",
+        "boolean",
+        "enum",
+        "json",
+        "lazy",
+        "literal",
+        "number",
+        "object",
+        "preprocess",
+        "record",
+        "string",
+        "union"
+      ],
+      "computed": [],
+      "bare": []
+    },
+    {
+      "file": "shared/artifact-comment-anchor.ts",
+      "properties": [
+        "literal",
+        "number",
+        "object"
+      ],
+      "computed": [],
+      "bare": []
+    },
+    {
+      "file": "shared/artifact-operations.ts",
+      "properties": [
+        "array",
+        "discriminatedUnion",
+        "enum",
+        "literal",
+        "number",
+        "object",
+        "record",
+        "string"
+      ],
+      "computed": [],
+      "bare": []
+    }
+  ],
+  "zustandImports": [
+    {
+      "file": "src/stores/auth.ts",
+      "text": "import { create } from 'zustand'"
+    }
+  ],
+  "threadBindingCounts": [
+    {
+      "fileName": "assets/NativeEditor-afrUx197.js",
+      "binding": {
+        "fileName": "assets/ConversationThread-DMcyiqQn.js",
+        "importedBindingCount": 2
+      }
+    },
+    {
+      "fileName": "assets/RichTextEditor-FFpQqL0u.js",
+      "binding": {
+        "fileName": "assets/ConversationThread-DMcyiqQn.js",
+        "importedBindingCount": 0
+      }
+    }
+  ]
+}

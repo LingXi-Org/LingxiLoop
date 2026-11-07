@@ -25,7 +25,7 @@
     "专用分支、仅相关文件变化触发两次真实生产构建，Node22和各自锁文件，使用现有只读包权限；不运行服务、发布或部署。"
   ],
   "checks": {
-    "syntheticGraphTestsPassed": 5,
+    "syntheticGraphTestsPassed": 6,
     "scriptSyntax": true,
     "actualProductionProfiles": "补根和逐块元数据两轮真实生产构建均通过；新增绑定计数与公开包模块白名单待新一轮采集。",
     "actualBootPreloadsRegistered": true
@@ -58,7 +58,7 @@
     "review": "reviews/8ebdf7d1.json",
     "rootFindingClosed": true
   },
-  "nextCollection": "每条静态边增加绑定数量，以区分Rollup传递依赖展开；仅对公开lucide-react/zod/zustand白名单输出包内相对模块路径、渲染长度与渲染导出。其余包仍只聚合。不得从计数零推断无副作用，也不等同真实网络。",
+  "nextCollection": "只把已经核实的Bot/Image两个公开leaf模块置于显式共享块，onlyExplicitManualChunks保持依赖的正常归属。生产审计验证新块仅2个模块且不吸收React，并拒绝Native静态启动闭包包含会话组件。固定基线与新候选真实构建待执行；实际网络、PSS、时延和10组门槛未通过。",
   "scopeLimit": "Design实际工作区先加载会话；静态启动根不是所有路由预热根，不能将604KB静态估算当成Design实际新增传输。Mermaid命名块只是包装模块，不能凭名字声称加载了引擎。",
   "chunkOwnershipProfile": {
     "collectorCommit": "387c018d649433d7e83133a270956a93050628f3",
@@ -69,5 +69,14 @@
     "receipt": "performance/static-profile-387c018d.json",
     "normalCI": 42408450537,
     "review": "reviews/387c018d.json"
+  },
+  "bindingProfile": {
+    "collectorCommit": "bb4107e101f33eb9a274d802ea852e207e6d9c2a",
+    "run": 42409755975,
+    "job": 128515123897,
+    "success": true,
+    "qualified": false,
+    "receipt": "performance/static-profile-bb4107e1.json",
+    "normalCI": 42409760818
   }
 }

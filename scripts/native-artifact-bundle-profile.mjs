@@ -7,6 +7,11 @@ export const openingModuleRoles={
  native:['/src/features/artifacts/native/NativeEditor.tsx','/src/features/artifacts/native/RichTextEditor.tsx'],
 }
 
+export function assertNativeConversationIsolation(profile){
+ const forbidden=[...new Set(profile.nativeIncremental.chunkDetails.flatMap(chunk=>chunk.projectModules).filter(path=>/^src\/features\/chat\/components\/(ConversationThread|ConversationMessage|ConversationComposer|NativeMessageContent|ComposerLexicalInput)\./.test(path)))]
+ assert.deepEqual(forbidden,[],'原生编辑器启动块不可包含会话界面')
+}
+
 /** Build metadata only. Actual browser transfer, Workers and timing stay separate. */
 export function profileOpeningChunks(bundle,applicationRoots,nativeRoots,repositoryRoot){
  const closure=roots=>{

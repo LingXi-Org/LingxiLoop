@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { build } from 'vite'
-import {profileOpeningChunks,openingModuleRoles} from './native-artifact-bundle-profile.mjs'
+import {profileOpeningChunks,openingModuleRoles,assertNativeConversationIsolation} from './native-artifact-bundle-profile.mjs'
 
 const output = resolve(process.argv[2] ?? '/tmp/lingxi-native-bundle-audit.json')
 const outDir = resolve(process.argv[3] ?? '/tmp/lingxi-native-production-dist')
@@ -29,6 +29,11 @@ await build({
     enforce: 'post',
     generateBundle(_options, bundle) {
       const chunks = Object.values(bundle).filter(value => value.type === 'chunk')
+      const sharedIcons=chunks.find(chunk=>chunk.name==='artifact-shared-icons')
+      if(sharedIcons){
+        assert.equal(sharedIcons.moduleIds.length,2,'The measured shared icon chunk must own only two leaf modules')
+        assert.ok(sharedIcons.moduleIds.every(id=>/\/node_modules\/lucide-react\/dist\/esm\/icons\/(bot|image)\.mjs$/.test(id.replaceAll('\\','/'))),'The shared icon chunk must not absorb React or other dependencies')
+      }
       const owns = (chunk, suffix) => chunk.moduleIds.some(id => id.replaceAll('\\', '/').endsWith(suffix))
       const rootChunks = Object.fromEntries(Object.entries(openingModuleRoles).map(([role,modules])=>[role,modules.map(module=>{
         const chunk=chunks.find(value=>owns(value,module))
@@ -69,6 +74,7 @@ await build({
         exportRealm: realm.fileName,
         exportHtmlPreloadsApplication: false,
       }
+      assertNativeConversationIsolation(report.openingProfile)
     },
   }],
 })
