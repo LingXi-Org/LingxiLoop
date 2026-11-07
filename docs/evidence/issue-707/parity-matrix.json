@@ -9493,6 +9493,16 @@
       "testEvidence": {
         "receipt": "functional/design-board-transforms.json",
         "scope": "受控HTTP与真实原生组件，不替代完整授权API、性能或全部视觉状态。"
+      },
+      "altSwitchEvidence": {
+        "reference": "source-design-board-alt-switch.json",
+        "functional": "functional/design-board-alt-switch.json",
+        "qualified": false
+      },
+      "canvasScopeEvidence": {
+        "functional": "functional/design-board-scope.json",
+        "review": "reviews/c9219138.json",
+        "qualified": false
       }
     },
     {
@@ -9535,6 +9545,11 @@
       "testEvidence": {
         "receipt": "functional/design-board-transforms.json",
         "scope": "受控HTTP与真实原生组件，不替代完整授权API、性能或全部视觉状态。"
+      },
+      "groupReferenceEvidence": {
+        "reference": "source-design-board-group.json",
+        "screenshots": "visual/design-board-group/reference/",
+        "nativeStatus": "尚未实现统一外框/成员1px边框、组缩放与多选属性空态"
       }
     },
     {
@@ -9577,6 +9592,45 @@
       "testEvidence": {
         "receipt": "functional/design-board-transforms.json",
         "scope": "受控HTTP与真实原生组件，不替代完整授权API、性能或全部视觉状态。"
+      }
+    },
+    {
+      "id": "D31-design",
+      "editor": "design",
+      "control": "画板等间距吸附及距离标注",
+      "trigger": "选择中间画板，水平拖动5屏幕像素、垂直30像素",
+      "states": [
+        "左右等距",
+        "延伸已有间距",
+        "参考线与间距竞争",
+        "复制",
+        "取消吸附",
+        "多选",
+        "浅色",
+        "深色"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "snapEqualObjectGaps",
+        "module": "eU",
+        "start": 5073877,
+        "end": 5076690,
+        "offsetUnit": "UTF-16 code units",
+        "runtime": "source-design-board-equal-gap.json"
+      },
+      "implementation": null,
+      "screenshots": {
+        "reference": "visual/design-board-equal-gap/reference/gap-middle-preview.png",
+        "native": null,
+        "matchedStateVerified": false
+      },
+      "result": "尚未实现。原版中间板x保持2080、y136，出现两条红色160距离标注；当前纯几何oracle明确没有验证此能力。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": null,
+        "scope": "仅原版实际观测"
       }
     }
   ],

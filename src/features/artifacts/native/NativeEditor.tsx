@@ -427,7 +427,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     const next:CanvasView=remembered??(fit?{zoom:fit.scale*2,x:fit.x,y:fit.y}:{zoom:1})
     pendingCanvasFit.current=awaitingBody?value:null
     if(!awaitingBody)rememberCanvasView(value,next)
-    pendingCanvasView.current=next;flushText();setPointEditing(null);setEditingId(null);setCropping(null);setSelected([]);setCanvasPageId(value);setPageId(doc?.pageOrder.find(id=>canvasPageOf(doc.pages[id])===value)??null);setZoom(next.zoom)
+    pendingCanvasView.current=next;flushText();setSelectedPages([]);pageSelectionAnchor.current=null;setPointEditing(null);setEditingId(null);setCropping(null);setSelected([]);setCanvasPageId(value);setPageId(doc?.pageOrder.find(id=>canvasPageOf(doc.pages[id])===value)??null);setZoom(next.zoom)
     if(value===activeCanvasId){const mapping=previousCanvasMapping.current,point=mapping&&next.x!==undefined&&next.y!==undefined?cameraScroll({x:next.x,y:next.y},mapping):{x:panPadding.x,y:panPadding.y};element?.scrollTo({left:point.x,top:point.y});pendingCanvasView.current=null}
   }
   const copyCanvasLink=async(value:string)=>{try{const link=designPageLink(new URL(window.location.href),artifactId,value);await navigator.clipboard.writeText(link);setNotice('页面链接已复制。')}catch(error){setNotice(editorError(error,'页面链接尚未复制，请检查剪贴板权限后重试。'))}}

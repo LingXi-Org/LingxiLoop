@@ -51,13 +51,15 @@ export function useBoardTransforms(options:Options){
       event.preventDefault();event.stopPropagation()
       if(Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>3)drag.moved=true
       if(!drag.moved)return
+      drag.copy=!drag.handle&&event.altKey
       const result=calculate(drag,event);drag.frames=result.frames
-      setPreview(previous=>({...previous,frames:result.frames,guides:result.guides}))
+      setPreview(previous=>({...previous,frames:result.frames,guides:result.guides,copy:drag.copy}))
     }
     const finish=async(event:PointerEvent)=>{
       if(active.current!==drag||event.pointerId!==drag.pointer)return
       event.preventDefault();event.stopPropagation();active.current=null;drag.stop();setTimeout(()=>{suppress.current=false},0)
       if(!drag.moved||!latest.current.writable){if(!drag.moved&&deferredSelection)latest.current.select(pageId,event.shiftKey,false);setPreview(empty);return}
+      drag.copy=!drag.handle&&event.altKey;drag.frames=calculate(drag,event).frames
       const token={};finishing.current=token
       try{
         if(drag.copy){
@@ -90,7 +92,7 @@ export function useBoardTransforms(options:Options){
     if(!opts.enabled||!opts.writable||!base||!page||event.ctrlKey||event.metaKey||event.altKey||event.nativeEvent.isComposing||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return
     event.preventDefault();event.stopPropagation()
     const step=event.shiftKey?10:1,dx=event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0,dy=event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0
-    const ids=handle?[pageId]:opts.selected.includes(pageId)?opts.selected:[pageId]
+    const ids=handle?[pageId]:opts.selected.includes(pageId)?opts.selected.filter(id=>opts.ids.includes(id)):[pageId]
     const operations:ArtifactOperation[]=ids.flatMap(id=>{
       const item=base.pages[id];if(!item)return[]
       const frame=handle?resizeBoardRect(item,handle,dx,dy,[],1).rect:{...item,x:item.x+dx,y:item.y+dy}

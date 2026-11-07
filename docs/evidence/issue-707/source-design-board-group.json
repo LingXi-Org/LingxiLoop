@@ -1,0 +1,719 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceResourceHashesVerified": 12,
+  "browser": "154.0.8037.57",
+  "fixture": "native-editor-visual-fixture.mjs",
+  "scope": "1440×1000 浅色、画板属性已打开；仅记录本文件列出的手势",
+  "results": [
+    {
+      "scenario": {
+        "name": "group-resize",
+        "multi": true,
+        "selectionModifier": "Shift",
+        "resize": true,
+        "group": true
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 884.2105102539062,
+        "height": 238.73684692382812
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 919.5789184570312,
+        "height": 268.7343444824219
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 441.4375305175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1216,
+            "title": "Page 1",
+            "w": 1997,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1216,
+            "title": "Page 2",
+            "w": 1997,
+            "x": 2163,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": [],
+      "selections": [
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 441.442px; height: 268.8px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 1px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 441.4375,
+            "height": 268.7968444824219,
+            "top": 412.0526428222656,
+            "right": 489.4375,
+            "bottom": 680.8494873046875,
+            "left": 48
+          },
+          "outline": "rgb(37, 125, 224) solid 1px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 441.442px; height: 268.8px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 1px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 526.1368408203125,
+            "y": 412.0526428222656,
+            "width": 441.43743896484375,
+            "height": 268.7968444824219,
+            "top": 412.0526428222656,
+            "right": 967.5742797851562,
+            "bottom": 680.8494873046875,
+            "left": 526.1368408203125
+          },
+          "outline": "rgb(37, 125, 224) solid 1px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "pointer-events-none absolute",
+          "style": "left: 0px; top: 0px; width: 4160px; height: 1215.71px;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 919.5789184570312,
+            "height": 268.7343444824219,
+            "top": 412.0526428222656,
+            "right": 967.5789184570312,
+            "bottom": 680.7869873046875,
+            "left": 48
+          },
+          "outline": "rgba(0, 0, 0, 0.9) none 3px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 919.579px; height: 268.737px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 2px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 919.5780639648438,
+            "height": 268.7343444824219,
+            "top": 412.0526428222656,
+            "right": 967.5780639648438,
+            "bottom": 680.7869873046875,
+            "left": 48
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 42,
+            "y": 406.0526428222656,
+            "width": 12,
+            "height": 12,
+            "top": 406.0526428222656,
+            "right": 54,
+            "bottom": 418.0526428222656,
+            "left": 42
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 961.578125,
+            "y": 406.0526428222656,
+            "width": 12,
+            "height": 12,
+            "top": 406.0526428222656,
+            "right": 973.578125,
+            "bottom": 418.0526428222656,
+            "left": 961.578125
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 961.578125,
+            "y": 674.7869873046875,
+            "width": 12,
+            "height": 12,
+            "top": 674.7869873046875,
+            "right": 973.578125,
+            "bottom": 686.7869873046875,
+            "left": 961.578125
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 42,
+            "y": 674.7869873046875,
+            "width": 12,
+            "height": 12,
+            "top": 674.7869873046875,
+            "right": 54,
+            "bottom": 686.7869873046875,
+            "left": 42
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "group-resize-shift",
+        "multi": true,
+        "selectionModifier": "Shift",
+        "resize": true,
+        "group": true,
+        "modifier": "Shift"
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 884.2105102539062,
+        "height": 238.73684692382812
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 995.320556640625,
+        "height": 268.7343444824219
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 477.68756103515625,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1216,
+            "title": "Page 1",
+            "w": 2161,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1216,
+            "title": "Page 2",
+            "w": 2161,
+            "x": 2341,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": [],
+      "selections": [
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 477.695px; height: 268.8px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 1px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 477.6875,
+            "height": 268.7968444824219,
+            "top": 412.0526428222656,
+            "right": 525.6875,
+            "bottom": 680.8494873046875,
+            "left": 48
+          },
+          "outline": "rgb(37, 125, 224) solid 1px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 477.695px; height: 268.8px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 1px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 565.4841918945312,
+            "y": 412.0526428222656,
+            "width": 477.68743896484375,
+            "height": 268.7968444824219,
+            "top": 412.0526428222656,
+            "right": 1043.171630859375,
+            "bottom": 680.8494873046875,
+            "left": 565.4841918945312
+          },
+          "outline": "rgb(37, 125, 224) solid 1px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "pointer-events-none absolute",
+          "style": "left: 0px; top: 0px; width: 4502.65px; height: 1215.71px;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 995.320556640625,
+            "height": 268.7343444824219,
+            "top": 412.0526428222656,
+            "right": 1043.320556640625,
+            "bottom": 680.7869873046875,
+            "left": 48
+          },
+          "outline": "rgba(0, 0, 0, 0.9) none 3px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 995.322px; height: 268.737px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 2px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 995.3125,
+            "height": 268.7343444824219,
+            "top": 412.0526428222656,
+            "right": 1043.3125,
+            "bottom": 680.7869873046875,
+            "left": 48
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 42,
+            "y": 406.0526428222656,
+            "width": 12,
+            "height": 12,
+            "top": 406.0526428222656,
+            "right": 54,
+            "bottom": 418.0526428222656,
+            "left": 42
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 1037.3125,
+            "y": 406.0526428222656,
+            "width": 12,
+            "height": 12,
+            "top": 406.0526428222656,
+            "right": 1049.3125,
+            "bottom": 418.0526428222656,
+            "left": 1037.3125
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 1037.3125,
+            "y": 674.7869873046875,
+            "width": 12,
+            "height": 12,
+            "top": 674.7869873046875,
+            "right": 1049.3125,
+            "bottom": 686.7869873046875,
+            "left": 1037.3125
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 42,
+            "y": 674.7869873046875,
+            "width": 12,
+            "height": 12,
+            "top": 674.7869873046875,
+            "right": 54,
+            "bottom": 686.7869873046875,
+            "left": 42
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "name": "group-minimum",
+        "multi": true,
+        "selectionModifier": "Shift",
+        "resize": true,
+        "group": true,
+        "dx": -1000,
+        "dy": -500
+      },
+      "bounds": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 884.2105102539062,
+        "height": 238.73684692382812
+      },
+      "frame": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 55.263153076171875,
+        "height": 26.52630615234375
+      },
+      "heading": {
+        "x": 48,
+        "y": 384.052978515625,
+        "width": 26.515625,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 120,
+            "title": "Page 1",
+            "w": 120,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 120,
+            "title": "Page 2",
+            "w": 120,
+            "x": 130,
+            "y": 0
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": [],
+      "selections": [
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 26.5263px; height: 26.5263px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 1px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 26.515625,
+            "height": 26.515625,
+            "top": 412.0526428222656,
+            "right": 74.515625,
+            "bottom": 438.5682678222656,
+            "left": 48
+          },
+          "outline": "rgb(37, 125, 224) solid 1px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 26.5263px; height: 26.5263px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 1px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 76.7368392944336,
+            "y": 412.0526428222656,
+            "width": 26.515625,
+            "height": 26.515625,
+            "top": 412.0526428222656,
+            "right": 103.2524642944336,
+            "bottom": 438.5682678222656,
+            "left": 76.7368392944336
+          },
+          "outline": "rgb(37, 125, 224) solid 1px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "pointer-events-none absolute",
+          "style": "left: 0px; top: 0px; width: 250px; height: 120px;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 55.263153076171875,
+            "height": 26.52630615234375,
+            "top": 412.0526428222656,
+            "right": 103.26315307617188,
+            "bottom": 438.5789489746094,
+            "left": 48
+          },
+          "outline": "rgba(0, 0, 0, 0.9) none 3px"
+        },
+        {
+          "tag": "DIV",
+          "cls": "outline-fill-accent",
+          "style": "position: absolute; left: 0px; top: 0px; width: 55.2632px; height: 26.5263px; transform-origin: 0px 0px; transform: translate(0px, 0px) scale(4.52381); outline-width: 2px; outline-style: solid; outline-offset: 0px; pointer-events: none;",
+          "rect": {
+            "x": 48,
+            "y": 412.0526428222656,
+            "width": 55.25,
+            "height": 26.515625,
+            "top": 412.0526428222656,
+            "right": 103.25,
+            "bottom": 438.5682678222656,
+            "left": 48
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 42,
+            "y": 406.0526428222656,
+            "width": 12,
+            "height": 12,
+            "top": 406.0526428222656,
+            "right": 54,
+            "bottom": 418.0526428222656,
+            "left": 42
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 97.234375,
+            "y": 406.0526428222656,
+            "width": 12,
+            "height": 12,
+            "top": 406.0526428222656,
+            "right": 109.234375,
+            "bottom": 418.0526428222656,
+            "left": 97.234375
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 97.234375,
+            "y": 432.5526428222656,
+            "width": 12,
+            "height": 12,
+            "top": 432.5526428222656,
+            "right": 109.234375,
+            "bottom": 444.5526428222656,
+            "left": 97.234375
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        },
+        {
+          "tag": "SPAN",
+          "cls": "absolute left-1/2 top-1/2 box-border block -translate-x-1/2 -translate-y-1/2 outline-fill-accent",
+          "style": "width: 12px; height: 12px; border-radius: 1px; background-color: var(--cds-on-accent); outline-style: solid; outline-width: 2px; outline-offset: -2px; pointer-events: none;",
+          "rect": {
+            "x": 42,
+            "y": 432.5526428222656,
+            "width": 12,
+            "height": 12,
+            "top": 432.5526428222656,
+            "right": 54,
+            "bottom": 444.5526428222656,
+            "left": 42
+          },
+          "outline": "rgb(37, 125, 224) solid 2px"
+        }
+      ]
+    }
+  ],
+  "qualified": false,
+  "nativeStatus": "尚未实现统一多选外框/组缩放与属性空态；仅原版实际观测。"
+}

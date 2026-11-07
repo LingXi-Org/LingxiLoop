@@ -19,13 +19,14 @@ for(const source of inventory.sources)assert.equal(createHash('sha256').update(a
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE?pathToFileURL(process.env.PLAYWRIGHT_MODULE).href:'playwright')
 const browser=await chromium.launch({headless:true,...(args.browser?{executablePath:args.browser}:{}),args:['--no-sandbox']})
 const scenarios=[
-  {name:'move'},{name:'move-shift',modifier:'Shift'},{name:'move-unsnapped',modifier:'Control'},
+  {name:'group-resize',multi:true,selectionModifier:'Shift',resize:true,group:true},{name:'group-resize-shift',multi:true,selectionModifier:'Shift',resize:true,group:true,modifier:'Shift'},{name:'group-minimum',multi:true,selectionModifier:'Shift',resize:true,group:true,dx:-1000,dy:-500},
+  {name:'gap-middle',targetFile:'Page2.dc.html',dx:5},{name:'move'},{name:'move-shift',modifier:'Shift'},{name:'move-unsnapped',modifier:'Control'},
   ...[25,28,30,42,44,46].map(dx=>({name:`snap-${dx}`,dx})),
   ...['n','e','s','w','nw','ne','sw'].map(handle=>({name:`resize-${handle}`,resize:true,handle})),
   {name:'resize',resize:true},{name:'resize-unsnapped',resize:true,modifier:'Control'},{name:'resize-shift',resize:true,modifier:'Shift'},{name:'resize-alt',resize:true,modifier:'Alt'},
   {name:'minimum',resize:true,dx:-500,dy:-300},{name:'minimum-shift',resize:true,dx:-500,dy:-300,modifier:'Shift'},
   {name:'maximum',resize:true,dx:3000,dy:2000},
-  {name:'copy',modifier:'Alt'},{name:'copy-multi',modifier:'Alt',multi:true,selectionModifier:'Shift'},{name:'cancel',cancel:true},{name:'copy-cancel',modifier:'Alt',cancel:true},
+  {name:'copy',modifier:'Alt'},{name:'copy-late',phase:'press'},{name:'copy-release',modifier:'Alt',phase:'release'},{name:'copy-multi',modifier:'Alt',multi:true,selectionModifier:'Shift'},{name:'cancel',cancel:true},{name:'copy-cancel',modifier:'Alt',cancel:true},
 ]
 const results=[]
 await mkdir(output,{recursive:true})
@@ -40,22 +41,25 @@ try{
       page=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'})
       await page.goto(url,{waitUntil:'networkidle'});await waitForReferenceVisualDocument(page,'design')
       await page.getByRole('button',{name:'Properties',exact:true}).click();await page.getByRole('button',{name:'Artboard 1 of 3: Page 1',exact:true}).click()
+      if(scenario.targetFile)await page.getByTestId('mega-artboard-title-'+scenario.targetFile).click()
       if(scenario.multi){await page.getByTestId('mega-artboard-title-Page2.dc.html').click();await page.getByTestId('mega-artboard-title-Page1.dc.html').click({modifiers:[scenario.selectionModifier]})}
       const before=JSON.parse(await readFile(join(project,'project/canvas.json'),'utf8'))
-      const target=page.getByTestId(scenario.resize?'mega-artboard-resize-Page1.dc.html':'mega-artboard-title-Page1.dc.html'),bounds=await target.boundingBox()
+      const target=scenario.group?page.locator('[data-testid="mega-set-box"],[data-testid="mega-group-box"]'):page.getByTestId((scenario.resize?'mega-artboard-resize-':'mega-artboard-title-')+(scenario.targetFile??'Page1.dc.html')),bounds=await target.boundingBox()
       const handle=scenario.handle??'se'
       const start=scenario.resize?{x:bounds.x+(handle.includes('w')?0:handle.includes('e')?bounds.width:bounds.width/2),y:bounds.y+(handle.includes('n')?0:handle.includes('s')?bounds.height:bounds.height/2)}:{x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2}
       if(scenario.modifier)await page.keyboard.down(scenario.modifier)
-      await page.mouse.move(start.x,start.y);await page.mouse.down();await page.mouse.move(start.x+(scenario.dx??40),start.y+(scenario.dy??30),{steps:5})
+      await page.mouse.move(start.x,start.y);await page.mouse.down();if(scenario.phase){await page.mouse.move(start.x+(scenario.dx??40)/2,start.y+(scenario.dy??30)/2,{steps:3});if(scenario.phase==='press')await page.keyboard.down('Alt');else await page.keyboard.up('Alt')}await page.mouse.move(start.x+(scenario.dx??40),start.y+(scenario.dy??30),{steps:5})
       await page.waitForTimeout(120)
-      const frame=await page.getByTestId('mega-artboard-resize-Page1.dc.html').boundingBox(),heading=await page.getByTestId('mega-artboard-title-Page1.dc.html').boundingBox()
+      const frame=await (scenario.group?page.locator('[data-testid="mega-set-box"],[data-testid="mega-group-box"]'):page.getByTestId('mega-artboard-resize-'+(scenario.targetFile??'Page1.dc.html'))).boundingBox(),heading=await page.getByTestId('mega-artboard-title-'+(scenario.targetFile??'Page1.dc.html')).boundingBox()
+      const selections=scenario.group?await page.locator('[style*="outline-width"],[data-mega-chrome="group-resize"]').evaluateAll(nodes=>nodes.map(element=>{const style=getComputedStyle(element);return{tag:element.tagName,cls:String(element.className),style:element.getAttribute('style'),rect:element.getBoundingClientRect().toJSON(),outline:style.outline}})):undefined
+      const decorations=scenario.targetFile?await page.locator('[data-testid],svg line,svg text').evaluateAll(nodes=>nodes.filter(element=>/gap|snap|guide/i.test(element.getAttribute('data-testid')??'')||element.tagName.toLowerCase()==='line'||element.tagName.toLowerCase()==='text').map(element=>({tag:element.tagName,testId:element.getAttribute('data-testid'),cls:String(element.className?.baseVal??element.className),style:element.getAttribute('style'),text:element.textContent,rect:element.getBoundingClientRect().toJSON(),stroke:getComputedStyle(element).stroke,color:getComputedStyle(element).color})).slice(-80)):undefined
       const preview=await page.locator('div.border-dashed').evaluateAll(nodes=>nodes.map(element=>{const style=getComputedStyle(element);return{rect:element.getBoundingClientRect().toJSON(),background:style.backgroundColor,border:style.border,borderRadius:style.borderRadius}}))
       await page.screenshot({path:join(output,`${scenario.name}-preview.png`)})
       if(scenario.cancel)await page.keyboard.press('Escape')
-      await page.mouse.up();if(scenario.modifier)await page.keyboard.up(scenario.modifier)
+      await page.mouse.up();if(scenario.modifier)await page.keyboard.up(scenario.modifier);if(scenario.phase==='press')await page.keyboard.up('Alt')
       await page.keyboard.press('Control+s');await page.waitForTimeout(600)
       const after=JSON.parse(await readFile(join(project,'project/canvas.json'),'utf8'))
-      results.push({scenario,bounds,frame,heading,before,after,preview})
+      results.push({scenario,bounds,frame,heading,before,after,preview,...(decorations?{decorations}:{}),...(selections?{selections}:{})})
       await writeFile(join(output,'reference.json'),JSON.stringify({referenceCommit:inventory.referenceCommit,referenceResourceHashesVerified:inventory.sources.length,browser:browser.version(),fixture:'native-editor-visual-fixture.mjs',scope:'1440×1000 浅色、画板属性已打开；仅记录本文件列出的手势',results},null,2)+'\n')
       console.log(`${scenario.name} 已捕获`)
     }finally{await page?.close();server?.kill('SIGTERM');await rm(project,{recursive:true,force:true})}

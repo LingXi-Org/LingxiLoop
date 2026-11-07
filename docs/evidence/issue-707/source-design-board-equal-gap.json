@@ -1,0 +1,173 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceResourceHashesVerified": 12,
+  "browser": "154.0.8037.57",
+  "fixture": "native-editor-visual-fixture.mjs",
+  "scope": "1440×1000 浅色、画板属性已打开；仅记录本文件列出的手势",
+  "results": [
+    {
+      "scenario": {
+        "name": "gap-middle",
+        "targetFile": "Page2.dc.html",
+        "dx": 5
+      },
+      "bounds": {
+        "x": 507.7894592285156,
+        "y": 384.052978515625,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "frame": {
+        "x": 507.7894592285156,
+        "y": 442.1158142089844,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812
+      },
+      "heading": {
+        "x": 507.7894592285156,
+        "y": 414.1161193847656,
+        "width": 424.4062805175781,
+        "height": 24
+      },
+      "before": {
+        "v": 3,
+        "title": "LingxiLoop",
+        "launch": {
+          "view": "canvas"
+        },
+        "pages": [],
+        "boards": {
+          "Page1.dc.html": {
+            "x": 0,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 1"
+          },
+          "Page2.dc.html": {
+            "x": 2080,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 2"
+          },
+          "Page3.dc.html": {
+            "x": 4160,
+            "y": 0,
+            "w": 1920,
+            "h": 1080,
+            "title": "Page 3"
+          }
+        },
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "notes": {},
+        "designSystems": []
+      },
+      "after": {
+        "v": 3,
+        "attachments": {},
+        "boards": {
+          "Page1.dc.html": {
+            "h": 1080,
+            "title": "Page 1",
+            "w": 1920,
+            "x": 0,
+            "y": 0
+          },
+          "Page2.dc.html": {
+            "h": 1080,
+            "title": "Page 2",
+            "w": 1920,
+            "x": 2080,
+            "y": 136
+          },
+          "Page3.dc.html": {
+            "h": 1080,
+            "title": "Page 3",
+            "w": 1920,
+            "x": 4160,
+            "y": 0
+          }
+        },
+        "designSystems": [],
+        "launch": {
+          "view": "canvas"
+        },
+        "notes": {},
+        "order": [
+          "Page1.dc.html",
+          "Page2.dc.html",
+          "Page3.dc.html"
+        ],
+        "pages": [],
+        "title": "LingxiLoop"
+      },
+      "preview": [],
+      "decorations": [
+        {
+          "tag": "DIV",
+          "testId": "mega-spacing-guides",
+          "cls": "pointer-events-none absolute inset-0 z-30",
+          "style": null,
+          "text": "160160",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1104,
+            "height": 1000,
+            "top": 0,
+            "right": 1104,
+            "bottom": 1000,
+            "left": 0
+          },
+          "stroke": "none",
+          "color": "rgba(0, 0, 0, 0.9)"
+        },
+        {
+          "tag": "line",
+          "testId": null,
+          "cls": "",
+          "style": "stroke: var(--t-measure); stroke-width: 1; opacity: 1;",
+          "text": "",
+          "rect": {
+            "x": 472.4210510253906,
+            "y": 546.4210815429688,
+            "width": 35.368408203125,
+            "height": 0,
+            "top": 546.4210815429688,
+            "right": 507.7894592285156,
+            "bottom": 546.4210815429688,
+            "left": 472.4210510253906
+          },
+          "stroke": "rgb(220, 60, 61)",
+          "color": "rgba(0, 0, 0, 0.9)"
+        },
+        {
+          "tag": "line",
+          "testId": null,
+          "cls": "",
+          "style": "stroke: var(--t-measure); stroke-width: 1; opacity: 1;",
+          "text": "",
+          "rect": {
+            "x": 932.2105102539062,
+            "y": 546.4210815429688,
+            "width": 35.368408203125,
+            "height": 0,
+            "top": 546.4210815429688,
+            "right": 967.5789184570312,
+            "bottom": 546.4210815429688,
+            "left": 932.2105102539062
+          },
+          "stroke": "rgb(220, 60, 61)",
+          "color": "rgba(0, 0, 0, 0.9)"
+        }
+      ]
+    }
+  ],
+  "qualified": false,
+  "nativeStatus": "尚未实现等距吸附和标注，仅有原版参考观测。"
+}
