@@ -1,0 +1,67 @@
+{
+  "审查对象": {
+    "候选提交": "8ebdf7d12d1e9b819ffe308605a25ab69b83375e",
+    "基线提交": "e3bc15de5d1bbe408a155283ada8e6db51824ef4",
+    "工作树": "/workspace/lingxi-issue707-scratch/review-8ebdf7d1",
+    "技能": ".agents/skills/repository-review/SKILL.md",
+    "范围": "仅P3启动根补齐、命名角色分组、原隔离审计根集合及首轮不完整数据/审查归档。",
+    "隔离": "独立detached只读；未读root后续WIP，未改产品/依赖、提交、推送、外发或部署。HEAD一致，工作树干净。"
+  },
+  "结论": "本批静态局部复审通过。原P3启动根缺口关闭，未发现新增P1/P2或其他可复现采集缺口。尚未验证补根后真实生产profile及任何实际性能资格。",
+  "发现": [],
+  "原P3闭环": {
+    "原报告": "/tmp/lingxi-review-e3bc15de.json",
+    "原缺口": "应用warm根遗漏GlobalInteractionProvider；实际字节影响未证明，不按实测性能P2处理。",
+    "修复": "openingModuleRoles显式命名application/native，application含main及全部实际BOOT_ROUTE_MODULES，包括GlobalInteractionProvider；audit按角色分别解析chunk，不再slice。全隔离审计根为两组并集，也包含新增Global根。",
+    "验证": "读取候选和固定72162f58两版vite.config.ts，实际5个boot预加载模块均包含在6个application根中；受控图中的Global及其共享/循环依赖全部进入application，nativeIncremental只剩真正未预热的原生/文字块；反转角色数组顺序结果一致。"
+  },
+  "实际独立检查": [
+    {
+      "项目": "3个采集器测试",
+      "结果": "3/3通过，无跳过，包括读取实际Vite预加载列表并要求应用角色覆盖的新回归。",
+      "命令": "node --test scripts/native-artifact-bundle-profile.test.mjs",
+      "证据": "/tmp/lingxi-review-8eb-tests.log"
+    },
+    {
+      "项目": "命名角色受控图",
+      "结果": "按候选角色解析所有chunk，验证Global包含、其共享/循环闭包被扣除、循环去重、顺序不影响结果、UTF8字节/gzip独立求和一致、私有包内部文件名未输出。仅合成元数据，不是产品构建/网络。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-8eb-graph.mjs",
+        "/workspace/lingxi-issue707-scratch/review-8eb-graph.json"
+      ]
+    },
+    {
+      "项目": "两版实际boot列表覆盖",
+      "结果": "候选及72162f582fe49e9cbdb03f760e29e3683f9c5c99实际Vite BOOT_ROUTE_MODULES均已覆盖；没有只核候选忽略固定基线。",
+      "证据": "/workspace/lingxi-issue707-scratch/review-8eb-roots.json"
+    },
+    {
+      "项目": "既有隔离约束",
+      "结果": "自动提取新旧audit从const reached到report赋值前核心并逐字比较相同；禁止兼容/导出静态引入、独立导出realm及HTML不得预加载应用根等断言未弱化。根并集新增Global使检查覆盖扩大。源指纹前后稳定检查未改。"
+    },
+    {
+      "项目": "原报告归档",
+      "结果": "docs/evidence/issue-707/reviews/e3bc15de.json与本人原/tmp报告逐字节一致。"
+    },
+    {
+      "项目": "首轮真实数据隐私/范围",
+      "结果": "独立解析static-profile-e3bc15de-incomplete.json，两份profile均qualified:false且uncommittedInputsPossible:false；外层qualification:false与P3/根不完整说明保留。每项模块仅label/count/UTF16长度，项目相对路径、依赖包名聚合或build-runtime，无源码字段或私有包内部路径明细。只核归档结构与标注，本轮未独立抓取首轮CI。"
+    },
+    {
+      "项目": "语法/格式",
+      "结果": "两个mjs node --check通过；git diff --check相对e3bc及完整af2起点均无输出。精确HEAD与工作树不变。"
+    }
+  ],
+  "不变边界": [
+    "workflow本次无修改；前次已审查的仅分支/4相关路径触发、contents:read/packages:read、固定721基线、Node22、各自锁文件npm ci、JSON产物及无发布/部署边界未变。",
+    "helper闭包、UTF16长度、gzip估算、路径聚合/脱敏及前100项模块列表逻辑未改；元数据不包含模块代码。",
+    "无src/shared/依赖/运行时、服务、Worker计量、浏览器就绪断言或性能阈值变动。"
+  ],
+  "未验证门槛": [
+    "新正常CI42405950324、重采42405945264由父线程通知进行中，本轮未查询，不报告为通过。",
+    "本地缺精确私有SDK，未造桩也未实际运行两版生产profile。首轮真实结果仍是不完整归属，不能用本次静态修复追认。",
+    "没有证明补Global会使真实nativeIncremental字节改变多少；受控共享图不冒充实际共享交集或性能回归。",
+    "静态profile不能替代实际HTTP/Worker/PSS/时延或最终10组交替AB/BA；完整视觉和服务资格仍未完成。",
+    "无产品变动，本轮未重复浏览器、PG、OSIME、导出及50页检查。"
+  ]
+}

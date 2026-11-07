@@ -25,7 +25,7 @@
     "专用分支、仅相关文件变化触发两次真实生产构建，Node22和各自锁文件，使用现有只读包权限；不运行服务、发布或部署。"
   ],
   "checks": {
-    "syntheticGraphTestsPassed": 3,
+    "syntheticGraphTestsPassed": 4,
     "scriptSyntax": true,
     "actualProductionProfiles": "首轮已运行但根集合不完整；修复轮待重新执行。",
     "actualBootPreloadsRegistered": true
@@ -46,5 +46,18 @@
     "qualified": false,
     "receipt": "performance/static-profile-e3bc15de-incomplete.json",
     "finding": "P3：实际启动GlobalInteractionProvider预热根遗漏，保留原数据，补根重采后才能用于完整归属。"
-  }
+  },
+  "correctedRootProfile": {
+    "collectorCommit": "8ebdf7d12d1e9b819ffe308605a25ab69b83375e",
+    "run": 42405945264,
+    "job": 128503541832,
+    "success": true,
+    "qualified": false,
+    "receipt": "performance/static-profile-8ebdf7d1.json",
+    "normalCI": 42405950324,
+    "review": "reviews/8ebdf7d1.json",
+    "rootFindingClosed": true
+  },
+  "nextCollection": "补逐块imports/dynamicImports/isDynamicEntry/字节/第一方归属/依赖包聚合，用于判别Native静态边和模块共置；不输出源码、私包内部路径或外部动态URL。",
+  "scopeLimit": "Design实际工作区先加载会话；静态启动根不是所有路由预热根，不能将604KB静态估算当成Design实际新增传输。Mermaid命名块只是包装模块，不能凭名字声称加载了引擎。"
 }

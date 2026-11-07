@@ -34,3 +34,18 @@ test('every actual boot preload is subtracted as an application root',()=>{
  const modules=JSON.parse(declaration[1].replaceAll("'",'"'))
  for(const module of modules)assert.ok(openingModuleRoles.application.includes('/'+module),`Missing actual warm boot root: ${module}`)
 })
+
+test('chunk ownership separates static edges, lazy routes and co-located project utilities',()=>{
+ const bundle={
+  'native.js':{...chunk('native.js',['thread.js'],{'/repo/src/features/artifacts/native/NativeEditor.tsx':{renderedLength:100,originalLength:200}}),dynamicImports:['comments.js'],isDynamicEntry:true},
+  'thread.js':chunk('thread.js',[],{'/repo/src/features/chat/components/ConversationThread.tsx':{renderedLength:90,originalLength:120},'/repo/src/lib/shared.ts':{renderedLength:10,originalLength:20},'/repo/node_modules/lexical/private.js':{renderedLength:30,originalLength:40}}),
+  'comments.js':chunk('comments.js',[],{'/repo/src/features/artifacts/native/CommentsPanel.tsx':{renderedLength:10,originalLength:20}}),
+ }
+ const profile=profileOpeningChunks(bundle,[],['native.js'],'/repo'),details=profile.nativeIncremental.chunkDetails
+ assert.deepEqual(details.find(item=>item.fileName==='native.js').imports,['thread.js'])
+ assert.deepEqual(details.find(item=>item.fileName==='native.js').dynamicImports,['comments.js'])
+ assert.equal(details.find(item=>item.fileName==='native.js').isDynamicEntry,true)
+ assert.deepEqual(details.find(item=>item.fileName==='thread.js').projectModules,['src/features/chat/components/ConversationThread.tsx','src/lib/shared.ts'])
+ assert.equal(details.find(item=>item.fileName==='thread.js').dependencyPackages[0].label,'dependency:lexical')
+ assert.ok(!JSON.stringify(profile).includes('private.js'))
+})

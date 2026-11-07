@@ -1,0 +1,181 @@
+{
+  "审查对象": {
+    "候选提交": "8ebdf7d12d1e9b819ffe308605a25ab69b83375e",
+    "固定基线": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+    "工作树": "/workspace/lingxi-issue707-scratch/review-8ebdf7d1",
+    "指定只读数据": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-8ebdf7d1.json",
+    "输入数据SHA256": "7e4d3e011a143cd6b233f2ed8ad530fb79ef5532304940b81b24e8148b9b5b1d",
+    "范围": "只读追加静态归属诊断；不改代码/分块策略，不下载私有构建包，不造SDK桩，不运行浏览器或长诊断。未读取root其他WIP，工作树干净。"
+  },
+  "结论": "已确认生产静态闭包含会话组件及其Markdown/Lexical依赖，并定位会话侧最短源码消费者路径。原生源码没有对应直接静态导入；现有数据缺逐chunk imports及module→chunk归属，不能确认Native/RTE到ConversationThread的第一条生产边或具体共置绑定。下一步应只补最小安全chunk元数据再决定解耦点。静态604237 gzip字节不等同实际新增传输。",
+  "静态量核对": {
+    "基线": {
+      "gzip估算字节": 155935,
+      "原始JS字节": 481852,
+      "块数": 6,
+      "渲染模块数": 59
+    },
+    "候选": {
+      "gzip估算字节": 604237,
+      "原始JS字节": 1903380,
+      "块数": 30,
+      "渲染模块数": 801
+    },
+    "差值": {
+      "gzip估算字节": 448302,
+      "原始JS字节": 1421528,
+      "块数": 24
+    },
+    "限定": "gzip是逐构建块本地估算；模块长度UTF16码元，且归属列表只保留前100项。以上不是HTTP字节、冷启动时间或PSS。"
+  },
+  "已验证消费者路径": [
+    {
+      "对象": "streamdown/parse5",
+      "路径": [
+        "src/features/chat/components/ConversationThread.tsx:16 → ConversationMessage",
+        "src/features/chat/components/ConversationMessage.tsx:12 → MarkdownText",
+        "src/components/assistant-ui/markdown-text.tsx:9 → streamdown",
+        "streamdown@2.6.0/dist/chunk-YOKDWASO.js:2 → rehype-raw",
+        "rehype-raw@7.0.0/lib/index.js:12 → hast-util-raw",
+        "hast-util-raw@9.1.0/lib/index.js:36 → parse5@7.3.0"
+      ],
+      "证明": "实际源码import及本机已安装公共包import，公共包版本逐项与冻结锁文件一致。对应parse5/streamdown的聚合渲染长度在候选原生静态闭包分别为340310/225238码元。不是原生源码直接导入parse5的证据。"
+    },
+    {
+      "对象": "Lexical",
+      "路径": [
+        "ConversationThread.tsx:14 → ConversationComposer",
+        "ConversationComposer.tsx:27 → ComposerLexicalInput",
+        "ComposerLexicalInput.tsx:5 → @assistant-ui/react-lexical",
+        "ComposerLexicalInput.tsx:6/7 → @lexical/react与lexical"
+      ],
+      "证明": "源码存在该会话输入消费者链，候选闭包lexical聚合167501码元；Native/RTE源码没有Lexical静态import。"
+    },
+    {
+      "对象": "会话其他大块",
+      "路径": [
+        "ConversationThread → ConversationMessage → NativeMessageContent",
+        "NativeMessageContent → TraceWaterfall/生成式UI/RunActivity等"
+      ],
+      "证明": "源码静态消费者存在，且候选聚合列表出现相应第一方模块；不据聚合列表推断每个模块的实际chunk文件。"
+    },
+    {
+      "对象": "Mermaid名称辨析",
+      "路径": [
+        "MarkdownText.tsx:7 → markdown-mermaid.ts（轻量包装）",
+        "markdown-mermaid.ts:13在实际render时动态import @streamdown/mermaid",
+        "streamdown核心lazy动态导入同包mermaid-HWGCJPDP.js组件包装"
+      ],
+      "证明": "已安装且锁定的streamdown@2.6.0/dist/mermaid-HWGCJPDP.js仅60字节，重导出同包核心的Mermaid React组件；其名字与生产mermaid-HWGCJPDP-DnFbuFN0.js前缀一致。仅凭生产chunk名不能认定完整mermaid引擎已加载，也不能据前100归属列表证明引擎绝对不存在。未读取私有SDK源码。"
+    }
+  ],
+  "原生源码检查": {
+    "方法": "用TypeScript AST遍历ImportDeclaration及ExportDeclaration，排除显式type-only；解析@/及相对路径，动态import单列不纳入静态闭包；裸包仅记录入口名，不解析私有源码。",
+    "结果": "本方法NativeEditor+RichTextEditor共71个项目模块（含两根），裸入口仅react、lucide-react、@tiptap/react、@tiptap/starter-kit、react-dom、zod、zustand。没有通向ConversationThread/streamdown/parse5的直接第一方静态路径。",
+    "边界": "源码AST不是Rollup树摇/隐式JSX导入/公共包内部图，不能据此否定真实chunk.imports产生的边，也不能宣称70或71与生产801模块是同一种计数。",
+    "证据": [
+      "/workspace/lingxi-issue707-scratch/review-8eb-ownership/source-graph.mjs",
+      "/workspace/lingxi-issue707-scratch/review-8eb-ownership/source-graph.json"
+    ]
+  },
+  "可验证耦合候选": [
+    {
+      "候选": "原生根到ConversationThread的生产静态chunk路径",
+      "证据": "profile仅从NativeEditor和RichTextEditor根的chunk.imports闭包计算，而候选集合包含ConversationThread-DMcyiqQn.js；由采集器定义至少存在一条该根并集到此块的静态边路径。",
+      "尚缺": "不能确定哪个根、哪一跳、绑定或共置模块。现有JSON只有集合和跨块聚合，没有边表。",
+      "优先动作": "用逐chunk imports做BFS输出两根各自到ConversationThread的最短路径，再读该路径中每块的第一方模块归属。"
+    },
+    {
+      "候选": "Tiptap/use-sync-external-store的公共共享入口",
+      "证据": "RichTextEditor.tsx:4→@tiptap/react@3.23.4；公共dist/index.js:7/148/153静态import shim/index.js及shim/with-selector.js；聊天公共@base-ui/react popup/media-query工具也用同一shim入口。两轮原生集合都有with-selector块，但生产名字由B3_dFiXZ变为DvQAS2oS。",
+      "限定": "这是可核对的共享公共依赖边界，尚未证明RichTextEditor→with-selector→ConversationThread确实为生产路径。"
+    },
+    {
+      "候选": "react-dom默认/命名导出与共置",
+      "证据": "NativeEditor→SpeakerAccessRecovery.tsx:1调用createPortal；Tiptap React导入react-dom默认值/flushSync；streamdown核心也静态导入react-dom。",
+      "限定": "源码共享入口存在，但当前无法归因于具体导出共置。"
+    },
+    {
+      "候选": "Lucide共享图标边界",
+      "证据": "Native EditorPrimitives及RTE静态导入Lucide，ConversationMessage/Composer也使用Lucide；候选原生聚合Lucide为45784码元/98模块。",
+      "限定": "createLucideIcon块已经属于应用warm集合，不能把整个Lucide或全Chat引入归因于图标。需逐块/绑定证据。"
+    }
+  ],
+  "路由和真实传输": {
+    "Design工作区": "native-artifact-serve.mjs:234/237使用view=conversations&conversation=...。ChatPane.tsx:18懒加载ConversationThread，实际会话界面在设计按钮旁渲染该线程；线程及其静态依赖可能在编辑器打开前已经下载，需以每样本preOpenScriptBytes/网络明细核对，不能仅以静态应用根扣除结果推断。",
+    "Slides工作区": "serve.mjs:238使用view=slides列表；DesktopApp只在chatActive或已保留聊天状态时渲染线程。不能把Design的动态热状态直接移用于Slides。页头虽预加载ChatPane静态根，其动态ConversationThread不自动等于已预热。",
+    "完整导航": "应用及原生开始阶段均在计时/字节窗口内；与workbenchOpen先加载外壳后计算增量的口径不同。",
+    "历史354单组观察": [
+      {
+        "kind": "design",
+        "mode": "fullNavigation",
+        "baselineBytes": 1279443,
+        "candidateBytes": 1347594,
+        "deltaBytes": 68151,
+        "ratio": 1.053266147847149,
+        "performanceEligibleSamplesPerArm": [
+          1,
+          1
+        ],
+        "baselineFailedExportObservations": 3
+      },
+      {
+        "kind": "design",
+        "mode": "workbenchOpen",
+        "baselineBytes": 242587,
+        "candidateBytes": 304788,
+        "deltaBytes": 62201,
+        "ratio": 1.256406979763961,
+        "performanceEligibleSamplesPerArm": [
+          1,
+          1
+        ],
+        "baselineFailedExportObservations": 0
+      },
+      {
+        "kind": "slides",
+        "mode": "fullNavigation",
+        "baselineBytes": 1303840,
+        "candidateBytes": 1371883,
+        "deltaBytes": 68043,
+        "ratio": 1.0521866179899375,
+        "performanceEligibleSamplesPerArm": [
+          1,
+          1
+        ],
+        "baselineFailedExportObservations": 3
+      },
+      {
+        "kind": "slides",
+        "mode": "workbenchOpen",
+        "baselineBytes": 642527,
+        "candidateBytes": 705299,
+        "deltaBytes": 62772,
+        "ratio": 1.0976955054028859,
+        "performanceEligibleSamplesPerArm": [
+          1,
+          1
+        ],
+        "baselineFailedExportObservations": 0
+      }
+    ],
+    "解释": "354每臂仅一组：Design完整导航+68151字节、工作区打开+62201；Slides完整导航+68043、工作区打开+62772，单组比值均>1.05。基线完整导航各3个导出观察失败，正式gates未给有效最终资格，qualified:false。这些是354历史实际观察，不能替代8eb/最终候选10组AB/BA，也不能把+448302静态gzip当成上述实际差值。"
+  },
+  "版本核对": "React/ReactDOM/Lucide/Tiptap/Zustand/Zod/Streamdown/assistant-ui/Lexical在721和8eb锁定版本均相同；本机所读公共依赖版本也匹配锁。未读私有SDK内部文件，不据当前数据归因于依赖升级。NativeEditor渲染长度66892→176300码元说明自身实现增长，但不同码元/压缩块/网络口径不能直接分摊真实传输成本。",
+  "下一步最小安全采集": {
+    "第一阶段必需字段": [
+      "每个相关chunk的公共fileName、imports、dynamicImports、isEntry/isDynamicEntry及对应根角色。",
+      "每块codeBytes/gzipBytes；第一方projectModules为仓库相对路径与renderedCodeUnits，不对第一方归属做前100截断。",
+      "每块dependencyPackages只聚合包名/模块数/渲染长度，继续不公开私包内部路径或模块源码。"
+    ],
+    "这些字段足以": "恢复Native/RTE→ConversationThread的实际最短chunk边；定位是否有原生所需的小模块与会话主块共置；区分动态路由或Mermaid组件包装；按Design/Slides单独讨论预热。",
+    "仅在第一阶段不足时": "对已经定位的共置模块收集Rollup getModuleInfo(importedIds/importers/dynamicallyImportedIds)，项目用相对路径，私有模块用稳定不透明ID加包名聚合；必要导出/绑定只给可连接的计数或不透明ID，不输出源码、私包路径。无需下载私有构建包。",
+    "当前不支持的决策": "在实际边/共置模块明朗前，无法据此指定删除编辑功能、修改生产manualChunks或拆某个确定模块。应先锁定第一生产边，再做最小解耦并重跑相同真实基准。"
+  },
+  "数据及操作边界": {
+    "输入核对": "指定JSON内collectorCommit/候选与固定基线SHA正确，qualification:false；本轮读取提供的数据及冻结历史354收据，未独立抓取CI原始构建包/日志。",
+    "证据汇总": "/workspace/lingxi-issue707-scratch/review-8eb-ownership/ownership-evidence.json",
+    "只读": "没有产品/依赖/采集器修改，没有新浏览器、生产构建、长性能诊断、部署或发布。"
+  },
+  "未验证": "Native到会话块的真实第一跳/共置绑定、8eb实际HTTP/Worker/PSS/启动输入、各路由动态热状态及最终10组性能都未在本轮确认；完整功能/视觉/服务资格仍false。"
+}
