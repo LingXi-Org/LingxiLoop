@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import {editorColorLabel} from './editor-copy'
 const ColorPopover = lazy(() => import('./ColorPopover'))
 export const EditorPaletteContext = createContext<string[]>([])
 export const EditorColorSessionContext = createContext<() => void>(() => {})
@@ -17,9 +18,11 @@ export function ColorField({
   value,
   onChange,
   description,
+  disabled = false,
 }: {
   label: string
   description?: string
+  disabled?: boolean
   value: string
   onChange(value: string): void
 }) {
@@ -44,6 +47,7 @@ export function ColorField({
       <button
         ref={button}
         type="button"
+        disabled={disabled}
         aria-label={label}
         aria-description={description}
         aria-haspopup="dialog"
@@ -57,7 +61,7 @@ export function ColorField({
           className="native-color-swatch"
           style={{ background: value === 'none' ? undefined : value }}
         />
-        <span>{value === 'none' ? '无' : value.trim().toLowerCase() === 'transparent' ? '透明' : value.toUpperCase()}</span>
+        <span>{editorColorLabel(value).toUpperCase()}</span>
       </button>
       {open && (
         <Suspense fallback={null}>

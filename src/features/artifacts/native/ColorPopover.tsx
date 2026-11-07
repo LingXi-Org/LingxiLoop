@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import {positionEditorPopover}from'./popover-position'
 import { IconButton } from './EditorPrimitives'
 import { useLocalDraft } from './draft-context'
+import {editorColorLabel} from './editor-copy'
 
 function normalizedColor(value: string) {
   if (value === 'none') return '#00000000'
@@ -192,12 +193,12 @@ export default function ColorPopover({
             <button
               type="button"
               key={color}
-              aria-label={`颜色 ${color}`}
+              aria-label={`颜色 ${editorColorLabel(color)}`}
               aria-pressed={color.toLowerCase() === value.toLowerCase()}
               onClick={() => choose(color)}
             >
               <i className="native-color-swatch" style={{ background: color }} />
-              <span>{color.toUpperCase()}</span>
+              <span>{editorColorLabel(color).toUpperCase()}</span>
               {color.toLowerCase() === value.toLowerCase() && (
                 <span className="native-color-check">✓</span>
               )}

@@ -112,7 +112,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(['contrast-large','contrast-small'].includes(editorCase))node.style.color='#888888'
     if(editorCase==='contrast-small')node.style.fontSize=16
     if(editorCase==='contrast-alpha')node.style.color='rgba(24,51,43,.5)'
-    if(editorCase==='contrast-transparent')node.style.color='transparent'
+    if(['contrast-transparent','contrast-transparent-palette'].includes(editorCase))node.style.color='transparent'
     if(editorCase==='contrast-opacity')node.style.opacity=.5
     if(editorCase==='contrast-gradient')node.css={'background-image':'linear-gradient(red,blue)'}
     if(editorCase==='contrast-parent-opacity')document.pages['page-1'].nodes['page-1-root'].style.opacity=.5
@@ -525,8 +525,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       if(editorCase.startsWith('contrast-')){
         if(editorCase.startsWith('contrast-overlap-'))assert.equal(await page.locator('[data-node-id=contrast-overlap]').count(),1,'实际遮挡图层必须已挂载')
         if(editorCase==='contrast-overlap-image'){await page.locator('[data-node-id=contrast-overlap] img').waitFor();assert.equal(await page.locator('[data-page-id=page-1] [data-node-type=image] img').count(),2)}
-        const badge=page.locator('.native-text-contrast'),hidden=['contrast-transparent','contrast-opacity','contrast-gradient','contrast-parent-opacity','contrast-clipped','contrast-readonly','contrast-overlap-paint','contrast-overlap-border','contrast-overlap-image'].includes(editorCase)
-        if(editorCase==='contrast-transparent')assert.match(await page.getByRole('button',{name:'颜色',exact:true}).innerText(),/透明/)
+        const badge=page.locator('.native-text-contrast'),hidden=['contrast-transparent','contrast-transparent-palette','contrast-opacity','contrast-gradient','contrast-parent-opacity','contrast-clipped','contrast-readonly','contrast-overlap-paint','contrast-overlap-border','contrast-overlap-image'].includes(editorCase)
+        if(editorCase.startsWith('contrast-transparent'))assert.match(await page.getByRole('button',{name:'颜色',exact:true}).innerText(),/透明/)
         if(hidden)assert.equal(await badge.count(),0)
         else{
           await badge.waitFor()
@@ -535,6 +535,33 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
           assert.equal(await badge.innerText(),passed?'对比度良好':'对比度不足')
           assert.equal(await badge.getAttribute('title'),`与背景颜色的对比度为 ${ratio}:1`)
           assert.equal(await page.getByRole('button',{name:'颜色',exact:true}).getAttribute('aria-description'),`文字与背景颜色的对比度为 ${ratio}:1，${passed?'对比度良好':'对比度不足'}。`)
+        }
+        if(editorCase==='contrast-transparent-palette'){
+          await page.getByRole('button',{name:'颜色',exact:true}).click()
+          const picker=page.getByRole('dialog',{name:'颜色颜色',exact:true}),option=picker.getByRole('button',{name:'颜色 透明',exact:true})
+          await picker.waitFor()
+          assert.equal(await option.count(),1,'透明选项的可访问名称必须中文');assert.match(await option.innerText(),/透明/)
+          await writeFile(join(output,`${kind}-${editorCase}-labels.json`),JSON.stringify(await picker.locator('.native-color-palette button').evaluateAll(elements=>elements.map(element=>({label:element.getAttribute('aria-label'),text:element.textContent}))),null,2)+'\n')
+          await picker.getByLabel('关闭颜色选择',{exact:true}).click()
+        }
+        if(editorCase==='contrast-color-css-peer-lock'){
+          await page.getByRole('button',{name:'颜色',exact:true}).click()
+          const picker=page.getByRole('dialog',{name:'颜色颜色',exact:true});await picker.getByRole('button',{name:'自定义',exact:true}).click()
+          const hex=picker.getByLabel('十六进制颜色',{exact:true});await hex.fill('#faf8f4')
+          document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId,patch:{locked:true}}],'peer-text-color-lock')).document;const peerDocument=structuredClone(document)
+          await page.waitForFunction(()=>document.querySelector('[role=radiogroup][aria-label="文本对齐"] [role=radio]')?.getAttribute('aria-disabled')==='true')
+          await hex.press('Enter')
+          await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).color==='rgb(250, 248, 244)'||[...document.querySelectorAll('button')].some(button=>button.textContent==='下载本地副本'))
+          assert.equal(await page.locator(`[data-node-id="${nodeId}"]`).evaluate(element=>getComputedStyle(element).color),'rgb(136, 136, 136)','对端锁定后不能应用旧颜色草稿')
+          assert.equal(await page.getByRole('button',{name:'颜色',exact:true}).isDisabled(),true)
+          await picker.getByLabel('关闭颜色选择',{exact:true}).click()
+          const pending=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click()
+          const recovery=JSON.parse(await readFile(await(await pending).path(),'utf8'))
+          assert.deepEqual(recovery.document,peerDocument)
+          assert.ok(recovery.drafts.flat().some(operation=>operation.type==='node.patch'&&operation.nodeId===nodeId&&operation.patch.style?.color==='#faf8f4'),'恢复副本必须含被阻止的白色草稿')
+          await writeFile(join(output,`${kind}-${editorCase}-recovery.json`),JSON.stringify(recovery,null,2)+'\n')
+          assert.deepEqual(document,peerDocument);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+          return{kind:'文字颜色对端锁定草稿保护',case:editorCase,peerLockPreserved:true,blockedDraftRecovered:true,noLocalWrites:true,consoleOrPageErrors:errors}
         }
         if(editorCase==='contrast-color-css-conflict'){
           await page.getByRole('button',{name:'颜色',exact:true}).click()
