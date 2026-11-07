@@ -104,6 +104,7 @@ jobs:
           python scripts/native-artifact-pss-check.py
           python scripts/native-artifact-cleanup-check.py
           python scripts/native-artifact-navigation-check.py
+          python scripts/native-artifact-navigation-readiness-check.py --browser "$CHROMIUM_PATH" --out "$RUNNER_TEMP/native-navigation-readiness.json"
           python scripts/native-artifact-export-control-check.py
           node scripts/native-artifact-proxy-check.mjs
           python scripts/native-embed-capture-check.py
@@ -121,6 +122,12 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --link-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-exports"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=nested-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-nested"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=same-node --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-same-node"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=width-hug-resize,width-hug-cancel,width-percent-click,width-important-click,min-width-add,max-width-add,min-height-add,max-height-add,right-add,bottom-add --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-extra"
+          for task_sizing_node in image shape; do
+            node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-node="$task_sizing_node" --sizing-case=width-hug,height-hug --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-$task_sizing_node"
+          done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-sizing --sizing-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-exports"
           for task_artboard_case in default exports readonly fit-repeat fit-hidden fit-policy; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-artboard --artboard-case="$task_artboard_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-artboard-$task_artboard_case"
           done
@@ -136,6 +143,7 @@ jobs:
           NATIVE_IME_BROWSER="$CHROMIUM_PATH" bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime"
           NATIVE_IME_BROWSER="$CHROMIUM_PATH" NATIVE_IME_TARGET=board-title bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime-title"
           NATIVE_IME_BROWSER="$CHROMIUM_PATH" NATIVE_IME_TARGET=element-link bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime-link"
+          NATIVE_IME_BROWSER="$CHROMIUM_PATH" NATIVE_IME_TARGET=element-sizing bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime-sizing"
           node --import tsx scripts/native-canvas-text-export-check.mjs "$RUNNER_TEMP/native-canvas-text-export.json"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-pen --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-pen"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector"

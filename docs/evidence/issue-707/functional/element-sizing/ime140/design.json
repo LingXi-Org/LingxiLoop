@@ -1,0 +1,312 @@
+{
+  "kind": "真实系统尺寸输入法回归",
+  "browserVersion": "140.0.7339.16",
+  "platform": "Linux、X11、Fcitx5拼音",
+  "target": "宽度中的中文样式注释",
+  "testDispatchesCompositionEvents": false,
+  "compositionEvents": [
+    {
+      "type": "compositionstart",
+      "data": "",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "n",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "n",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "n",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "ni",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "ni",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "ni",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "ni h",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "ni h",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "ni h",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "ni ha",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "ni ha",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "ni ha",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "ni hao",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "ni hao",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "ni hao",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "你好",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "你好",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "你好",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionend",
+      "data": "你好",
+      "inputType": null,
+      "trusted": false
+    },
+    {
+      "type": "compositionstart",
+      "data": "",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "z",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "z",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "z",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "zh",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "zh",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "zh",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "zh o",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "zh o",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "zh o",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "zh o n",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "zh o n",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "zh o n",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "zhong",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "zhong",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "zhong",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "zhong w",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "zhong w",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "zhong w",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "zhong w e",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "zhong w e",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "zhong w e",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "zhong wen",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "zhong wen",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": "zhong wen",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionupdate",
+      "data": "",
+      "inputType": null,
+      "trusted": true
+    },
+    {
+      "type": "beforeinput",
+      "data": "",
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "input",
+      "data": null,
+      "inputType": "insertCompositionText",
+      "trusted": true
+    },
+    {
+      "type": "compositionend",
+      "data": "",
+      "inputType": null,
+      "trusted": false
+    }
+  ],
+  "compositionEndTrusted": false,
+  "noSaveDuringComposition": true,
+  "saveShortcutKeepsEditing": true,
+  "cancelDoesNotExit": true,
+  "oneCommittedBatch": true,
+  "immediateSharedHistoryInsideConfirmedField": true,
+  "savedAndReopened": true,
+  "scope": "HTTP文档夹具与真实系统输入；其他操作系统未验收",
+  "consoleOrPageErrors": []
+}

@@ -1,5 +1,10 @@
 import type { ArtifactNode } from './artifact-document.js'
 
+/** CSS rectangles have no intrinsic child size: auto follows the browser box. */
+export function artifactUsesBoxRectangle(node:Pick<ArtifactNode,'type'|'shape'|'css'>):boolean {
+  return node.type==='shape'&&(node.shape??'rect')==='rect'&&!!node.css&&Object.keys(node.css).length>0
+}
+
 /** Document-unit geometry shared by the live canvas, thumbnails and exports.
  * Keeping the viewBox in document units preserves circular corner radii and
  * stroke widths on non-square shapes. */

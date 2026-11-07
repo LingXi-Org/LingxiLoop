@@ -20,6 +20,7 @@ export function nodeCodeEntries(node:ArtifactNode,page:ArtifactPage):InspectorCo
   if(node.style.paddingX!==undefined||node.style.paddingY!==undefined)values.set('padding',paddingCss(node.style)??'0px')
   for(const [key,value]of Object.entries(appearance(node.style)))if(value!==undefined)values.set(key.replace(/[A-Z]/g,char=>`-${char.toLowerCase()}`),String(value))
   for(const [key,value]of Object.entries(node.css??{}))values.set(key,value)
+  for(const [axis,flag]of [['width','implicitWidth'],['height','implicitHeight']] as const)if(node[flag]&&node.css?.[axis]==='auto')values.delete(axis)
   return [...values].map(([name,value])=>({name,value})).concat(Object.entries(node.attributes??{}).map(([name,value])=>({name:`@${name}`,value})))
 }
 
@@ -50,6 +51,11 @@ export function nodeCodePatch(node:ArtifactNode,before:readonly InspectorCodeEnt
     }else{
       if(value===undefined){if(Object.hasOwn(css,name))delete css[name];else if(geometry[name])css[name]='auto'}else css[name]=value
       cssChanged=true
+    }
+    if(name==='width'||name==='height'){
+      const flag=name==='width'?'implicitWidth':'implicitHeight'
+      if(value===undefined){css[name]='auto';cssChanged=true;patch[flag]=true}
+      else if(node[flag]!==undefined)unset.push(flag)
     }
   }
   if(Object.keys(style).length)patch.style=style as ArtifactStyle

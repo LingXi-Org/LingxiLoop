@@ -9,7 +9,7 @@ import {
 
 const nodePatchSchema = artifactNodeSchema.omit({ id: true, type: true }).partial()
 const pagePatchSchema = artifactPageSchema.omit({ id: true, nodes: true, nodeOrder: true }).partial()
-const optionalNodeFields = new Set(['css', 'attributes', 'motionId', 'text', 'textSizing', 'richText', 'source', 'assetId', 'posterAssetId', 'name', 'scope', 'flipX', 'flipY', 'lineStart', 'lineEnd', 'crop', 'shape', 'points', 'path', 'cells', 'tableHeader', 'svg', 'embed', 'layout', 'locked', 'hidden', 'animation'])
+const optionalNodeFields = new Set(['implicitWidth','implicitHeight','css', 'attributes', 'motionId', 'text', 'textSizing', 'richText', 'source', 'assetId', 'posterAssetId', 'name', 'scope', 'flipX', 'flipY', 'lineStart', 'lineEnd', 'crop', 'shape', 'points', 'path', 'cells', 'tableHeader', 'svg', 'embed', 'layout', 'locked', 'hidden', 'animation'])
 const unsetFieldSchema = z.string().refine(field => optionalNodeFields.has(field) || field.startsWith('style.') && Object.hasOwn(artifactStyleSchema.shape, field.slice(6)), 'field cannot be removed')
 const indexSchema = z.number().int().min(0).max(10_000).optional()
 
@@ -248,6 +248,13 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
           }
           if(['rotation','flipX','flipY'].some(field=>Object.hasOwn(operation.patch,field))&&Object.hasOwn(css,'transform')){css.transform=nodeTransform({...item,...operation.patch});updated=true}
           if(updated)fields.push(['css',css])
+        }
+        // Fixed geometry replaces a cleared declaration. Keep that change in
+        // the same versioned batch and inverse as the CSS bridge above.
+        for(const [axis,flag]of [['width','implicitWidth'],['height','implicitHeight']] as const){
+          if(item[flag]===undefined||Object.hasOwn(operation.patch,flag)||unsets.includes(flag))continue
+          const changedCss=fields.find(([field])=>field==='css'),nextCss=unsets.includes('css')?undefined:changedCss?changedCss[1] as ArtifactNode['css']:item.css
+          if(Object.hasOwn(operation.patch,axis)||nextCss?.[axis]!==item.css?.[axis])unsets.push(flag)
         }
         // Plain text replaces the visible rich-text value; guard both representations,
         // even when richText was absent in the observed snapshot.

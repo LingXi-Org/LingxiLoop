@@ -1,0 +1,8 @@
+{
+  "kind": "新增尺寸属性行不写文档",
+  "case": "min-width-add",
+  "value": "0",
+  "noWrites": true,
+  "documentUnchanged": true,
+  "consoleOrPageErrors": []
+}

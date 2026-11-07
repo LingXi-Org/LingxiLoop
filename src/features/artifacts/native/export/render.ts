@@ -1,6 +1,6 @@
 import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
 import {canvasTextMetrics} from '../../../../../shared/artifact-canvas-typography'
-import { artifactShapeGeometry } from '../../../../../shared/artifact-shapes'
+import { artifactShapeGeometry,artifactUsesBoxRectangle } from '../../../../../shared/artifact-shapes'
 import type { ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../../shared/artifact-themes'
 import { awaitPageFonts } from './fonts'
@@ -116,6 +116,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         break
       }
       case 'shape': {
+        if(artifactUsesBoxRectangle(node)){css+=`;background-color:${style.gradient?'transparent':style.backgroundColor??style.fill??'#d6e6ff'}`;break}
         const gradientId = `gradient-${page.id}-${node.id}`
         const gradient = style.gradient
         const gradientDefinition = gradient ? `<defs><${gradient.type === 'radial' ? 'radialGradient' : 'linearGradient'} id="${gradientId}"${gradient.type === 'linear' ? ` x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform="rotate(${gradient.angle-90} .5 .5)"` : ''}>${gradient.stops.map(stop => `<stop offset="${stop.offset}" stop-color="${escapeHtml(stop.color)}"/>`).join('')}</${gradient.type === 'radial' ? 'radialGradient' : 'linearGradient'}></defs>` : ''

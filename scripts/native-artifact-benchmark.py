@@ -866,11 +866,7 @@ def navigate(page, kind, number):
             if kind == 'design' and native_design.count():
                 target = frame.locator(f'[data-page-id="page-{number}"] .native-board-label')
                 stage = frame.locator('.native-stage')
-                if target.count():
-                    item, bounds = target.first.bounding_box(), stage.bounding_box()
-                    if item and bounds and item['x'] >= bounds['x'] and item['y'] >= bounds['y'] and item['x'] + item['width'] <= bounds['x'] + bounds['width'] and item['y'] + item['height'] <= bounds['y'] + bounds['height']:
-                        target.first.click(); return {"control": "nativeDesignBoard", "wheelEvents": wheel_count}
-                scroll = stage.evaluate('e=>({x:e.scrollLeft,y:e.scrollTop})')
+                scroll = stage.evaluate('e=>({x:e.scrollLeft,y:e.scrollTop,maxX:e.scrollWidth-e.clientWidth,maxY:e.scrollHeight-e.clientHeight})')
                 # Calibrate fixture world coordinates from a mounted board's
                 # actual CSS position. Canvas padding and centering can change.
                 # Only read DOM geometry; movement still uses trusted wheels.
@@ -883,6 +879,14 @@ def navigate(page, kind, number):
                     # The frozen baseline predates mounted-board metadata and
                     # uses its original camera without the newer canvas padding.
                     x, y = (number-1) % 5 * 1040, (number-1) // 5 * 620
+                x, y = max(0, min(scroll['maxX'], x)), max(0, min(scroll['maxY'], y))
+                # A natural-width title becomes visible before the board's
+                # image/formula area. Finish the same calibrated camera move
+                # for both arms before selecting; readiness remains strict.
+                if target.count() and abs(x-scroll['x']) <= 1 and abs(y-scroll['y']) <= 1:
+                    item, bounds = target.first.bounding_box(), stage.bounding_box()
+                    if item and bounds and item['x'] >= bounds['x'] and item['y'] >= bounds['y'] and item['x'] + item['width'] <= bounds['x'] + bounds['width'] and item['y'] + item['height'] <= bounds['y'] + bounds['height']:
+                        target.first.click(); return {"control": "nativeDesignBoard", "wheelEvents": wheel_count}
                 stage.hover(); page.mouse.wheel(max(-600,min(600,x-scroll['x'])),max(-600,min(600,y-scroll['y'])))
                 # Scrolling can unmount an isolated page iframe. Restart with
                 # a fresh frame list instead of visiting that detached snapshot.

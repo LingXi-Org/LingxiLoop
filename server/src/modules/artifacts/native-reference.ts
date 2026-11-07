@@ -19,6 +19,7 @@ export function nativeModelReference(kind: 'design' | 'slides') {
     + 'For node.patch include page/PAGE/exists, node/PAGE/NODE/exists and node/PAGE/NODE/field/FIELD for each changed field. Style leaves use field/style.color etc. '
     + 'A text-only patch clears existing richText so the visible content changes; include field/richText as well as field/text. To retain formatting, patch richText and its plain-text representation together. '
     + '元素链接：文字使用 richText 的 link 标记及 attrs.href，保留已有段落、字重、斜体及 attrs.target；图片、组合等整体链接使用节点 attributes.href。支持网页、邮件、电话、锚点及相对文档地址，活动脚本链接继续留在隔离内容中。修改链接前同时读取并校验 node/PAGE/NODE/field/richText 与 node/PAGE/NODE/field/attributes，避免覆盖另一种表示中的并发修改。'
+    + 'implicitWidth/implicitHeight 是可选的尺寸声明缺省标记，只有编辑器清除宽度/高度时才写入；CSS中的auto字面值与缺省声明不同。通过原生几何或代码设置显式宽高时移除对应标记，其他编辑保留这些字段。旧文档没有标记，不能补写默认值。'
     + 'For parentId also include page/PAGE/nodeOrder and the new parent existence key. '
     + 'For node.insert include page/PAGE/exists, node/PAGE/NEW_ID/exists, page/PAGE/nodeOrder and parent existence if non-null. '
     + 'For node.delete include page/PAGE/exists, page/PAGE/nodeOrder and both node/PAGE/ID and node/PAGE/ID/exists for the node and every descendant. '

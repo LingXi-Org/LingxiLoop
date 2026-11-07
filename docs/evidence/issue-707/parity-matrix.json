@@ -9742,6 +9742,60 @@
       },
       "nestedLinkEvidence": "functional/element-link-nested.json",
       "sameNodeLinkEvidence": "functional/element-link-same-node.json"
+    },
+    {
+      "id": "D34-design",
+      "editor": "design",
+      "control": "画板元素尺寸和定位",
+      "trigger": "选择画板文字、图片或矩形，使用尺寸、模式、位置、偏移及附加尺寸属性",
+      "states": [
+        "固定",
+        "自适应",
+        "填充",
+        "百分比",
+        "普通",
+        "相对",
+        "绝对",
+        "固定定位",
+        "粘性",
+        "附加属性只展开",
+        "回车",
+        "失焦",
+        "取消",
+        "中文组词",
+        "保存快捷键",
+        "共享撤销重做",
+        "重开",
+        "只读",
+        "冲突",
+        "权限撤回",
+        "无效值恢复",
+        "点击及取消缩放",
+        "六格式导出"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "PropertySizingRow",
+        "start": 4282892,
+        "end": 4286000,
+        "offsetUnit": "UTF-16 code units",
+        "runtime": "source-element-sizing.json"
+      },
+      "implementation": "src/features/artifacts/native/ElementSizingProperties.tsx",
+      "screenshots": {
+        "reference": "visual/element-sizing/reference/",
+        "native": "visual/element-sizing/implementation/",
+        "manifest": "visual/element-sizing/differences/raw-pixel-results.json",
+        "matchedStateVerified": true
+      },
+      "result": "22种相同文档的元素计算几何逐字段一致，140/154各28种、手势及六格式局部回归通过。真实系统拼音140/156通过。4对原始整图差4.4515%–4.7830%，0/4满足0.5%；缺口见来源说明，完整功能及视觉未通过。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-sizing.json",
+        "scope": "受控HTTP、真实React/Worker/浏览器及系统拼音；不代替真实授权浏览器、全部对象/菜单、缩略图或性能资格。"
+      }
     }
   ],
   "registeredReplacements": [

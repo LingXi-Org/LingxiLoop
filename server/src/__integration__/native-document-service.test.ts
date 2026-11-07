@@ -483,6 +483,27 @@ test('画板四角持久化到不可变页快照、共享历史和页面副本',
   assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
 })
 
+test('画板元素自适应尺寸保存重开、复制和共享历史保留可选标记及原始页快照',async()=>{
+  const item=await artifact('design'),initial=await snapshot(item.id),node=createNode('text','sizing-text')
+  const inserted=await apply(item.id,prepareBatch(initial.document,[{type:'node.insert',pageId:'page-1',node}],'insert-sizing'))
+  const oldHash=inserted.pageVersions['page-1'],oldBytes=JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash))
+  const request=prepareBatch(inserted.document,[{type:'node.patch',pageId:'page-1',nodeId:node.id,patch:{css:{width:'auto',height:'auto','max-width':'90%'},implicitWidth:true,implicitHeight:true}}],'hug-sizing')
+  const saved=await apply(item.id,request),reopened=(await snapshot(item.id)).document.pages['page-1'].nodes[node.id]
+  assert.equal(reopened.implicitWidth,true);assert.equal(reopened.implicitHeight,true)
+  assert.deepEqual(reopened.css,{width:'auto',height:'auto','max-width':'90%'})
+  assert.deepEqual((await readNativePage(db,item.id,'page-1',saved.pageVersions['page-1']))?.nodes[node.id],reopened)
+  assert.equal((await apply(item.id,request)).deduplicated,true)
+  const resized=await apply(item.id,prepareBatch(saved.document,[{type:'node.patch',pageId:'page-1',nodeId:node.id,patch:{width:800}}],'resize-sizing'))
+  assert.equal(resized.document.pages['page-1'].nodes[node.id].implicitWidth,undefined)
+  assert.equal(resized.document.pages['page-1'].nodes[node.id].implicitHeight,true)
+  const undone=await apply(item.id,{operationId:'undo-sizing',kind:'undo',targetOperationId:'resize-sizing',expectedHistoryVersion:resized.history.version})
+  assert.deepEqual(undone.document.pages['page-1'].nodes[node.id],reopened)
+  const copied=await apply(item.id,prepareBatch(undone.document,duplicatePages(undone.document,['page-1'],()=> 'sizing-copy'),'copy-sizing'))
+  const copy=Object.values(copied.document.pages['sizing-copy'].nodes).find(value=>value.type==='text')
+  assert.equal(copy?.implicitWidth,true);assert.equal(copy?.implicitHeight,true);assert.deepEqual(copy?.css,reopened.css)
+  assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
+})
+
 test('画板打印设置独立持久化、撤销重做与复制，旧页快照不变',async()=>{
   const item=await artifact('design'),initial=await snapshot(item.id),page=initial.document.pages['page-1'],oldHash=initial.pageVersions['page-1'],oldBytes=JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash))
   const request=prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{print:'flow',paper:'A4'}}],'print-settings')

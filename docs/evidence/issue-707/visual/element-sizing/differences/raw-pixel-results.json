@@ -1,0 +1,42 @@
+{
+  "kind": "matched-synthetic-fixture-raw-pixel-diagnostic",
+  "state": "element-sizing",
+  "masks": [],
+  "antialiasExclusions": false,
+  "qualified": false,
+  "scope": "Only the specified matched state; control geometry and complete interaction states remain separate gates.",
+  "results": [
+    {
+      "image": "sizing-base.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 64101,
+      "rawDifferentRatio": 0.04451458333333334,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "sizing-width-hug.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 66878,
+      "rawDifferentRatio": 0.04644305555555556,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "sizing-height-hug.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 68875,
+      "rawDifferentRatio": 0.04782986111111111,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "sizing-position-fixed.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 67927,
+      "rawDifferentRatio": 0.04717152777777778,
+      "conservativePixelPass": false
+    }
+  ]
+}

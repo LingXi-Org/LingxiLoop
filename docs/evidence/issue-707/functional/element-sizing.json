@@ -1,0 +1,163 @@
+{
+  "scope": "固定来源+受控HTTP真实React/Worker/浏览器；真实PostgreSQL文档服务。不是完整授权浏览器、Agent外部模型或性能验收。",
+  "qualified": false,
+  "source": "source-element-sizing.json",
+  "checks": {
+    "unit": {
+      "passed": 63,
+      "commands": [
+        "node --import tsx --test src/features/artifacts/native/element-sizing.test.ts src/features/artifacts/native/inspector-code-edit.test.ts shared/artifact-operations.test.ts",
+        "node --import tsx --test src/features/artifacts/native/editor-copy.test.ts src/features/artifacts/native/thumbnail.test.tsx shared/artifact-shapes.test.ts shared/artifact-legacy.test.ts"
+      ]
+    },
+    "postgreSQL": {
+      "passed": 19,
+      "newRegression": "画板元素自适应尺寸保存重开、复制和共享历史保留可选标记及原始页快照",
+      "ephemeralDatabase": true,
+      "newServicesOrTables": false,
+      "scope": "既有文档服务及实际PostgreSQL事务；不是HTTP鉴权或Agent端到端。"
+    },
+    "textInputs": {
+      "140": 28,
+      "154": 28
+    },
+    "gesture": {
+      "140": 4,
+      "154": 4,
+      "clickRestoresAuthoredCss": true,
+      "cancelNoWrites": true,
+      "importantPriorityPreserved": true
+    },
+    "exports": {
+      "140": {
+        "design": 6,
+        "slides": 6
+      },
+      "154": {
+        "design": 6,
+        "slides": 6
+      },
+      "formats": [
+        "html",
+        "pdf",
+        "pptx",
+        "svg",
+        "png",
+        "jpeg"
+      ],
+      "artifacts": "exports/element-sizing/",
+      "htmlGeometry": "900px × 60px，重开后实际测量",
+      "pdf": "独立pdfinfo页数及pdftotext中文文本",
+      "pptx": "真实ZIP页数及媒体",
+      "images": "浏览器解码尺寸及非空像素"
+    },
+    "sourceGeometry": {
+      "matchedCases": 22,
+      "matchingFields": [
+        "width",
+        "height",
+        "position",
+        "left",
+        "top",
+        "minWidth",
+        "maxWidth",
+        "minHeight",
+        "maxHeight",
+        "right",
+        "bottom"
+      ],
+      "receipt": "functional/element-sizing/geometry-comparison.json"
+    },
+    "ime": {
+      "140": true,
+      "156": true,
+      "trustedOsInput": true,
+      "javascriptCompositionDispatch": false,
+      "scope": "Fcitx5实际拼音组词，原始compositionend的isTrusted=false已在逐事件收据保留；不虚报全部事件可信。"
+    },
+    "regression50": {
+      "design": {
+        "pages": 50,
+        "unchangedPageHashes": 47,
+        "maxMountedPages": 6,
+        "maxMountedNodes": 22
+      },
+      "slides": {
+        "pages": 50,
+        "unchangedPageHashes": 47,
+        "maxMountedPages": 1,
+        "maxMountedNodes": 7
+      }
+    },
+    "webLint": {
+      "passed": true,
+      "warnings": 43,
+      "infos": 4
+    },
+    "serverLint": {
+      "passed": true,
+      "files": 631
+    },
+    "localTypecheck": {
+      "passed": false,
+      "diagnostics": 76,
+      "ownNewDiagnostics": 0,
+      "blocker": "正式LingxiOS SDK本机不可用及其级联诊断；等待正式安装环境的候选CI。"
+    }
+  },
+  "failuresPreserved": [
+    {
+      "case": "缺少尺寸控件",
+      "log": "element-sizing-before.log",
+      "resolution": "新增原生组件；不能把构建成功替代交互验证。"
+    },
+    {
+      "case": "CSS自动尺寸点击被旧几何覆盖",
+      "log": "element-sizing-click-before154.log",
+      "message": "1152px !== auto",
+      "resolution": "手势结束重新应用已保存width/height/translate声明及important优先级；点击、取消、缩放和撤销通过。"
+    },
+    {
+      "case": "老聚焦保存探针",
+      "log": "element-sizing-final50-154.log",
+      "message": "Design已还原的画板属性不存在旧高级入口，等待超时。",
+      "status": "未通过，不能作为聚焦保存验收；本批中文尺寸快捷键及原版草稿规则另有专门检查。"
+    },
+    {
+      "case": "首次PostgreSQL启动检查",
+      "log": "element-sizing-pg.log",
+      "message": "缺少测试环境变量WUKONG_USER_TOKEN_SECRET",
+      "resolution": "显式使用仓库CI测试配置后19项通过；没有使用或输出生产凭据。"
+    },
+    {
+      "case": "首次IME清理",
+      "log": "element-sizing-ime156.log",
+      "message": "测试通过但临时配置目录清理时Fcitx尚在写入，退出1。",
+      "resolution": "退出时等待本次输入法进程，140/156完整重跑退出0。"
+    }
+  ],
+  "knownGaps": "source-element-sizing.json",
+  "visual": {
+    "pairs": 4,
+    "rawPasses": 0,
+    "minimumDifferentRatio": 0.04451458333333334,
+    "maximumDifferentRatio": 0.04782986111111111,
+    "masks": [],
+    "antialiasExclusions": false,
+    "qualified": false
+  },
+  "databaseCompatibility": {
+    "schemaVersion": 1,
+    "optionalFields": [
+      "implicitWidth",
+      "implicitHeight"
+    ],
+    "defaults": "缺省即既有显式尺寸规则；清除的auto与作者直接输入auto可区分。",
+    "immutableOriginalSnapshots": true,
+    "sharedHistory": true,
+    "copyAndReopen": true
+  },
+  "finalCandidateCI": "待运行",
+  "independentReview": "待运行",
+  "logNormalization": "归档日志仅去除行尾空白，原始日志仍保留在工作区scratch；不修改测试结果。"
+}

@@ -41,8 +41,8 @@ task_browser=$3
 fcitx5 --version > "$task_output/fcitx5-version.txt" 2>&1
 fcitx5 --disable=wayland > "$task_output/fcitx5.log" 2>&1 &
 task_ime_pid=$!
-trap 'kill "$task_ime_pid" 2>/dev/null || true' EXIT
+trap 'kill "$task_ime_pid" 2>/dev/null || true; wait "$task_ime_pid" 2>/dev/null || true' EXIT
 task_target=${NATIVE_IME_TARGET:-text}
 task_mode=both
-if [[ "$task_target" == board-title || "$task_target" == element-link ]]; then task_mode=design; fi
+if [[ "$task_target" == board-title || "$task_target" == element-link || "$task_target" == element-sizing ]]; then task_mode=design; fi
 node --import tsx scripts/native-editor-ui-acceptance.mjs --mode="$task_mode" --ime-target="$task_target" --checks=os-ime --headed=true --browser="$task_browser" --output="$task_output"

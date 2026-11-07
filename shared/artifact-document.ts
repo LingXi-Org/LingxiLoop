@@ -116,6 +116,7 @@ export const artifactNodeSchema = z.object({
   motionId: artifactIdSchema.optional(),
   type: z.enum(artifactNodeTypes),
   x: finite, y: finite, width: positive, height: positive, rotation: finite,
+  implicitWidth:z.boolean().optional(),implicitHeight:z.boolean().optional(),
   parentId: artifactIdSchema.nullable(),
   name: z.string().max(1000).optional(), scope: z.enum(['artboard', 'canvas']).optional(),
   flipX: z.boolean().optional(), flipY: z.boolean().optional(),

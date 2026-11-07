@@ -1,0 +1,486 @@
+
+> lingxiloop@0.1.0-beta lint
+> biome lint src vite.config.ts
+
+src/components/assistant-ui/elements/tool-call.tsx:62:11 lint/complexity/noUselessFragments  FIXABLE  ━━━━━━━━━━
+
+  i This fragment is unnecessary.
+
+    60 │             {activeLabel}
+    61 │           </ShimmerLabel>
+  > 62 │           <>{label}</>
+       │           ^^^^^^^^^^^^
+    63 │         </SwapLabel>
+    64 │         <span
+
+  i A fragment is redundant if it contains only one child, or if it is the child of a html element, and is not a keyed fragment.
+
+  i Unsafe fix: Remove the Fragment
+
+    62 │ ··········<>{label}</>
+       │           --       ---
+
+src/components/product-language.test.tsx:45:31 lint/complexity/noUselessFragments  FIXABLE  ━━━━━━━━━━
+
+  i This fragment is unnecessary.
+
+    43 │ function renderMarkdown(source: string) {
+    44 │   const document = createMarkdownGreenfieldDocument(source)
+  > 45 │   return renderToStaticMarkup(<>{document.chunks.map(chunk => <MarkdownGreenfieldChunkRenderer key={chunk.id} chunk={chunk} />)}</>)
+       │                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    46 │ }
+    47 │
+
+  i A fragment is redundant if it contains only one child, or if it is the child of a html element, and is not a keyed fragment.
+
+  i Unsafe fix: Remove the Fragment
+
+    45 │ ··return·renderToStaticMarkup(<>{document.chunks.map(chunk·=>·<MarkdownGreenfieldChunkRenderer·key={chunk.id}·chunk={chunk}·/>)}</>)
+       │                               ---                                                                                              ----
+
+src/components/retab/hooks/use-keyed-layout-effect.ts:15:17 lint/suspicious/noConfusingVoidType  FIXABLE  ━━━━━━━━━━
+
+  ! void is confusing inside a union type.
+
+    13 │ export function useKeyedLayoutEffect(
+    14 │   key: string | null,
+  > 15 │   effect: () => void | (() => void),
+       │                 ^^^^
+    16 │ ) {
+    17 │   useIsomorphicLayoutEffect(() => {
+
+  i Unsafe fix: Use undefined instead.
+
+    13 13 │   export function useKeyedLayoutEffect(
+    14 14 │     key: string | null,
+    15    │ - ··effect:·()·=>·void·|·(()·=>·void),
+       15 │ + ··effect:·()·=>·undefined·|·(()·=>·void),
+    16 16 │   ) {
+    17 17 │     useIsomorphicLayoutEffect(() => {
+
+
+src/components/retab/hooks/use-keyed-mount-effect.ts:15:17 lint/suspicious/noConfusingVoidType  FIXABLE  ━━━━━━━━━━
+
+  ! void is confusing inside a union type.
+
+    13 │ export function useKeyedMountEffect(
+    14 │   key: string | null,
+  > 15 │   effect: () => void | (() => void),
+       │                 ^^^^
+    16 │ ) {
+    17 │   // eslint-disable-next-line no-restricted-syntax
+
+  i Unsafe fix: Use undefined instead.
+
+    13 13 │   export function useKeyedMountEffect(
+    14 14 │     key: string | null,
+    15    │ - ··effect:·()·=>·void·|·(()·=>·void),
+       15 │ + ··effect:·()·=>·undefined·|·(()·=>·void),
+    16 16 │   ) {
+    17 17 │     // eslint-disable-next-line no-restricted-syntax
+
+
+src/components/retab/hooks/use-mount-effect.ts:13:46 lint/suspicious/noConfusingVoidType  FIXABLE  ━━━━━━━━━━
+
+  ! void is confusing inside a union type.
+
+    11 │  * widget lifecycles, browser API subscriptions, stable singleton dependencies).
+    12 │  */
+  > 13 │ export function useMountEffect(effect: () => void | (() => void)) {
+       │                                              ^^^^
+    14 │   // eslint-disable-next-line no-restricted-syntax
+    15 │   useEffect(effect, []);
+
+  i Unsafe fix: Use undefined instead.
+
+    11 11 │    * widget lifecycles, browser API subscriptions, stable singleton dependencies).
+    12 12 │    */
+    13    │ - export·function·useMountEffect(effect:·()·=>·void·|·(()·=>·void))·{
+       13 │ + export·function·useMountEffect(effect:·()·=>·undefined·|·(()·=>·void))·{
+    14 14 │     // eslint-disable-next-line no-restricted-syntax
+    15 15 │     useEffect(effect, []);
+
+
+src/components/retab/lib/csv-normalizer.ts:23:3 lint/style/useConst  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This let declares a variable that is only assigned once.
+
+    21 │   options?: CsvNormalizerOptions,
+    22 │ ): CsvNormalizer {
+  > 23 │   let hasHeader = !options || options.hasHeader !== false;
+       │   ^^^
+    24 │   let columns: string[] | null = null;
+    25 │   let width = 0;
+
+  i 'hasHeader' is never reassigned.
+
+    21 │   options?: CsvNormalizerOptions,
+    22 │ ): CsvNormalizer {
+  > 23 │   let hasHeader = !options || options.hasHeader !== false;
+       │       ^^^^^^^^^
+    24 │   let columns: string[] | null = null;
+    25 │   let width = 0;
+
+  i Safe fix: Use const instead.
+
+    21 21 │     options?: CsvNormalizerOptions,
+    22 22 │   ): CsvNormalizer {
+    23    │ - ··let·hasHeader·=·!options·||·options.hasHeader·!==·false;
+       23 │ + ··const·hasHeader·=·!options·||·options.hasHeader·!==·false;
+    24 24 │     let columns: string[] | null = null;
+    25 25 │     let width = 0;
+
+
+src/components/retab/lib/csv-normalizer.ts:33:5 lint/style/useConst  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This let declares a variable that is only assigned once.
+
+    32 │   function copyAndPad(row: string[], nextWidth: number): string[] {
+  > 33 │     let out = row.slice();
+       │     ^^^
+    34 │     while (out.length < nextWidth) out.push("");
+    35 │     return out;
+
+  i 'out' is never reassigned.
+
+    32 │   function copyAndPad(row: string[], nextWidth: number): string[] {
+  > 33 │     let out = row.slice();
+       │         ^^^
+    34 │     while (out.length < nextWidth) out.push("");
+    35 │     return out;
+
+  i Safe fix: Use const instead.
+
+    31 31 │
+    32 32 │     function copyAndPad(row: string[], nextWidth: number): string[] {
+    33    │ - ····let·out·=·row.slice();
+       33 │ + ····const·out·=·row.slice();
+    34 34 │       while (out.length < nextWidth) out.push("");
+    35 35 │       return out;
+
+
+src/components/retab/lib/csv-normalizer.ts:40:5 lint/style/useConst  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This let declares a variable that is only assigned once.
+
+    38 │   function growColumns(nextWidth: number): CsvTableEvent[] {
+    39 │     if (!columns || nextWidth <= width) return [];
+  > 40 │     let next = columns.slice();
+       │     ^^^
+    41 │     for (let i = width; i < nextWidth; i++) {
+    42 │       next.push(hasHeader ? "" : makeColumnName(i));
+
+  i 'next' is never reassigned.
+
+    38 │   function growColumns(nextWidth: number): CsvTableEvent[] {
+    39 │     if (!columns || nextWidth <= width) return [];
+  > 40 │     let next = columns.slice();
+       │         ^^^^
+    41 │     for (let i = width; i < nextWidth; i++) {
+    42 │       next.push(hasHeader ? "" : makeColumnName(i));
+
+  i Safe fix: Use const instead.
+
+    38 38 │     function growColumns(nextWidth: number): CsvTableEvent[] {
+    39 39 │       if (!columns || nextWidth <= width) return [];
+    40    │ - ····let·next·=·columns.slice();
+       40 │ + ····const·next·=·columns.slice();
+    41 41 │       for (let i = width; i < nextWidth; i++) {
+    42 42 │         next.push(hasHeader ? "" : makeColumnName(i));
+
+
+src/components/retab/lib/csv-parser.ts:18:3 lint/style/useConst  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This let declares a variable that is only assigned once.
+
+    16 │  */
+    17 │ export function createCsvParser(options?: CsvParserOptions): CsvParser {
+  > 18 │   let delimiter = (options && options.delimiter) || ",";
+       │   ^^^
+    19 │   let record: string[] = [];
+    20 │   let field = "";
+
+  i 'delimiter' is never reassigned.
+
+    16 │  */
+    17 │ export function createCsvParser(options?: CsvParserOptions): CsvParser {
+  > 18 │   let delimiter = (options && options.delimiter) || ",";
+       │       ^^^^^^^^^
+    19 │   let record: string[] = [];
+    20 │   let field = "";
+
+  i Safe fix: Use const instead.
+
+     16  16 │    */
+     17  17 │   export function createCsvParser(options?: CsvParserOptions): CsvParser {
+     18     │ - ··let·delimiter·=·(options·&&·options.delimiter)·||·",";
+         18 │ + ··const·delimiter·=·(options·&&·options.delimiter)·||·",";
+     19  19 │     let record: string[] = [];
+     20  20 │     let field = "";
+
+
+src/components/retab/lib/csv-parser.ts:28:5 lint/style/useConst  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This let declares a variable that is only assigned once.
+
+    27 │   function push(text: string): string[][] {
+  > 28 │     let out: string[][] = [];
+       │     ^^^
+    29 │     for (let i = 0; i < text.length; i++) {
+    30 │       let c = text.charAt(i);
+
+  i 'out' is never reassigned.
+
+    27 │   function push(text: string): string[][] {
+  > 28 │     let out: string[][] = [];
+       │         ^^^
+    29 │     for (let i = 0; i < text.length; i++) {
+    30 │       let c = text.charAt(i);
+
+  i Safe fix: Use const instead.
+
+     26  26 │
+     27  27 │     function push(text: string): string[][] {
+     28     │ - ····let·out:·string[][]·=·[];
+         28 │ + ····const·out:·string[][]·=·[];
+     29  29 │       for (let i = 0; i < text.length; i++) {
+     30  30 │         let c = text.charAt(i);
+
+
+src/components/retab/lib/csv-parser.ts:30:7 lint/style/useConst  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This let declares a variable that is only assigned once.
+
+    28 │     let out: string[][] = [];
+    29 │     for (let i = 0; i < text.length; i++) {
+  > 30 │       let c = text.charAt(i);
+       │       ^^^
+    31 │       if (!sawFirstChar) {
+    32 │         sawFirstChar = true;
+
+  i 'c' is never reassigned.
+
+    28 │     let out: string[][] = [];
+    29 │     for (let i = 0; i < text.length; i++) {
+  > 30 │       let c = text.charAt(i);
+       │           ^
+    31 │       if (!sawFirstChar) {
+    32 │         sawFirstChar = true;
+
+  i Safe fix: Use const instead.
+
+     28  28 │       let out: string[][] = [];
+     29  29 │       for (let i = 0; i < text.length; i++) {
+     30     │ - ······let·c·=·text.charAt(i);
+         30 │ + ······const·c·=·text.charAt(i);
+     31  31 │         if (!sawFirstChar) {
+     32  32 │           sawFirstChar = true;
+
+
+src/components/retab/lib/csv-parser.ts:86:5 lint/style/useConst  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ! This let declares a variable that is only assigned once.
+
+    85 │   function flush(): string[][] {
+  > 86 │     let out: string[][] = [];
+       │     ^^^
+    87 │     if (pendingQuote) {
+    88 │       pendingQuote = false;
+
+  i 'out' is never reassigned.
+
+    85 │   function flush(): string[][] {
+  > 86 │     let out: string[][] = [];
+       │         ^^^
+    87 │     if (pendingQuote) {
+    88 │       pendingQuote = false;
+
+  i Safe fix: Use const instead.
+
+     84  84 │
+     85  85 │     function flush(): string[][] {
+     86     │ - ····let·out:·string[][]·=·[];
+         86 │ + ····const·out:·string[][]·=·[];
+     87  87 │       if (pendingQuote) {
+     88  88 │         pendingQuote = false;
+
+
+src/components/retab/ui/code-viewer-chrome.tsx:3:8 lint/style/useImportType  FIXABLE  ━━━━━━━━━━━━━━
+
+  ! All these imports are only used as types.
+
+    1 │ "use client";
+    2 │
+  > 3 │ import * as React from "react";
+      │        ^^^^^^^^^^^^^^^^^^^^^^^
+    4 │
+    5 │ import { type ViewerDownloadAction } from "@/components/retab/lib/viewer-download-actions";
+
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+
+  i Safe fix: Use import type.
+
+    3 │ import·type·*·as·React·from·"react";
+      │        +++++
+
+src/components/retab/ui/code-viewer-chrome.tsx:5:8 lint/style/useImportType  FIXABLE  ━━━━━━━━━━━━━━
+
+  ! All these imports are only used as types.
+
+    3 │ import * as React from "react";
+    4 │
+  > 5 │ import { type ViewerDownloadAction } from "@/components/retab/lib/viewer-download-actions";
+      │        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    6 │
+    7 │ import { Skeleton } from "@/components/ui/skeleton";
+
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+
+  i Safe fix: Use import type.
+
+      3   3 │   import * as React from "react";
+      4   4 │
+      5     │ - import·{·type·ViewerDownloadAction·}·from·"@/components/retab/lib/viewer-download-actions";
+          5 │ + import·type·{·ViewerDownloadAction·}·from·"@/components/retab/lib/viewer-download-actions";
+      6   6 │
+      7   7 │   import { Skeleton } from "@/components/ui/skeleton";
+
+
+src/components/retab/ui/code-viewer-projection-scheduler.ts:20:28 lint/suspicious/noConfusingVoidType  FIXABLE  ━━━━━━━━━━
+
+  ! void is confusing inside a union type.
+
+    18 │   viewportRef,
+    19 │ }: {
+  > 20 │   project: () => boolean | void;
+       │                            ^^^^
+    21 │   rowHostRef?: React.RefObject<HTMLPreElement | null>;
+    22 │   viewportRef: React.RefObject<HTMLDivElement | null>;
+
+  i Unsafe fix: Use undefined instead.
+
+     18  18 │     viewportRef,
+     19  19 │   }: {
+     20     │ - ··project:·()·=>·boolean·|·void;
+         20 │ + ··project:·()·=>·boolean·|·undefined;
+     21  21 │     rowHostRef?: React.RefObject<HTMLPreElement | null>;
+     22  22 │     viewportRef: React.RefObject<HTMLDivElement | null>;
+
+
+src/components/retab/ui/code-viewer-viewport.tsx:3:8 lint/style/useImportType  FIXABLE  ━━━━━━━━━━━━
+
+  ! All these imports are only used as types.
+
+    1 │ "use client";
+    2 │
+  > 3 │ import * as React from "react";
+      │        ^^^^^^^^^^^^^^^^^^^^^^^
+    4 │
+    5 │ import { CODE_GUTTER_BACKGROUND } from "./code-viewer-projector";
+
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+
+  i Safe fix: Use import type.
+
+    3 │ import·type·*·as·React·from·"react";
+      │        +++++
+
+src/components/retab/ui/csv-viewer-chrome.tsx:3:8 lint/style/useImportType  FIXABLE  ━━━━━━━━━━━━━━━
+
+  ! All these imports are only used as types.
+
+    1 │ "use client";
+    2 │
+  > 3 │ import * as React from "react";
+      │        ^^^^^^^^^^^^^^^^^^^^^^^
+    4 │
+    5 │ import { cn } from "@/lib/utils";
+
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+
+  i Safe fix: Use import type.
+
+    3 │ import·type·*·as·React·from·"react";
+      │        +++++
+
+src/components/retab/ui/csv-viewer.tsx:279:8 lint/style/useExportType  FIXABLE  ━━━━━━━━━━━━━━━━━━━━
+
+  ! All exports are only types.
+
+    277 │ });
+    278 │
+  > 279 │ export {
+        │        ^
+  > 280 │   type CsvCellAddress,
+         ...
+  > 285 │   type CsvViewerSource,
+  > 286 │ };
+        │ ^^
+    287 │
+    288 │ function useCsvControlsRegistration({
+
+  i Using export type allows compilers to safely drop exports of types without looking for their definition.
+
+  i Safe fix: Use export type.
+
+    277 277 │   });
+    278 278 │
+    279     │ - export·{
+    280     │ - ··type·CsvCellAddress,
+    281     │ - ··type·CsvDialect,
+    282     │ - ··type·CsvDocumentSource,
+    283     │ - ··type·CsvTableSource,
+    284     │ - ··type·CsvTable,
+    285     │ - ··type·CsvViewerSource,
+        279 │ + export·type·{
+        280 │ + ··CsvCellAddress,
+        281 │ + ··CsvDialect,
+        282 │ + ··CsvDocumentSource,
+        283 │ + ··CsvTableSource,
+        284 │ + ··CsvTable,
+        285 │ + ··CsvViewerSource,
+    286 286 │   };
+    287 287 │
+
+
+src/components/retab/ui/docx-viewer-chrome.tsx:3:8 lint/style/useImportType  FIXABLE  ━━━━━━━━━━━━━━
+
+  ! All these imports are only used as types.
+
+    1 │ "use client";
+    2 │
+  > 3 │ import * as React from "react";
+      │        ^^^^^^^^^^^^^^^^^^^^^^^
+    4 │
+    5 │ import { cn } from "@/lib/utils";
+
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+
+  i Safe fix: Use import type.
+
+    3 │ import·type·*·as·React·from·"react";
+      │        +++++
+
+src/components/retab/ui/dropdown-menu.tsx:3:8 lint/style/useImportType  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+
+  ! All these imports are only used as types.
+
+    1 │ "use client";
+    2 │
+  > 3 │ import * as React from "react";
+      │        ^^^^^^^^^^^^^^^^^^^^^^^
+    4 │ import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
+    5 │ import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
+
+  i Importing the types with import type ensures that they are removed by the compilers and avoids loading unnecessary modules.
+
+  i Safe fix: Use import type.
+
+    3 │ import·type·*·as·React·from·"react";
+      │        +++++
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 27.
+Checked 911 files in 1514ms. No fixes applied.
+Found 43 warnings.
+Found 4 infos.

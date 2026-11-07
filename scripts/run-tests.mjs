@@ -54,6 +54,7 @@ const testsByScope = {
   ],
   admin: ['admin/src/lingxilit-url.test.ts', 'admin/src/record-presentation.test.ts', 'admin/src/management-session.test.ts'],
   web: [
+    'src/features/artifacts/native/element-sizing.test.ts',
     'src/components/product-language.test.tsx',
     'shared/artifact-operations.test.ts',
     'shared/artifact-page-radius.test.ts',
