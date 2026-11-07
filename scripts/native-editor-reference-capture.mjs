@@ -7,6 +7,7 @@ import {createHash} from 'node:crypto'
 import {readFile,mkdir,writeFile} from 'node:fs/promises'
 import {resolve,join} from 'node:path'
 import {pathToFileURL} from 'node:url'
+import {waitForReferenceVisualDocument} from './native-editor-reference-ready.mjs'
 const args=Object.fromEntries(process.argv.slice(2).map(value=>value.replace(/^--/,'').split('=')))
 const sourceRoot=resolve(args['reference-root']??''),output=resolve(args.output??'/tmp/lingxi-reference-evidence')
 assert.ok(args['reference-root'],'--reference-root must identify the separately downloaded pinned release')
@@ -20,6 +21,7 @@ const {chromium}=await import(process.env.PLAYWRIGHT_MODULE?pathToFileURL(proces
 const browser=await chromium.launch({headless:true,...(args.browser?{executablePath:args.browser}:{}),args:['--no-sandbox']})
 await mkdir(output,{recursive:true})
 const results=[]
+const paintProofs=new WeakMap()
 try {
   for(const kind of args['pages-only'] ? [] : ['design','slides']) {
     const url=new URL(args[`${kind}-url`]);assert.ok(['127.0.0.1','localhost'].includes(url.hostname),'Reference must run separately on loopback')
@@ -30,6 +32,7 @@ try {
         await capture(page,kind,`${width}-${theme}`,width,height,theme)
       }finally{await page.close()}
     }
+    if(args['defaults-only']==='true')continue
     let page
     try {
       const reset=async()=>{await page?.close();page=await browser.newPage({viewport:{width:1440,height:1000},colorScheme:'light',reducedMotion:'reduce'});await page.goto(url.href,{waitUntil:'networkidle'});await ready(page,kind);await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(200)}
@@ -71,12 +74,11 @@ async function capture(page,kind,state,width,height,theme) {
     const s=getComputedStyle(e),r=e.getBoundingClientRect()
     return {label:e.getAttribute('aria-label')??e.getAttribute('title')??e.textContent?.slice(0,100),role:e.getAttribute('role')??e.tagName.toLowerCase(),rect:{x:r.x,y:r.y,width:r.width,height:r.height},fontFamily:s.fontFamily,fontSize:s.fontSize,fontWeight:s.fontWeight,color:s.color,background:s.backgroundColor,border:s.border,shadow:s.boxShadow,radius:s.borderRadius,cursor:s.cursor,transition:s.transition}
   }))
-  results.push({kind,state,width,height,theme,file:filename,controls:metrics})
+  results.push({kind,state,width,height,theme,file:filename,controls:metrics,documentPaint:paintProofs.get(page)??null})
 }
 
 async function ready(page,kind){
-  if(kind==='slides')await page.getByText('LingxiLoop 1',{exact:true}).first().waitFor({timeout:60000})
-  else {await page.getByRole('button',{name:'Open artboard Page 1 full window',exact:true}).waitFor({timeout:60000});await page.waitForFunction(()=>!document.body.innerText.includes('Loading…'),null,{timeout:60000})}
+  paintProofs.set(page,await waitForReferenceVisualDocument(page,kind))
 }
 
 

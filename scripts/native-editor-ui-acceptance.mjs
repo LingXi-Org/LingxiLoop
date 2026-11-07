@@ -2514,6 +2514,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
           screenshots.push({width,height,theme,path:`${kind}-${width}-${theme}.png`,controls:await visualControls(page)})
         }
       }
+      if(options['defaults-only']==='true'){assert.deepEqual(errors,[]);return {kind:'isolated-native-editor-default-visual-diagnostic',mode:kind,screenshots,scope:'只记录默认界面，不替代菜单/面板或像素验收',consoleOrPageErrors:errors}}
       const reset=async()=>{await page.setViewportSize({width:1440,height:1000});await page.reload({waitUntil:'domcontentloaded'});await ready(1);await page.locator('[data-native-artifact-editor]').evaluate(e=>e.setAttribute('data-theme','light'));await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(120)}
       const capture=async state=>{await page.waitForTimeout(120);const path=`${kind}-${state}.png`;await page.screenshot({path:join(output,path)});screenshots.push({width:1440,height:1000,theme:'light',state,path,controls:await visualControls(page)})}
       const menus=kind==='design'?[['pages','页面菜单'],['drawing','绘图工具'],['shapes','插入图形'],['export','导出格式'],['zoom','画布缩放'],['history','版本历史'],['comment-options','评论选项']]:[['shapes','插入图形'],['export','导出格式'],['zoom','画布缩放'],['layouts','添加页面'],['history','版本历史'],['comment-options','评论选项']]

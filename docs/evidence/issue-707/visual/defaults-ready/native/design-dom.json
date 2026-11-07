@@ -1,0 +1,296 @@
+[
+  {
+    "id": "page-1-heading",
+    "html": "<div class=\"native-node native-node-text\" data-node-id=\"page-1-heading\" data-node-type=\"text\" style=\"color: rgb(24, 51, 43); font-family: Arial; font-size: 48px; font-weight: 700; line-height: 1.25; position: absolute; left: 64px; top: 40px; width: 1152px; height: 76px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><div class=\"native-text-content\"><h1>LingxiLoop 1</h1></div></div>",
+    "rect": {
+      "x": 62.147369384765625,
+      "y": 420.88897705078125,
+      "width": 254.65261840820312,
+      "height": 16.79998779296875,
+      "top": 420.88897705078125,
+      "right": 316.79998779296875,
+      "bottom": 437.68896484375,
+      "left": 62.147369384765625
+    },
+    "children": [
+      {
+        "tag": "DIV",
+        "rect": {
+          "x": 62.147369384765625,
+          "y": 420.88897705078125,
+          "width": 254.65261840820312,
+          "height": 16.79998779296875,
+          "top": 420.88897705078125,
+          "right": 316.79998779296875,
+          "bottom": 437.68896484375,
+          "left": 62.147369384765625
+        },
+        "color": "rgb(24, 51, 43)",
+        "display": "block",
+        "position": "static",
+        "font": "700 48px / 60px Arial"
+      },
+      {
+        "tag": "H1",
+        "rect": {
+          "x": 62.147369384765625,
+          "y": 420.88897705078125,
+          "width": 254.65261840820312,
+          "height": 13.263153076171875,
+          "top": 420.88897705078125,
+          "right": 316.79998779296875,
+          "bottom": 434.1521301269531,
+          "left": 62.147369384765625
+        },
+        "color": "rgb(24, 51, 43)",
+        "display": "block",
+        "position": "static",
+        "font": "700 48px / 60px Arial"
+      }
+    ]
+  },
+  {
+    "id": "page-1-image",
+    "html": "<div class=\"native-node native-node-image\" data-node-id=\"page-1-image\" data-node-type=\"image\" style=\"font-size: 32px; line-height: 1.25; position: absolute; left: 64px; top: 200px; width: 640px; height: 360px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><div class=\"native-image-crop\"><img alt=\"\" draggable=\"false\" decoding=\"async\" src=\"blob:http://127.0.0.1:5173/463377a1-63d7-4e6b-a39b-968012a95fc4\" style=\"width: 100%; height: 100%; max-width: none; transform: translate(0%, 0%); object-fit: cover;\"></div></div>",
+    "rect": {
+      "x": 62.147369384765625,
+      "y": 456.25738525390625,
+      "width": 141.4736785888672,
+      "height": 79.5789794921875,
+      "top": 456.25738525390625,
+      "right": 203.6210479736328,
+      "bottom": 535.8363647460938,
+      "left": 62.147369384765625
+    },
+    "children": [
+      {
+        "tag": "IMG",
+        "rect": {
+          "x": 62.147369384765625,
+          "y": 456.25738525390625,
+          "width": 141.4736785888672,
+          "height": 79.5789794921875,
+          "top": 456.25738525390625,
+          "right": 203.6210479736328,
+          "bottom": 535.8363647460938,
+          "left": 62.147369384765625
+        },
+        "color": "rgb(32, 33, 36)",
+        "display": "block",
+        "position": "static",
+        "font": "32px / 40px ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif"
+      }
+    ]
+  },
+  {
+    "id": "page-1-shape",
+    "html": "<div class=\"native-node native-node-shape\" data-node-id=\"page-1-shape\" data-node-type=\"shape\" style=\"font-size: 32px; line-height: 1.25; border-radius: 12px; position: absolute; left: 760px; top: 440px; width: 180px; height: 80px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><svg viewBox=\"0 0 180 80\" width=\"100%\" height=\"100%\" aria-label=\"形状\" style=\"overflow: visible;\"><rect x=\"0\" y=\"0\" width=\"180\" height=\"80\" rx=\"12\" fill=\"#426b46\"></rect></svg></div>",
+    "rect": {
+      "x": 216,
+      "y": 509.3100280761719,
+      "width": 39.78947448730469,
+      "height": 17.684234619140625,
+      "top": 509.3100280761719,
+      "right": 255.7894744873047,
+      "bottom": 526.9942626953125,
+      "left": 216
+    },
+    "children": []
+  },
+  {
+    "id": "page-2-heading",
+    "html": "<div class=\"native-node native-node-text\" data-node-id=\"page-2-heading\" data-node-type=\"text\" style=\"color: rgb(24, 51, 43); font-family: Arial; font-size: 48px; font-weight: 700; line-height: 1.25; position: absolute; left: 64px; top: 40px; width: 1152px; height: 76px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><div class=\"native-text-content\"><h1>LingxiLoop 2</h1></div></div>",
+    "rect": {
+      "x": 521.9285888671875,
+      "y": 420.88897705078125,
+      "width": 254.65264892578125,
+      "height": 16.79998779296875,
+      "top": 420.88897705078125,
+      "right": 776.5812377929688,
+      "bottom": 437.68896484375,
+      "left": 521.9285888671875
+    },
+    "children": [
+      {
+        "tag": "DIV",
+        "rect": {
+          "x": 521.9285888671875,
+          "y": 420.88897705078125,
+          "width": 254.65264892578125,
+          "height": 16.79998779296875,
+          "top": 420.88897705078125,
+          "right": 776.5812377929688,
+          "bottom": 437.68896484375,
+          "left": 521.9285888671875
+        },
+        "color": "rgb(24, 51, 43)",
+        "display": "block",
+        "position": "static",
+        "font": "700 48px / 60px Arial"
+      },
+      {
+        "tag": "H1",
+        "rect": {
+          "x": 521.9285888671875,
+          "y": 420.88897705078125,
+          "width": 254.65264892578125,
+          "height": 13.263153076171875,
+          "top": 420.88897705078125,
+          "right": 776.5812377929688,
+          "bottom": 434.1521301269531,
+          "left": 521.9285888671875
+        },
+        "color": "rgb(24, 51, 43)",
+        "display": "block",
+        "position": "static",
+        "font": "700 48px / 60px Arial"
+      }
+    ]
+  },
+  {
+    "id": "page-2-image",
+    "html": "<div class=\"native-node native-node-image\" data-node-id=\"page-2-image\" data-node-type=\"image\" style=\"font-size: 32px; line-height: 1.25; position: absolute; left: 64px; top: 200px; width: 640px; height: 360px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><div class=\"native-image-crop\"><img alt=\"\" draggable=\"false\" decoding=\"async\" src=\"blob:http://127.0.0.1:5173/dd173e54-427c-499a-8691-bef5bf377a60\" style=\"width: 100%; height: 100%; max-width: none; transform: translate(0%, 0%); object-fit: cover;\"></div></div>",
+    "rect": {
+      "x": 521.9285888671875,
+      "y": 456.25738525390625,
+      "width": 141.47369384765625,
+      "height": 79.5789794921875,
+      "top": 456.25738525390625,
+      "right": 663.4022827148438,
+      "bottom": 535.8363647460938,
+      "left": 521.9285888671875
+    },
+    "children": [
+      {
+        "tag": "IMG",
+        "rect": {
+          "x": 521.9285888671875,
+          "y": 456.25738525390625,
+          "width": 141.47369384765625,
+          "height": 79.5789794921875,
+          "top": 456.25738525390625,
+          "right": 663.4022827148438,
+          "bottom": 535.8363647460938,
+          "left": 521.9285888671875
+        },
+        "color": "rgb(32, 33, 36)",
+        "display": "block",
+        "position": "static",
+        "font": "32px / 40px ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif"
+      }
+    ]
+  },
+  {
+    "id": "page-2-shape",
+    "html": "<div class=\"native-node native-node-shape\" data-node-id=\"page-2-shape\" data-node-type=\"shape\" style=\"font-size: 32px; line-height: 1.25; border-radius: 12px; position: absolute; left: 760px; top: 440px; width: 180px; height: 80px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><svg viewBox=\"0 0 180 80\" width=\"100%\" height=\"100%\" aria-label=\"形状\" style=\"overflow: visible;\"><rect x=\"0\" y=\"0\" width=\"180\" height=\"80\" rx=\"12\" fill=\"#426b46\"></rect></svg></div>",
+    "rect": {
+      "x": 675.78125,
+      "y": 509.3100280761719,
+      "width": 39.78948974609375,
+      "height": 17.684234619140625,
+      "top": 509.3100280761719,
+      "right": 715.5707397460938,
+      "bottom": 526.9942626953125,
+      "left": 675.78125
+    },
+    "children": []
+  },
+  {
+    "id": "page-3-heading",
+    "html": "<div class=\"native-node native-node-text\" data-node-id=\"page-3-heading\" data-node-type=\"text\" style=\"color: rgb(24, 51, 43); font-family: Arial; font-size: 48px; font-weight: 700; line-height: 1.25; position: absolute; left: 64px; top: 40px; width: 1152px; height: 76px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><div class=\"native-text-content\"><h1>LingxiLoop 3</h1></div></div>",
+    "rect": {
+      "x": 981.7254638671875,
+      "y": 420.88897705078125,
+      "width": 254.6527099609375,
+      "height": 16.79998779296875,
+      "top": 420.88897705078125,
+      "right": 1236.378173828125,
+      "bottom": 437.68896484375,
+      "left": 981.7254638671875
+    },
+    "children": [
+      {
+        "tag": "DIV",
+        "rect": {
+          "x": 981.7254638671875,
+          "y": 420.88897705078125,
+          "width": 254.6527099609375,
+          "height": 16.79998779296875,
+          "top": 420.88897705078125,
+          "right": 1236.378173828125,
+          "bottom": 437.68896484375,
+          "left": 981.7254638671875
+        },
+        "color": "rgb(24, 51, 43)",
+        "display": "block",
+        "position": "static",
+        "font": "700 48px / 60px Arial"
+      },
+      {
+        "tag": "H1",
+        "rect": {
+          "x": 981.7254638671875,
+          "y": 420.88897705078125,
+          "width": 254.6527099609375,
+          "height": 13.263153076171875,
+          "top": 420.88897705078125,
+          "right": 1236.378173828125,
+          "bottom": 434.1521301269531,
+          "left": 981.7254638671875
+        },
+        "color": "rgb(24, 51, 43)",
+        "display": "block",
+        "position": "static",
+        "font": "700 48px / 60px Arial"
+      }
+    ]
+  },
+  {
+    "id": "page-3-image",
+    "html": "<div class=\"native-node native-node-image\" data-node-id=\"page-3-image\" data-node-type=\"image\" style=\"font-size: 32px; line-height: 1.25; position: absolute; left: 64px; top: 200px; width: 640px; height: 360px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><div class=\"native-image-crop\"><img alt=\"\" draggable=\"false\" decoding=\"async\" src=\"blob:http://127.0.0.1:5173/ebea5b4d-e15c-4716-ab3a-13f07a9a4566\" style=\"width: 100%; height: 100%; max-width: none; transform: translate(0%, 0%); object-fit: cover;\"></div></div>",
+    "rect": {
+      "x": 981.7254638671875,
+      "y": 456.25738525390625,
+      "width": 141.4737548828125,
+      "height": 79.5789794921875,
+      "top": 456.25738525390625,
+      "right": 1123.19921875,
+      "bottom": 535.8363647460938,
+      "left": 981.7254638671875
+    },
+    "children": [
+      {
+        "tag": "IMG",
+        "rect": {
+          "x": 981.7254638671875,
+          "y": 456.25738525390625,
+          "width": 141.4737548828125,
+          "height": 79.5789794921875,
+          "top": 456.25738525390625,
+          "right": 1123.19921875,
+          "bottom": 535.8363647460938,
+          "left": 981.7254638671875
+        },
+        "color": "rgb(32, 33, 36)",
+        "display": "block",
+        "position": "static",
+        "font": "32px / 40px ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", sans-serif"
+      }
+    ]
+  },
+  {
+    "id": "page-3-shape",
+    "html": "<div class=\"native-node native-node-shape\" data-node-id=\"page-3-shape\" data-node-type=\"shape\" style=\"font-size: 32px; line-height: 1.25; border-radius: 12px; position: absolute; left: 760px; top: 440px; width: 180px; height: 80px; transform: rotate(0deg) scale(1, 1); transform-origin: center center; box-sizing: border-box;\"><svg viewBox=\"0 0 180 80\" width=\"100%\" height=\"100%\" aria-label=\"形状\" style=\"overflow: visible;\"><rect x=\"0\" y=\"0\" width=\"180\" height=\"80\" rx=\"12\" fill=\"#426b46\"></rect></svg></div>",
+    "rect": {
+      "x": 1135.578125,
+      "y": 509.3100280761719,
+      "width": 39.7894287109375,
+      "height": 17.684234619140625,
+      "top": 509.3100280761719,
+      "right": 1175.3675537109375,
+      "bottom": 526.9942626953125,
+      "left": 1135.578125
+    },
+    "children": []
+  }
+]

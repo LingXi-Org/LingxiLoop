@@ -320,3 +320,9 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 [09e95447正式CI42330654549](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42330654549)通过，包含新增的真实PostgreSQL、授权与共享历史用例。[独立审查](reviews/09e95447.json)仍复现两项P2：可信组字期间访问丢失导致原始代码丢失、像素行高误成倍数。[修复收据](functional/code-composition-recovery.json)记录140/154可信compositionstart后无compositionend卸载、中文下载/重试/再次关闭重开/显式保存，以及2px实际行高/撤销重做/重开；不把CDP事件当真实操作系统输入法。原始草稿使用会话本地恢复数据，无自动发送，不新增服务或表。
 
 [56af8a44正式CI42333439893](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42333439893)通过；[复审](reviews/56af8a44.json)确认原组字丢失及像素行高P2关闭，但发现显式保留副本重载后局部输入复活。[清理修复收据](functional/code-explicit-reset.json)保留先失败、140/154真实下载/GET文档/清空字段与会话/关闭重开不复活，以及原有恢复不自动提交回归。
+
+
+[0a622150独立复审](reviews/0a622150.json)通过，原显式清除后草稿复活P2已关闭；[正式CI42334223493](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42334223493)通过。140/154备份并重载后字段与会话清空，关闭重开无复活；154原恢复与连续保存/共享撤销流程通过。局部复审不替代完整视觉、真实服务、操作系统输入法及最终性能资格。
+
+
+[默认界面重新配对](visual/defaults-ready/manifest.json)修复参考截图提前捕获iframe加载占位的问题，等待每个可见画板以及Slides语义标题、图片解码和字体完成。140/154延迟挂载/图片/屏外占位回归通过；16对同环境截图、控件数据、叠加图和未掩码原始差异保留。仅1/16低于0.5%，最大4.684%，仍不满足视觉门槛；旧截图不能作为参考文档已绘制的证明。
