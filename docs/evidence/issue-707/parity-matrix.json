@@ -9890,6 +9890,49 @@
         "receipt": "functional/element-layout.json",
         "scope": "固定来源与受控HTTP真实浏览器、实际隔离导出；不代替完整授权服务或最终性能。"
       }
+    },
+    {
+      "id": "D37-design",
+      "editor": "design",
+      "control": "画板文本对齐单选与CSS声明",
+      "trigger": "选择画板文字，选择方向/方向键切换/还原，保存重开与共享历史",
+      "states": [
+        "四方向",
+        "CSS覆盖",
+        "重要声明",
+        "继承",
+        "逻辑起止",
+        "键盘",
+        "还原",
+        "只读",
+        "锁定",
+        "权限变化",
+        "浅色",
+        "深色",
+        "窄容器"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "start": 2949789,
+        "lookup": "text-align",
+        "offsetUnit": "UTF-16 code units",
+        "runtime": "source-element-text-alignment.json"
+      },
+      "implementation": "src/features/artifacts/native/ElementTextAlignment.tsx",
+      "screenshots": {
+        "reference": "visual/element-text-alignment/reference/",
+        "native": "visual/element-text-alignment/implementation/",
+        "manifest": "visual/element-text-alignment/differences/raw-pixel-results.json",
+        "matchedStateVerified": true
+      },
+      "result": "140/154各12功能状态通过，154另四方向截图、深色及390窄容器3场景通过。15单元/32CI契约，50页/47哈希回归通过。轨道水平位置/尺寸吻合但纵向提前21px，5对整图像素均未达0.5%；完整文本、多选/其他编辑器及真实服务未验收。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-text-alignment.json",
+        "scope": "Design画板DOM文本的对齐控件；受控HTTP、真实React/Worker/浏览器和共享操作，不代表完整授权API、Slides/自由画布、全部文本功能或最终性能。"
+      }
     }
   ],
   "registeredReplacements": [

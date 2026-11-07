@@ -1,0 +1,98 @@
+{
+  "kind": "中文文本对齐单选与声明回归",
+  "case": "text-align-css",
+  "geometry": {
+    "group": {
+      "x": 112,
+      "y": 670.28125,
+      "width": 242,
+      "height": 24,
+      "top": 670.28125,
+      "right": 354,
+      "bottom": 694.28125,
+      "left": 112
+    },
+    "background": "rgba(11, 11, 11, 0.05)",
+    "borderRadius": "6px",
+    "padding": "1px",
+    "thumb": {
+      "rect": {
+        "x": 233,
+        "y": 671.28125,
+        "width": 60,
+        "height": 22,
+        "top": 671.28125,
+        "right": 293,
+        "bottom": 693.28125,
+        "left": 233
+      },
+      "background": "rgb(255, 255, 255)",
+      "borderRadius": "5px",
+      "boxShadow": "rgba(11, 11, 11, 0.05) 0px 0px 0px 1px"
+    },
+    "radios": [
+      {
+        "label": "文本左对齐",
+        "checked": "false",
+        "rect": {
+          "x": 113,
+          "y": 671.28125,
+          "width": 60,
+          "height": 22,
+          "top": 671.28125,
+          "right": 173,
+          "bottom": 693.28125,
+          "left": 113
+        }
+      },
+      {
+        "label": "文本居中",
+        "checked": "false",
+        "rect": {
+          "x": 173,
+          "y": 671.28125,
+          "width": 60,
+          "height": 22,
+          "top": 671.28125,
+          "right": 233,
+          "bottom": 693.28125,
+          "left": 173
+        }
+      },
+      {
+        "label": "文本右对齐",
+        "checked": "true",
+        "rect": {
+          "x": 233,
+          "y": 671.28125,
+          "width": 60,
+          "height": 22,
+          "top": 671.28125,
+          "right": 293,
+          "bottom": 693.28125,
+          "left": 233
+        }
+      },
+      {
+        "label": "文本两端对齐",
+        "checked": "false",
+        "rect": {
+          "x": 293,
+          "y": 671.28125,
+          "width": 60,
+          "height": 22,
+          "top": 671.28125,
+          "right": 353,
+          "bottom": 693.28125,
+          "left": 293
+        }
+      }
+    ]
+  },
+  "computedAlignment": "right",
+  "selectedAlignment": "right",
+  "batches": 1,
+  "savedAndReopened": true,
+  "otherPagesUnchanged": true,
+  "consoleOrPageErrors": []
+}

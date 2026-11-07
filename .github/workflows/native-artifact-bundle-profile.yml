@@ -13,6 +13,7 @@ on:
       - scripts/native-artifact-shared-icons.ts
       - scripts/native-artifact-shared-icons.test.ts
       - vite.config.ts
+      - src/features/artifacts/native/**
 
 permissions: { contents: read, packages: read }
 concurrency:

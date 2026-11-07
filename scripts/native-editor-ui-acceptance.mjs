@@ -107,6 +107,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
+  if(options.checks==='element-sizing'&&['text-align-css','text-align-important','text-align-history'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-align':editorCase==='text-align-important'?'center !important':'center'}
+  if(options.checks==='element-sizing'&&editorCase==='text-align-locked')document.pages['page-1'].nodes['page-1-heading'].locked=true
+  if(options.checks==='element-sizing'&&editorCase==='text-align-inherited')document.pages['page-1'].nodes['page-1-root'].style.textAlign='center'
+  if(options.checks==='element-sizing'&&['text-align-logical-start','text-align-logical-end'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-align':editorCase.endsWith('start')?'start':'end'}
   if(options.checks==='element-sizing'&&editorCase==='exports'&&kind==='slides'){const node=document.pages['page-1'].nodes['page-1-heading'];node.css={width:'50%',height:'auto','max-width':'900px'};node.implicitHeight=true}
   if(options.checks==='element-layout'&&editorCase==='capture')document.pages['page-1'].nodes['page-1-heading'].style.backgroundColor='#ed3521'
   if(options.checks==='element-sizing'&&options['sizing-stroke']==='true')Object.assign(document.pages['page-1'].nodes['page-1-shape'].style,{stroke:'#18332b',strokeWidth:2,borderStyle:'dashed'})
@@ -230,7 +234,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historyRequests = [],expectedCodeNetworkErrors=[]
   let denyCodeAccess=false
   let rejectSpeakerSave=['notes-network','notes-denied','notes-write-denied'].includes(options['speaker-case']);let denySpeakerRead=false;const speakerSaveIds=[]
-  let fixtureWrite=!(options.checks==='element-layout'&&editorCase==='readonly')&&!(options.checks==='element-sizing'&&editorCase==='readonly')&&!(options.checks==='element-link'&&editorCase==='readonly')&&!(options.checks==='board-title'&&editorCase==='readonly')&&!(options.checks==='board-transform'&&['readonly','group-readonly'].includes(editorCase))&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
+  let fixtureWrite=!(options.checks==='element-layout'&&editorCase==='readonly')&&!(options.checks==='element-sizing'&&['readonly','text-align-readonly'].includes(editorCase))&&!(options.checks==='element-link'&&editorCase==='readonly')&&!(options.checks==='board-title'&&editorCase==='readonly')&&!(options.checks==='board-transform'&&['readonly','group-readonly'].includes(editorCase))&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
   let holdImageReads=options.checks==='asset-reads',releaseImageReads
   const imageReadGate=new Promise(resolve=>{releaseImageReads=resolve}),physicalImageReads=[]
   const pageReads=[]
@@ -496,6 +500,48 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const section=page.locator('.native-element-sizing'),field=section.getByRole('textbox',{name:'宽度',exact:true})
       await field.waitFor()
       const saved=()=>page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200)
+      if(editorCase.startsWith('text-align-')){
+        const group=page.getByRole('radiogroup',{name:'文本对齐',exact:true}),node=page.locator(`[data-node-id="${nodeId}"]`),before=structuredClone(document.pages['page-1'].nodes[nodeId]),labels={left:'文本左对齐',center:'文本居中',right:'文本右对齐',justify:'文本两端对齐'}
+        assert.equal(await group.getByRole('radio').count(),4)
+        if(editorCase.startsWith('text-align-logical-')){assert.equal(receipts.length,0);for(const radio of await group.getByRole('radio').all())assert.equal(await radio.getAttribute('aria-checked'),'false')}
+        if(editorCase==='text-align-inherited'){assert.equal(await group.getByRole('radio',{name:labels.center,exact:true}).getAttribute('aria-checked'),'true');assert.equal(await node.evaluate(element=>getComputedStyle(element).textAlign),'center')}
+        if(['text-align-readonly','text-align-locked','text-align-permission'].includes(editorCase)){
+          let expected=original
+          if(editorCase==='text-align-permission'){
+            await group.getByRole('radio',{name:labels.left,exact:true}).focus();fixtureWrite=false
+            document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-1',patch:{title:'权限变更后的页面'}}],'peer-text-alignment-access')).document;expected=structuredClone(document)
+            const refreshed=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/document')&&response.status()===200);await page.evaluate(()=>window.__codeChanged());await refreshed
+          }
+          await page.waitForFunction(()=>document.querySelector('[aria-label="文本左对齐"]')?.getAttribute('aria-disabled')==='true')
+          for(const radio of await group.getByRole('radio').all())assert.equal(await radio.isDisabled(),true)
+          await group.getByRole('radio',{name:labels.left,exact:true}).focus();await page.keyboard.press('ArrowRight')
+          assert.equal(receipts.length,0);assert.deepEqual(document,expected);assert.deepEqual(errors,[])
+          return{kind:'文本对齐正常禁用回归',case:editorCase,noWrites:true,documentUnchanged:editorCase!=='text-align-permission',peerChangePreserved:editorCase==='text-align-permission',consoleOrPageErrors:errors}
+        }
+        const choose=async value=>{const changed=saved();await group.getByRole('radio',{name:labels[value],exact:true}).click();await changed;assert.equal(await node.evaluate(element=>getComputedStyle(element).textAlign),value,'文本对齐必须更新实际优先声明，不能只改被CSS覆盖的类型化字段');assert.equal(await group.getByRole('radio',{name:labels[value],exact:true}).getAttribute('aria-checked'),'true')}
+        if(editorCase==='text-align-all')for(const value of ['left','center','right','justify'])await choose(value)
+        else if(editorCase==='text-align-keyboard'){
+          await group.getByRole('radio',{name:labels.left,exact:true}).focus()
+          for(const value of ['center','right','justify']){const changed=saved();await page.keyboard.press('ArrowRight');await changed;assert.equal(await node.evaluate(element=>getComputedStyle(element).textAlign),value)}
+        }else await choose(Object.hasOwn(labels,editorCase.slice('text-align-'.length))?editorCase.slice('text-align-'.length):'right')
+        let finalValue=editorCase==='text-align-all'||editorCase==='text-align-keyboard'?'justify':Object.hasOwn(labels,editorCase.slice('text-align-'.length))?editorCase.slice('text-align-'.length):'right'
+        if(editorCase==='text-align-reset'||editorCase==='text-align-inherited'){
+          const changed=saved();await page.getByLabel('还原文本对齐',{exact:true}).click();await changed
+          assert.equal(document.pages['page-1'].nodes[nodeId].style.textAlign,undefined);assert.equal(document.pages['page-1'].nodes[nodeId].css?.['text-align'],undefined);finalValue=editorCase==='text-align-inherited'?'center':'left'
+        }
+        if(editorCase==='text-align-history'){
+          await page.locator('[data-native-artifact-editor]').focus();let changed=saved();await page.keyboard.press('Control+z');await changed;assert.deepEqual(document.pages['page-1'].nodes[nodeId],before);assert.equal(await node.evaluate(element=>getComputedStyle(element).textAlign),'center')
+          changed=saved();await page.keyboard.press('Control+Shift+z');await changed;assert.equal(await node.evaluate(element=>getComputedStyle(element).textAlign),'right')
+        }
+        await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')
+        const geometry=await group.evaluate(element=>{const style=getComputedStyle(element),thumb=element.querySelector('[data-native-alignment-thumb]'),thumbStyle=thumb&&getComputedStyle(thumb);return{group:element.getBoundingClientRect().toJSON(),background:style.backgroundColor,borderRadius:style.borderRadius,padding:style.padding,thumb:thumb&&{rect:thumb.getBoundingClientRect().toJSON(),background:thumbStyle.backgroundColor,borderRadius:thumbStyle.borderRadius,boxShadow:thumbStyle.boxShadow},radios:[...element.querySelectorAll('[role=radio]')].map(radio=>({label:radio.getAttribute('aria-label'),checked:radio.getAttribute('aria-checked'),rect:radio.getBoundingClientRect().toJSON()}))}})
+        await page.screenshot({path:join(output,`${editorCase}.png`)})
+        await page.reload();await ready(1);await page.locator(`[data-node-id="${nodeId}"]`).click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await group.waitFor()
+        assert.equal(await group.getByRole('radio',{name:labels[finalValue],exact:true}).getAttribute('aria-checked'),'true');const computed=await node.evaluate(element=>getComputedStyle(element).textAlign);assert.equal(editorCase==='text-align-reset'&&computed==='start'?'left':computed,finalValue)
+        for(const key of ['x','y','width','height','rotation','parentId'])assert.equal(document.pages['page-1'].nodes[nodeId][key],before[key],'文本单选和方向键不得移动或变换画布对象')
+        assert.deepEqual(document.pages['page-2'],original.pages['page-2']);assert.deepEqual(document.pages['page-3'],original.pages['page-3']);assert.deepEqual(errors,[])
+        return{kind:'中文文本对齐单选与声明回归',case:editorCase,beforeNode:before,savedNode:document.pages['page-1'].nodes[nodeId],geometry,computedAlignment:computed,selectedAlignment:finalValue,batches:receipts.length,savedAndReopened:true,otherPagesUnchanged:true,consoleOrPageErrors:errors}
+      }
       if(options['align-position']){
         const label={static:'普通',relative:'相对',fixed:'固定',sticky:'粘性'}[options['align-position']]
         await section.getByLabel('位置：绝对',{exact:true}).click();const changed=saved();await section.getByRole('menuitemradio',{name:label,exact:true}).click();await changed

@@ -1,0 +1,87 @@
+{
+  "candidate": "56d93aa1173ae7060a49ba903916cbbfa01247be",
+  "baseline": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "scope": "获准冻结生产静态元数据独立后验；仅读取指定JSON及既有冻结历史数据，无root WIP/私包/构建JS/产品修改",
+  "result": "真实六leaf生产静态隔离通过，完整闭包与成本聚合一致；不能据此判最终性能合格",
+  "findings": [],
+  "input": {
+    "path": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-56d93aa1.json",
+    "sha256": "7c2b71e0d164d2442d91cfb2aa7c38a555495bfc18efc483153dc2c524841690",
+    "run": 42412401607,
+    "job": 128523163748,
+    "source": "实际工作流完整日志；六公开图标版本。静态生产归属不是实际网络、PSS、输入或最终性能。",
+    "qualified": false
+  },
+  "verified": [
+    {
+      "check": "两臂状态及完整性",
+      "result": "固定721和精确56提交两臂openingIsolationPassed/buildCompleted/sourceInputsUnchanged均true、uncommittedInputsPossible=false、qualified=false，成功数据无failureCode。JSON可完整解析，chunk字段与原collector一致；模块仅第一方路径/依赖聚合及三公开包白名单，无代码或私包内部路径。"
+    },
+    {
+      "check": "所有根和传递静态闭包重建",
+      "result": "所有imports在联合元数据均有对应chunk，无缺边或重复归属；application闭包恰等于application集合，native两根闭包减暖集合恰等于22块nativeIncremental；app∪native恰等于元数据总集合。每块raw/gzip求和与每组摘要完全一致。",
+      "nativeRootClosures": {
+        "assets/NativeEditor-CHvI0Szp.js": 29,
+        "assets/RichTextEditor-B8WSH2aC.js": 33
+      },
+      "evidence": "/workspace/lingxi-issue707-scratch/review-56-actual/checks.json"
+    },
+    {
+      "check": "重型路径真实消除",
+      "result": "从NativeEditor和RichTextEditor两个完整静态根分别遍历，均无ConversationThread、CodeBlock、parse5、streamdown、shiki/highlighter归属。application也无这些组件/包，排除仅搬到暖根而被减去的误判；只证明静态路径，动态功能仍可按需加载。"
+    },
+    {
+      "check": "6leaf与React边界",
+      "result": "共享块恰6个公开Lucide leaf、2009raw/604gzip、无第一方/React/createLucideIcon实现，只有1条公共factory静态依赖。factory单独块依赖应用index。React及ReactDOM仅应用index一块归属，8/8模块与基线码元一致，无元数据层面的重复React实现；共享图标块不在application预热闭包。"
+    }
+  ],
+  "staticCosts": {
+    "unit": "每块gzipSync估算字节之和，不是HTTP实际传输",
+    "baseline": {
+      "application": 618927,
+      "nativeIncremental": 155935,
+      "union": 774862,
+      "nativeChunks": 6
+    },
+    "candidate": {
+      "application": 621256,
+      "nativeIncremental": 228201,
+      "union": 849457,
+      "nativeChunks": 22
+    },
+    "deltasVsBaseline": {
+      "applicationGzip": {
+        "baseline": 618927,
+        "candidate": 621256,
+        "delta": 2329,
+        "growthPercent": 0.3762963968287014
+      },
+      "nativeIncrementalGzip": {
+        "baseline": 155935,
+        "candidate": 228201,
+        "delta": 72266,
+        "growthPercent": 46.34366883637413
+      },
+      "unionGzip": {
+        "baseline": 774862,
+        "candidate": 849457,
+        "delta": 74595,
+        "growthPercent": 9.626875495249475
+      }
+    },
+    "vsPriorDa": {
+      "applicationDelta": -29,
+      "nativeIncrementalDelta": -150415,
+      "unionDelta": -150444,
+      "conclusion": "应用暖区下降29bytes，联合区真实静态下降150444bytes；本轮优化收益不是把重型路径搬到暖区。"
+    },
+    "qualification": "相对721原生增量静态gzip+46.3437%，联合静态gzip+9.6269%，仍明显有体积差距；即使5%作静态诊断也超出，但用户门槛是实际脚本传输/时延/PSS，不能以这些估算替代实际性能判定。"
+  },
+  "unverified": [
+    "未在本机运行正式SDK生产构建或独立查询GitHub任务状态；本次对获准的完整真实日志JSON做独立数据核对",
+    "仅能从现有聚合证明React归属未分裂，未运行真实浏览器验证运行时初始化及图标视觉",
+    "静态应用暖根并非每个实际路由全部预热内容：Design先会话和Slides列表起点须由原benchmark分别测量",
+    "未验证实际HTTP/Worker/输入p95/PSS/冷启动p75或最终10组交替ABBA；运行中的bf诊断不是最终资格",
+    "真实授权服务与完整视觉/全部交互资格仍未通过；本报告仅确认本候选静态图隔离与归属"
+  ]
+}

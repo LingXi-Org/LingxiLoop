@@ -1,0 +1,36 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "sourceLocations": [
+    {
+      "symbol": "文本对齐属性标签/四选项",
+      "start": 2949789,
+      "offsetUnit": "UTF-16 code units"
+    },
+    {
+      "symbol": "文本对齐代码值校验（含start/end）",
+      "start": 3143882,
+      "offsetUnit": "UTF-16 code units"
+    }
+  ],
+  "runtimeLocator": "[data-testid=dc-prop-text-align] / [role=radiogroup][aria-label=Align] / [role=radio]",
+  "localizedCopy": [
+    "对齐",
+    "文本对齐",
+    "文本左对齐",
+    "文本居中",
+    "文本右对齐",
+    "文本两端对齐",
+    "还原文本对齐",
+    "文本对齐未能修改，请重试。"
+  ],
+  "implementation": [
+    "src/features/artifacts/native/ElementTextAlignment.tsx",
+    "src/features/artifacts/native/element-text-alignment.ts",
+    "src/features/artifacts/native/element-text-alignment.css"
+  ],
+  "evidence": "functional/element-text-alignment.json",
+  "license": "原版发布包/字体仅独立参考；原生保留产品React/BaseUI和ISC Lucide；无原版编译代码或图标字体进入产品。",
+  "completeQualification": false
+}

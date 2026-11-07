@@ -475,3 +475,9 @@ da2552a6[真实生产采集](performance/static-profile-da2552a6.json)4241054003
 02dc46c3正常CI42411895076通过，但[失败重采42411890483](performance/static-profile-02dc46c3-failed.json)仍命中CodeBlock，且致命退出前console.log异步写出被截断，候选JSON不能解析。没有补造数据或声称已取得完整失败图。真实子进程300000字符回归在旧实现复现JSON截断，改writeSync同步输出后9项采集检查通过，exit1及原异常保留。另补明确buildCompleted=false/sourceInputsUnchanged/固定failureCode；[独立复审](reviews/af4d6f05.json)已核02+af元数据口径及原错误rethrow。
 
 复核[历史完整图的全部路径](performance/shared-transitive-icon-paths.json)证明：Native到CodeBlock有直接和经左右箭头包装块两条路径。前次仅处理直接边不充分。新增实际历史图传递路径回归先失败，再仅追加ChevronLeft/Right（总6leaf）通过，共2项映射/图回归；不扩55/57图标整组，避免已暖book-open/panel-right把成本前移。此次来源是已取得的历史完整图，不冒称6f/02精确新图。新候选真实生产消边、应用与原生总成本及完整性能待验证。
+
+56d93aa1正常CI42412406893、[真实生产重采](performance/static-profile-56d93aa1.json)42412401607及[独立实际图核对](reviews/56-actual-graph.json)通过。六leaf共享块2009raw/604gzip，仅依赖既有createLucideIcon；React/ReactDOM模块仍唯一且8/8码元与基线一致。Native两根完整闭包无会话/代码预览/Markdown解析，未移入应用预热闭包。原生静态gzip228201，应用621256，联合849457；相对固定基线联合仍+74595（9.63%），不等于实际网络或性能通过。bf两图标诊断42410966590已完成前置，正在真实测量；56六图标诊断42412830772排队，均非最终10组资格。
+
+新增D37画板文本对齐，清单现169项，仍未穷尽。见[固定来源](source-element-text-alignment.json)、[功能及缺口](functional/element-text-alignment.json)和[5对截图](visual/element-text-alignment/differences/raw-pixel-results.json)。先复现旧CSS居中覆盖导致点击右对齐仍居中，改为从实际CSS/父级读取，选择方向按来源替换旧声明并清除!important，还原删除作者声明并恢复继承；沿用共享操作/版本读键。四个中文单选、真实方向键、CSS优先级、逻辑start/end无选中、重开/历史、只读/锁定/权限撤回通过；140/154各12功能场景，154另4方向截图、深色及390窄容器3项。15定向单元、32CI/采集契约、两模式50页/47未改页哈希通过。整体类型检查仍76项SDK/级联诊断，新文件无诊断，不造桩。
+
+文本轨道水平位置、203×24及相对单选框尺寸匹配，轨道/指示器采用实测浅深色；整组仍纵向提前21px，缺失对比度说明和其余文本行尚未还原。5对原始整图约3.98%–6.61%，0/5通过0.5%，没有掩码或抗锯齿排除。仅Design画板DOM，本批不声明Slides/自由画布、完整段落/表格/多选、六格式或真实服务资格。属性面板继续按需加载，局部CSS；无模型/接口/数据库变化。专用分支静态采集新增native路径触发，因真实历史已证明UI导入变化会重排共享块；不改变性能阈值。新候选正式CI、生产图及冻结复审待执行。

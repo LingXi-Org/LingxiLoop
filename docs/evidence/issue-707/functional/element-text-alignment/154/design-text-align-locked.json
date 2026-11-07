@@ -1,0 +1,8 @@
+{
+  "kind": "文本对齐正常禁用回归",
+  "case": "text-align-locked",
+  "noWrites": true,
+  "documentUnchanged": true,
+  "peerChangePreserved": false,
+  "consoleOrPageErrors": []
+}

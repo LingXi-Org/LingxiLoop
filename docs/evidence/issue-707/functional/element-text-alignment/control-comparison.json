@@ -1,0 +1,382 @@
+[
+  {
+    "state": "left",
+    "groupDelta": {
+      "x": 0,
+      "y": -21,
+      "width": 0,
+      "height": 0
+    },
+    "sourceRadios": [
+      {
+        "x": 1202,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1252.25,
+        "bottom": 892,
+        "left": 1202
+      },
+      {
+        "x": 1252.25,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1302.5,
+        "bottom": 892,
+        "left": 1252.25
+      },
+      {
+        "x": 1302.5,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1352.75,
+        "bottom": 892,
+        "left": 1302.5
+      },
+      {
+        "x": 1352.75,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1403,
+        "bottom": 892,
+        "left": 1352.75
+      }
+    ],
+    "nativeRadios": [
+      {
+        "x": 1202,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1252.25,
+        "bottom": 871,
+        "left": 1202
+      },
+      {
+        "x": 1252.25,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1302.5,
+        "bottom": 871,
+        "left": 1252.25
+      },
+      {
+        "x": 1302.5,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1352.75,
+        "bottom": 871,
+        "left": 1302.5
+      },
+      {
+        "x": 1352.75,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1403,
+        "bottom": 871,
+        "left": 1352.75
+      }
+    ],
+    "absoluteGeometryPassed": false,
+    "reason": "整组纵向提前21px，文本属性其他行及对比度说明尚未还原；不以相对尺寸吻合冒充整体定位通过。"
+  },
+  {
+    "state": "center",
+    "groupDelta": {
+      "x": 0,
+      "y": -21,
+      "width": 0,
+      "height": 0
+    },
+    "sourceRadios": [
+      {
+        "x": 1202,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1252.25,
+        "bottom": 892,
+        "left": 1202
+      },
+      {
+        "x": 1252.25,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1302.5,
+        "bottom": 892,
+        "left": 1252.25
+      },
+      {
+        "x": 1302.5,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1352.75,
+        "bottom": 892,
+        "left": 1302.5
+      },
+      {
+        "x": 1352.75,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1403,
+        "bottom": 892,
+        "left": 1352.75
+      }
+    ],
+    "nativeRadios": [
+      {
+        "x": 1202,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1252.25,
+        "bottom": 871,
+        "left": 1202
+      },
+      {
+        "x": 1252.25,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1302.5,
+        "bottom": 871,
+        "left": 1252.25
+      },
+      {
+        "x": 1302.5,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1352.75,
+        "bottom": 871,
+        "left": 1302.5
+      },
+      {
+        "x": 1352.75,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1403,
+        "bottom": 871,
+        "left": 1352.75
+      }
+    ],
+    "absoluteGeometryPassed": false,
+    "reason": "整组纵向提前21px，文本属性其他行及对比度说明尚未还原；不以相对尺寸吻合冒充整体定位通过。"
+  },
+  {
+    "state": "right",
+    "groupDelta": {
+      "x": 0,
+      "y": -21,
+      "width": 0,
+      "height": 0
+    },
+    "sourceRadios": [
+      {
+        "x": 1202,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1252.25,
+        "bottom": 892,
+        "left": 1202
+      },
+      {
+        "x": 1252.25,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1302.5,
+        "bottom": 892,
+        "left": 1252.25
+      },
+      {
+        "x": 1302.5,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1352.75,
+        "bottom": 892,
+        "left": 1302.5
+      },
+      {
+        "x": 1352.75,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1403,
+        "bottom": 892,
+        "left": 1352.75
+      }
+    ],
+    "nativeRadios": [
+      {
+        "x": 1202,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1252.25,
+        "bottom": 871,
+        "left": 1202
+      },
+      {
+        "x": 1252.25,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1302.5,
+        "bottom": 871,
+        "left": 1252.25
+      },
+      {
+        "x": 1302.5,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1352.75,
+        "bottom": 871,
+        "left": 1302.5
+      },
+      {
+        "x": 1352.75,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1403,
+        "bottom": 871,
+        "left": 1352.75
+      }
+    ],
+    "absoluteGeometryPassed": false,
+    "reason": "整组纵向提前21px，文本属性其他行及对比度说明尚未还原；不以相对尺寸吻合冒充整体定位通过。"
+  },
+  {
+    "state": "justify",
+    "groupDelta": {
+      "x": 0,
+      "y": -21,
+      "width": 0,
+      "height": 0
+    },
+    "sourceRadios": [
+      {
+        "x": 1202,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1252.25,
+        "bottom": 892,
+        "left": 1202
+      },
+      {
+        "x": 1252.25,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1302.5,
+        "bottom": 892,
+        "left": 1252.25
+      },
+      {
+        "x": 1302.5,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1352.75,
+        "bottom": 892,
+        "left": 1302.5
+      },
+      {
+        "x": 1352.75,
+        "y": 870,
+        "width": 50.25,
+        "height": 22,
+        "top": 870,
+        "right": 1403,
+        "bottom": 892,
+        "left": 1352.75
+      }
+    ],
+    "nativeRadios": [
+      {
+        "x": 1202,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1252.25,
+        "bottom": 871,
+        "left": 1202
+      },
+      {
+        "x": 1252.25,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1302.5,
+        "bottom": 871,
+        "left": 1252.25
+      },
+      {
+        "x": 1302.5,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1352.75,
+        "bottom": 871,
+        "left": 1302.5
+      },
+      {
+        "x": 1352.75,
+        "y": 849,
+        "width": 50.25,
+        "height": 22,
+        "top": 849,
+        "right": 1403,
+        "bottom": 871,
+        "left": 1352.75
+      }
+    ],
+    "absoluteGeometryPassed": false,
+    "reason": "整组纵向提前21px，文本属性其他行及对比度说明尚未还原；不以相对尺寸吻合冒充整体定位通过。"
+  }
+]

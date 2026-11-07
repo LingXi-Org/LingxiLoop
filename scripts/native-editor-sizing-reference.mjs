@@ -23,7 +23,7 @@ try{
   for(const name of args.case?.split(',')??['base','width','percent','width-hug','width-fill','height-hug','height-fill','position-inline','position-relative','position-fixed','position-sticky','min-width','max-width','min-height','max-height','right','bottom','offset','reset-width','escape','blank','save']){
     const project=await mkdtemp(join(tmpdir(),'lingxi-source-sizing-'));let server,page
     try{
-      for(const [file,bytes]of createVisualFixture('design').legacyFiles){const path=join(project,file);await mkdir(dirname(path),{recursive:true});await writeFile(path,bytes)}
+      for(const [file,bytes]of createVisualFixture('design').legacyFiles){const path=join(project,file);await mkdir(dirname(path),{recursive:true});const content=args['text-align-initial']&&file.endsWith('/Page1.dc.html')?String(bytes).replace('<h1 style="',`<h1 style="text-align:${args['text-align-initial']};`):bytes;await writeFile(path,content)}
       server=spawn(process.execPath,[join(sourceRoot,'skills/claude-design/scripts/server.mjs'),project,'--port','0','--host','127.0.0.1'],{stdio:['ignore','pipe','ignore']})
       const url=await new Promise((resolve,reject)=>{let raw='';const timer=setTimeout(()=>reject(Error('参考服务启动超时')),15000);server.stdout.on('data',bytes=>{raw+=bytes;try{const data=JSON.parse(raw);if(data.url){clearTimeout(timer);resolve(data.url)}}catch{}});server.once('exit',()=>{clearTimeout(timer);reject(Error('参考服务退出'))})})
       page=await browser.newPage({viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},colorScheme:args.theme??'light',reducedMotion:'reduce'})
@@ -62,6 +62,10 @@ try{
         const property=name.startsWith('padding')?'padding':'margin',label=property==='padding'?'Padding':'Margin'
         if(name.endsWith('-expand'))await page.getByRole('button',{name:`Edit ${property} per side`,exact:true}).click()
         else{const input=page.getByRole('textbox',{name:label,exact:true});if(name.endsWith('-step-down'))await input.press('ArrowDown');else{await input.fill(name.endsWith('-blank')?'':args.value??'20');await input.press('Enter')}}
+      }else if(name.startsWith('text-align-')){
+        const group=page.getByRole('radiogroup',{name:'Align',exact:true}),value=name.slice('text-align-'.length),label={left:'Left',center:'Center',right:'Right',justify:'Justify'}[value]
+        await group.getByRole('radio',{name:value==='reset'?'Right':label,exact:true}).click()
+        if(value==='reset')await page.getByRole('button',{name:'Unset Align (use inherited)',exact:true}).click()
       }else if(name.startsWith('position-')){
         await page.getByRole('button',{name:'Position: Absolute',exact:true}).click()
         const label=name.slice(9);await page.getByRole('menuitemradio',{name:label[0].toUpperCase()+label.slice(1),exact:true}).click()
@@ -103,7 +107,7 @@ try{
       const panel=page.getByRole('complementary',{name:'Properties panel',exact:true})
       const readControls=()=>panel.locator('button,input').evaluateAll(elements=>elements.map(element=>{const style=getComputedStyle(element);return{tag:element.tagName,label:element.getAttribute('aria-label'),disabled:element.disabled,text:element.textContent,value:element.value,placeholder:element.getAttribute('placeholder'),rect:element.getBoundingClientRect().toJSON(),fontSize:style.fontSize,lineHeight:style.lineHeight,padding:style.padding,borderRadius:style.borderRadius,color:style.color,background:style.backgroundColor,opacity:style.opacity,outline:style.outline,boxShadow:style.boxShadow,iconGeometry:element.getAttribute('aria-label')?.startsWith('Align')?[...element.querySelectorAll('svg,i,span')].map(child=>{const css=getComputedStyle(child);return{tag:child.tagName,rect:child.getBoundingClientRect().toJSON(),fontSize:css.fontSize,strokeWidth:css.strokeWidth,display:css.display,color:css.color,background:css.backgroundColor,opacity:css.opacity}}):undefined}}))
       const controlsBeforeGlobalSave=await readControls()
-      const readGeometry=()=>heading.evaluate(element=>{const style=getComputedStyle(element);return{layoutWidth:element.offsetWidth,layoutHeight:element.offsetHeight,boxSizing:style.boxSizing,paddingTop:style.paddingTop,paddingRight:style.paddingRight,paddingBottom:style.paddingBottom,paddingLeft:style.paddingLeft,marginTop:style.marginTop,marginRight:style.marginRight,marginBottom:style.marginBottom,marginLeft:style.marginLeft,style:element.getAttribute('style'),rect:element.getBoundingClientRect().toJSON(),width:style.width,height:style.height,position:style.position,left:style.left,top:style.top,minWidth:style.minWidth,maxWidth:style.maxWidth,minHeight:style.minHeight,maxHeight:style.maxHeight,right:style.right,bottom:style.bottom}})
+      const readGeometry=()=>heading.evaluate(element=>{const style=getComputedStyle(element);return{layoutWidth:element.offsetWidth,layoutHeight:element.offsetHeight,boxSizing:style.boxSizing,paddingTop:style.paddingTop,paddingRight:style.paddingRight,paddingBottom:style.paddingBottom,paddingLeft:style.paddingLeft,marginTop:style.marginTop,marginRight:style.marginRight,marginBottom:style.marginBottom,marginLeft:style.marginLeft,style:element.getAttribute('style'),rect:element.getBoundingClientRect().toJSON(),width:style.width,height:style.height,position:style.position,left:style.left,top:style.top,minWidth:style.minWidth,maxWidth:style.maxWidth,minHeight:style.minHeight,maxHeight:style.maxHeight,right:style.right,bottom:style.bottom,textAlign:style.textAlign}})
       const geometryBeforeGlobalSave=await readGeometry()
       const beforeGlobalSave=await readFile(join(project,'project/Page1.dc.html'),'utf8');await page.evaluate(()=>document.activeElement?.blur());await page.keyboard.press('Control+s');await page.waitForTimeout(600)
       if(args['align-state']){
@@ -118,6 +122,11 @@ try{
       if(args['align-key']){await page.keyboard.press(args['align-key']);await page.waitForTimeout(450)}
       if(args['align-state'])await page.waitForTimeout(250)
       const controls=await readControls(),geometry=await readGeometry()
+      const textAlignmentChrome=args.node?null:await panel.getByText('Align',{exact:true}).evaluate(label=>{
+        const row=label.parentElement.parentElement
+        const group=row.querySelector('[role=radiogroup]'),style=group&&getComputedStyle(group),thumb=group?.querySelector('[data-flip-at]'),thumbStyle=thumb&&getComputedStyle(thumb)
+        return{html:row.outerHTML,rect:row.getBoundingClientRect().toJSON(),group:group&&{rect:group.getBoundingClientRect().toJSON(),background:style.backgroundColor,borderRadius:style.borderRadius,padding:style.padding,height:style.height},thumb:thumb&&{rect:thumb.getBoundingClientRect().toJSON(),background:thumbStyle.backgroundColor,borderRadius:thumbStyle.borderRadius,boxShadow:thumbStyle.boxShadow},controls:[...row.querySelectorAll('[role=radio]')].map(element=>{const css=getComputedStyle(element);return{tag:element.tagName,role:element.getAttribute('role'),label:element.getAttribute('aria-label')??element.querySelector('[aria-label]')?.getAttribute('aria-label'),title:element.getAttribute('title'),checked:element.getAttribute('aria-checked'),pressed:element.getAttribute('aria-pressed'),value:element.getAttribute('value'),rect:element.getBoundingClientRect().toJSON(),color:css.color,background:css.backgroundColor,borderRadius:css.borderRadius,boxShadow:css.boxShadow,outline:css.outline,tabIndex:element.tabIndex}})}
+      })
       const selectionHandles=[]
       for(const scope of page.frames())for(const candidate of await scope.locator('[data-resize-handle]').all()){
         const rect=await candidate.boundingBox();if(rect&&rect.width>0&&rect.height>0)selectionHandles.push({rotate:await candidate.getAttribute('data-rotate-handle')!==null,rect})
@@ -127,7 +136,7 @@ try{
       if(/^(padding|margin)/.test(name))await page.mouse.move(20,200)
       await page.screenshot({path:join(output,`sizing-${name}.png`)})
       const frameRect=await board.locator('iframe').boundingBox(),camera={beforeDomEntry:rect,frameRect,scale:frameRect.width/1920,headingScreenRect:await heading.boundingBox()}
-      cases.push({name,layoutChrome,subject:args.node??'text',camera,selectionHandles,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
+      cases.push({name,layoutChrome,textAlignmentChrome,initialTextAlignment:args['text-align-initial']??null,beforeActionSnippet:original.match(/<h1\b[\s\S]*?<\/h1>/)?.[0],subject:args.node??'text',camera,selectionHandles,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
       await writeFile(join(output,'reference.json'),JSON.stringify({sourceCommit:'016b39d7fdcc30bfacee31ea5541498ac53921c6',referenceResourceHashesVerified:inventory.sources.length,browser:browser.version(),theme:args.theme??'light',viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},cases},null,2)+'\n')
       console.log(name+' 已捕获')
     }finally{await page?.close();server?.kill('SIGTERM');await rm(project,{recursive:true,force:true})}

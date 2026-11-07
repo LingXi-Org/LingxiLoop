@@ -1,0 +1,114 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false,
+  "scope": "Design画板DOM文本的对齐控件；受控HTTP、真实React/Worker/浏览器和共享操作，不代表完整授权API、Slides/自由画布、全部文本功能或最终性能。",
+  "sourceResourcesVerifiedEachRun": 12,
+  "sourceStates": [
+    "left",
+    "center",
+    "right",
+    "justify",
+    "center!important→right清除优先级",
+    "reset→继承start",
+    "start/end逻辑值无选中",
+    "dark"
+  ],
+  "nativeBrowserCases": {
+    "140": 12,
+    "154": 16,
+    "narrow390x844": 3,
+    "dark1440x1000": 1
+  },
+  "unitTestsPassed": 15,
+  "newAlignmentUnitTests": 6,
+  "ciContractsAndGraphTestsPassed": 32,
+  "lint": {
+    "passed": true,
+    "warnings": 43,
+    "infos": 4
+  },
+  "localFullTypecheck": {
+    "passed": false,
+    "diagnostics": 76,
+    "reason": "正式私有SDK缺失及级联诊断；新增测试parentId曾错误用undefined，改null后新文件无诊断。未造桩。"
+  },
+  "persistence": [
+    "四方向选择写入共享操作，保存重开",
+    "旧CSS覆盖及!important按固定来源替换为新方向",
+    "共享撤销恢复原始CSS，重做恢复新方向",
+    "还原移除CSS和类型化字段，恢复父级继承",
+    "原稿快照和其他页面保持不变"
+  ],
+  "disabled": [
+    "只读",
+    "对象锁定",
+    "权限撤回后真实变更通知/重新读取，保留同伴标题且本地零写入"
+  ],
+  "regression50": {
+    "design": {
+      "pages": 50,
+      "unchangedPageHashes": 47,
+      "maxMountedPages": 6,
+      "maxMountedNodes": 22
+    },
+    "slides": {
+      "pages": 50,
+      "unchangedPageHashes": 47,
+      "maxMountedPages": 1,
+      "maxMountedNodes": 7
+    },
+    "receipt": "element-text-alignment/regression50/"
+  },
+  "failuresRetained": [
+    {
+      "case": "CSS覆盖",
+      "before": "点击文本右对齐后computedTextAlign仍center",
+      "after": "right，旧声明移除，保存重开/历史通过"
+    },
+    {
+      "case": "测试权限变更通知",
+      "before": "未推进文档seq时/changes为空，因此等待/document超时",
+      "after": "夹具同伴标题变更推进真实共享版本后通知，重新读取权限并禁止本地编辑；没有修改产品权限协议。"
+    },
+    {
+      "case": "类型化测试数据",
+      "before": "parentId:undefined新增一项TS诊断",
+      "after": "使用模型规定的null，新文件无诊断，整体仍76项SDK诊断"
+    }
+  ],
+  "knownGaps": [
+    "完整文本面板、对比度说明、添加属性和所有混合值/上下文/焦点状态仍待还原。",
+    "轨道水平位置、203×24尺寸及相对单选框匹配；整组纵向仍比来源提前21px，全部绝对几何不通过。",
+    "本批只有1440浅深及390窄容器部分状态；不是全部8容器/主题资格。",
+    "原版图标字体仅参考，原生Lucide图形仍有差别。",
+    "完整段落自身声明、变量/所有级联、表格和多选、Slides/自由画布仍未验收。",
+    "本批未重跑六格式、系统IME和真实授权评论/Agent周期，不把历史证据记为本批全通过。",
+    "整图像素、所有功能和最终10组性能门槛均未通过。"
+  ],
+  "visualReceipt": "visual/element-text-alignment/differences/raw-pixel-results.json",
+  "independentReview": "新候选冻结后待执行",
+  "rawPixelDifferences": [
+    {
+      "image": "text-align-left.png",
+      "ratio": 0.040035416666666664
+    },
+    {
+      "image": "text-align-center.png",
+      "ratio": 0.039919444444444445
+    },
+    {
+      "image": "text-align-right.png",
+      "ratio": 0.03982569444444444
+    },
+    {
+      "image": "text-align-justify.png",
+      "ratio": 0.03983125
+    },
+    {
+      "image": "text-align-right-dark.png",
+      "ratio": 0.06607361111111111
+    }
+  ]
+}
