@@ -53,3 +53,12 @@ test('thumbnail DOM remains bounded for dense pages', () => {
   const output = renderToStaticMarkup(createElement(PageThumbnail, { page, document, loaded: true }))
   assert.equal((output.match(/<g /g) ?? []).length, 96)
 })
+
+test('画板四角裁切背景和全部缩略内容，不改写节点',()=>{
+  const document=createDocument('design','radius-thumb'),page=createPage('radius-page');page.radius=[10,20,30,40]
+  const node={...createNode('shape','edge'),x:0,y:0,width:page.width,height:page.height,style:{fill:'#123456'}}
+  page.nodes={edge:node};page.nodeOrder=['edge'];const before=JSON.stringify(page)
+  const html=renderToStaticMarkup(createElement(PageThumbnail,{page,document,loaded:true}))
+  assert.match(html,/<clipPath/);assert.match(html,/M10 0 H1260 A20 20/);assert.match(html,/<g clip-path="url\(#/)
+  assert.equal(JSON.stringify(page),before)
+})

@@ -1,10 +1,11 @@
+import {pageRadiusCss,pageRadiusPath} from '../../../../shared/artifact-page-radius'
 import { useArtifactAssetRead } from './asset-read-context'
 import type { AssetRead } from './asset-reads'
 import { artifactShapeGeometry } from '../../../../shared/artifact-shapes'
 import { editorFontFamily } from './editor-fonts'
 import { SvgImage } from './SvgImage'
 import { inheritedSvgFont } from './svg-presentation'
-import { memo, useEffect, useState, type ReactNode } from 'react'
+import { memo, useEffect, useState, useId, type ReactNode } from 'react'
 import { isSafeArtifactSvg, type ArtifactAsset, type ArtifactDocument, type ArtifactNode, type ArtifactPage, type ArtifactRichText, type ArtifactTheme, type ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
 import {codeStyleProperties} from '../../../../shared/artifact-node-code'
@@ -233,10 +234,11 @@ function hasEditorFonts(nodes: PreviewNode[]): boolean {
 }
 export const PageThumbnail = memo(function PageThumbnail({ page, document, loaded }: { page: ArtifactPage; document: ArtifactDocument; loaded: boolean }) {
   const preview = loaded ? describePage(page, document) : previews.get(`${document.id}:${page.id}`)
+  const clipId=useId(),rounded=!!pageRadiusCss(page.radius)
+  const content=<><rect width={preview?.width ?? page.width} height={preview?.height ?? page.height} fill={preview?.background ?? safeColor(artifactPageBackground(page, document), '#fff')} />{preview?.nodes.map(node => <PreviewShape key={node.id} node={node} document={document} loaded={loaded} />)}</>
   const needsFonts = !!preview && hasEditorFonts(preview.nodes)
   useEffect(() => { if (needsFonts) void import('./editor-fonts.css').catch(() => {}) }, [needsFonts])
   return <svg aria-hidden="true" focusable="false" width="64" height="40" viewBox={`0 0 ${preview?.width ?? page.width} ${preview?.height ?? page.height}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', width: 64, height: 40, flexShrink: 0, borderRadius: 3, overflow: 'hidden', background: '#e8eaee' }}>
-    <rect width={preview?.width ?? page.width} height={preview?.height ?? page.height} fill={preview?.background ?? safeColor(artifactPageBackground(page, document), '#fff')} />
-    {preview?.nodes.map(node => <PreviewShape key={node.id} node={node} document={document} loaded={loaded} />)}
+    {rounded?<><defs><clipPath id={clipId}><path d={pageRadiusPath(page.radius,preview?.width??page.width,preview?.height??page.height)}/></clipPath></defs><g clipPath={`url(#${clipId})`}>{content}</g></>:content}
   </svg>
 })

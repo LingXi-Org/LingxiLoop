@@ -129,3 +129,14 @@ test('native artifact tools declare a new organization runtime harness and use t
   assert.match(deploy, /await convergeHarnessCutover\(/)
   assert.match(deploy, /barrier: \(\) => harnessTargetEntry\(ssh, images, 'barrier'\)/)
 })
+
+
+test('原生Agent工具接受四角圆角并拒绝错误长度和越界值',()=>{
+  const document=createDocument('design','radius-tool'),page=createPage('p');document.pages.p=page;document.pageOrder=['p']
+  const batch=prepareBatch(document,[{type:'page.patch',pageId:'p',patch:{radius:[10,20,30,40]}}],'radius-tool')
+  for(const tools of [design,slides]){
+    const tool=tools.find(tool=>tool.action.endsWith('.apply_ops'))!
+    assert.deepEqual(tool.parse(batch),batch)
+    for(const radius of [[1,2,3],[1,2,3,4,5],[1,2,-1,4],[1,2,4001,4]])assert.throws(()=>tool.parse({...batch,operations:[{type:'page.patch',pageId:'p',patch:{radius}}]}))
+  }
+})

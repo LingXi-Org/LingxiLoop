@@ -1,3 +1,4 @@
+import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
 import {canvasTextMetrics} from '../../../../../shared/artifact-canvas-typography'
 import { artifactShapeGeometry } from '../../../../../shared/artifact-shapes'
 import type { ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../../shared/artifact-document'
@@ -137,7 +138,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
     const tag=node.attributes?.href?'a':'div',attributes=Object.entries(node.attributes??{}).map(([name,value])=>` ${name}="${escapeHtml(value)}"`).join('')
     return `<${tag} class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'}${attributes}${tag==='a'?' rel="noopener noreferrer"':''} style="${escapeHtml(css)}">${content}</${tag}>`
   }
-  return `<section class="artifact-export-page" data-page-id="${page.id}" data-transition="${page.transition}" aria-label="${escapeHtml(page.title)}" style="width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}">${(await Promise.all(children(null).map(render))).join('')}</section>`
+  return `<section class="artifact-export-page" data-page-id="${page.id}" data-transition="${page.transition}" aria-label="${escapeHtml(page.title)}" style="width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}${pageRadiusCss(page.radius)?`;border-radius:${pageRadiusCss(page.radius)}`:''}">${(await Promise.all(children(null).map(render))).join('')}</section>`
 }
 
 export async function mountExportPage(page: ArtifactPage, resources: ExportResources): Promise<{ element: HTMLElement; viewport: HTMLElement; dispose: () => void }> {

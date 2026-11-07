@@ -140,9 +140,13 @@ export const artifactNodeSchema = z.object({
 export type ArtifactNode = z.infer<typeof artifactNodeSchema>
 export type ArtifactNodeType = ArtifactNode['type']
 
+const pageCornerRadius = z.number().finite().min(0).max(4000)
+export const artifactPageRadiusSchema = z.union([pageCornerRadius,z.array(pageCornerRadius).length(4)])
+
 export const artifactPageSchema = z.object({
   id: artifactIdSchema, title: z.string().max(1000),
   x: finite, y: finite, width: positive, height: positive,
+  radius:artifactPageRadiusSchema.optional(),
   sizing: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
   section: z.string().max(200).optional(),
   interactive: z.boolean().optional(), frameless: z.boolean().optional(),

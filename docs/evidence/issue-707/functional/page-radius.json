@@ -1,0 +1,503 @@
+{
+  "kind": "画板圆角局部持久化和导出回归",
+  "qualified": false,
+  "scope": "浏览器使用受控HTTP夹具；另列真实临时PostgreSQL文档服务，不代替真实授权浏览器评论/Agent、完整视觉、实体输入法或性能资格。",
+  "browserResults": {
+    "140": {
+      "kind": "isolated-page-radius",
+      "uniformAndCorners": true,
+      "savedAndReopened": true,
+      "sharedUndoRedo": true,
+      "nodesUnchanged": true,
+      "exports": [
+        {
+          "format": "html",
+          "bytes": 12484
+        },
+        {
+          "format": "pdf",
+          "bytes": 88949,
+          "pixels": {
+            "width": 1920,
+            "height": 1080,
+            "corner": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "edge": [
+              249,
+              248,
+              244,
+              255
+            ],
+            "topLeft": [
+              253,
+              253,
+              253,
+              255
+            ],
+            "bottomRight": [
+              249,
+              248,
+              243,
+              255
+            ]
+          },
+          "rasterizer": "pdftoppm"
+        },
+        {
+          "format": "pptx",
+          "bytes": 672588,
+          "pixels": {
+            "width": 3840,
+            "height": 2160,
+            "corner": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge": [
+              250,
+              248,
+              244,
+              255
+            ],
+            "topLeft": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bottomRight": [
+              250,
+              248,
+              244,
+              255
+            ]
+          }
+        },
+        {
+          "format": "svg",
+          "bytes": 61441,
+          "pixels": {
+            "width": 1920,
+            "height": 1080,
+            "corner": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge": [
+              250,
+              248,
+              244,
+              255
+            ],
+            "topLeft": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bottomRight": [
+              250,
+              248,
+              244,
+              255
+            ]
+          }
+        },
+        {
+          "format": "png",
+          "bytes": 208883,
+          "pixels": {
+            "width": 3840,
+            "height": 2160,
+            "corner": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge": [
+              250,
+              248,
+              244,
+              255
+            ],
+            "topLeft": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bottomRight": [
+              250,
+              248,
+              244,
+              255
+            ]
+          }
+        }
+      ],
+      "consoleOrPageErrors": []
+    },
+    "154": {
+      "kind": "isolated-page-radius",
+      "uniformAndCorners": true,
+      "savedAndReopened": true,
+      "sharedUndoRedo": true,
+      "nodesUnchanged": true,
+      "exports": [
+        {
+          "format": "html",
+          "bytes": 12484
+        },
+        {
+          "format": "pdf",
+          "bytes": 88949,
+          "pixels": {
+            "width": 1920,
+            "height": 1080,
+            "corner": [
+              255,
+              255,
+              255,
+              255
+            ],
+            "edge": [
+              249,
+              248,
+              244,
+              255
+            ],
+            "topLeft": [
+              253,
+              253,
+              253,
+              255
+            ],
+            "bottomRight": [
+              249,
+              248,
+              243,
+              255
+            ]
+          },
+          "rasterizer": "pdftoppm"
+        },
+        {
+          "format": "pptx",
+          "bytes": 672588,
+          "pixels": {
+            "width": 3840,
+            "height": 2160,
+            "corner": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge": [
+              250,
+              248,
+              244,
+              255
+            ],
+            "topLeft": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bottomRight": [
+              250,
+              248,
+              244,
+              255
+            ]
+          }
+        },
+        {
+          "format": "svg",
+          "bytes": 66481,
+          "pixels": {
+            "width": 1920,
+            "height": 1080,
+            "corner": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge": [
+              250,
+              248,
+              244,
+              255
+            ],
+            "topLeft": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bottomRight": [
+              250,
+              248,
+              244,
+              255
+            ]
+          }
+        },
+        {
+          "format": "png",
+          "bytes": 208883,
+          "pixels": {
+            "width": 3840,
+            "height": 2160,
+            "corner": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "edge": [
+              250,
+              248,
+              244,
+              255
+            ],
+            "topLeft": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "bottomRight": [
+              250,
+              248,
+              244,
+              255
+            ]
+          }
+        }
+      ],
+      "consoleOrPageErrors": []
+    }
+  },
+  "oracle": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+    "offsetUnit": "UTF-16 code units",
+    "functions": [
+      {
+        "start": 2534998,
+        "end": 2535326,
+        "sha256": "8dd2034a4ef0fb05ef95789168dcf9ff286cdbadfb061b3fe73ac96f00fc6e6f"
+      },
+      {
+        "start": 2535404,
+        "end": 2535525,
+        "sha256": "be23168ea251f319210597f21baf38ba12c3ec32675b23ca3d13109635f1480c"
+      }
+    ],
+    "comparedInputs": 218,
+    "allEqual": true,
+    "maximum": 4000,
+    "decimals": 2,
+    "scope": "只验证固定原版纯圆角归一化与CSS文本；不代表全部视觉、UI持久化或性能资格。",
+    "qualified": false
+  },
+  "actualPostgresql": {
+    "kind": "actual-postgresql-native-document-service",
+    "code": 0,
+    "databaseTemporary": true,
+    "existingSchemaAndForwardMigration": true,
+    "noProductDatabase": true,
+    "publishedSdkSubstitute": false,
+    "qualified": false
+  },
+  "actualPostgresqlTestsPassed": 17,
+  "projectionTestsIncludedInFocusedUnits": 4,
+  "focusedUnitTestsPassed": 70,
+  "orchestrationContractsPassed": 15,
+  "productionNormalExports": {
+    "kind": "isolated-production-canvas-text-export",
+    "scope": "真实生产构建及隔离导出；固定夹具，不代替授权API、离线文件打开、完整视觉或性能验收",
+    "browser": "154.0.8037.57",
+    "fixtureFont": "system-ui",
+    "paddingAndTypography": true,
+    "uniformPadding": true,
+    "penPath": true,
+    "vectorPath": true,
+    "editedVectorPath": true,
+    "paddedEditedVector": true,
+    "rows": [
+      {
+        "format": "html",
+        "bytes": 11617,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      },
+      {
+        "format": "pdf",
+        "bytes": 33246,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      },
+      {
+        "format": "pptx",
+        "bytes": 105021,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      },
+      {
+        "format": "svg",
+        "bytes": 66136,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      },
+      {
+        "format": "png",
+        "bytes": 149603,
+        "nonWhitePixels": 54659,
+        "unchanged": true,
+        "realms": 0,
+        "mountedPages": 0
+      }
+    ],
+    "consoleOrPageErrors": []
+  },
+  "full50": [
+    {
+      "kind": "isolated-native-editor-ui-diagnostic",
+      "mode": "design",
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "1859698ab513381bad8dfeb41a504d61f29081d8048e42f7d5f1f7ac33aae708",
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 6,
+      "maxMountedNodes": 24,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    },
+    {
+      "kind": "isolated-native-editor-ui-diagnostic",
+      "mode": "slides",
+      "fixtureVersion": 3,
+      "fixtureSemanticSha256": "d66d7c922fe62b46adf6a4ec4905b2a647fb9b59d2ad25903ce94f9b43d3cc04",
+      "scope": "HTTP fixture and real shared reducer; not real API, database, Agent runtime, or performance acceptance",
+      "pagesTraversed": 50,
+      "activePageImageDecodedAndFormulaReady": 50,
+      "maxMountedPages": 1,
+      "maxMountedNodes": 7,
+      "editedPages": [
+        1,
+        25,
+        50
+      ],
+      "reloadedPages": [
+        1,
+        25,
+        50
+      ],
+      "committedManualBatches": 9,
+      "openingTextWithoutChangesDoesNotSave": true,
+      "chineseIme": true,
+      "formulaEditedAndReopened": 25,
+      "imageCropEditedAndReopened": 50,
+      "themeSwitchedAndRestored": true,
+      "pageOrderChangedAndReopened": true,
+      "pageOrderSharedUndoRedo": true,
+      "agentSharedUndoRedo": true,
+      "changedPageIds": [
+        "page-1",
+        "page-25",
+        "page-50"
+      ],
+      "untouchedPageHashes": 47,
+      "agentPlainTextPatchVisible": true,
+      "isolatedInteraction": true,
+      "consoleOrPageErrors": []
+    }
+  ],
+  "archiveSha256": "8601589322b9b0ff9cccabdea23136b8cf0c890fb7c225361bf3b065017ba304",
+  "initialFailures": [
+    "操作校验拒绝新radius字段。",
+    "旧转换忽略radius、缩略图没有裁切、HTML导出缺圆角。",
+    "UI没有圆角字段。",
+    "PNG画布背景填满透明角；彩色PDF角落被画板背景填色。",
+    "画板阴影/轮廓保持直角。"
+  ],
+  "harnessCorrection": "重开时排除独立canvas内容层，避免同page-id下两层导致严格定位失败；不当作产品错误。",
+  "checks": {
+    "webLint": {
+      "passed": true,
+      "warnings": 43,
+      "infos": 4
+    },
+    "serverLint": {
+      "passed": true
+    },
+    "webTypecheck": {
+      "passed": false,
+      "missingPublishedSdkAndCascade": 76,
+      "changedModules": 0
+    },
+    "serverTypecheck": {
+      "passed": false,
+      "missingPublishedSdkAndCascade": 748,
+      "newProductTypeErrors": 0,
+      "existingSdkImportErrorInChangedToolContractTest": true
+    },
+    "publishedSdkAgentToolContractTest": {
+      "runLocally": false,
+      "reason": "精确正式SDK本地未安装，等待拥有依赖的正式CI"
+    }
+  },
+  "candidate": "待冻结候选独立只读复审和正式CI。",
+  "agentInputSchema": {
+    "schemaCompiled": true,
+    "usesLocalReferences": true,
+    "schemaBytes": 19477,
+    "validatedRadiusDefinitions": 2,
+    "homogeneousFourCornerArray": true,
+    "publishedSdkRuntimeTest": "待正式CI运行"
+  }
+}

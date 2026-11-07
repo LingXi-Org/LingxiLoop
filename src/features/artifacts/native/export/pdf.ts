@@ -1,3 +1,4 @@
+import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
 import { artboardsInReadingOrder } from '../canvas-reading-order'
 import { trackExportWorker, releaseExportWorker } from './worker-lifecycle'
 import type { ArtifactDocument } from '../../../../../shared/artifact-document'
@@ -33,7 +34,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
     for (const [index, id] of pageIds.entries()) {
       resources.check()
       const page = document.pages[id]!, mounted = await mountExportPage(page, resources)
-      const background = artifactPageBackground(page, document)
+      const background = artifactPageBackground(page, document),rounded=!!pageRadiusCss(page.radius),paperBackground=rounded?'#ffffff':background
       try {
         const bounds = mounted.element.getBoundingClientRect()
         const links = [...mounted.element.querySelectorAll('a[href]')].map(anchor => {
@@ -43,11 +44,11 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
         const flow = page.sizing === 'flow'
         const sheetHeight = flow ? page.paper === 'A4' ? page.width * 1123 / 794 : page.paper === 'Letter' ? page.width * 1056 / 816 : page.height : page.height
         const contentHeight = flow ? Math.max(page.height, mounted.element.scrollHeight) : page.height
-        mounted.viewport.style.cssText = `position:relative;overflow:hidden;width:${page.width}px;height:${sheetHeight}px;background:${background}`
-        if (flow) { mounted.element.style.height = `${contentHeight}px`; mounted.element.style.overflow = 'visible' }
+        mounted.viewport.style.cssText = `position:relative;overflow:hidden;width:${page.width}px;height:${sheetHeight}px;background:${paperBackground}`
+        if (flow) { mounted.element.style.height = `${contentHeight}px`; mounted.element.style.overflow = rounded?'hidden':'visible' }
         for (let offset = 0; offset < contentHeight; offset += sheetHeight) {
           mounted.element.style.transform = `translateY(${-offset}px)`
-          const data = await toJpeg(mounted.viewport, { quality: .94, pixelRatio: 1, width: page.width, height: sheetHeight, backgroundColor: background, skipAutoScale: true })
+          const data = await toJpeg(mounted.viewport, { quality: .94, pixelRatio: 1, width: page.width, height: sheetHeight, backgroundColor: paperBackground, skipAutoScale: true })
           resources.check()
           const binary = atob(data.slice(data.indexOf(',') + 1)), jpeg = Uint8Array.from(binary, character => character.charCodeAt(0))
           pages.push({ width: page.width, height: sheetHeight, jpeg, text: offset === 0 ? pageText(page) : '',

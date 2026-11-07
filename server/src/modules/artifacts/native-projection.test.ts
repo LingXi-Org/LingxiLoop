@@ -47,3 +47,12 @@ test('lazy native projection retains content text and independent padding in loa
   assert.equal(loaded.document.pages.p.nodes.t.textSizing,'content')
   assert.deepEqual(projectNativeSnapshot(snapshot,[]).document.pages.p.nodes,{})
 })
+
+test('画板圆角随未加载页元数据返回，不要求读取完整页体',()=>{
+  const document=createDocument('design','radius-projection'),page=createPage('p');page.radius=[10,20,30,40]
+  page.nodes.t={...createNode('text','t'),text:'未加载的正文'};page.nodeOrder=['t'];document.pages.p=page;document.pageOrder=['p']
+  const snapshot={document,history:{version:0,undo:null,redo:null},pageVersions:{p:'immutable-radius-hash'},original:{version:'old',files:{},warnings:[]}}
+  const projection=projectNativeSnapshot(snapshot,[])
+  assert.deepEqual(projection.document.pages.p.radius,[10,20,30,40]);assert.deepEqual(projection.document.pages.p.nodes,{})
+  assert.equal(projection.pageVersions.p,'immutable-radius-hash');assert.equal(document.pages.p.nodes.t.text,'未加载的正文')
+})

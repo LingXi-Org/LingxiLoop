@@ -1,3 +1,4 @@
+import {normalizePageRadius} from './artifact-page-radius.js'
 import { Parser } from 'htmlparser2'
 import {
   createDocument, createNode, createPage, isSafeArtifactSvg, validateArtifactDocument,
@@ -163,6 +164,7 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       if (document.canvasPages) page.canvasPageId = document.canvasPages.find(sheet=>sheet.id===safeId(String(board.page??''), ''))?.id ?? document.canvasPages[0]!.id
       page.x = finite(board.x, (ordinal % 4) * 1360); page.y = finite(board.y, Math.floor(ordinal / 4) * 800)
       page.width = dimension(board.w ?? board.width, 1280); page.height = dimension(board.h ?? board.height, 720)
+      const radius=normalizePageRadius(board.radius);if(radius!==undefined)page.radius=radius
       if (typeof board.title === 'string') page.title = board.title
       if (typeof board.is_interactive === 'boolean') page.interactive = board.is_interactive
       if (typeof board.frameless === 'boolean') page.frameless = board.frameless

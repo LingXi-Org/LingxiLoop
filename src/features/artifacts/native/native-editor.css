@@ -270,3 +270,9 @@
 .native-kind-design .native-panel-tab[data-inspector-tab=outline]{width:60.96875px}
 .native-kind-design .native-panel-tab[data-inspector-tab=code]{width:47.421875px}
 .native-kind-design .native-panel-tab[data-inspector-tab=theme]{width:58.09375px}
+.native-artboard-radius-main{display:flex;align-items:center;gap:4px}
+.native-artboard-radius-main>.native-field{flex:1;min-width:0}
+.native-artboard-radius-main>.native-icon-button{width:24px;height:24px;min-height:24px;padding:3px}
+.native-artboard-radius-corners{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px}
+.native-artboard-radius-corners>.native-field{min-width:0}
+.native-artboard-radius-corners>.native-field>span{flex-basis:auto;min-width:0;font-size:11px}

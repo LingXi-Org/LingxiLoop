@@ -1,3 +1,4 @@
+import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
 import {resolvedPadding} from '../../../../../shared/artifact-appearance'
 import { trackExportWorker, releaseExportWorker } from './worker-lifecycle'
 import type { ArtifactDocument, ArtifactRichText } from '../../../../../shared/artifact-document'
@@ -53,7 +54,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
     const first = document.pages[document.pageOrder[0] ?? '']
     if (!first) throw new Error('没有可导出的页面')
     for (const [index, pageId] of document.pageOrder.entries()) {
-      const page = document.pages[pageId]!, output: PptxPage = { background: color(artifactPageBackground(page, document), 'FFFFFF'), notes: page.notes, hidden: page.skip, commands: [] }
+      const page = document.pages[pageId]!, output: PptxPage = { background: pageRadiusCss(page.radius)?'FFFFFF':color(artifactPageBackground(page, document), 'FFFFFF'), notes: page.notes, hidden: page.skip, commands: [] }
       pages.push(output)
       const slide = {
         addText: (...args: unknown[]) => output.commands.push({ kind: 'text', args }),
@@ -72,7 +73,11 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
           const node=page.nodes[id]!, style=artifactResolvedStyle(node.style,document)
           return node.type==='group' && !!(style.gradient || style.shadow || node.flipX || node.flipY || Object.keys(node.css??{}).length)
         }))
-        for (const id of page.nodeOrder) {
+        if(pageRadiusCss(page.radius)){
+          const {toPng}=await import('html-to-image'),data=await toPng(mounted.element,{pixelRatio:2,skipAutoScale:true})
+          resources.check();slide.addImage({data,x:0,y:0,w:page.width/96*scale,h:page.height/96*scale})
+          resources.warnings.add(`${page.title}：画板圆角以整页图片保留，透明区域使用白色纸张背景；原稿保留可编辑内容。`)
+        }else for (const id of page.nodeOrder) {
           resources.check()
           const node = page.nodes[id]!
           const style = artifactResolvedStyle(node.style, document)

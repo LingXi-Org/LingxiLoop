@@ -16,7 +16,7 @@ const indexSchema = z.number().int().min(0).max(10_000).optional()
 export const artifactOperationSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('document.patch'), patch: artifactDocumentSchema.pick({ title: true, themeId: true, canvasPages: true }).partial(), unset: z.array(z.literal('canvasPages')).max(1).optional() }).strict(),
   z.object({ type: z.literal('page.insert'), page: artifactPageSchema, index: indexSchema }).strict(),
-  z.object({ type: z.literal('page.patch'), pageId: artifactIdSchema, patch: pagePatchSchema, unset: z.array(z.enum(['sizing', 'paper', 'themeBackground', 'section', 'guides', 'layoutGuides', 'canvasPageId', 'interactive', 'frameless'])).max(9).optional() }).strict(),
+  z.object({ type: z.literal('page.patch'), pageId: artifactIdSchema, patch: pagePatchSchema, unset: z.array(z.enum(['sizing', 'paper', 'themeBackground', 'section', 'guides', 'layoutGuides', 'canvasPageId', 'interactive', 'frameless', 'radius'])).max(10).optional() }).strict(),
   z.object({ type: z.literal('page.delete'), pageId: artifactIdSchema }).strict(),
   z.object({ type: z.literal('pages.reorder'), pageIds: z.array(artifactIdSchema).max(1000) }).strict(),
   z.object({ type: z.literal('node.insert'), pageId: artifactIdSchema, node: artifactNodeSchema, index: indexSchema }).strict(),

@@ -212,3 +212,10 @@ test('原始声明替换生成的同名声明，避免无效值回退到旧的�
   assert.match(opening,/(?:^|;)width:480(?:;|$)/)
   assert.match(opening,/color:#123456 !important/)
 })
+
+test('离线页面保留画板四角裁切且原稿保持不变',async()=>{
+  const document=fixture(),page=document.pages.page;page.radius=[10,20,30,40];const before=JSON.stringify(document)
+  const html=await renderPageHtml(page,new ExportResources(document,{format:'html'}))
+  assert.match(html,/class="artifact-export-page"[^>]*border-radius:10px 20px 30px 40px/)
+  assert.equal(JSON.stringify(document),before)
+})

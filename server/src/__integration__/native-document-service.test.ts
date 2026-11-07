@@ -464,3 +464,21 @@ test('幻灯片神奇移动身份与转场真实持久化，复制可编辑并�
   const restored=await apply(item.id,{operationId:'undo-unset-motion-id',kind:'undo',targetOperationId:'unset-motion-id',expectedHistoryVersion:unset.history.version})
   assert.equal(restored.document.pages['page-1'].nodes[node.id].motionId,'renamed-motion')
 })
+
+test('画板四角持久化到不可变页快照、共享历史和页面副本',async()=>{
+  const item=await artifact('design'),initial=await snapshot(item.id),oldHash=initial.pageVersions['page-1']
+  const old=await readNativePage(db,item.id,'page-1',oldHash),oldBytes=JSON.stringify(old)
+  const request=prepareBatch(initial.document,[{type:'page.patch',pageId:'page-1',patch:{radius:[10,20,30,40]}}],'radius')
+  const saved=await apply(item.id,request)
+  assert.deepEqual((await snapshot(item.id)).document.pages['page-1'].radius,[10,20,30,40])
+  assert.deepEqual((await readNativePage(db,item.id,'page-1',saved.pageVersions['page-1']))?.radius,[10,20,30,40])
+  assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
+  assert.equal((await apply(item.id,request)).deduplicated,true)
+  const undone=await apply(item.id,{operationId:'undo-radius',kind:'undo',targetOperationId:'radius',expectedHistoryVersion:saved.history.version})
+  assert.equal(Object.hasOwn(undone.document.pages['page-1'],'radius'),false)
+  const redone=await apply(item.id,{operationId:'redo-radius',kind:'redo',targetOperationId:'radius',expectedHistoryVersion:undone.history.version})
+  assert.deepEqual(redone.document.pages['page-1'].radius,[10,20,30,40])
+  const copy=await apply(item.id,prepareBatch(redone.document,duplicatePages(redone.document,['page-1'],()=> 'radius-copy'),'copy-radius'))
+  assert.deepEqual(copy.document.pages['radius-copy'].radius,[10,20,30,40])
+  assert.equal(JSON.stringify(await readNativePage(db,item.id,'page-1',oldHash)),oldBytes)
+})

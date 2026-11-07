@@ -1,0 +1,284 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "referenceHashesVerified": 12,
+  "oracle": {
+    "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+    "offsetUnit": "UTF-16 code units",
+    "functions": [
+      {
+        "start": 2534998,
+        "end": 2535326,
+        "sha256": "8dd2034a4ef0fb05ef95789168dcf9ff286cdbadfb061b3fe73ac96f00fc6e6f"
+      },
+      {
+        "start": 2535404,
+        "end": 2535525,
+        "sha256": "be23168ea251f319210597f21baf38ba12c3ec32675b23ca3d13109635f1480c"
+      }
+    ],
+    "comparedInputs": 218,
+    "allEqual": true,
+    "maximum": 4000,
+    "decimals": 2,
+    "scope": "只验证固定原版纯圆角归一化与CSS文本；不代表全部视觉、UI持久化或性能资格。",
+    "qualified": false
+  },
+  "runtime": {
+    "inputs": [
+      {
+        "label": "Artboard width",
+        "value": "1920"
+      },
+      {
+        "label": "Artboard height",
+        "value": "1080"
+      },
+      {
+        "label": "Radius",
+        "value": ""
+      },
+      {
+        "label": "Radius top left",
+        "value": "40"
+      },
+      {
+        "label": "Radius top right",
+        "value": "80"
+      },
+      {
+        "label": "Radius bottom left",
+        "value": "80"
+      },
+      {
+        "label": "Radius bottom right",
+        "value": "20"
+      }
+    ],
+    "roundedShells": [
+      {
+        "radius": "40px 80px 20px",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.07) 0px 2px 4px 0px, color(srgb 0.0431373 0.0431373 0.0431373 / 0.08) 0px 6px 16px 0px",
+        "rect": {
+          "x": 48,
+          "y": 412.0526428222656,
+          "width": 424.4210510253906,
+          "height": 238.73684692382812,
+          "top": 412.0526428222656,
+          "right": 472.4210510253906,
+          "bottom": 650.7894897460938,
+          "left": 48
+        }
+      }
+    ]
+  },
+  "clipAncestors": [
+    {
+      "tag": "IFRAME",
+      "cls": "min-h-0 w-full flex-1 border-0",
+      "rect": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812,
+        "top": 412.0526428222656,
+        "right": 472.4210510253906,
+        "bottom": 650.7894897460938,
+        "left": 48
+      },
+      "css": {
+        "width": "1920px",
+        "height": "1080px",
+        "borderRadius": "0px",
+        "overflow": "clip",
+        "overflowX": "clip",
+        "overflowY": "clip",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "clipPath": "none",
+        "transform": "none"
+      }
+    },
+    {
+      "tag": "DIV",
+      "cls": "relative flex h-full w-full flex-col overflow-clip bg-white shadow-md forced-colors:outline-[length:round(up,2px*var(--mega-inv-scale),1px)] forced-colors:outline-offset-[round(up,4px*var(--mega-inv-scale),1px)] forced-colors:outline-[color:Highlight]",
+      "rect": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812,
+        "top": 412.0526428222656,
+        "right": 472.4210510253906,
+        "bottom": 650.7894897460938,
+        "left": 48
+      },
+      "css": {
+        "width": "1920px",
+        "height": "1080px",
+        "borderRadius": "40px 80px 20px",
+        "overflow": "clip",
+        "overflowX": "clip",
+        "overflowY": "clip",
+        "background": "rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box",
+        "clipPath": "none",
+        "transform": "none"
+      }
+    },
+    {
+      "tag": "DIV",
+      "cls": "absolute",
+      "rect": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 424.4210510253906,
+        "height": 238.73684692382812,
+        "top": 412.0526428222656,
+        "right": 472.4210510253906,
+        "bottom": 650.7894897460938,
+        "left": 48
+      },
+      "css": {
+        "width": "1920px",
+        "height": "1080px",
+        "borderRadius": "0px",
+        "overflow": "visible",
+        "overflowX": "visible",
+        "overflowY": "visible",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "clipPath": "none",
+        "transform": "none"
+      }
+    },
+    {
+      "tag": "DIV",
+      "cls": "",
+      "rect": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 0,
+        "height": 0,
+        "top": 412.0526428222656,
+        "right": 48,
+        "bottom": 412.0526428222656,
+        "left": 48
+      },
+      "css": {
+        "width": "0px",
+        "height": "0px",
+        "borderRadius": "0px",
+        "overflow": "visible",
+        "overflowX": "visible",
+        "overflowY": "visible",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "clipPath": "none",
+        "transform": "none"
+      }
+    },
+    {
+      "tag": "DIV",
+      "cls": "absolute left-0 top-0",
+      "rect": {
+        "x": 48,
+        "y": 412.0526428222656,
+        "width": 0,
+        "height": 0,
+        "top": 412.0526428222656,
+        "right": 48,
+        "bottom": 412.0526428222656,
+        "left": 48
+      },
+      "css": {
+        "width": "0px",
+        "height": "0px",
+        "borderRadius": "0px",
+        "overflow": "visible",
+        "overflowX": "visible",
+        "overflowY": "visible",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "clipPath": "none",
+        "transform": "matrix(0.221053, 0, 0, 0.221053, 48, 412.053)"
+      }
+    },
+    {
+      "tag": "DIV",
+      "cls": "relative h-full w-full select-none overflow-clip bg-om-bg-canvas",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1104,
+        "height": 1000,
+        "top": 0,
+        "right": 1104,
+        "bottom": 1000,
+        "left": 0
+      },
+      "css": {
+        "width": "1104px",
+        "height": "1000px",
+        "borderRadius": "0px",
+        "overflow": "clip",
+        "overflowX": "clip",
+        "overflowY": "clip",
+        "background": "color(srgb 0.929804 0.929804 0.929804) none repeat scroll 0% 0% / auto padding-box border-box",
+        "clipPath": "none",
+        "transform": "none"
+      }
+    },
+    {
+      "tag": "MAIN",
+      "cls": "relative min-h-0 min-w-0 flex-1 bg-om-bg-canvas",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1104,
+        "height": 1000,
+        "top": 0,
+        "right": 1104,
+        "bottom": 1000,
+        "left": 0
+      },
+      "css": {
+        "width": "1104px",
+        "height": "1000px",
+        "borderRadius": "0px",
+        "overflow": "visible",
+        "overflowX": "visible",
+        "overflowY": "visible",
+        "background": "color(srgb 0.929804 0.929804 0.929804) none repeat scroll 0% 0% / auto padding-box border-box",
+        "clipPath": "none",
+        "transform": "none"
+      }
+    },
+    {
+      "tag": "DIV",
+      "cls": "relative flex min-h-0 flex-1",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1104,
+        "height": 1000,
+        "top": 0,
+        "right": 1104,
+        "bottom": 1000,
+        "left": 0
+      },
+      "css": {
+        "width": "1104px",
+        "height": "1000px",
+        "borderRadius": "0px",
+        "overflow": "visible",
+        "overflowX": "visible",
+        "overflowY": "visible",
+        "background": "rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box",
+        "clipPath": "none",
+        "transform": "none"
+      }
+    }
+  ],
+  "scope": "固定原版40/80/20/80四角的前端状态；保存状态未确认同态，不将截图作为原版文件持久化通过。",
+  "imageFiles": [
+    "visual/page-radius/reference-default.png",
+    "visual/page-radius/reference-corners.png"
+  ],
+  "qualified": false
+}

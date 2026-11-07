@@ -5471,12 +5471,17 @@
         "native": null,
         "matchedStateVerified": false
       },
-      "result": "尚未补齐上游独立圆角",
+      "result": "画板统一/逐角圆角已进入原操作链路、真实PG快照/共享历史/副本及五格式；完整面板与全部状态、1px/0.5%仍未通过。",
       "visualQualified": false,
       "functionalQualified": false,
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "pageRadiusEvidence": {
+        "source": "source-design-page-radius.json",
+        "functional": "functional/page-radius.json",
+        "visual": "visual/page-radius/manifest.json"
       }
     },
     {

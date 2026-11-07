@@ -1,3 +1,4 @@
+import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
 import type { ArtifactDocument } from '../../../../../shared/artifact-document'
 import type { ArtifactExportOptions, ArtifactExportResult } from '../export-artifact'
 import { ExportResources, exportFilename } from './common'
@@ -13,9 +14,10 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
       const { toPng, toJpeg, toSvg } = await import('html-to-image')
       resources.check()
       const render = options.format === 'svg' ? toSvg : options.format === 'jpeg' ? toJpeg : toPng
-      const url = await render(mounted.element, { pixelRatio: options.pixelRatio ?? 2, skipAutoScale: true, backgroundColor: page.background })
+      const url = await render(mounted.element, { pixelRatio: options.pixelRatio ?? 2, skipAutoScale: true, backgroundColor:pageRadiusCss(page.radius)?options.format==='jpeg'?'#ffffff':undefined:page.background })
       resources.check()
       const blob = await fetch(url, { signal: options.signal }).then(response => response.blob())
+      if(options.format==='jpeg'&&pageRadiusCss(page.radius))resources.warnings.add(`${page.title}：压缩位图使用白色背景保留圆角。`)
       resources.progress(1)
       return { blob, filename: exportFilename(page.title, options.format), warnings: [...resources.warnings] }
     } finally { mounted.dispose() }

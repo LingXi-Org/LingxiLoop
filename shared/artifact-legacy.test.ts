@@ -180,3 +180,9 @@ it('设计播放元数据保留原型和无框标记，旧文件默认静态且�
   assert.equal(result.pages[result.pageOrder[2]!]!.frameless,undefined)
   assert.equal(JSON.stringify(files),before)
 })
+
+it('旧版画板四角读取为可选元数据，转换不修改原文件',()=>{
+  const files={'project/canvas.json':file(JSON.stringify({v:3,order:['a.dc.html'],boards:{'a.dc.html':{w:800,h:600,radius:[10,20,30,40]}}})),'project/a.dc.html':file('<html><body><x-dc><p>圆角画板</p></x-dc></body></html>')}
+  const before=JSON.stringify(files),result=convertLegacyArtifact({id:'radius',kind:'design',title:'圆角',files})
+  assert.deepEqual(result.document.pages.a.radius,[10,20,30,40]);assert.equal(JSON.stringify(files),before)
+})

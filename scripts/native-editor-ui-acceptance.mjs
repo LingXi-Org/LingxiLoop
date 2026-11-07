@@ -6,6 +6,7 @@
  * real credentials, database, external service or general E2E framework is used.
  */
 import assert from 'node:assert/strict'
+import {execFileSync} from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdtemp, mkdir, writeFile, readFile, rm, realpath, symlink } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -27,7 +28,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -41,7 +42,7 @@ const { chromium } = await import(modulePath.startsWith('/') ? pathToFileURL(mod
 const dependencyRoot = await realpath(join(root, 'node_modules'))
 const workspace = await mkdtemp(join(tmpdir(), 'lingxi-native-ui-'))
 await mkdir(output, { recursive: true })
-if(options.checks==='slides-skipped-export')await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
+if(options.checks==='slides-skipped-export'||options.checks==='page-radius'&&options['radius-case']==='exports')await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
 const mocks = {
   http: `export async function http(path,init){const response=await fetch('/api'+path,{...init,headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});return response.json()}`,
   realtime: options.checks==='inspector-code'?`const listeners=new Set();window.__codeChanged=()=>{for(const fn of listeners)fn({type:'artifact.changed',artifactId:'fixture'})};export const ws={on:fn=>{listeners.add(fn);return()=>listeners.delete(fn)}}`:'export const ws={on:()=>()=>{}}',
@@ -58,7 +59,7 @@ try {
   server = await createServer({ configFile: false, root: workspace, publicDir: join(root, 'public'), plugins: [react()], logLevel: 'error',
     cacheDir:join(workspace,'.vite'),
     // Late CommonJS discovery reloads the fixture during PPTX export, even with HMR off.
-    optimizeDeps: options.checks==='slides-skipped-export'?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
+    optimizeDeps: options.checks==='slides-skipped-export'||options.checks==='page-radius'&&options['radius-case']==='exports'?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
     resolve: { alias: [
       ...Object.entries({ '@/api/core/http': 'http', '@/api/core/realtime': 'realtime', '@/api/transport': 'transport', '@/stores/auth': 'auth', '@/lib/workspaceSession': 'workspaceSession' }).map(([find, name]) => ({ find, replacement: join(workspace, `${name}.js`) })),
       { find: 'react', replacement: dirname(require.resolve('react/package.json')) },
@@ -82,7 +83,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
@@ -2572,6 +2573,45 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       for(const capture of ink.captures)assert.ok(capture.left>0&&capture.top>0&&capture.right<capture.width-1&&capture.bottom<capture.height-1,`explicit and default strokes must not touch capture boundaries: ${JSON.stringify(ink)}`)
       assert.ok(ink.inheritedRedPixels>100&&ink.inheritedBlackPixels===0,'captured text must keep its inherited group color')
       return {kind:'isolated-export-ink-diagnostic',mode:kind,...ink,scope:'actual Chromium html-to-image rasterizer; not a full PPTX rendering comparison'}
+    }
+    if(options.checks==='page-radius'){
+      assert.equal(kind,'design');const originalNodes=JSON.stringify(document.pages['page-1'].nodes)
+      await page.locator('[data-page-id="page-1"] .native-board-label').click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      const radius=page.getByLabel('圆角',{exact:true}),content=page.locator('[data-page-id="page-1"] [data-content-layer]:not(.native-canvas-content)')
+      const captureRadius=async name=>{await page.waitForFunction(()=>{const es=[...document.querySelectorAll('.native-stage .native-page-content:not(.native-canvas-content) img')];return es.length===3&&es.every(e=>e.complete&&e.naturalWidth>0)});await page.evaluate(()=>{document.activeElement?.blur();return document.fonts.ready});await page.mouse.move(10,100);await page.screenshot({path:join(output,`radius-${name}.png`)})}
+      await captureRadius('default')
+      await radius.fill('80');await radius.press('Tab');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-page-id="page-1"] [data-content-layer]:not(.native-canvas-content)')).borderTopLeftRadius==='80px');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      assert.equal(document.pages['page-1'].radius,80)
+      await page.getByRole('button',{name:'分别设置圆角',exact:true}).click();await page.getByLabel('左上圆角',{exact:true}).fill('40');await page.getByLabel('左上圆角',{exact:true}).press('Tab');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-page-id="page-1"] [data-content-layer]:not(.native-canvas-content)')).borderTopLeftRadius==='40px');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      await page.getByLabel('右下圆角',{exact:true}).fill('20');await page.getByLabel('右下圆角',{exact:true}).press('Tab');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-page-id="page-1"] [data-content-layer]:not(.native-canvas-content)')).borderBottomRightRadius==='20px');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.deepEqual(document.pages['page-1'].radius,[40,80,20,80])
+      await captureRadius('corners')
+      await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-page-id="page-1"] [data-content-layer]:not(.native-canvas-content)')).borderBottomRightRadius==='80px')
+      await page.keyboard.press('Control+Shift+z');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-page-id="page-1"] [data-content-layer]:not(.native-canvas-content)')).borderBottomRightRadius==='20px');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      await page.reload();await ready(1);assert.equal(await content.evaluate(element=>getComputedStyle(element).borderRadius),'40px 80px 20px')
+      assert.equal(JSON.stringify(document.pages['page-1'].nodes),originalNodes,'画板圆角不得改写内部对象')
+      assert.equal(await content.evaluate(element=>getComputedStyle(element.closest('.native-page-scaled')).borderRadius),'40px 80px 20px','画板轮廓与阴影必须使用相同圆角')
+      const exports=[]
+      if(options['radius-case']==='exports'){
+        await page.locator('[data-page-id="page-1"] .native-board-label').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'背景',exact:true}).click()
+        const picker=page.getByRole('dialog',{name:'背景颜色',exact:true});await picker.getByRole('button',{name:'自定义',exact:true}).click();const hex=picker.getByLabel('十六进制颜色',{exact:true});await hex.fill('#123456');await hex.press('Control+s');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');await picker.getByLabel('关闭颜色选择',{exact:true}).click();assert.equal(document.pages['page-1'].background,'#123456')
+        const pixels=async(bytes,type)=>page.evaluate(async({base64,type})=>{const image=new Image();image.src=`data:${type};base64,${base64}`;await image.decode();const canvas=document.createElement('canvas');canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const context=canvas.getContext('2d');context.drawImage(image,0,0);const at=(x,y)=>[...context.getImageData(Math.round(x),Math.round(y),1,1).data];return{width:canvas.width,height:canvas.height,corner:at(0,0),edge:at(canvas.width/2,0),topLeft:at(10*canvas.width/1920,10*canvas.height/1080),bottomRight:at(canvas.width-10*canvas.width/1920,canvas.height-10*canvas.height/1080)}},{base64:bytes.toString('base64'),type})
+        const rounded=async(bytes,type)=>{const result=await pixels(bytes,type);assert.equal(result.corner[3],0);assert.equal(result.edge[3],255);assert.equal(result.topLeft[3],0);assert.equal(result.bottomRight[3],255);return result}
+        for(const [format,label]of [['html','网页'],['pdf','便携文档'],['pptx','演示文稿'],['svg','当前画板 · 矢量图'],['png','当前画板 · 透明位图']]){
+          await page.getByLabel('导出格式',{exact:true}).click();const done=page.waitForEvent('download');await page.getByRole('button',{name:label,exact:true}).click();const download=await done,bytes=await readFile(await download.path());assert.ok(bytes.length>100);await writeFile(join(output,`radius.${format}`),bytes)
+          const result={format,bytes:bytes.length}
+          if(format==='html')assert.match(bytes.toString('utf8'),/border-radius:40px 80px 20px 80px/)
+          if(format==='pdf'){assert.equal(bytes.subarray(0,5).toString(),'%PDF-');const path=join(output,'pdf-page');execFileSync('pdftoppm',['-f','1','-singlefile','-scale-to-x','1920','-scale-to-y','1080','-png',join(output,'radius.pdf'),path],{stdio:'pipe'});result.pixels=await pixels(await readFile(path+'.png'),'image/png');assert.ok(result.pixels.corner.slice(0,3).every(v=>v>=250));assert.ok(result.pixels.topLeft.slice(0,3).every(v=>v>=250));assert.ok(result.pixels.bottomRight[0]>=240&&result.pixels.bottomRight[2]<250);result.rasterizer='pdftoppm'}
+          if(format==='png'||format==='svg')result.pixels=await rounded(bytes,format==='png'?'image/png':'image/svg+xml')
+          if(format==='pptx'){
+            const {default:JSZip}=await import('jszip'),zip=await JSZip.loadAsync(bytes),xml=await zip.file('ppt/slides/slide1.xml').async('string'),rels=await zip.file('ppt/slides/_rels/slide1.xml.rels').async('string')
+            assert.match(xml,/<p:bg>[\s\S]*?val="FFFFFF"/);assert.equal((xml.match(/<p:pic>/g)??[]).length,1,'圆角第一页使用完整裁切图片');assert.doesNotMatch(xml,/<a:t>/)
+            const target=rels.match(/Target="\.\.\/media\/([^"<]+)"/)[1],image=await zip.file('ppt/media/'+target).async('nodebuffer');result.pixels=await rounded(image,'image/png')
+            assert.ok((await page.locator('.native-notice').innerText()).includes('画板圆角以整页图片保留'))
+          }
+          exports.push(result)
+        }
+      }
+      assert.deepEqual(errors,[]);return{kind:'isolated-page-radius',uniformAndCorners:true,savedAndReopened:true,sharedUndoRedo:true,nodesUnchanged:true,exports,consoleOrPageErrors:errors}
     }
     if(options.checks==='design-outline'){
       assert.equal(kind,'design')
