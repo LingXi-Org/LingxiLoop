@@ -1,0 +1,38 @@
+{
+  "key": "Delete",
+  "focusBefore": {
+    "tag": "SPAN",
+    "role": "radio",
+    "active": true
+  },
+  "keys": [
+    {
+      "key": "Delete",
+      "trusted": true,
+      "target": "radio"
+    }
+  ],
+  "nodeStillInDocument": false,
+  "nodeDOMCount": 0,
+  "batches": 1,
+  "receipts": [
+    {
+      "operationId": "9f0f6a0e-54a4-4640-a168-7417eb6301a1",
+      "baseSeq": 0,
+      "expectedVersions": {
+        "page/page-1/exists": 0,
+        "page/page-1/nodeOrder": 0,
+        "node/page-1/page-1-heading": 0,
+        "node/page-1/page-1-heading/exists": 0
+      },
+      "operations": [
+        {
+          "type": "node.delete",
+          "pageId": "page-1",
+          "nodeId": "page-1-heading"
+        }
+      ]
+    }
+  ],
+  "consoleErrors": []
+}

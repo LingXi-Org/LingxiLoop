@@ -1,15 +1,19 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {readFileSync} from 'node:fs'
-import {spawnSync} from 'node:child_process'
+import {spawn} from 'node:child_process'
+import {once} from 'node:events'
 import {profileOpeningChunks,openingModuleRoles,assertNativeOpeningIsolation} from './native-artifact-bundle-profile.mjs'
 const chunk=(fileName,imports,modules,code='export const value=1;')=>({type:'chunk',fileName,imports,modules,code})
-test('failed production audit flushes the complete metadata before its fatal error',()=>{
+test('failed production audit flushes complete metadata under stdout backpressure before its fatal error',{timeout:5000},async()=>{
  const source=readFileSync(new URL('./native-artifact-bundle-audit.mjs',import.meta.url),'utf8'),emit=source.match(/^const emitOpeningProfile=.*$/m)?.[0];assert.ok(emit)
- const child=spawnSync(process.execPath,['--input-type=module','--eval',`import {writeSync} from 'node:fs';${emit};emitOpeningProfile({commit:'fixture',sourceInputsSha256:'f'.repeat(64),uncommittedInputsPossible:false,openingProfile:{qualified:false,payload:'x'.repeat(300000)}},false,true);throw new Error('expected isolation failure')`],{encoding:'utf8'})
- assert.equal(child.status,1)
- const line=child.stdout.trim();assert.ok(line.startsWith('NATIVE_ARTIFACT_BUNDLE_PROFILE '))
- const profile=JSON.parse(line.slice('NATIVE_ARTIFACT_BUNDLE_PROFILE '.length));assert.equal(profile.payload.length,300000);assert.equal(profile.openingIsolationPassed,false);assert.equal(profile.buildCompleted,false);assert.equal(profile.sourceInputsUnchanged,true);assert.equal(profile.failureCode,'native_opening_isolation');assert.equal(profile.qualified,false)
+ const child=spawn(process.execPath,['--input-type=module','--eval',`import {writeSync} from 'node:fs';${emit};await new Promise(resolve=>process.stdout.write('warmup\\n',resolve));await emitOpeningProfile({commit:'fixture',sourceInputsSha256:'f'.repeat(64),uncommittedInputsPossible:false,openingProfile:{qualified:false,payload:'x'.repeat(700000)}},false,true);throw new Error('expected isolation failure')`]),closed=once(child,'close'),ended=once(child.stdout,'end')
+ let output='',errors='';child.stderr.setEncoding('utf8');child.stderr.on('data',data=>{errors+=data})
+ await once(child.stdout,'readable');await new Promise(resolve=>setTimeout(resolve,30))
+ child.stdout.setEncoding('utf8');child.stdout.on('data',data=>{output+=data});child.stdout.resume()
+ const [[status]]=await Promise.all([closed,ended]);assert.equal(status,1);assert.match(errors,/expected isolation failure/)
+ const line=output.split('\n').find(line=>line.startsWith('NATIVE_ARTIFACT_BUNDLE_PROFILE '));assert.ok(line,JSON.stringify({length:output.length,prefix:output.slice(0,100),suffix:output.slice(-40)}))
+ const profile=JSON.parse(line.slice('NATIVE_ARTIFACT_BUNDLE_PROFILE '.length));assert.equal(profile.payload.length,700000);assert.equal(profile.openingIsolationPassed,false);assert.equal(profile.buildCompleted,false);assert.equal(profile.sourceInputsUnchanged,true);assert.equal(profile.failureCode,'native_opening_isolation');assert.equal(profile.qualified,false)
 })
 test('native opening rejects co-located conversation UI but allows lazy comments',()=>{
  const bundle={

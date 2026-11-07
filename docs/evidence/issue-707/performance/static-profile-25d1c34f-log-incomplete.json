@@ -1,0 +1,19 @@
+{
+  "collectorCommit": "25d1c34f63bdafd9a461b267123b9ece4b6f107d",
+  "run": 42416087606,
+  "job": 128534391055,
+  "workflowPassed": true,
+  "qualified": false,
+  "rows": [
+    {
+      "lineCharacters": 65565,
+      "jsonComplete": false
+    },
+    {
+      "lineCharacters": 65565,
+      "jsonComplete": false
+    }
+  ],
+  "scope": "隔离审计工作流通过，但候选公共日志JSON短写，不能当作完整候选图/指标。原candidate.json文件未下载，未补造数据。另有文本单选Delete P2，完整功能不通过。",
+  "nextFix": "等待process.stdout.write回调完成，再正常结束或抛原隔离错误；Vite generateBundle改为异步等待。带初始化stdout、700000字符、延迟消费的真实子进程回归先丢失输出，修复后完整并保留exit1。"
+}

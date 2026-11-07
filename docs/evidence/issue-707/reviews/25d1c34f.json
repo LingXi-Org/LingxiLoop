@@ -1,0 +1,83 @@
+{
+  "candidate": "25d1c34f63bdafd9a461b267123b9ece4b6f107d",
+  "baseline": "56d93aa1173ae7060a49ba903916cbbfa01247be",
+  "scope": "按repository-review独立detached只读审查Design画板中文文字对齐、CSS优先/继承/还原、共享操作、键盘与权限；不读取root后续WIP或修改产品",
+  "result": "发现1项已在Chrome140/154复现的P2；候选局部审查未通过",
+  "findings": [
+    {
+      "severity": "P2",
+      "location": "src/features/artifacts/native/ElementTextAlignment.tsx:31",
+      "relatedLocations": [
+        "src/features/artifacts/native/NativeEditor.tsx:734",
+        "src/features/artifacts/native/NativeEditor.tsx:754"
+      ],
+      "title": "属性单选项获得焦点后Delete会删除画布文字",
+      "scenario": "选中画板文字并打开属性，聚焦“文本左对齐”span radio，按Delete。两个浏览器均将事件冒泡到编辑器的画布快捷键，产生一条node.delete并持久化删除所选文字。原按钮控件被根部button过滤保护，新span角色未被包含。",
+      "reproduction": [
+        "固定25d1c34f及公有依赖，运行只读自有探针 /workspace/lingxi-issue707-scratch/review-25-probes/radio-key.mjs",
+        "使用--mode=design --checks=element-sizing --sizing-case=text-align-keyboard --review-key=Delete及Chrome140/154浏览器路径",
+        "探针确认焦点实际位于SPAN role=radio，发送Playwright真实键盘Delete，capture记录isTrusted=true；等待500ms后HTTP共享文档和DOM文字均不存在、操作批次数1。期待节点保留的断言失败。"
+      ],
+      "evidence": [
+        "/workspace/lingxi-issue707-scratch/review-25-delete140/review-radio-key.json",
+        "/workspace/lingxi-issue707-scratch/review-25-delete154/review-radio-key.json",
+        "/workspace/lingxi-issue707-scratch/review-25-delete140/review-radio-key.png",
+        "/workspace/lingxi-issue707-scratch/review-25-delete154/review-radio-key.png"
+      ],
+      "minimumFix": "把该属性radio纳入画布动作快捷键隔离，例如根部非编辑控件过滤增加role=radio，或在该组正确隔离画布动作键；保留BaseUI方向键/Space及预期共享保存、撤销行为。先添加真实Delete/Backspace/复制动作快捷键定向回归。",
+      "sourceLimit": "未在固定Source重放Delete，不宣称Source对该按键行为已验收；本问题是属性控件聚焦后触发不相关持久化画布删除的新增原生回归。"
+    }
+  ],
+  "verified": [
+    {
+      "check": "Chrome140/154各正式12场景",
+      "result": "均通过。四方向、CSS优先覆盖、important清除、方向键三步、共享历史、只读/锁定/撤权零写入、还原、父级继承及start/end无选中→显式选择均覆盖。普通四方向4批次/键盘3批次，没有重复onClick+onValueChange双提交；保存重开和其他页面不变通过。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-25-align140",
+        "/workspace/lingxi-issue707-scratch/review-25-align154"
+      ],
+      "logs": [
+        "/tmp/lingxi-review-25-align140.log",
+        "/tmp/lingxi-review-25-align154.log"
+      ]
+    },
+    {
+      "check": "18项定向单元",
+      "result": "本次运行6项新文字对齐、5项元素对齐及7项代码编辑测试，全通过；不是仅引用父线程15项记录。",
+      "log": "/tmp/lingxi-review-25-units.log"
+    },
+    {
+      "check": "32项静态采集和CI编排合同",
+      "result": "全部通过",
+      "log": "/tmp/lingxi-review-25-contracts.log"
+    },
+    {
+      "check": "精确范围及操作链路",
+      "result": "CSS/typed声明替换经原nodeCodePatch和commitCode，当前getBase/锁定检查及css/style.textAlign读键保持；无模型/服务/数据库/依赖变更，Slides/自由画布仍原控件分支。git diff --check通过。新native路径触发静态采集，未降低原隔离约束。"
+    },
+    {
+      "check": "证据资格边界",
+      "result": "已明确完整功能/视觉/性能false，纵向21px偏移及整图差异未当通过；历史服务/IME/导出没有冒记本批验证。"
+    }
+  ],
+  "reviewProbeFailures": [
+    {
+      "result": "自有探针首次运行因无空格from相对导入未正确改为冻结绝对路径，启动缺文件失败；仅修复自有探针后重跑。此启动失败不作为产品问题。",
+      "log": "/tmp/lingxi-review-25-delete154.log"
+    },
+    {
+      "result": "修正后的140/154探针均在“属性聚焦不能删除节点”真实断言失败，为上述P2。",
+      "logs": [
+        "/tmp/lingxi-review-25-delete140.log",
+        "/tmp/lingxi-review-25-delete154-after-import.log"
+      ]
+    }
+  ],
+  "unverified": [
+    "未独立重放Source当前控件、所有CSS变量/级联/段落声明；Source已登记start/end行为仅按已归档证据核对，不扩大为全部浏览器CSS一致",
+    "未另跑中文系统IME、完整50页/导出或真实授权API并发；本次固定HTTP夹具不能替代服务/跨租户验收",
+    "没有运行完整正式SDK类型检查/build；候选新CI与静态profile尚未获得，新增Lucide/BaseUI导入可能重新分块，不能沿用56图为25的通过证据",
+    "未重做四容器双主题全部状态、原始像素验收或最终10组ABBA、实际脚本/输入/PSS门槛",
+    "后续修复必须新冻结候选并重跑受影响检查，原25失败报告应保留"
+  ]
+}

@@ -88,7 +88,7 @@
     "整图像素、所有功能和最终10组性能门槛均未通过。"
   ],
   "visualReceipt": "visual/element-text-alignment/differences/raw-pixel-results.json",
-  "independentReview": "新候选冻结后待执行",
+  "independentReview": "25失败原报告保留；修复候选待新CI/冻结复审",
   "rawPixelDifferences": [
     {
       "image": "text-align-left.png",
@@ -110,5 +110,12 @@
       "image": "text-align-right-dark.png",
       "ratio": 0.06607361111111111
     }
-  ]
+  ],
+  "candidate25IndependentReview": {
+    "passed": false,
+    "severity": "P2",
+    "receipt": "reviews/25d1c34f.json",
+    "failure": "聚焦新span radio后Delete删除画布文字"
+  },
+  "keyboardBoundaryFix": "functional/element-text-alignment-keyboard.json"
 }

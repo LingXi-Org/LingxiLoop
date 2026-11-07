@@ -505,6 +505,22 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(await group.getByRole('radio').count(),4)
         if(editorCase.startsWith('text-align-logical-')){assert.equal(receipts.length,0);for(const radio of await group.getByRole('radio').all())assert.equal(await radio.getAttribute('aria-checked'),'false')}
         if(editorCase==='text-align-inherited'){assert.equal(await group.getByRole('radio',{name:labels.center,exact:true}).getAttribute('aria-checked'),'true');assert.equal(await node.evaluate(element=>getComputedStyle(element).textAlign),'center')}
+        if(editorCase==='text-align-shortcuts'){
+          await page.evaluate(()=>{window.__textAlignmentKeys=[];document.addEventListener('keydown',event=>{if(event.target.closest?.('[role=radio]'))window.__textAlignmentKeys.push({key:event.key,trusted:event.isTrusted,role:event.target.getAttribute('role')})},{capture:true})})
+          for(const key of ['Delete','Backspace','Control+d','Control+g','Control+Shift+g','Control+a','Alt+ArrowDown','r','t','p']){
+            await group.getByRole('radio',{name:labels.left,exact:true}).focus();await page.keyboard.press(key);await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+            assert.equal(await node.count(),1,`属性单选中的${key}不得删除画布文字`);assert.equal(receipts.length,0,`属性单选中的${key}不得触发画布操作`);assert.deepEqual(document,original)
+          }
+          let changed=saved();await group.getByRole('radio',{name:labels.right,exact:true}).click();await changed
+          await group.getByRole('radio',{name:labels.right,exact:true}).focus();changed=saved();await page.keyboard.press('Control+z');await changed;assert.deepEqual(document.pages['page-1'].nodes[nodeId],before)
+          changed=saved();await page.keyboard.press('Control+Shift+z');await changed;assert.equal(document.pages['page-1'].nodes[nodeId].style.textAlign,'right')
+          await group.getByRole('radio',{name:labels.right,exact:true}).focus();const writes=receipts.length;await page.keyboard.press('Control+s');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');assert.equal(receipts.length,writes)
+          const originalCount=document.pages['page-1'].nodeOrder.length
+          await page.locator('[data-native-artifact-editor]').focus();changed=saved();await page.keyboard.press('Control+d');await changed;assert.equal(document.pages['page-1'].nodeOrder.length,originalCount+1)
+          await page.locator('[data-native-artifact-editor]').focus();changed=saved();await page.keyboard.press('Delete');await changed;assert.equal(document.pages['page-1'].nodeOrder.length,originalCount);assert.ok(document.pages['page-1'].nodes[nodeId])
+          const keys=await page.evaluate(()=>window.__textAlignmentKeys);assert.ok(keys.every(event=>event.trusted));assert.deepEqual(errors,[])
+          return{kind:'文本单选键盘边界回归',keys,destructiveShortcutsBlocked:true,sharedUndoRedoPreserved:true,savePreserved:true,canvasShortcutsPreserved:true,batches:receipts.length,consoleOrPageErrors:errors}
+        }
         if(['text-align-readonly','text-align-locked','text-align-permission'].includes(editorCase)){
           let expected=original
           if(editorCase==='text-align-permission'){

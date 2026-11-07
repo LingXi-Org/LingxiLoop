@@ -1,0 +1,12 @@
+{
+  "kind": "isolated-canvas-vector-edit-diagnostic",
+  "scenario": "delete",
+  "entry": "双击路径",
+  "sourceAnchorCount": true,
+  "oneGestureOneBatch": true,
+  "sourceGeometryWithin1CssPx": true,
+  "sharedUndoRedo": true,
+  "savedAndReopened": true,
+  "scope": "真实React和可信输入，受控HTTP；不代替全部控制点编辑、授权API或完整视觉",
+  "consoleOrPageErrors": []
+}

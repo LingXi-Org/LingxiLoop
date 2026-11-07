@@ -1,0 +1,126 @@
+{
+  "kind": "文本单选键盘边界回归",
+  "keys": [
+    {
+      "key": "Delete",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Backspace",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Control",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "d",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Control",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "g",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Control",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Shift",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "g",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Control",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "a",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Alt",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "ArrowDown",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "r",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "t",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "p",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Control",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "z",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Control",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Shift",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "z",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "Control",
+      "trusted": true,
+      "role": "radio"
+    },
+    {
+      "key": "s",
+      "trusted": true,
+      "role": "radio"
+    }
+  ],
+  "destructiveShortcutsBlocked": true,
+  "sharedUndoRedoPreserved": true,
+  "savePreserved": true,
+  "canvasShortcutsPreserved": true,
+  "batches": 3,
+  "consoleOrPageErrors": []
+}

@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync, writeSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { build } from 'vite'
@@ -22,13 +22,13 @@ function sourceFingerprint() {
 }
 const inputSha256 = sourceFingerprint()
 let report
-const emitOpeningProfile=(value,openingIsolationPassed,sourceInputsUnchanged)=>writeSync(1,'NATIVE_ARTIFACT_BUNDLE_PROFILE '+JSON.stringify({commit:value.commit,sourceInputsSha256:value.sourceInputsSha256,uncommittedInputsPossible:value.uncommittedInputsPossible,openingIsolationPassed,buildCompleted:openingIsolationPassed,sourceInputsUnchanged,...(!openingIsolationPassed?{failureCode:'native_opening_isolation'}:{}),...value.openingProfile})+'\n')
+const emitOpeningProfile=(value,openingIsolationPassed,sourceInputsUnchanged)=>new Promise((resolve,reject)=>process.stdout.write('NATIVE_ARTIFACT_BUNDLE_PROFILE '+JSON.stringify({commit:value.commit,sourceInputsSha256:value.sourceInputsSha256,uncommittedInputsPossible:value.uncommittedInputsPossible,openingIsolationPassed,buildCompleted:openingIsolationPassed,sourceInputsUnchanged,...(!openingIsolationPassed?{failureCode:'native_opening_isolation'}:{}),...value.openingProfile})+'\n',error=>error?reject(error):resolve()))
 await build({
   build: { outDir, emptyOutDir: true },
   plugins: [{
     name: 'native-artifact-dependency-audit',
     enforce: 'post',
-    generateBundle(_options, bundle) {
+    async generateBundle(_options, bundle) {
       const chunks = Object.values(bundle).filter(value => value.type === 'chunk')
       const sharedIcons=chunks.find(chunk=>chunk.name==='artifact-shared-icons')
       if(sharedIcons){
@@ -75,7 +75,7 @@ await build({
         exportRealm: realm.fileName,
         exportHtmlPreloadsApplication: false,
       }
-      try{assertNativeOpeningIsolation(report.openingProfile)}catch(error){emitOpeningProfile(report,false,sourceFingerprint()===inputSha256);throw error}
+      try{assertNativeOpeningIsolation(report.openingProfile)}catch(error){await emitOpeningProfile(report,false,sourceFingerprint()===inputSha256);throw error}
     },
   }],
 })
@@ -84,4 +84,4 @@ assert.equal(sourceFingerprint(), inputSha256, 'Build inputs changed during the 
 await mkdir(dirname(output), { recursive: true })
 await writeFile(output, `${JSON.stringify(report, null, 2)}\n`)
 console.log(`Native production graph audit: ${output}`)
-emitOpeningProfile(report,true,true)
+await emitOpeningProfile(report,true,true)

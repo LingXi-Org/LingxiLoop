@@ -723,15 +723,15 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
         else if(!(event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')&&(['Delete','Backspace'].includes(event.key)||(event.ctrlKey||event.metaKey)&&['z','y'].includes(event.key.toLowerCase()))){event.preventDefault();event.stopPropagation()}
         return
       }
-      if(pointEditing&&!event.nativeEvent.isComposing&&!(event.target as HTMLElement).closest('input,textarea,[contenteditable="true"],button,summary')&&pointEditor.current?.key(event))return
-      if(kind==='design'&&tool==='pen'&&!event.nativeEvent.isComposing&&!(event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')&&(!(event.target as HTMLElement).closest('button,summary')||event.key==='Escape'||(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z')&&vectorTool.current?.key(event))return
+      if(pointEditing&&!event.nativeEvent.isComposing&&!(event.target as HTMLElement).closest('input,textarea,[contenteditable="true"],button,summary,[role=radio],[role=radiogroup]')&&pointEditor.current?.key(event))return
+      if(kind==='design'&&tool==='pen'&&!event.nativeEvent.isComposing&&!(event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')&&(!(event.target as HTMLElement).closest('button,summary,[role=radio],[role=radiogroup]')||event.key==='Escape'||(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z')&&vectorTool.current?.key(event))return
       if(kind==='design'&&(event.ctrlKey||event.metaKey)&&event.altKey&&!event.shiftKey&&event.key.toLowerCase()==='l'&&!event.nativeEvent.isComposing){event.preventDefault();void copyCanvasLink(activeCanvasId);return}
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') { event.preventDefault(); drafts.flush('save'); void session.retry(); return }
       const typing = (event.target as HTMLElement).closest('input,textarea,[contenteditable="true"]')
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z' && !(event.target as HTMLElement).closest('input,textarea') && !event.nativeEvent.isComposing) { event.preventDefault(); flushText(); setEditingId(null); void session.undoRedo(event.shiftKey ? 'redo' : 'undo'); return }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y' && !(event.target as HTMLElement).closest('input,textarea') && !event.nativeEvent.isComposing) { event.preventDefault(); flushText(); setEditingId(null); void session.undoRedo('redo'); return }
       if (!event.nativeEvent.isComposing && event.key==='Escape') { if(gesture.current||pendingComment.current){event.preventDefault();event.stopPropagation();pointerUp(null,true)}setCropping(null);setTool('select');closeContextMenu(!!contextReturn.current);setEditingId(null);if(presenting){event.preventDefault();event.stopPropagation();flushText();setPresenting(false);if(window.document.fullscreenElement)void window.document.exitFullscreen()}return }
-      if (typing || event.nativeEvent.isComposing || (event.target as HTMLElement).closest('button,summary,a,[role=menu],[role=dialog]')) return
+      if (typing || event.nativeEvent.isComposing || (event.target as HTMLElement).closest('button,summary,a,[role=menu],[role=dialog],[role=radio],[role=radiogroup]')) return
       if(event.key==='Enter'&&selectedNodes.length===1&&selectedNodes[0].path){event.preventDefault();beginPointEditing(selectedNodes[0],current!);return}
       if (event.key === ' ') { event.preventDefault(); space.current = true }
       if ((event.ctrlKey || event.metaKey) && event.key === '\\') { event.preventDefault(); setInspectorOpen(v => !v); return }
