@@ -1,0 +1,102 @@
+{
+  "commit": "56af8a44e0cf94ce7660543e592f4afe51ae458f",
+  "baseCommit": "09e954472985629596d220386cf5b59086ca390a",
+  "reviewer": "/root/independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "精确冻结worktree复审原始Code草稿/权限恢复及行高单位修复；未修改产品文件。真实浏览器使用受控HTTP/CDP，不代表真实授权API或物理OS输入法验收。",
+  "closedPreviousFindings": [
+    "code-composition-access-loss-drops-raw-draft：Chrome154可信compositionstart→403卸载→下载→重试→再次关闭重开→显式编辑保存通过，原始文本与快照由会话保留，恢复不自动提交。",
+    "code-line-height-px-converted-to-unitless-multiplier：Chrome154实际2px计算行高、保留原生倍数、共享undo/redo及重开通过；映射单测区分像素与无单位值。"
+  ],
+  "findings": [
+    {
+      "id": "code-discard-reload-resurrects-local-control-draft",
+      "severity": "P2",
+      "title": "显式保留副本并重载时同步重置已重填的代码控件",
+      "file": "src/features/artifacts/native/InspectorCode.tsx",
+      "line": 29,
+      "related": [
+        {
+          "file": "src/features/artifacts/native/InspectorCode.tsx",
+          "line": 41
+        },
+        {
+          "file": "src/features/artifacts/native/session.ts",
+          "line": 251
+        }
+      ],
+      "failure": "会话清理codeDrafts后，仍挂载的InspectorCode局部draft/draftRef只在初次mount读取会话，未随明确重载重置。可信组字403→重试重填后，点击“保留副本并重新载入”，下载成功且实际GET document结束，字段仍显示已被明确清除的本地文字、状态仍为draft；再次关闭面板会由unmount retain把该旧草稿重新写回会话。第二份恢复JSON再次含同一草稿。该复现用有效的@data-label中文声明，不涉及尚未验收的无效声明删除能力，receipts=0。",
+      "smallestCorrection": "显式恢复/清理时同步重置或重挂代码控件，并用恢复代次等方式阻止旧组件的unmount清理重新retain刚被清除的草稿；保留普通关闭/权限丢失的草稿保护。增加下载并重载→关闭重开→无旧草稿复活的回归。",
+      "reproduction": [
+        "/tmp/lingxi-review-probe-56/probe.mjs",
+        "/tmp/lingxi-review-56-discard154/design.json",
+        "/tmp/lingxi-review-56-discard154/discard-backup.json",
+        "/tmp/lingxi-review-56-discard154/resurrected-recovery.json"
+      ],
+      "observed": {
+        "afterExplicitReloadStillShowsLocalText": true,
+        "saveStateAfterReload": "draft",
+        "serverHasDraft": false,
+        "oldRawDraftReappearsInRecoveryAfterReopen": true,
+        "committedBatches": 0,
+        "consoleOrPageErrors": []
+      }
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "代码映射与session定向单测",
+      "result": "passed",
+      "count": 17
+    },
+    {
+      "check": "Chrome154可信组字访问丢失恢复主流程",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-56-compose154/design.json"
+    },
+    {
+      "check": "Chrome154行高像素/原生倍数、undo/redo与重开",
+      "result": "passed",
+      "receipt": "/tmp/lingxi-review-56-lineheight154/design.json"
+    },
+    {
+      "check": "Chrome154明确备份并重载后原始草稿生命周期",
+      "result": "failed",
+      "receipt": "/tmp/lingxi-review-56-discard154/design.json"
+    }
+  ],
+  "performanceEvidence": {
+    "candidateCommit": "305ee08977f7694ce7346f6f6cdcccb0727d5fd4",
+    "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+    "runId": 42326380804,
+    "archive": "docs/evidence/issue-707/performance/305ee089-diagnostic.zip",
+    "archiveBytes": 1038904,
+    "archiveSha256Verified": "f1cb90fe4a60515ab1a64e6a5e520df3b2296c7470e8a780bd26a7d6520364f6",
+    "qualified": false,
+    "samplesPerEditorModeArm": 1,
+    "slidesFullNavigation": {
+      "editableMs": {
+        "baseline": 6798.8,
+        "candidate": 8573,
+        "increasePercent": 26.09578160851915
+      },
+      "pssDeltaBytes": {
+        "baseline": 302351360,
+        "candidate": 368589414,
+        "increasePercent": 21.907642155140294
+      },
+      "scriptTransferBytes": {
+        "baseline": 1303840,
+        "candidate": 1361010,
+        "increasePercent": 4.384740458952008
+      }
+    },
+    "interpretation": "归档ZIP哈希与摘要一致，单组冷启动和增量PSS值超过5%门槛；这不是稳定p75或最终十组资格，也不是当前56af8a44的测量结果。"
+  },
+  "unverified": [
+    "未独立运行全部120单测、15合约、Chrome140、web/server全量检查或当前正式CI。",
+    "未重新触发性能诊断；仅核验305归档及其摘要，最终候选性能资格仍未通过。",
+    "完整Code删除/继承/布局/媒体、最终视觉、真实授权服务与物理OS输入法仍未验收，局部修复不等于完整功能通过。"
+  ]
+}

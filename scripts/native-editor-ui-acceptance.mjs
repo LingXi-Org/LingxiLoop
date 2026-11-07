@@ -225,7 +225,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
   if(options.checks==='slides-present-controls')page.on('pageerror',error=>{void writeFile(join(output,'page-error-details.json'),JSON.stringify({message:error.message,stack:error.stack},null,2))})
-  page.on('console', message => { if(options.checks==='inspector-code'&&message.type()==='error'&&(options['code-case']==='cas'&&message.location().url.includes('/operations')&&message.text().includes('409')||options['code-case']==='access-composing'&&/\/(changes|document)(?:\?|$)/.test(message.location().url)&&message.text().includes('403'))){expectedCodeNetworkErrors.push(message.text());return} if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(options['preview-save-retry']==='true'&&message.location().url.includes('/operations')&&message.text().includes('503'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(options.checks==='canvas-board-preview-load'&&message.location().url.includes('/BoardPreview.tsx'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
+  page.on('console', message => { if(options.checks==='inspector-code'&&message.type()==='error'&&(options['code-case']==='cas'&&message.location().url.includes('/operations')&&message.text().includes('409')||['access-composing','discard-recovery'].includes(options['code-case'])&&/\/(changes|document)(?:\?|$)/.test(message.location().url)&&message.text().includes('403'))){expectedCodeNetworkErrors.push(message.text());return} if (message.type() === 'error'&&!(expectedVectorDenied&&message.text().includes('403')&&message.location().url.includes('/changes'))&&!(options['preview-save-retry']==='true'&&message.location().url.includes('/operations')&&message.text().includes('503'))&&!(expectedCommentError&&message.text().includes('503')&&message.location().url.includes('/comments/'))&&!(options.checks==='canvas-board-preview-load'&&message.location().url.includes('/BoardPreview.tsx'))&&!(['svg-font-error','svg-font-cancel'].includes(options.checks)&&message.location().url.includes('/fonts/editors/'))&&!(options.checks==='svg-font-module'&&message.location().url.includes('/svg-font-image.ts'))&&!(options.checks==='canvas-vector-load'&&message.location().url.includes('/CanvasPenTool.tsx'))&&!(options.checks==='canvas-vector-edit-load'&&message.location().url.includes('/CanvasPointEditor.tsx'))) errors.push(message.text()) })
   if(options.checks==='canvas-board-preview-load')await page.route('**/BoardPreview.tsx*',async route=>{if(boardModuleBlocked)await route.fulfill({status:503,body:'全窗口预览未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-edit-load')await page.route('**/CanvasPointEditor.tsx*',async route=>{if(pointModuleBlocked)await route.fulfill({status:503,body:'控制点工具未能加载'});else await route.continue()})
   if(options.checks==='canvas-vector-load')await page.route('**/CanvasPenTool.tsx*',async route=>{if(vectorModuleBlocked)await route.fulfill({status:503,body:'钢笔工具未能加载'});else await route.continue()})
@@ -444,8 +444,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(receipts.length,1);assert.deepEqual(errors,[])
         return{kind:'isolated-code-lineheight',pixelUnitPreserved:true,computedLineHeight:'2px',nativeRatioUnchanged:true,sharedUndoRedo:true,reopened:true,consoleOrPageErrors:errors}
       }
-      if(options['code-case']==='access-composing'){
+      if(['access-composing','discard-recovery'].includes(options['code-case'])){
         await field.evaluate(element=>{window.__codeImeEvents=[];for(const type of ['compositionstart','compositionend'])element.addEventListener(type,event=>window.__codeImeEvents.push({type:event.type,trusted:event.isTrusted}))})
+        if(options['code-case']==='discard-recovery')await field.fill(initial+'\n@data-label: ')
         await field.press('Control+End')
         const cdp=await page.context().newCDPSession(page)
         await cdp.send('Input.imeSetComposition',{text:'中文组字恢复',selectionStart:6,selectionEnd:6})
@@ -462,6 +463,19 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         denyCodeAccess=false;await page.getByRole('button',{name:'重试',exact:true}).click();await ready(1);await field.waitFor()
         assert.ok((await field.inputValue()).includes('中文组字恢复'))
         await page.waitForTimeout(260);assert.equal(receipts.length,0)
+        if(options['code-case']==='discard-recovery'){
+          const downloaded=page.waitForEvent('download'),reread=page.waitForRequest(request=>new URL(request.url()).pathname.endsWith('/document')&&request.method()==='GET')
+          await page.getByRole('button',{name:'保留副本并重新载入',exact:true}).click()
+          const backup=await downloaded;await reread
+          const saved=JSON.parse(await readFile(await backup.path(),'utf8'))
+          assert.ok(saved.codeDrafts.some(draft=>draft.text.includes('中文组字恢复')))
+          await page.waitForFunction(()=>!document.querySelector('[aria-label="样式与属性"]')?.value.includes('中文组字恢复')&&document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+          await page.getByRole('button',{name:'关闭属性',exact:true}).click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await field.waitFor()
+          assert.ok(!(await field.inputValue()).includes('中文组字恢复'))
+          assert.equal(await page.getByRole('button',{name:'下载本地副本',exact:true}).count(),0)
+          assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+          return{kind:'isolated-code-explicit-reset',trustedComposition:true,validRawAttribute:true,backupDownloaded:true,realDocumentReload:true,fieldAndOwnerCleared:true,noResurrectionAfterPanelClose:true,noWrites:true,consoleOrPageErrors:errors}
+        }
         await page.getByRole('button',{name:'关闭属性',exact:true}).click()
         await page.getByRole('button',{name:'显示属性',exact:true}).click();await field.waitFor()
         assert.ok((await field.inputValue()).includes('中文组字恢复'));assert.equal(receipts.length,0)

@@ -318,3 +318,5 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 权限丢失时已编辑操作复用既有会话恢复存储，不自动发送，不新增服务或表；会话重开后仍可备份，不会将旧草稿自动覆盖远端。源码、格式、错误、混合值与无障碍提示均中文；编程语法、品牌及作者原文保留。新增授权API/数据库集成用例待正式CI，本地web类型76、server类型748个私有SDK相关/级联错误，新改动模块无类型错误。
 
 [09e95447正式CI42330654549](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42330654549)通过，包含新增的真实PostgreSQL、授权与共享历史用例。[独立审查](reviews/09e95447.json)仍复现两项P2：可信组字期间访问丢失导致原始代码丢失、像素行高误成倍数。[修复收据](functional/code-composition-recovery.json)记录140/154可信compositionstart后无compositionend卸载、中文下载/重试/再次关闭重开/显式保存，以及2px实际行高/撤销重做/重开；不把CDP事件当真实操作系统输入法。原始草稿使用会话本地恢复数据，无自动发送，不新增服务或表。
+
+[56af8a44正式CI42333439893](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42333439893)通过；[复审](reviews/56af8a44.json)确认原组字丢失及像素行高P2关闭，但发现显式保留副本重载后局部输入复活。[清理修复收据](functional/code-explicit-reset.json)保留先失败、140/154真实下载/GET文档/清空字段与会话/关闭重开不复活，以及原有恢复不自动提交回归。

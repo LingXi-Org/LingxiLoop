@@ -71,6 +71,18 @@ test('组字访问丢失的原始代码由会话保留，恢复读取不自动�
   await h.session.flush();assert.equal(h.ids.length,0);h.session.dispose()
 })
 
+test('显式保留副本后重载推进代码草稿代次，旧控件清理可识别已经清除的输入',async()=>{
+  const h=harness();await h.session.open();const base=h.session.getSnapshot().document!
+  assert.equal(h.session.codeDraftGeneration,0)
+  h.session.retainCodeDraft({pageId:'page-one',nodeIds:['page-one-text'],text:'@data-label: 中文恢复草稿',before:[],base})
+  const observed=h.session.codeDraftGeneration
+  await h.session.discardAfterRecovery()
+  assert.equal(h.session.codeDraftGeneration,observed+1)
+  assert.equal(h.session.getCodeDraft('page-one',['page-one-text']),undefined)
+  assert.equal(h.session.hasRetainedDrafts,false)
+  assert.equal(h.ids.length,0);h.session.dispose()
+})
+
 test('geometry read dependencies reject a peer transform arriving after the client snapshot',async()=>{
   let document=fixture()
   const receipt=():DocumentReceipt=>({document,write:true,history:{version:0,undo:null,redo:null}})

@@ -258,7 +258,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
   const selectedRef = useRef(selected); selectedRef.current = selected
   const dispatch = useCallback((ops: ArtifactOperation[], base?: ArtifactDocument) => { try { session.dispatch(ops, base) } catch (error) { setNotice(editorError(error, '无法应用修改，请重试。')) } }, [session])
   const commitCode=useCallback((ops:ArtifactOperation[],base:ArtifactDocument)=>{const snapshot=session.getSnapshot();if(!snapshot.write||!snapshot.document){session.retainDraft(ops);return false}try{session.dispatch(ops,base);return !session.getSnapshot().conflict}catch(error){setNotice(editorError(error,'无法应用修改，请重试。'));return false}},[session])
-  const codeDraftAccess=useMemo<NativeCodeDraftAccess>(()=>({get:(pageId,nodeIds)=>session.getCodeDraft(pageId,nodeIds),retain:draft=>session.retainCodeDraft(draft),clear:(pageId,nodeIds)=>session.clearCodeDraft(pageId,nodeIds),canCommit:pageId=>{const value=session.getSnapshot();return value.write&&!value.conflict&&!!value.document&&value.loadedPageIds.includes(pageId)}}),[session])
+  const codeDraftAccess=useMemo<NativeCodeDraftAccess>(()=>({generation:()=>session.codeDraftGeneration,get:(pageId,nodeIds)=>session.getCodeDraft(pageId,nodeIds),retain:draft=>session.retainCodeDraft(draft),clear:(pageId,nodeIds)=>session.clearCodeDraft(pageId,nodeIds),canCommit:pageId=>{const value=session.getSnapshot();return value.write&&!value.conflict&&!!value.document&&value.loadedPageIds.includes(pageId)}}),[session])
   const commitSpeakerNote=useCallback((pageId:string,notes:string,base:ArtifactDocument)=>{
     const snapshot=session.getSnapshot()
     if(snapshot.document?.pages[pageId]?.notes===notes){setSpeakerNoteError('');return true}

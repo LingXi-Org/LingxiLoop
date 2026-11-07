@@ -28,12 +28,14 @@ export default function InspectorCode(props:Props){
   const serialized=useMemo(()=>serializeInspectorCode(common,mixed),[common,mixed])
   const [draft,setDraft]=useState<Draft|null>(()=>{const retained=props.codeDrafts.get(pageId,selected);return retained?{text:retained.text,base:retained.base,before:retained.before,dirty:true,deferUntilSave:true}:null})
   const draftRef=useRef<Draft|null>(draft),composing=useRef(false),afterComposition=useRef(false),timer=useRef<ReturnType<typeof setTimeout>|undefined>(undefined)
+  const generation=useRef(props.codeDrafts.generation())
   const latest=useRef({props,common});latest.current={props,common}
   const [error,setError]=useState<{line:number;message:string}|null>(null)
   const errorId=useId()
   const update=(value:Draft|null)=>{draftRef.current=value;setDraft(value)}
   const save=(discardInvalid=false,explicit=false,unmount=false)=>{
     clearTimeout(timer.current)
+    if(generation.current!==latest.current.props.codeDrafts.generation()){draftRef.current=null;markDirty(false);return true}
     let value=draftRef.current
     if(composing.current){value={text:field.current?.value??value?.text??serialized,base:value?.base??latest.current.props.document,before:value?.before??latest.current.common,dirty:true};draftRef.current=value}
     if(!value?.dirty)return true

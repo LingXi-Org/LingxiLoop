@@ -7,6 +7,7 @@ export interface NativeCodeDraft {
   pageId:string;nodeIds:string[];text:string;before:Array<{name:string;value:string}>;base:ArtifactDocument
 }
 export interface NativeCodeDraftAccess {
+  generation():number
   get(pageId:string,nodeIds:string[]):NativeCodeDraft|undefined
   retain(draft:NativeCodeDraft):void
   clear(pageId:string,nodeIds:string[]):void
@@ -56,6 +57,7 @@ export class NativeDocumentSession {
   private queue: ArtifactOperationBatch[] = []
   private rejectedDrafts = new Map<string, ArtifactOperation[]>()
   private codeDrafts = new Map<string,NativeCodeDraft>()
+  private codeDraftResetGeneration=0
   private predictions = new Map<string, Record<string, number>>()
   // Captured editing/gesture snapshots refer to anchors for our own optimistic
   // writes. ACKs may renumber those writes after an unrelated remote operation.
@@ -233,6 +235,7 @@ export class NativeDocumentSession {
     } catch (error) { this.failure(error) }
   }
   get hasRetainedDrafts(){return this.rejectedDrafts.size>0||this.codeDrafts.size>0}
+  get codeDraftGeneration(){return this.codeDraftResetGeneration}
   private codeDraftKey(pageId:string,nodeIds:string[]){return pageId+'|'+[...nodeIds].sort().join(',')}
   getCodeDraft(pageId:string,nodeIds:string[]){return this.codeDrafts.get(this.codeDraftKey(pageId,nodeIds))}
   retainCodeDraft(draft:NativeCodeDraft){
@@ -248,6 +251,6 @@ export class NativeDocumentSession {
     this.update({pending:this.queue.length+this.rejectedDrafts.size+this.codeDrafts.size,error:'当前无法保存，本地修改已保留。可下载本地副本。'})
   }
   recovery() { return { format: 'lingxi-native-recovery-v1', document: this.state.document, operations: this.queue, drafts: [...this.rejectedDrafts.values()],codeDrafts:[...this.codeDrafts.values()] } }
-  async discardAfterRecovery() { if (this.sending) await this.sending; this.queue = []; this.predictions.clear(); this.batchAnchors.clear(); this.snapshotAnchors = new WeakMap(); this.rejectedDrafts.clear();this.codeDrafts.clear(); this.update({ conflict: false, error: '', pending: 0 }); await this.open() }
+  async discardAfterRecovery() { if (this.sending) await this.sending;this.codeDraftResetGeneration++; this.queue = []; this.predictions.clear(); this.batchAnchors.clear(); this.snapshotAnchors = new WeakMap(); this.rejectedDrafts.clear();this.codeDrafts.clear(); this.update({ conflict: false, error: '', pending: 0 }); await this.open() }
   dispose() { this.disposed = true; this.controller.abort(); this.listeners.clear() }
 }
