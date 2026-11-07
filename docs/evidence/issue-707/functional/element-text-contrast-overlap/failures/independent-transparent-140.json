@@ -1,0 +1,90 @@
+{
+  "computed": null,
+  "other": {
+    "background": "rgba(0, 0, 0, 0)",
+    "backgroundImage": "none",
+    "opacity": "1",
+    "children": 0,
+    "text": "",
+    "border": "0px none rgb(32, 33, 36)"
+  },
+  "hits": [
+    {
+      "tag": "H1",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": "page-1-heading",
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": "transparent-overlap",
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": "page-1-root",
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": null,
+      "page": "page-1"
+    },
+    {
+      "tag": "DIV",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "SECTION",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "DIV",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "BODY",
+      "node": null,
+      "page": null
+    },
+    {
+      "tag": "HTML",
+      "node": null,
+      "page": null
+    }
+  ],
+  "badgeCount": 0,
+  "writes": 0
+}

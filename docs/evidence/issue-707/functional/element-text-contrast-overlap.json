@@ -1,0 +1,25 @@
+{
+  "beforeCandidate": "ed7a984c0253cba3e9e8b1710997230cbf17ca40",
+  "issue": "透明空的非祖先画布节点被当作有可见绘制，错误隐藏12.7:1提示。",
+  "independentFailure": "reviews/ed7a984c.json",
+  "regression": "element-text-contrast-overlap/failures/design-failure.json",
+  "source": {
+    "commit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+    "sourceHash": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+    "hasVisiblePaintUtf16": 775418,
+    "referenceHashesVerified": 12,
+    "runtime": "element-text-contrast-overlap/reference/reference.json"
+  },
+  "fix": "仅实际媒体、直接非空文本、背景图/非透明颜色或非透明边框算可见绘制；空布局节点不改变已知背景。原生裁剪媒体子元素关闭命中测试，仍以其媒体包装节点保留可见绘制判定。",
+  "verified": [
+    "140/154各8场景通过：透明空组、透明边框保留提示；背景色、边框、已加载图片遮挡隐藏；默认、CSS颜色与保存/撤销重做/重开仍通过。",
+    "图片场景明确挂载两个图像并等待解码；原ready单图严格选择器不能接收双图，现等待至少一图且所有已挂载图加载；额外图片有明确数量断言。",
+    "保留首次局部修复未识别裁剪媒体的两版失败；最终8场景重新全部通过。",
+    "9项文字对齐/对比度单位和24项静态采集/CI契约通过；lint仍43警告/4信息。"
+  ],
+  "newReview": "新候选提交后的独立只读复审与CI待执行。",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false,
+  "scope": "修复明确遮挡误判；不是完整文字、多选、全部背景/媒体或性能验收。"
+}

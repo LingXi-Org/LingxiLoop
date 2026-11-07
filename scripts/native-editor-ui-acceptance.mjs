@@ -118,6 +118,15 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(editorCase==='contrast-parent-opacity')document.pages['page-1'].nodes['page-1-root'].style.opacity=.5
     if(editorCase==='contrast-css')node.css={color:'#888888'}
     if(editorCase==='contrast-clipped')node.css={'background-clip':'text'}
+    if(editorCase.startsWith('contrast-overlap-')){
+      const overlap={...createNode(editorCase==='contrast-overlap-image'?'image':'group','contrast-overlap'),parentId:node.parentId,x:node.x,y:node.y,width:node.width,height:node.height,style:{}}
+      if(editorCase==='contrast-overlap-paint')overlap.style.backgroundColor='#ff0000'
+      if(editorCase==='contrast-overlap-border')Object.assign(overlap.style,{borderWidth:1,borderColor:'#ff0000'})
+      if(editorCase==='contrast-overlap-transparent-border')Object.assign(overlap.style,{borderWidth:1,borderColor:'transparent'})
+      if(editorCase==='contrast-overlap-image')overlap.assetId=document.pages['page-1'].nodes['page-1-image'].assetId
+      document.pages['page-1'].nodes[overlap.id]=overlap
+      document.pages['page-1'].nodeOrder.splice(document.pages['page-1'].nodeOrder.indexOf(node.id),0,overlap.id)
+    }
   }
   if(options.checks==='element-sizing'&&['text-align-css','text-align-important','text-align-history'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-align':editorCase==='text-align-important'?'center !important':'center'}
   if(options.checks==='element-sizing'&&editorCase==='text-align-locked')document.pages['page-1'].nodes['page-1-heading'].locked=true
@@ -379,10 +388,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     const canvas = page.locator(`[data-page-id="page-${index}"]`)
     if(!visualChecks.includes(options.checks)) await canvas.locator('[data-formula-ready=true]').waitFor()
     if(holdImageReads){await canvas.locator('[data-node-type=image] [aria-busy=true]').waitFor();return}
-    await canvas.locator('[data-node-type=image] img').waitFor().catch(async error=>{await page.screenshot({path:join(output,'failure.png')});await writeFile(join(output,'failure-state.json'),JSON.stringify(await page.evaluate(()=>({notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent),root:[...document.querySelectorAll('[data-native-artifact-editor]')].map(e=>({current:e.dataset.currentPage,canvas:e.dataset.canvasPageId})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON(),nodes:e.querySelectorAll('[data-node-id]').length})),geometry:window.__geometryLog?.slice(-8)})),null,2));throw error})
+    await canvas.locator('[data-node-type=image] img').first().waitFor().catch(async error=>{await page.screenshot({path:join(output,'failure.png')});await writeFile(join(output,'failure-state.json'),JSON.stringify(await page.evaluate(()=>({notices:[...document.querySelectorAll('.native-notice')].map(e=>e.textContent),root:[...document.querySelectorAll('[data-native-artifact-editor]')].map(e=>({current:e.dataset.currentPage,canvas:e.dataset.canvasPageId})),boards:[...document.querySelectorAll('[data-artboard-id]')].map(e=>({id:e.dataset.artboardId,rect:e.getBoundingClientRect().toJSON(),nodes:e.querySelectorAll('[data-node-id]').length})),geometry:window.__geometryLog?.slice(-8)})),null,2));throw error})
     await page.waitForFunction(index => {
-      const image = window.document.querySelector(`[data-page-id="page-${index}"] [data-node-type=image] img`)
-      return image?.complete && image.naturalWidth > 0
+      const images = [...window.document.querySelectorAll(`[data-page-id="page-${index}"] [data-node-type=image] img`)]
+      return images.length > 0 && images.every(image=>image.complete && image.naturalWidth > 0)
     }, index)
   }
   const scrollCanvasTo=async point=>{
@@ -513,11 +522,13 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await field.waitFor()
       const saved=()=>page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200)
       if(editorCase.startsWith('contrast-')){
-        const badge=page.locator('.native-text-contrast'),hidden=['contrast-transparent','contrast-opacity','contrast-gradient','contrast-parent-opacity','contrast-clipped','contrast-readonly'].includes(editorCase)
+        if(editorCase.startsWith('contrast-overlap-'))assert.equal(await page.locator('[data-node-id=contrast-overlap]').count(),1,'实际遮挡图层必须已挂载')
+        if(editorCase==='contrast-overlap-image'){await page.locator('[data-node-id=contrast-overlap] img').waitFor();assert.equal(await page.locator('[data-page-id=page-1] [data-node-type=image] img').count(),2)}
+        const badge=page.locator('.native-text-contrast'),hidden=['contrast-transparent','contrast-opacity','contrast-gradient','contrast-parent-opacity','contrast-clipped','contrast-readonly','contrast-overlap-paint','contrast-overlap-border','contrast-overlap-image'].includes(editorCase)
         if(hidden)assert.equal(await badge.count(),0)
         else{
           await badge.waitFor()
-          const ratio=editorCase==='contrast-alpha'?'2.9':['contrast-base','contrast-history'].includes(editorCase)?'12.7':'3.3',passed=['contrast-base','contrast-large','contrast-css','contrast-history'].includes(editorCase)
+          const ratio=editorCase==='contrast-alpha'?'2.9':['contrast-base','contrast-history','contrast-overlap-empty','contrast-overlap-transparent-border'].includes(editorCase)?'12.7':'3.3',passed=['contrast-base','contrast-large','contrast-css','contrast-history','contrast-overlap-empty','contrast-overlap-transparent-border'].includes(editorCase)
           assert.equal(await badge.getAttribute('data-verdict'),passed?'pass':'fail')
           assert.equal(await badge.innerText(),passed?'对比度良好':'对比度不足')
           assert.equal(await badge.getAttribute('title'),`与背景颜色的对比度为 ${ratio}:1`)

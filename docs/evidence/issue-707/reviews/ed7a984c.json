@@ -1,0 +1,99 @@
+{
+  "candidate": "ed7a984c0253cba3e9e8b1710997230cbf17ca40",
+  "baseline": "d373c5a99152a974c36116ce0a52ef2fef3f1a5f",
+  "scope": "按repository-review在独立detached树只读审查ElementTextColor/对比度合成与遮挡/ColorField可访问说明/Inspector及验收证据；含父线程另授权的既有D37实际CSS反例，不读取root后续WIP，不修改产品或外发",
+  "result": "发现1项真实P2，已在140/154及固定来源对照复现；原冻结候选局部审查未通过",
+  "findings": [
+    {
+      "severity": "P2",
+      "location": "src/features/artifacts/native/rendered-text-contrast.ts:37",
+      "title": "无可见绘制的透明空图层会被误判为遮挡，隐藏有效对比度提示",
+      "scenario": "默认文字后方增加同尺寸的空group：x64/y40/1152×76、无文字/子节点/背景图/边框、背景完全透明，层级在文字下方。实际背景和文字未改变，但elementsFromPoint命中该透明图层后函数仅因data-node-id就返回null。140/154均提示消失、零文档写入。",
+      "sourceComparison": {
+        "commit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+        "resourceHashesVerified": 12,
+        "result": "同一源HTML在h1前添加同尺寸透明空DIV，原版继续显示Good contrast与12.7:1，背景rgb250/248/244和前景rgb24/51/43。",
+        "codeLocation": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js，UTF16 hasVisiblePaint偏移775418；media标签正则775245；isElementUnoccluded776483",
+        "conditions": "不相关命中仅在有可见绘制时影响ground：媒体/控件标签、直接非空文本、背景图、未知或alpha>.02背景、可见宽度/样式的未知或alpha>.02边框；透明空DIV所有条件均false。"
+      },
+      "minimumFix": "在非祖先命中分支按实际可见绘制判定，再把可绘制媒体/文字/背景/边框遮挡视为未知；透明空布局命中跳过。添加透明空group及透明边框的失败回归，保留不透明shape/图片等真实绘制仍隐藏的正向回归。",
+      "evidence": [
+        "/workspace/lingxi-issue707-scratch/review-ed7-transparent140/transparent-overlap.json",
+        "/workspace/lingxi-issue707-scratch/review-ed7-transparent154/transparent-overlap.json",
+        "/workspace/lingxi-issue707-scratch/review-ed7-source-transparent154/reference.json"
+      ],
+      "scripts": [
+        "/workspace/lingxi-issue707-scratch/review-ed7-probes/contrast.mjs",
+        "/workspace/lingxi-issue707-scratch/review-ed7-probes/source-transparent.mjs"
+      ],
+      "reproduction": "原生probe --mode=design --checks=element-sizing --sizing-case=contrast-base --contrast-review=transparent-overlap；Source probe --reference-root=/tmp/lingxi-baoyu-v280 --case=contrast-base；各指定现有浏览器和独立output。"
+    }
+  ],
+  "verified": [
+    {
+      "check": "正式对比度12场景×Chrome140/154",
+      "result": "均通过：默认/大字/小字门槛、前景alpha、全透明、元素及祖先opacity、gradient、CSS真实color覆盖、background-clip:text、readonly隐藏、颜色共享历史/保存重开。静态提示及aria-description中文、无页面或控制台错误。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-ed7-contrast140",
+        "/workspace/lingxi-issue707-scratch/review-ed7-contrast154"
+      ],
+      "logs": [
+        "/tmp/lingxi-review-ed7-contrast140.log",
+        "/tmp/lingxi-review-ed7-contrast154.log"
+      ]
+    },
+    {
+      "check": "真实可见绘制遮挡正向检查",
+      "result": "154不透明group、SVG矩形shape及图片在文字后方均返回unknown且badge0、零写入；图片夹具只保留一个已加载图像避免探针选择器歧义。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-ed7-opaque154/transparent-overlap.json",
+        "/workspace/lingxi-issue707-scratch/review-ed7-shape154/transparent-overlap.json",
+        "/workspace/lingxi-issue707-scratch/review-ed7-image154-retry/transparent-overlap.json"
+      ]
+    },
+    {
+      "check": "单节点ResizeObserver生命周期",
+      "result": "154对创建栈含ElementTextColor的observer插桩：活动只1个、仅观察page-1-heading；3次关闭/重开均0/1，多选0、清除后恢复单选1、改选图片0、再选文字1、撤回写权限0，全部disconnect并无本地写入/错误。scroll事件cleanup代码使用相同update/capture参数，未另对全局scroll监听器插桩。",
+      "output": "/workspace/lingxi-issue707-scratch/review-ed7-lifecycle154-retry/lifecycle.json",
+      "script": "/workspace/lingxi-issue707-scratch/review-ed7-probes/lifecycle.mjs"
+    },
+    {
+      "check": "另授权的D37 typed-left/CSS-center反例",
+      "result": "140/154将style.textAlign=left且CSS center的文字通过radio改Left，实际计算left、旧css移除、保存重开/其他页不变均通过。未复现问题，不因renderer静态猜测列为P2。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-ed7-typedcss140/typed-css.json",
+        "/workspace/lingxi-issue707-scratch/review-ed7-typedcss154/typed-css.json"
+      ]
+    },
+    {
+      "check": "9定向单元及32合同",
+      "result": "3项contrast+6项text-alignment单元、9项collector及23项CI合同均通过。脚本语法和git diff --check通过。",
+      "logs": [
+        "/tmp/lingxi-review-ed7-units.log",
+        "/tmp/lingxi-review-ed7-contracts.log"
+      ]
+    },
+    {
+      "check": "隔离范围和声明",
+      "result": "无共享模型/DB/服务/导出变更。旧Slides/自由画布分支保留；颜色操作继续原共享链路；新增只读DOM测量未自行派发文档操作。证据明确完整资格false、2px纵向及整图差异未过，未将历史性能或完整授权API当本批通过。"
+    }
+  ],
+  "reviewProbeFailures": [
+    {
+      "result": "首次图片反例夹具复制出两个img，使既有ready严格选择器匹配2项；仅调整自有夹具为移动/替换唯一原图后重跑通过，不是产品故障。",
+      "log": "/tmp/lingxi-review-ed7-image154.log"
+    },
+    {
+      "result": "首次observer生命周期脚本从全选直接点击已选文字仍保持多选，等待badge超时；补明确点击空画布清除选择后再选，状态断言通过，不将取证步骤问题归为产品回归。",
+      "log": "/tmp/lingxi-review-ed7-lifecycle154.log"
+    }
+  ],
+  "unverified": [
+    "未独立重跑浅深所有容器/触摸/低动画和全部CSS变量/继承/富文本逐段前景，未将当前outer-node计算泛化为所有文字状态",
+    "没有单独运行locked状态UI、observer滚动监听计数或复杂运行时动画/外部CSS背景变化；readonly/撤权/多选及基本观察器清理已定向实测",
+    "CSS作者颜色覆盖的编辑入口仍在证据中明确待实现；此审查未将既有颜色字段局限误报为本提交新增问题",
+    "未执行正式SDK完整类型检查/构建、真实授权API/跨租户/Agent、导出或最终10组ABBA；本次受控HTTP不能替代服务验收",
+    "父线程通知普通CI/静态采集成功，本审查未独立查询或读取新生产JSON；静态成功不闭合上述真实功能P2，也不等于最终性能/全目标通过",
+    "后续修复应新冻结候选复审，保留本ed7失败报告、截图和原始结果"
+  ]
+}
