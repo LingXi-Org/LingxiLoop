@@ -113,7 +113,7 @@ jobs:
           node scripts/native-startup-probe-check.mjs
           node --import tsx scripts/native-page-radius-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-page-radius-oracle.json"
           node --import tsx scripts/native-page-print-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-page-print-oracle.json"
-          for task_artboard_case in default exports readonly; do
+          for task_artboard_case in default exports readonly fit-repeat fit-hidden fit-policy; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-artboard --artboard-case="$task_artboard_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-artboard-$task_artboard_case"
           done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=page-radius --radius-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-page-radius"

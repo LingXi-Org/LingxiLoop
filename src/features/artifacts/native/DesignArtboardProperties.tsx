@@ -4,7 +4,7 @@ import {Radio} from '@base-ui/react/radio'
 import type {ArtifactDocument,ArtifactPage} from '../../../../shared/artifact-document'
 import type {ArtifactOperation} from '../../../../shared/artifact-operations'
 import {normalizePageRadius,pageRadiusCorners} from '../../../../shared/artifact-page-radius'
-import {artifactPrintMode} from '../../../../shared/artifact-page-print'
+import {artifactPrintMode,canFitArtifactPageHeight,nextArtifactFitHeight} from '../../../../shared/artifact-page-print'
 import {artifactPageBackground} from '../../../../shared/artifact-themes'
 import Field from './InspectorField'
 import {IconButton,Menu,MenuItem} from './EditorPrimitives'
@@ -20,14 +20,14 @@ function ArtboardRadius({page,onChange}:{page:ArtifactPage;onChange(value:Artifa
   return <div className="native-artboard-radius"><div className="native-artboard-radius-main"><Field label="圆角" unit type="number" min={0} max={4000} value={mixed?'':corners[0]} placeholder={mixed?'混合':undefined} onChange={value=>change(value)}/><IconButton icon="frame" label="分别设置圆角" active={cornersOpen} onClick={()=>setCornersOpen(value=>!value)}/></div>{cornersOpen&&<div className="native-artboard-radius-corners">{([['左上圆角',0],['右上圆角',1],['左下圆角',3],['右下圆角',2]]as const).map(([label,index])=><Field key={index} label={label} unit type="number" min={0} max={4000} value={corners[index]} onChange={value=>change(value,index)}/>)}</div>}</div>
 }
 
-export default function DesignArtboardProperties({document,page,dispatch,fitHeight,writable}:{document:ArtifactDocument;page:ArtifactPage;dispatch(operations:ArtifactOperation[]):void;fitHeight():void;writable:boolean}){
+export default function DesignArtboardProperties({document,page,dispatch,measureHeight,writable}:{document:ArtifactDocument;page:ArtifactPage;dispatch(operations:ArtifactOperation[]):void;measureHeight():number|undefined;writable:boolean}){
   const patch=(value:Extract<ArtifactOperation,{type:'page.patch'}>['patch'],unset?:Extract<ArtifactOperation,{type:'page.patch'}>['unset'])=>dispatch([{type:'page.patch',pageId:page.id,patch:value,...(unset?{unset}:{})}])
   const size=(axis:'width'|'height',value:string)=>{const number=Number(value);if(value.trim()&&Number.isFinite(number))patch({[axis]:Math.max(120,Math.min(8000,number))})}
   const mode=artifactPrintMode(page)
   return <div className="native-artboard-properties">
     <section className="native-property-section native-artboard-size"><h3>画板</h3><div className="native-artboard-section-body">
-      <Field label="宽度" inputLabel="画板宽度" type="number" unit min={120} max={8000} value={page.width} onChange={value=>size('width',value)}/>
-      <div className="native-artboard-height"><Field label="高度" inputLabel="画板高度" type="number" unit min={120} max={8000} value={page.height} onChange={value=>size('height',value)}/><Menu icon="more" label="高度操作" disabled={!writable} popupRole="menu" minimumWidth={180} align="end"><MenuItem role="menuitem" onClick={fitHeight}>适应内容高度</MenuItem></Menu></div>
+      <Field label="宽度" inputLabel="画板宽度" type="number" unit min={120} max={8000} value={Math.round(page.width)} onChange={value=>size('width',value)}/>
+      <div className="native-artboard-height"><Field label="高度" inputLabel="画板高度" type="number" unit min={120} max={8000} value={Math.round(page.height)} onChange={value=>size('height',value)}/>{writable&&canFitArtifactPageHeight(page)&&<Menu icon="more" label="高度操作" popupRole="menu" minimumWidth={180} align="end"><MenuItem role="menuitem" onClick={()=>{const height=nextArtifactFitHeight(page,measureHeight());if(height!==undefined)patch({height})}}>适应内容高度</MenuItem></Menu>}</div>
       <div className="native-artboard-radio-row"><span>打印模式</span><RadioGroup aria-label="打印模式" disabled={!writable} value={mode} onValueChange={value=>patch({print:value as 'flow'|'fixed'})}><Radio.Root value="flow">流式</Radio.Root><Radio.Root value="fixed">固定</Radio.Root></RadioGroup></div>
       <div className="native-artboard-radio-row"><span>纸张</span><RadioGroup aria-label="打印纸张" value={page.paper==='A4'||page.paper==='Letter'?page.paper:null} disabled={!writable||mode!=='flow'} onValueChange={value=>{if(value)patch({paper:value as 'A4'|'Letter'})}}><Radio.Root value="Letter">美式信纸</Radio.Root><Radio.Root value="A4">A4</Radio.Root></RadioGroup></div>
     </div></section>

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {createPage} from './artifact-document.js'
-import {artifactPrintMode,artifactPrintPaper,artifactPrintSheetHeight,inferArtifactPaper,localeArtifactPaper} from './artifact-page-print.js'
+import {artifactPrintMode,artifactPrintPaper,artifactPrintSheetHeight,inferArtifactPaper,localeArtifactPaper,canFitArtifactPageHeight,nextArtifactFitHeight} from './artifact-page-print.js'
 
 test('显式打印分页不改画板尺寸，纸张按来源点数而非屏幕近似值计算',()=>{
   const page={...createPage('p'),width:1920,height:240,print:'flow' as const,paper:'A4' as const},before=JSON.stringify(page)
@@ -33,4 +33,23 @@ test('未显式选择纸张时，尺寸推断优先于语言；中文地区默�
   assert.equal(localeArtifactPaper(['es-MX']),'Letter')
   assert.equal(localeArtifactPaper(['en']),'Letter')
   assert.equal(localeArtifactPaper([]),'A4')
+})
+
+
+test('普通固定画板只增长超过四像素，已适配和宽松画板不写历史',()=>{
+  const page={...createPage('p'),width:1920,height:1080},before=JSON.stringify(page)
+  for(const measured of [0,40,1080,1084])assert.equal(nextArtifactFitHeight(page,measured),undefined)
+  assert.equal(nextArtifactFitHeight(page,1085),1085);assert.equal(nextArtifactFitHeight(page,10000),8000)
+  assert.equal(nextArtifactFitHeight({...page,height:1400},1080),undefined)
+  assert.equal(nextArtifactFitHeight({...page,height:8000},10000),undefined)
+  assert.equal(nextArtifactFitHeight({...page,height:40},40),undefined)
+  assert.equal(JSON.stringify(page),before)
+})
+
+test('流式、无框和已匹配纸张不提供普通高度适配入口',()=>{
+  const page={...createPage('p'),width:1920,height:1080}
+  assert.equal(canFitArtifactPageHeight(page),true)
+  for(const other of [{...page,print:'flow' as const},{...page,sizing:'flow' as const},{...page,frameless:true},{...page,width:794}]){
+    assert.equal(canFitArtifactPageHeight(other),false);assert.equal(nextArtifactFitHeight(other,5000),undefined)
+  }
 })

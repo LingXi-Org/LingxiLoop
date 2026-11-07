@@ -391,10 +391,37 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await inspector.locator('summary').filter({hasText:'高级'}).count(),0,'画板尺寸应直接呈现，符合来源表单')
       const mode=inspector.getByRole('radiogroup',{name:'打印模式',exact:true}),paper=inspector.getByRole('radiogroup',{name:'打印纸张',exact:true}),saved=()=>page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
       await mode.getByRole('radio',{name:'固定',exact:true}).waitFor()
+      if(options['artboard-case']==='fit-hidden'){
+        const root=Object.values(document.pages['page-1'].nodes).find(node=>node.type==='group'&&!node.parentId),row=inspector.locator(`[data-outline-node="${root.id}"]`)
+        await row.hover();await row.getByRole('button',{name:/^隐藏图层 /}).click();await saved();assert.equal(document.pages['page-1'].nodes[root.id].hidden,true)
+        await page.getByLabel('画板高度',{exact:true}).fill('240');await page.getByLabel('画板高度',{exact:true}).press('Enter');await saved()
+        const baseline={receipts:receipts.length,seq:document.seq,history:JSON.stringify(history)}
+        await page.getByLabel('高度操作',{exact:true}).click();await page.getByRole('menuitem',{name:'适应内容高度',exact:true}).click();await page.waitForTimeout(500)
+        assert.equal(document.pages['page-1'].height,240,'隐藏祖先的后代不能扩大画板');assert.equal(receipts.length,baseline.receipts);assert.equal(document.seq,baseline.seq);assert.equal(JSON.stringify(history),baseline.history)
+        assert.deepEqual(errors,[]);return{kind:'隐藏组合不扩大画板回归',hiddenThroughRealLayerControl:true,height:240,noFitWrites:true,noHistoryEntries:true,consoleOrPageErrors:errors}
+      }
+      if(options['artboard-case']==='fit-policy'){
+        for(const height of [1100,1400]){
+          await page.getByLabel('画板高度',{exact:true}).fill(String(height));await page.getByLabel('画板高度',{exact:true}).press('Enter');await saved();const baseline=receipts.length
+          await page.getByLabel('高度操作',{exact:true}).click();await page.getByRole('menuitem',{name:'适应内容高度',exact:true}).click();await page.waitForTimeout(500)
+          assert.equal(document.pages['page-1'].height,height,'普通固定画板按原版只增大，不自动缩小');assert.equal(receipts.length,baseline)
+        }
+        await mode.getByRole('radio',{name:'流式',exact:true}).click();await saved();assert.equal(await page.getByLabel('高度操作',{exact:true}).count(),0,'原版流式打印不显示高度操作入口')
+        assert.deepEqual(errors,[]);return{kind:'原版高度适配资格回归',ordinaryFixedDoesNotShrink:true,flowHidesHeightAction:true,consoleOrPageErrors:errors}
+      }
+      if(options['artboard-case']==='fit-repeat'){
+        const baseline={document:JSON.stringify(document),history:JSON.stringify(history),receipts:receipts.length}
+        for(let index=0;index<3;index++){
+          await page.getByLabel('高度操作',{exact:true}).click();await page.getByRole('menuitem',{name:'适应内容高度',exact:true}).click();await page.waitForTimeout(500)
+          assert.equal(receipts.length,baseline.receipts,'已经适配的画板不得重复保存或污染撤销历史');assert.equal(JSON.stringify(history),baseline.history);assert.equal(JSON.stringify(document),baseline.document)
+        }
+        assert.deepEqual(errors,[]);return{kind:'已适配画板重复操作回归',repeatedActions:3,noWrites:true,noHistoryEntries:true,documentUnchanged:true,consoleOrPageErrors:errors}
+      }
       if(options['artboard-case']==='readonly'){
         for(const label of ['画板宽度','画板高度','圆角','背景'])assert.ok(await page.getByLabel(label,{exact:true}).isDisabled())
         assert.ok(await mode.getByRole('radio',{name:'流式',exact:true}).isDisabled())
-        for(const label of ['高度操作','添加布局参考线']){const trigger=page.getByLabel(label,{exact:true});assert.equal(await trigger.getAttribute('aria-disabled'),'true');await trigger.click({force:true});assert.equal(await page.locator('.native-artboard-properties details[open]').count(),0)}
+        assert.equal(await page.getByLabel('高度操作',{exact:true}).count(),0)
+        for(const label of ['添加布局参考线']){const trigger=page.getByLabel(label,{exact:true});assert.equal(await trigger.getAttribute('aria-disabled'),'true');await trigger.click({force:true});assert.equal(await page.locator('.native-artboard-properties details[open]').count(),0)}
         assert.equal(receipts.length,0);assert.deepEqual(errors,[]);return{kind:'只读画板属性回归',fieldsAndActionsDisabled:true,noWrites:true,consoleOrPageErrors:errors}
       }
       if(options['artboard-case']==='visual'){
@@ -412,6 +439,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await mode.getByRole('radio',{name:'流式',exact:true}).getAttribute('aria-checked'),'true');assert.equal(await paper.getByRole('radio',{name:'A4',exact:true}).getAttribute('aria-checked'),'true')
       await page.getByRole('button',{name:'关闭属性',exact:true}).click();await page.locator('[data-native-artifact-editor]').focus();await page.keyboard.press('Control+z');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].paper,undefined);assert.equal(document.pages['page-1'].print,'flow')
       await page.keyboard.press('Control+Shift+z');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved');assert.equal(document.pages['page-1'].paper,'A4');await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByLabel('画板宽度',{exact:true}).waitFor()
+      assert.equal(await page.getByLabel('高度操作',{exact:true}).count(),0);await mode.getByRole('radio',{name:'固定',exact:true}).click();await saved()
       await page.getByLabel('画板宽度',{exact:true}).fill('96');await page.getByLabel('画板宽度',{exact:true}).press('Enter');await saved();assert.equal(document.pages['page-1'].width,120)
       await page.getByLabel('画板宽度',{exact:true}).fill('9000');await page.getByLabel('画板宽度',{exact:true}).press('Enter');await saved();assert.equal(document.pages['page-1'].width,8000)
       await page.getByLabel('画板宽度',{exact:true}).fill('1920');await page.getByLabel('画板宽度',{exact:true}).press('Enter');await saved()

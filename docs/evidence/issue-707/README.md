@@ -356,3 +356,6 @@ S29保留未取得资格：自动全屏与完整放映控件、全部视觉/媒�
 [画板表单来源](source-design-artboard.json)区分打印分页和画板随内容增长。原版选择流式/A4不会改变1920×240画板或iframe高度；显式保存后写入print/paper。新增原生可选print独立字段，旧原生sizing/纸张PDF语义继续读取，不补写旧稿；新转换保留原版print而不误触发画板增长。
 
 [局部回归](functional/design-artboard.json)记录140/154的打印/纸张保存重开、共享撤销重做、尺寸边界、适应内容高度及只读；18项真实临时PostgreSQL文档服务通过，不改旧快照。10492项原版纸张推断/页高断言一致；实际PDF经pdfinfo/pdftoppm验证流式A4两页、固定一页，保留第二页红色正文；纸张物理尺寸及链接缩放另有单测。新[八对默认画板截图](visual/design-artboard/geometry.json)登记控件最大偏差1CSSpx；[原始像素结果](visual/design-artboard/differences/raw-pixel-results.json)0/8通过，最大9.9872%，无掩码或抗锯齿排除。完整属性/参考线卡片、选框、其余状态及性能继续未取得资格。初始表新增D24–D27细分，现159行，均未标完整资格。
+
+
+`658310ea`的[正式CI](https://github.com/LingXi-Org/LingxiLoop/actions/runs/42351895559)通过，独立[冻结审查](reviews/658310ea.json)仍发现三项高度适配P2，未验收。[修复回归](functional/design-artboard-fit-fixes.json)先失败后在140/154确认：重复三次不写历史、隐藏组合后代不撑大画板、普通高板不缩小、流式移除高度入口，并重跑主打印/共享历史及只读。来源四像素增长容差与入口资格进入纯函数对照；未将fill分页的缩小逻辑套到普通画板。完整视觉/全部属性和性能继续不合格。

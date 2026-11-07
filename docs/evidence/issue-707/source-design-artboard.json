@@ -250,7 +250,15 @@
   "observations": [
     "画板1920×240、内容1080高，选择流式和A4后画板/iframe仍保持240高；显式保存后print=flow、paper=a4写入原版画板元数据。",
     "原版纸张语言/尺寸推断及页高10492项断言一致。",
-    "流式PDF实际使用纸张点数，固定模式使用画板CSS像素转点数。"
+    "流式PDF实际使用纸张点数，固定模式使用画板CSS像素转点数。",
+    "原版普通固定画板已适配或大于内容时不写入/不缩小；fill分页另有120px缩小阈值。",
+    "流式打印不显示高度操作按钮；只读覆盖onFitHeight为空，亦不渲染该入口。"
   ],
-  "qualified": false
+  "qualified": false,
+  "fitPolicyEvidence": "functional/design-artboard-fit-fixes.json",
+  "fitControllerOffsets": {
+    "start": 5753571,
+    "description": "Dv只在resolveMeasuredExportHeight给出数值时写入；Da仅用于fill分页；hc以needsPagedExport控制入口。"
+  },
+  "readOnlyFitSourceOffset": 4579499
 }

@@ -1,0 +1,124 @@
+{
+  "commit": "658310eafee5c0a1cef4852d28e5d28650a6d8ef",
+  "baseCommit": "fadc73d5070fc93ddcaa60528218af1242207f24",
+  "reviewer": "independent_review_ab",
+  "readOnly": true,
+  "reviewPassed": false,
+  "scope": "精确冻结detached checkout；可选print/旧sizing兼容、画板表单和草稿抽取、PDF物理纸张/链接缩放、手动适配的普通/已适配/隐藏/画布对象状态。未混入根WIP；未修改产品文件、提交、合并或部署。",
+  "findings": [
+    {
+      "id": "P2-1",
+      "severity": "P2",
+      "title": "手动适配无条件写入高度，污染历史且缩短原版应保持的高画板",
+      "file": "src/features/artifacts/native/NativeEditor.tsx",
+      "line": 787,
+      "scenario": "已适配1080px画板连续点3次适应内容高度，高度保持1080但每次产生批次，seq/history/receipts均0→1→2→3。另将普通固定画板设1100/1200/1400，正文根1080，原生全部缩成1080；原版同状态均保持原高。",
+      "sourceEvidence": "真实原版手动Fit的Dv调用经单点内存插桩记录：普通非fill画板第三参空，Ga=fits；expand:fill下第三参1080，1100仍fits，1200/1400才缩至1080。固定源函数有4px增长容差和仅fill第三参触发的120px缩小阈值，不可无上下文套给普通frame。",
+      "minimalFix": "按本次实际来源上下文决定适配资格与变更；普通非fill不无条件缩小，无变化/容差内不派发操作。保留旧native sizing增长语义，未支持fill模型时不擅自套缩小逻辑。补重复Fit历史不增长及1100/1400不缩回归。",
+      "evidence": [
+        "/tmp/lingxi-review-658-fit-repeat154/design.json",
+        "/tmp/lingxi-review-658-fit-tall-154/design.json",
+        "/tmp/lingxi-review-658-source-fit-policy.json"
+      ]
+    },
+    {
+      "id": "P2-2",
+      "severity": "P2",
+      "title": "隐藏组合的后代仍被高度测量计入",
+      "file": "src/features/artifacts/native/NativeEditor.tsx",
+      "line": 783,
+      "scenario": "真实点击图层眼睛隐藏根组合，再将画板高度设240后Fit。原生已无渲染子元素且rootHidden=true，却从240增至560，因为elementBounds只排节点自身hidden，仍返回隐藏祖先下的子节点。",
+      "referenceComparison": "原版实际点击Hide group “LingxiLoop 1”，根HTML为display:none；同h240手动Fit测得ha240、Da空、Ga fits，高度保持240。",
+      "minimalFix": "在该适配动作中排除实际隐藏祖先链下的节点，复用现有可见性语义；增加真实图层隐藏组合→h240→Fit回归。该隐藏状态已实测，不是理论防护。",
+      "evidence": [
+        "/tmp/lingxi-review-658-fit-hidden154-real/design.json",
+        "/tmp/lingxi-review-658-source-fit-hidden.json"
+      ]
+    },
+    {
+      "id": "P2-3",
+      "severity": "P2",
+      "title": "流式打印下仍提供原版不存在的高度适配入口",
+      "file": "src/features/artifacts/native/DesignArtboardProperties.tsx",
+      "line": 30,
+      "scenario": "将打印模式切到流式，原生高度操作仍存在且aria-disabled=false，菜单仍有可用适应内容高度。原版同状态Height actions按钮count=0；其needsPagedExport资格排除print=flow。",
+      "minimalFix": "按实际来源资格显示高度操作，流式打印不显示该入口；补切换模式后入口消失/恢复且不额外改几何的回归。",
+      "evidence": [
+        "/tmp/lingxi-review-658-fit-flow-154-final/design.json",
+        "/tmp/lingxi-review-658-source-fit-policy.json"
+      ]
+    }
+  ],
+  "independentChecks": [
+    {
+      "check": "154正式design-artboard default/exports/readonly",
+      "result": "均通过；打印/纸张不改几何、纸张共享undo/redo、宽度边界、固定与流式PDF一/两页、pdfinfo真实A4点数、pdftoppm第二页内容及只读禁用。默认已含源有缺口的Fit场景，不能代替本次新增状态。",
+      "evidence": [
+        "/tmp/lingxi-review-658-default-154/design.json",
+        "/tmp/lingxi-review-658-exports-154/design.json",
+        "/tmp/lingxi-review-658-readonly-154/design.json"
+      ]
+    },
+    {
+      "check": "140正式design-artboard default",
+      "result": "通过，无页面错误。",
+      "evidence": "/tmp/lingxi-review-658-default140/design.json"
+    },
+    {
+      "check": "共享模型/操作/旧转换/PDF/投影和CI合同",
+      "result": "首组82项（包含15CI）全部通过；补充存储/错误投影8项通过，共90项、0失败。",
+      "evidence": [
+        "/tmp/lingxi-review-658-unit.log",
+        "/tmp/lingxi-review-658-more-contract.log"
+      ]
+    },
+    {
+      "check": "固定Source纸张纯函数oracle",
+      "result": "10492断言全部一致，原固定JS SHA256核验通过；不包含Fit策略的完整上下文资格。",
+      "evidence": "/tmp/lingxi-review-658-oracle.json"
+    },
+    {
+      "check": "真实临时PostgreSQL文档服务",
+      "result": "18项通过；新print历史、快照/副本及旧sizing保持。PG容器network none，Node22容器共享其隔离回环，源/依赖RO，无veth或host端口发布；均已清理，无本次label容器残留。",
+      "evidence": [
+        "/tmp/lingxi-review-658-db.json",
+        "/tmp/lingxi-review-658-db.log"
+      ],
+      "script": "/tmp/lingxi-review-658-db.mjs"
+    },
+    {
+      "check": "154直属画布对象测量",
+      "result": "同页scope:canvas便签y5000未拉高正文画板，height仍1080；重复写入仍属P2-1。",
+      "evidence": "/tmp/lingxi-review-658-fit-canvas-154/design.json"
+    },
+    {
+      "check": "154未加载页现有保护",
+      "result": "页体挂起时高度入口正确禁用，强制点击无菜单/写入，高度1080未变；释放页体后入口恢复。无需为此新增guard。",
+      "evidence": "/tmp/lingxi-review-658-fit-loading154-confirm/design.json"
+    },
+    {
+      "check": "原版实际手动Fit上下文",
+      "result": "独立临时项目与服务；原JS原268077...哈希验证后，仅通过本浏览器route对Dv返回表达式增加记录，未修改参考磁盘文件或产品。采集普通/fill各1080/1100/1200/1400和Flow入口、真实隐藏组合；服务与项目均已清理。",
+      "evidence": [
+        "/tmp/lingxi-review-658-source-fit-policy.json",
+        "/tmp/lingxi-review-658-source-fit-hidden.json"
+      ],
+      "scripts": [
+        "/tmp/lingxi-review-658-source-fit-policy.mjs",
+        "/tmp/lingxi-review-658-source-fit-hidden.mjs"
+      ]
+    }
+  ],
+  "analysis": [
+    "print独立可选枚举，旧sizing与原数据缺省不补写；新转换将源print写入print，既有native sizing不迁移。共享版本键、逆操作和复制使用通用字段路径，单位与真实PG验证通过。",
+    "显式flow使用来源纸张推断与整数像素页高，PDF writer输出物理A4/Letter点数并按scaleX/scaleY缩放链接。旧未设print的PDF页高仍按旧sizing公式，未见本局部兼容回归。",
+    "InspectorField抽取保持原草稿、组合输入与保存处理，新增单位和输入标签；只读和加载禁用实测正常。未新增服务、表、迁移或授权边界。",
+    "Source插桩收据中的UI高度和Dv参数为本结论依据；其canvas文件metadata有源保存延迟，未将滞后文件值或普通POST计数当作无写入证据。"
+  ],
+  "unverified": [
+    "自建探针曾错误预期未加载页仍可打开菜单而超时；实际是既有writable保护正确禁用，已按正确断言重跑通过。未将该超时当作产品问题。",
+    "未独立运行新SDK tool.print正式合同、完整类型/构建/lint、两个编辑器50页47哈希、原生产五格式和圆角五格式；根线程结果不记作本审查重跑。",
+    "未补全所有Source纸张/frameless/fill UI资格、多选和全部参考线卡片/弹窗状态；本次明确记录的普通/fill/Flow/隐藏状态才有实际证据。",
+    "整体默认像素8对仍未达标，完整功能/视觉/服务与正式10组AB/BA性能资格仍false，本审查不认定整体交付完成。"
+  ]
+}

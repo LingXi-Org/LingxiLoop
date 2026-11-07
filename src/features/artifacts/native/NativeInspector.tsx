@@ -14,7 +14,7 @@ import InspectorWidthGrip,{useDesignInspectorWidth} from './InspectorWidthGrip'
 import type {NativeCodeDraftAccess} from './session'
 
 interface Props {
-  fitArtboardHeight():void
+  measureArtboardHeight():number|undefined
   panelWidth:number;setPanelWidth(value:number):void
   outline:Omit<ComponentProps<typeof DesignOutline>,'document'|'selected'|'sheet'|'writable'|'dispatch'>
   inspectorTab: 'properties' | 'outline' | 'code' | 'theme'
@@ -51,7 +51,7 @@ interface Props {
   selectedWithChildren(): ArtifactNode[]
 }
 
-export default function NativeInspector({fitArtboardHeight,panelWidth,setPanelWidth,outline,inspectorTab, setInspectorTab, setInspectorOpen, doc, primary, current, primaryPadding, kind, canvasContentId, writable, selected, setSelected, inspectorBase, fileInput, replaceImage, getBase, beginInspector, dispatch, inspectDispatch, patchNode, beginCrop, reorderLayer, ungroup, groupSelection, align, distribute, deleteSelection, pasteNodes, selectedWithChildren,onNotice,commitCode,codeDrafts}: Props) {
+export default function NativeInspector({measureArtboardHeight,panelWidth,setPanelWidth,outline,inspectorTab, setInspectorTab, setInspectorOpen, doc, primary, current, primaryPadding, kind, canvasContentId, writable, selected, setSelected, inspectorBase, fileInput, replaceImage, getBase, beginInspector, dispatch, inspectDispatch, patchNode, beginCrop, reorderLayer, ungroup, groupSelection, align, distribute, deleteSelection, pasteNodes, selectedWithChildren,onNotice,commitCode,codeDrafts}: Props) {
   const aside=useRef<HTMLElement|null>(null),[sheet,setSheet]=useState(false)
   useLayoutEffect(()=>{const root=aside.current?.closest<HTMLElement>('[data-native-artifact-editor]');if(!root)return;const update=()=>{setSheet(root.clientWidth<(kind==='design'?600:768));aside.current?.style.setProperty('--native-inspector-root-height',`${root.clientHeight}px`)},observer=new ResizeObserver(update);observer.observe(root);update();return()=>observer.disconnect()},[kind])
   useEffect(()=>{const root=aside.current?.closest<HTMLElement>('[data-native-artifact-editor]');if(root&&root.clientWidth>=600&&inspectorTab==='outline')setInspectorTab('properties')},[sheet,inspectorTab,setInspectorTab])
@@ -111,7 +111,7 @@ export default function NativeInspector({fitArtboardHeight,panelWidth,setPanelWi
             {primary.type==='group'&&<button type="button" onClick={ungroup}>取消组合</button>}
             <label className="native-check"><input type="checkbox" checked={primary.locked??false} onChange={e=>patchNode({locked:e.target.checked})} />锁定</label>
           </details>
-        </> : selected.length>1 ? <section className="native-property-section"><h3>已选 {selected.length} 个元素</h3><button type="button" onClick={groupSelection}>组合</button></section> : current && current.id!==canvasContentId&&(kind==='slides'||outline.selectedPages.includes(current.id)) ? kind==='design'?<DesignArtboardProperties key={current.id} document={doc} page={current} dispatch={inspectDispatch} fitHeight={fitArtboardHeight} writable={writable}/>:<>
+        </> : selected.length>1 ? <section className="native-property-section"><h3>已选 {selected.length} 个元素</h3><button type="button" onClick={groupSelection}>组合</button></section> : current && current.id!==canvasContentId&&(kind==='slides'||outline.selectedPages.includes(current.id)) ? kind==='design'?<DesignArtboardProperties key={current.id} document={doc} page={current} dispatch={inspectDispatch} measureHeight={measureArtboardHeight} writable={writable}/>:<>
           <section className="native-property-section"><h3>幻灯片</h3><div className="native-field"><span>转场</span><Menu className="native-transition-menu" label={`转场：${({none:'无',fade:'淡入淡出',push:'推移',magic:'神奇移动',slide:'推移'})[current.transition]}`} text={({none:'无',fade:'淡入淡出',push:'推移',magic:'神奇移动',slide:'推移'})[current.transition]} minimumWidth={219} offset={6} popupRole="menu" disabled={!writable}>{(['none','fade','push','magic'] as const).map(value=><MenuItem key={value} role="menuitemradio" aria-checked={current.transition===value||value==='push'&&current.transition==='slide'} selected={current.transition===value||value==='push'&&current.transition==='slide'} onClick={()=>inspectDispatch([{type:'page.patch',pageId:current.id,patch:{transition:value}}])}>{({none:'无',fade:'淡入淡出',push:'推移',magic:'神奇移动'})[value]}</MenuItem>)}</Menu></div>{current.transition==='magic'&&<p className="native-transition-help">神奇移动会将本页与下一页共有的元素移动到新位置。复制本页后，再移动或调整元素大小，即可保留它们的配对关系。</p>}</section>
           <section className="native-property-section"><h3>外观</h3><Field label="背景" type="color" value={artifactPageBackground(current,doc)} onChange={v=>inspectDispatch([{type:'page.patch',pageId:current.id,patch:{background:v==='none'?'transparent':v},unset:['themeBackground']}])} /></section>
           <details className="native-property-disclosure"><summary>高级</summary>

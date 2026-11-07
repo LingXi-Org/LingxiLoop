@@ -33,3 +33,15 @@ export function artifactPrintSheetHeight(page:Pick<ArtifactPage,'width'|'height'
 }
 
 export function artifactPrintMode(page:Pick<ArtifactPage,'print'|'sizing'>):'fixed'|'flow' {return page.print??page.sizing??'fixed'}
+
+/** 普通画板的来源入口：流式、无框及已匹配纸张的画板不提供此动作。 */
+export function canFitArtifactPageHeight(page:Pick<ArtifactPage,'width'|'height'|'print'|'sizing'|'frameless'>):boolean {
+  return artifactPrintMode(page)!=='flow'&&!page.frameless&&inferArtifactPaper(page)===undefined
+}
+
+/** 普通固定画板只在内容超出四像素容差时增高；不产生空历史。 */
+export function nextArtifactFitHeight(page:Pick<ArtifactPage,'width'|'height'|'print'|'sizing'|'frameless'>,measured:number|undefined):number|undefined {
+  if(measured===undefined||!canFitArtifactPageHeight(page))return undefined
+  const height=Math.min(8000,Math.ceil(Math.max(0,measured)))
+  return height>Math.round(page.height)+4?height:undefined
+}
