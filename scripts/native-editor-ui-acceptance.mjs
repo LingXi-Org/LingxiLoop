@@ -27,7 +27,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -82,7 +82,7 @@ try {
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
@@ -210,6 +210,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='slides-skipped-export')page.on('framenavigated',frame=>{if(frame===page.mainFrame())exportNavigations.push(new URL(frame.url()).pathname)})
   if(options.checks==='slides-present-controls'&&options['presentation-case']==='denied')await page.addInitScript(()=>{Element.prototype.requestFullscreen=()=>Promise.reject(new DOMException('拒绝全屏','NotAllowedError'))})
   if(options.checks==='slides-present-controls'&&options['presentation-case']==='module-error')await page.route('**/SlidesPresentation.tsx*',route=>route.abort('failed'))
+  let inspectorModuleRequests=0,blockInspector=options['inspector-case']==='failed',releaseInspector
+  if(options.checks==='inspector-load'){
+    const held=options['inspector-case']==='cancel'?new Promise(resolve=>{releaseInspector=resolve}):Promise.resolve()
+    await page.route('**/NativeInspector.tsx*',async route=>{inspectorModuleRequests++;await held;if(blockInspector)await route.abort('failed');else await route.continue()})
+  }
   page.setDefaultTimeout(30_000)
   if(options['presentation-portrait']==='true')await page.addInitScript(()=>{const original=window.setTimeout;window.setTimeout=(fn,delay,...args)=>original(fn,[570,670,730].includes(delay)?delay*10:delay,...args)})
   await page.addInitScript(()=>{window.__geometryLog=[];window.__geometryMessages=0;window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
@@ -337,6 +342,50 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     await page.goto(`${baseUrl}/?kind=${kind}${options.checks==='canvas-links'?'&project=fixture-project&view=conversations&conversation=fixture-room':''}`, { waitUntil: 'domcontentloaded', timeout: 120_000 })
     if(options.checks==='canvas-empty')await page.locator('[data-native-artifact-editor]').waitFor();else await ready(1)
     if(options['canvas-theme']==='dark')await page.evaluate(()=>document.documentElement.classList.add('dark'))
+    if(options.checks==='inspector-load'){
+      assert.equal(inspectorModuleRequests,0)
+      const toggle=page.getByRole('button',{name:'显示属性',exact:true})
+      if(!['failed','cancel'].includes(options['inspector-case']))await page.locator('.native-stage [data-node-id="page-1-shape"]').click()
+      await toggle.click()
+      if(options['inspector-case']==='failed'){
+        await page.getByRole('status').filter({hasText:'属性面板未能加载，请刷新页面后重试。'}).waitFor()
+        assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-inspector-open'),'false')
+        assert.equal(await toggle.evaluate(element=>element===element.ownerDocument.activeElement),true)
+        assert.equal(receipts.length,0)
+        blockInspector=false;await page.reload();await ready(1);await toggle.click()
+        await page.getByRole('complementary',{name:'属性面板',exact:true}).getByRole('button',{name:'属性',exact:true}).waitFor()
+        assert.ok(inspectorModuleRequests>=2)
+        const expected=errors.filter(value=>value==='Failed to load resource: net::ERR_FAILED'),unexpected=errors.filter(value=>value!=='Failed to load resource: net::ERR_FAILED');assert.deepEqual(unexpected,[])
+        return{kind:'isolated-inspector-module-error',lazyUntilOpened:true,chineseFailure:true,editorRetained:true,focusRestored:true,refreshRecovered:true,noWrites:true,expectedNetworkErrors:expected,consoleOrPageErrors:unexpected}
+      }
+      if(options['inspector-case']==='cancel'){
+        await page.getByRole('status').filter({hasText:'正在加载属性…'}).waitFor()
+        await page.getByRole('button',{name:'关闭属性',exact:true}).click()
+        assert.equal(await toggle.evaluate(element=>element===element.ownerDocument.activeElement),true)
+        const loaded=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/NativeInspector.tsx'))
+        releaseInspector();await loaded
+        await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))))
+        assert.equal(await page.locator('[data-native-artifact-editor]').getAttribute('data-inspector-open'),'false')
+        assert.equal(await page.getByRole('complementary',{name:'属性面板',exact:true}).count(),0)
+        await toggle.click();await page.getByRole('button',{name:'属性',exact:true}).waitFor()
+        assert.equal(inspectorModuleRequests,1);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+        return{kind:'isolated-inspector-load-cancellation',lazyUntilOpened:true,closeWhileLoading:true,lateModuleDoesNotReopen:true,cachedReentry:true,focusRestored:true,noWrites:true,consoleOrPageErrors:errors}
+      }
+      const radius=page.getByRole('spinbutton',{name:'圆角',exact:true})
+      await radius.waitFor();assert.equal(await radius.inputValue(),'12')
+      await radius.fill('20');await radius.press('Control+s')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      assert.equal(document.pages['page-1'].nodes['page-1-shape'].style.borderRadius,20)
+      await page.getByRole('button',{name:'关闭属性',exact:true}).click()
+      assert.equal(await toggle.evaluate(element=>element===element.ownerDocument.activeElement),true)
+      await page.keyboard.press('Control+z')
+      await page.waitForFunction(()=>getComputedStyle(document.querySelector('.native-stage [data-node-id="page-1-shape"]')).borderRadius==='12px')
+      await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
+      assert.equal(document.pages['page-1'].nodes['page-1-shape'].style.borderRadius,12)
+      await toggle.click();await radius.waitFor();assert.equal(await radius.inputValue(),'12')
+      assert.equal(inspectorModuleRequests,1);assert.equal(receipts.length,1);assert.deepEqual(errors,[])
+      return{kind:'isolated-lazy-inspector-field',lazyUntilOpened:true,fieldDraftSaved:true,sharedUndo:true,reopenedValue:true,cachedReentry:true,focusRestored:true,consoleOrPageErrors:errors}
+    }
     if (options.checks === 'slides-present-controls') {
       const width=Number(options.width??1440),height=Number(options.height??1000)
       if(['touch','pen'].includes(options['presentation-case'])){
