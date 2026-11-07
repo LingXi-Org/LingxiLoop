@@ -1,0 +1,59 @@
+{
+  "text": "\n\n\n\n\n\n\n\n5%\nPage 1\n\nTap to open\nPage 2\n\nTap to open\nPage 3\n\nTap to open",
+  "boards": 3,
+  "frames": 0,
+  "buttons": [
+    {
+      "label": "Page 1, pages",
+      "text": ""
+    },
+    {
+      "label": "Select",
+      "text": ""
+    },
+    {
+      "label": "Tools",
+      "text": ""
+    },
+    {
+      "label": "Scroll toolbar right",
+      "text": ""
+    },
+    {
+      "label": "Export",
+      "text": ""
+    },
+    {
+      "label": "Scroll toolbar right",
+      "text": ""
+    },
+    {
+      "label": "Play",
+      "text": ""
+    },
+    {
+      "label": "Properties",
+      "text": ""
+    },
+    {
+      "label": "5%, Zoom",
+      "text": "5%"
+    },
+    {
+      "label": "All changes synced",
+      "text": ""
+    },
+    {
+      "label": "Open artboard Page 1 full window",
+      "text": ""
+    },
+    {
+      "label": "Open artboard Page 2 full window",
+      "text": ""
+    },
+    {
+      "label": "Open artboard Page 3 full window",
+      "text": ""
+    }
+  ]
+}

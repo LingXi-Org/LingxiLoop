@@ -1,0 +1,127 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "qualified": false,
+  "scope": "8容器/主题，链接分组局部几何；绝对上下游偏差另记，不是整体界面通过。",
+  "results": [
+    {
+      "container": "1440x1000-light",
+      "localDeltas": {
+        "inputLocalX": 0,
+        "inputLocalY": 0,
+        "inputWidth": 0,
+        "inputHeight": 0,
+        "sectionHeight": 0
+      },
+      "absoluteInputOffsetY": 0,
+      "fontSizeEqual": true,
+      "lineHeightEqual": true,
+      "localGeometryPass": true,
+      "fullVisualQualified": false
+    },
+    {
+      "container": "1440x1000-dark",
+      "localDeltas": {
+        "inputLocalX": 0,
+        "inputLocalY": 0,
+        "inputWidth": 0,
+        "inputHeight": 0,
+        "sectionHeight": 0
+      },
+      "absoluteInputOffsetY": 0,
+      "fontSizeEqual": true,
+      "lineHeightEqual": true,
+      "localGeometryPass": true,
+      "fullVisualQualified": false
+    },
+    {
+      "container": "390x844-light",
+      "localDeltas": {
+        "inputLocalX": 0,
+        "inputLocalY": 0.0,
+        "inputWidth": 0,
+        "inputHeight": 0,
+        "sectionHeight": 0
+      },
+      "absoluteInputOffsetY": -1.0,
+      "fontSizeEqual": true,
+      "lineHeightEqual": true,
+      "localGeometryPass": true,
+      "fullVisualQualified": false
+    },
+    {
+      "container": "1920x1200-light",
+      "localDeltas": {
+        "inputLocalX": 0,
+        "inputLocalY": 0,
+        "inputWidth": 0,
+        "inputHeight": 0,
+        "sectionHeight": 0
+      },
+      "absoluteInputOffsetY": 0,
+      "fontSizeEqual": true,
+      "lineHeightEqual": true,
+      "localGeometryPass": true,
+      "fullVisualQualified": false
+    },
+    {
+      "container": "1920x1200-dark",
+      "localDeltas": {
+        "inputLocalX": 0,
+        "inputLocalY": 0,
+        "inputWidth": 0,
+        "inputHeight": 0,
+        "sectionHeight": 0
+      },
+      "absoluteInputOffsetY": 0,
+      "fontSizeEqual": true,
+      "lineHeightEqual": true,
+      "localGeometryPass": true,
+      "fullVisualQualified": false
+    },
+    {
+      "container": "768x1024-light",
+      "localDeltas": {
+        "inputLocalX": 0,
+        "inputLocalY": 0,
+        "inputWidth": 0,
+        "inputHeight": 0,
+        "sectionHeight": 0
+      },
+      "absoluteInputOffsetY": 0,
+      "fontSizeEqual": true,
+      "lineHeightEqual": true,
+      "localGeometryPass": true,
+      "fullVisualQualified": false
+    },
+    {
+      "container": "768x1024-dark",
+      "localDeltas": {
+        "inputLocalX": 0,
+        "inputLocalY": 0,
+        "inputWidth": 0,
+        "inputHeight": 0,
+        "sectionHeight": 0
+      },
+      "absoluteInputOffsetY": 0,
+      "fontSizeEqual": true,
+      "lineHeightEqual": true,
+      "localGeometryPass": true,
+      "fullVisualQualified": false
+    },
+    {
+      "container": "390x844-dark",
+      "localDeltas": {
+        "inputLocalX": 0,
+        "inputLocalY": 0.0,
+        "inputWidth": 0,
+        "inputHeight": 0,
+        "sectionHeight": 0
+      },
+      "absoluteInputOffsetY": -1.0,
+      "fontSizeEqual": true,
+      "lineHeightEqual": true,
+      "localGeometryPass": true,
+      "fullVisualQualified": false
+    }
+  ]
+}

@@ -507,3 +507,10 @@ ed7a984c普通CI42420619003和生产静态图42420615258通过，[实图](perfor
 
 
 40a172e8普通CI42422640880及[真实静态图](performance/static-profile-40a172e8.json)42422636443成功，联合849507；[独立审查](reviews/40a172e8.json)仍发现两项P2：对端锁定后旧颜色弹窗可写入，透明选项仍残留英文。现提交前读取最新节点能力、原草稿基线继续用于CAS，阻止时用现有retainDraft保存；颜色触发器按锁定/只读禁用，混合状态单独控制提示。字段及弹窗共用中文语义标签。140/154各7项通过，包括零正式写入、真实下载JSON中保留白色草稿、透明可见文案/a11y；两模式共享颜色回归通过，18单元/15契约、lint43/4。原失败、等待探针修正及实际恢复JSON见[锁定/中文修复证据](functional/element-text-color-lock.json)。新候选CI与冻结复审待执行，完整资格仍false。
+
+
+新增D40链接分组，清单172项。按实际Source DOM还原1px上边框、40px标题、32px正文行/8px底部间距；触摸输入40px、正文42px及总分组91px，窄容器标签列92px。先红的2px局部偏差已修复，154八容器主题局部输入/分组尺寸≤1px；140/154各6链接保存/历史/只读/冲突/权限/非法地址回归通过。见[来源](source-element-link-layout.json)、[功能范围](functional/element-link-layout.json)、[局部矩阵](functional/element-link-layout/matrix.json)。两主题hover/focus四个输入框，按实际字体测宽仅排除已登记占位翻译联合行框后差异0；整图与其他控件未通过。初次外扩hover包含来源独立滚动条的240差异及窄容器变量优先级失败都保留；滚动条和上游触摸50px偏差尚待还原。390触摸来源初始进入画板预览，原等待编辑按钮失败是真实视图差别，不改短等待为通过。
+
+22cc5ac7的普通CI42423533500、真实静态图42423529344、[功能只读复审](reviews/22cc5ac7.json)及[实图后验](reviews/22cc-actual-graph.json)通过限定范围。静态联合849527，仍+9.64%；唯一React、六leaf和隔离未变，不是实际性能通过。
+
+[六图标56d93aa1真实诊断](performance/diagnostic-56d93aa1.json)42412830772已完成，[独立复算](reviews/56-actual-diagnostic.json)一致。8样本6成功，基线两模式full各3导出browser_timeout保留。Design脚本+5.44%/+26.30%、PSS+2.06%/+1.45%；Slides启动+16.67%/+25.26%、脚本+5.33%/+10.08%、PSS+33.54%/+42.18%。输入p95为34.6—41.6ms。诊断流程通过，预算仍失败，qualified=false；不是新最终候选或10组p75资格。继续定位实际脚本/Slides内存成本，不调整门槛或隐去失败。

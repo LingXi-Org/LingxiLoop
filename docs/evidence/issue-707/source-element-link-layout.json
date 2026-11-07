@@ -1,0 +1,17 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "runtimeHashesVerified": 12,
+  "runtime": "functional/element-link-layout/reference/",
+  "selector": "[data-testid=\"dc-prop-@href\"]",
+  "actualStyleFacts": [
+    "分组上边框1、标题40、正文行32、底部8，总高度81；宽屏标签列76，窄容器92。",
+    "触摸：左16右12、间隔12、标签列乘13/12；输入40、圆角8、字体16/20，正文实际42，总分组91。",
+    "标题字重580；标签12/15、浅色alpha .467深色 .4。",
+    "hover内环alpha .2；focus原有蓝环与辉光保持。"
+  ],
+  "sourceMobileDiscovery": "390触摸来源初始为画板预览，旧就绪条件等待全窗口按钮失败，已保留实际界面，不能当文档加载失败或编辑器状态通过。",
+  "implementation": "src/features/artifacts/native/ElementLinkField.tsx",
+  "license": "THIRD_PARTY_NOTICES.md；参考发布资源不进入产品包。"
+}

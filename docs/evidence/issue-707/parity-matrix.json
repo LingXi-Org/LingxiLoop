@@ -10011,6 +10011,43 @@
         "receipt": "functional/element-text-color.json",
         "scope": "Design画板颜色操作及共享色值中文；不代表完整原版颜色弹窗、多选、服务或性能。"
       }
+    },
+    {
+      "id": "D40-design",
+      "editor": "design",
+      "control": "链接分组标题、正文和输入状态布局",
+      "trigger": "选择画板文字打开属性，检查窄容器/触摸及hover、focus；保存/历史/冲突",
+      "states": [
+        "8容器主题",
+        "触摸",
+        "hover",
+        "focus",
+        "保存",
+        "历史",
+        "只读",
+        "冲突",
+        "权限",
+        "非法地址"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "runtime": "source-element-link-layout.json"
+      },
+      "implementation": "src/features/artifacts/native/ElementLinkField.tsx",
+      "screenshots": {
+        "reference": "visual/element-link-layout/reference/",
+        "native": "visual/element-link-layout/implementation/",
+        "manifest": "visual/element-link-layout/whole-differences/results.json",
+        "matchedStateVerified": true
+      },
+      "result": "154八容器主题局部尺寸≤1px、输入字体匹配；140/154各6链接流程通过。四局部输入状态翻译行框排除后差异0，但整图、上游触摸布局和滚动条仍未通过。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-link-layout.json",
+        "scope": "链接局部分组/输入，不代表完整属性面板、默认触摸状态、视觉或性能。"
+      }
     }
   ],
   "registeredReplacements": [

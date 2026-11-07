@@ -266,7 +266,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const delayedPageId=speakerPreviewFailure?'page-3':options.checks==='canvas-fit-body'?'positioned-body':options['preview-body-delay']==='true'?'page-2':null
   const snapshot = () => ({ document:delayedPageId&&!canvasBodyLoaded?{...document,pages:{...document.pages,[delayedPageId]:{...document.pages[delayedPageId],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:delayedPageId&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!==delayedPageId):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
-  const page = await browser.newPage({ hasTouch:options['speaker-case']==='coarse'||options['presentation-case']==='touch', viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:options.checks==='slide-transitions'?'no-preference':'reduce' })
+  const page = await browser.newPage({ hasTouch:options.touch==='true'||options['speaker-case']==='coarse'||options['presentation-case']==='touch', viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:options.checks==='slide-transitions'?'no-preference':'reduce' })
   if (options.checks === 'slides-skipped-export') await page.addInitScript(() => {
     window.__exportDownloadAttempts = []
     const click = HTMLAnchorElement.prototype.click
@@ -600,8 +600,21 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         }else{assert.equal(receipts.length,0);assert.deepEqual(document,original)}
         assert.deepEqual(errors,[])
         const chrome=hidden?null:await badge.evaluate(element=>({rect:element.getBoundingClientRect().toJSON(),row:element.parentElement.getBoundingClientRect().toJSON(),title:element.title,verdict:element.dataset.verdict,color:getComputedStyle(element).color,typography:[...element.closest('.native-property-section').children].map(child=>({tag:child.tagName,class:child.className,text:child.textContent.slice(0,80),rect:child.getBoundingClientRect().toJSON(),margin:getComputedStyle(child).margin,padding:getComputedStyle(child).padding})),swatch:{color:getComputedStyle(element.firstElementChild).color,background:getComputedStyle(element.firstElementChild).backgroundColor}}))
+        if(options['link-state']){const destination=page.getByRole('textbox',{name:'链接目标',exact:true});if(options['link-state']==='hover')await destination.hover();else if(options['link-state']==='focus')await destination.focus();await page.waitForTimeout(250)}
+        const linkChrome=options['capture-link-structure']==='true'?await page.getByRole('textbox',{name:'链接目标',exact:true}).evaluate(input=>{
+          const result=[];let element=input
+          for(let depth=0;depth<4&&element;depth++,element=element.parentElement){const css=getComputedStyle(element);result.push({tag:element.tagName,class:element.className,html:element.outerHTML,rect:element.getBoundingClientRect().toJSON(),padding:css.padding,margin:css.margin,fontFamily:css.fontFamily,fontSize:css.fontSize,lineHeight:css.lineHeight,fontWeight:css.fontWeight,color:css.color,background:css.backgroundColor,boxShadow:css.boxShadow,borderTop:css.borderTop,borderBottom:css.borderBottom})}
+          return result
+        }):null
+        if(options['verify-link-layout']==='true'){
+          assert.ok(linkChrome&&options['link-reference'],'链接尺寸比较需要来源和实际DOM数据')
+          const reference=JSON.parse(await readFile(resolve(options['link-reference']),'utf8'));assert.equal(reference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(reference.referenceResourceHashesVerified,12)
+          const source=reference.cases[0].linkChrome,owner=linkChrome.find(element=>element.tag==='SECTION'&&element.class.includes('native-element-link')),target=linkChrome[0]
+          for(const [name,actual,expected]of [['输入横坐标',target.rect.x-owner.rect.x,source[0].rect.x-source[4].rect.x],['输入纵坐标',target.rect.y-owner.rect.y,source[0].rect.y-source[4].rect.y],['输入宽度',target.rect.width,source[0].rect.width],['输入高度',target.rect.height,source[0].rect.height],['分组高度',owner.rect.height,source[4].rect.height]])assert.ok(Math.abs(actual-expected)<=1,`${name}：实际${actual}，来源${expected}`)
+          assert.equal(target.fontSize,source[0].fontSize);assert.equal(target.lineHeight,source[0].lineHeight)
+        }
         await page.screenshot({path:join(output,`${kind}-${editorCase}.png`)})
-        return{kind:'文字颜色对比度',case:editorCase,hidden,chrome,historyChecked,writes:receipts.length,documentUnchanged:!historyChecked,consoleOrPageErrors:errors}
+        return{kind:'文字颜色对比度',case:editorCase,hidden,chrome,linkChrome,historyChecked,writes:receipts.length,documentUnchanged:!historyChecked,consoleOrPageErrors:errors}
       }
       if(editorCase.startsWith('text-align-')){
         const group=page.getByRole('radiogroup',{name:'文本对齐',exact:true}),node=page.locator(`[data-node-id="${nodeId}"]`),before=structuredClone(document.pages['page-1'].nodes[nodeId]),labels={left:'文本左对齐',center:'文本居中',right:'文本右对齐',justify:'文本两端对齐'}

@@ -4,6 +4,7 @@ import {artifactVersionKey,type ArtifactOperation} from '../../../../shared/arti
 import {elementLink,elementLinkPatch} from '../../../../shared/artifact-element-link'
 import {useLocalDraft} from './draft-context'
 import type {DraftFlushReason} from './drafts'
+import './element-link-field.css'
 
 interface Props {
   node:ArtifactNode
@@ -47,5 +48,5 @@ export default function ElementLinkField({node,pageId,writable,getBase,commit,re
     const base=draft.current?.base??getBase();if(!base)return
     draft.current={text:next,base};setText(next);setError('');markDirty(true)
   }
-  return <section className="native-property-section native-element-link"><h3>链接</h3><label className="native-field"><span>目标</span><input aria-label="链接目标" placeholder={value===null?'混合':'输入网址…'} maxLength={['text','note'].includes(node.type)&&!node.attributes?.href?2048:10000} readOnly={!writable} value={text} onChange={event=>change(event.target.value)} onCompositionStart={()=>{composing.current=true;change(text)}} onCompositionEnd={event=>{composing.current=false;change(event.currentTarget.value);if(afterComposition.current){afterComposition.current=false;save()}}} onBlur={()=>save()} onKeyDown={event=>{event.stopPropagation();if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();return}if(event.key==='Enter'&&!event.nativeEvent.isComposing&&event.keyCode!==229&&!composing.current){event.preventDefault();save()}}}/></label>{error&&<p role="alert">{error}</p>}</section>
+  return <section className="native-property-section native-element-link native-element-link-field"><header><h3>链接</h3></header><div className="native-element-link-body"><label className="native-field"><span>目标</span><input aria-label="链接目标" placeholder={value===null?'混合':'输入网址…'} maxLength={['text','note'].includes(node.type)&&!node.attributes?.href?2048:10000} readOnly={!writable} value={text} onChange={event=>change(event.target.value)} onCompositionStart={()=>{composing.current=true;change(text)}} onCompositionEnd={event=>{composing.current=false;change(event.currentTarget.value);if(afterComposition.current){afterComposition.current=false;save()}}} onBlur={()=>save()} onKeyDown={event=>{event.stopPropagation();if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){event.preventDefault();return}if(event.key==='Enter'&&!event.nativeEvent.isComposing&&event.keyCode!==229&&!composing.current){event.preventDefault();save()}}}/></label>{error&&<p role="alert">{error}</p>}</div></section>
 }

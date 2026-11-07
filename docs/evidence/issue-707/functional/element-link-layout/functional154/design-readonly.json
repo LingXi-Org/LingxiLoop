@@ -1,0 +1,7 @@
+{
+  "kind": "原生元素链接回归",
+  "mode": "design",
+  "case": "readonly",
+  "noWrites": true,
+  "consoleOrPageErrors": []
+}
