@@ -250,3 +250,23 @@
 .native-inspector-width-grip:focus-visible{outline:none}
 .native-inspector-width-grip:focus-visible>span{opacity:1;box-shadow:0 0 0 1px var(--native-panel),0 0 0 2px var(--native-accent)}
 .native-context-menu{max-height:calc(100% - 8px);overflow-y:auto;overscroll-behavior:contain}
+
+/* 来源工具栏先压缩工具滚动区，固定尾部允许跨过侧栏边缘。 */
+.native-toolbar-secondary,.native-toolbar-tail,.native-toolbar-tail-slot,.native-toolbar-fixed{display:contents}
+.native-kind-design .native-toolbar{z-index:49}
+.native-editor.native-kind-design .native-insert-tools{flex:0 1000 auto;min-width:0;overflow:clip}
+.native-kind-design .native-view-tools{flex:0 1 auto;min-width:0;max-width:none;gap:4px}
+.native-kind-design .native-toolbar-secondary{display:flex;align-items:center;flex:0 1000 auto;min-width:0;overflow:clip}
+.native-kind-design .native-toolbar-tail,.native-kind-design .native-toolbar-tail-slot{display:flex;align-items:center;flex:0 1 auto;min-width:0;gap:4px}
+.native-kind-design .native-toolbar-fixed{display:flex;align-items:center;flex:none;gap:4px}
+@container(max-width:639px){.native-kind-design .native-toolbar{inset-inline-start:8px;inset-inline-end:calc(8px + var(--native-sidebar-width,0px));gap:6px}}
+@container(max-width:599px){.native-kind-design .native-toolbar{inset-inline-end:8px}}
+@container(max-width:639px){.native-editor.native-kind-design .native-toolbar{gap:6px}}
+.native-kind-design .native-toolbar-fixed>span:has(>.native-play-menu){display:flex}
+/* 中文标签使用固定来源的英文控件槽宽，保持尾部与标签均可点。 */
+.native-kind-design .native-inspector-tabs{gap:0}
+.native-kind-design .native-inspector-tabs>.native-panel-tab{flex:none;text-align:start}
+.native-kind-design .native-panel-tab[data-inspector-tab=properties]{width:79.15625px}
+.native-kind-design .native-panel-tab[data-inspector-tab=outline]{width:60.96875px}
+.native-kind-design .native-panel-tab[data-inspector-tab=code]{width:47.421875px}
+.native-kind-design .native-panel-tab[data-inspector-tab=theme]{width:58.09375px}

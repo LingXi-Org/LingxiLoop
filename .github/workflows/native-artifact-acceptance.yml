@@ -112,7 +112,7 @@ jobs:
           node scripts/native-reference-paint-check.mjs
           node scripts/native-startup-probe-check.mjs
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-outline --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-design-outline"
-          for task_outline_case in large context space menu width narrow-context; do
+          for task_outline_case in large context space menu width width-tools narrow-context; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-outline --outline-case="$task_outline_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-design-outline-$task_outline_case"
           done
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=inspector-code --code-case=empty --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-code-empty"

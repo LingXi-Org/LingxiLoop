@@ -2608,6 +2608,17 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await tree.getAttribute('aria-multiselectable'),'true')
       const board=tree.getByRole('treeitem',{name:'Page 1',exact:true})
       assert.equal(await board.getAttribute('aria-expanded'),'true')
+      if(options['outline-case']==='width-tools'){
+        await page.setViewportSize({width:600,height:844});const grip=page.getByRole('separator',{name:'调整属性面板宽度',exact:true});await grip.focus();await grip.press('End');await page.waitForFunction(()=>document.querySelector('[aria-label="调整属性面板宽度"]')?.getAttribute('aria-valuenow')==='480')
+        const controls=[]
+        for(const name of ['播放','显示属性','画布缩放']){const control=page.getByLabel(name,{exact:true});controls.push({name,box:await control.boundingBox(),hit:await control.evaluate(element=>{const r=element.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return element===hit||element.contains(hit)})})}
+        await writeFile(join(output,'layout.json'),JSON.stringify(await page.locator('.native-toolbar,.native-insert-tools,.native-view-tools,.native-toolbar-secondary,.native-toolbar-tail,.native-toolbar-tail-slot,.native-toolbar-fixed,.native-toolbar-tail>.native-toolbar-separator').evaluateAll(es=>es.map(e=>({className:e.className,rect:e.getBoundingClientRect().toJSON(),flex:getComputedStyle(e).flex,padding:getComputedStyle(e).padding,gap:getComputedStyle(e).gap,margin:getComputedStyle(e).margin,minWidth:getComputedStyle(e).minWidth}))),null,2));await writeFile(join(output,'hit-test.json'),JSON.stringify(controls,null,2));assert.ok(controls.every(x=>x.hit),'600px最大侧栏不能遮挡播放、属性及缩放')
+        const tabs=[];for(const name of ['属性','代码','主题']){const tab=page.getByRole('tab',{name,exact:true});tabs.push({name,box:await tab.boundingBox(),hit:await tab.evaluate(element=>{const r=element.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return element===hit||element.contains(hit)})})}await writeFile(join(output,'tab-hit-test.json'),JSON.stringify(tabs,null,2));assert.ok(tabs.every(x=>x.hit),'中文属性标签必须保留来源槽宽，不能被固定尾部挡住')
+        for(const [name,x]of [['播放',42],['显示属性',70],['画布缩放',98]])assert.ok(Math.abs(controls.find(c=>c.name===name).box.x-x)<=1,'600/480来源固定尾部坐标应在1px内')
+        await page.screenshot({path:join(output,'width-tools.png')})
+        const box=controls.find(x=>x.name==='显示属性').box;await page.mouse.click(box.x+box.width/2,box.y+box.height/2);await page.getByRole('complementary',{name:'属性面板',exact:true}).waitFor({state:'detached'})
+        assert.equal(receipts.length,0);assert.deepEqual(errors,[]);return{kind:'isolated-design-width-tools',controls,tabs,actualPointerClosesInspector:true,noDocumentWrites:true,consoleOrPageErrors:errors}
+      }
       if(options['outline-case']==='width'){
         const grip=page.getByRole('separator',{name:'调整属性面板宽度',exact:true}),panel=page.getByRole('complementary',{name:'属性面板',exact:true})
         await grip.waitFor();await grip.focus()

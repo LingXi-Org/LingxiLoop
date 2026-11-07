@@ -158,7 +158,7 @@ export function IconButton({
     </button>
   )
 }
-export function ToolbarTools({ children }: { children: ReactNode }) {
+export function ToolbarTools({ children, enabled=true }: { children: ReactNode;enabled?:boolean }) {
   const scroller = useRef<HTMLDivElement>(null),
     content = useRef<HTMLDivElement>(null),
     [forward, setForward] = useState(false)
@@ -172,7 +172,8 @@ export function ToolbarTools({ children }: { children: ReactNode }) {
     if (content.current) observer.observe(content.current)
     measure()
     return () => observer.disconnect()
-  }, [])
+  }, [enabled])
+  if(!enabled)return <>{children}</>
   return (
     <div className="native-tools-overflow">
       <div ref={scroller} className="native-tools-scroll" onScroll={measure}>

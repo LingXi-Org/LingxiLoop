@@ -59,6 +59,10 @@
       "testEvidence": {
         "receipt": null,
         "scope": "待逐项执行并登记"
+      },
+      "toolbarYieldEvidence": {
+        "functional": "functional/design-toolbar-yield.json",
+        "visual": "visual/design-toolbar-yield/manifest.json"
       }
     },
     {
@@ -837,7 +841,8 @@
         "source": "source-design-outline.json",
         "functional": "functional/design-outline.json",
         "visual": "visual/design-outline/manifest.json",
-        "widthAndReviewFixes": "functional/design-inspector-width.json"
+        "widthAndReviewFixes": "functional/design-inspector-width.json",
+        "toolbarYield": "functional/design-toolbar-yield.json"
       }
     },
     {
