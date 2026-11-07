@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {readFileSync} from 'node:fs'
+import {spawnSync} from 'node:child_process'
 import {profileOpeningChunks,openingModuleRoles,assertNativeOpeningIsolation} from './native-artifact-bundle-profile.mjs'
 const chunk=(fileName,imports,modules,code='export const value=1;')=>({type:'chunk',fileName,imports,modules,code})
+test('failed production audit flushes the complete metadata before its fatal error',()=>{
+ const source=readFileSync(new URL('./native-artifact-bundle-audit.mjs',import.meta.url),'utf8'),emit=source.match(/^const emitOpeningProfile=.*$/m)?.[0];assert.ok(emit)
+ const child=spawnSync(process.execPath,['--input-type=module','--eval',`import {writeSync} from 'node:fs';${emit};emitOpeningProfile({commit:'fixture',sourceInputsSha256:'f'.repeat(64),uncommittedInputsPossible:false,openingProfile:{qualified:false,payload:'x'.repeat(300000)}},false,true);throw new Error('expected isolation failure')`],{encoding:'utf8'})
+ assert.equal(child.status,1)
+ const line=child.stdout.trim();assert.ok(line.startsWith('NATIVE_ARTIFACT_BUNDLE_PROFILE '))
+ const profile=JSON.parse(line.slice('NATIVE_ARTIFACT_BUNDLE_PROFILE '.length));assert.equal(profile.payload.length,300000);assert.equal(profile.openingIsolationPassed,false);assert.equal(profile.buildCompleted,false);assert.equal(profile.sourceInputsUnchanged,true);assert.equal(profile.failureCode,'native_opening_isolation');assert.equal(profile.qualified,false)
+})
 test('native opening rejects co-located conversation UI but allows lazy comments',()=>{
  const bundle={
   'native.js':{...chunk('native.js',['thread.js'],{}),dynamicImports:['comments.js']},

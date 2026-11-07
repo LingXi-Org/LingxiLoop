@@ -1,0 +1,17 @@
+{
+  "collectorCommit": "02dc46c38fc3d02f269a83d1c535c55e5c079e8d",
+  "run": 42411890483,
+  "job": 128521602972,
+  "passed": false,
+  "qualified": false,
+  "source": "已解码工作流日志",
+  "failure": "启动隔离断言仍拒绝CodeBlock；断言前的异步console.log在致命退出时截断候选JSON，不能解析或当作完整候选元数据。",
+  "baselineLineCharacters": 85781,
+  "candidateLineCharacters": 65565,
+  "candidateJsonComplete": false,
+  "normalCI": {
+    "run": 42411895076,
+    "passed": true
+  },
+  "nextFix": "使用writeSync同步完整输出后仍抛同一异常；真实子进程300000字符回归先在旧console实现出现JSON截断，修复后完整解析并保留exit1。"
+}

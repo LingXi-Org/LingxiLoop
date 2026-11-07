@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { build } from 'vite'
@@ -22,7 +22,7 @@ function sourceFingerprint() {
 }
 const inputSha256 = sourceFingerprint()
 let report
-const emitOpeningProfile=(value,openingIsolationPassed,sourceInputsUnchanged)=>console.log('NATIVE_ARTIFACT_BUNDLE_PROFILE '+JSON.stringify({commit:value.commit,sourceInputsSha256:value.sourceInputsSha256,uncommittedInputsPossible:value.uncommittedInputsPossible,openingIsolationPassed,buildCompleted:openingIsolationPassed,sourceInputsUnchanged,...(!openingIsolationPassed?{failureCode:'native_opening_isolation'}:{}),...value.openingProfile}))
+const emitOpeningProfile=(value,openingIsolationPassed,sourceInputsUnchanged)=>writeSync(1,'NATIVE_ARTIFACT_BUNDLE_PROFILE '+JSON.stringify({commit:value.commit,sourceInputsSha256:value.sourceInputsSha256,uncommittedInputsPossible:value.uncommittedInputsPossible,openingIsolationPassed,buildCompleted:openingIsolationPassed,sourceInputsUnchanged,...(!openingIsolationPassed?{failureCode:'native_opening_isolation'}:{}),...value.openingProfile})+'\n')
 await build({
   build: { outDir, emptyOutDir: true },
   plugins: [{
@@ -32,8 +32,8 @@ await build({
       const chunks = Object.values(bundle).filter(value => value.type === 'chunk')
       const sharedIcons=chunks.find(chunk=>chunk.name==='artifact-shared-icons')
       if(sharedIcons){
-        assert.equal(sharedIcons.moduleIds.length,4,'The measured shared icon chunk must own only four leaf modules')
-        assert.ok(sharedIcons.moduleIds.every(id=>/\/node_modules\/lucide-react\/dist\/esm\/icons\/(bot|image|chevron-down|ellipsis)\.mjs$/.test(id.replaceAll('\\','/'))),'The shared icon chunk must not absorb React or other dependencies')
+        assert.equal(sharedIcons.moduleIds.length,6,'The measured shared icon chunk must own only six leaf modules')
+        assert.ok(sharedIcons.moduleIds.every(id=>/\/node_modules\/lucide-react\/dist\/esm\/icons\/(bot|image|chevron-down|ellipsis|chevron-left|chevron-right)\.mjs$/.test(id.replaceAll('\\','/'))),'The shared icon chunk must not absorb React or other dependencies')
       }
       const owns = (chunk, suffix) => chunk.moduleIds.some(id => id.replaceAll('\\', '/').endsWith(suffix))
       const rootChunks = Object.fromEntries(Object.entries(openingModuleRoles).map(([role,modules])=>[role,modules.map(module=>{

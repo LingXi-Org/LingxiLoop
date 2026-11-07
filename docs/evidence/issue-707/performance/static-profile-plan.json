@@ -25,7 +25,7 @@
     "专用分支、仅相关文件变化触发两次真实生产构建，Node22和各自锁文件，使用现有只读包权限；不运行服务、发布或部署。"
   ],
   "checks": {
-    "syntheticGraphTestsPassed": 8,
+    "syntheticGraphTestsPassed": 9,
     "scriptSyntax": true,
     "actualProductionProfiles": "补根和逐块元数据两轮真实生产构建均通过；新增绑定计数与公开包模块白名单待新一轮采集。",
     "actualBootPreloadsRegistered": true
@@ -58,7 +58,7 @@
     "review": "reviews/8ebdf7d1.json",
     "rootFindingClosed": true
   },
-  "nextCollection": "追加已实际核对的chevron-down/ellipsis两个公开leaf到同一共享块，避免两图标连带预览/Markdown。补sourceFingerprint覆盖配置helper并回归。启动审计增加CodeBlock排除，新共享块仅4leaf，其他原隔离断言保持。8合成+1映射通过，真实新构建待运行。",
+  "nextCollection": "已证明旧图除直接CodeBlock边外，还有Native经ChevronLeft/Right所在包装块到CodeBlock的路径。新增遍历实际历史完整图的回归先失败，再补仅这2leaf（共6leaf）通过。生产断言仍不放宽，保留React；失败日志改同步完整写出，明确未完成/输入一致/固定失败码，真实子进程回归通过。新真实生产构建待执行；不能以9+2局部测试声称消边或性能达标。",
   "scopeLimit": "Design实际工作区先加载会话；静态启动根不是所有路由预热根，不能将604KB静态估算当成Design实际新增传输。Mermaid命名块只是包装模块，不能凭名字声称加载了引擎。",
   "chunkOwnershipProfile": {
     "collectorCommit": "387c018d649433d7e83133a270956a93050628f3",
@@ -93,5 +93,15 @@
     "iconChunkGzipBytes": 444,
     "review": "reviews/da2552a6.json",
     "finding": "P3新配置helper缺少构建指纹覆盖，修复后须重采"
+  },
+  "fourIconFailure": {
+    "run": 42411260291,
+    "receipt": "performance/static-profile-6f71d610-failed.json",
+    "isolated": false
+  },
+  "failedCaptureFailure": {
+    "run": 42411890483,
+    "receipt": "performance/static-profile-02dc46c3-failed.json",
+    "candidateJsonComplete": false
   }
 }

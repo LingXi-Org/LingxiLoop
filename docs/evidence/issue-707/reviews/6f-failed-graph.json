@@ -1,0 +1,71 @@
+{
+  "candidate": "6f71d6106ec32e47d7d74650a52ac713fe89de99",
+  "scope": "追加独立只读失败分析；不修改代码或门槛，不外发，未读取root后续WIP",
+  "result": "四leaf实际生产隔离失败，不能声称消边；下一步先保留失败图，再按实际图决定有限扩组",
+  "actualFailure": {
+    "run": 42411260291,
+    "job": 128519711476,
+    "stage": "assertNativeOpeningIsolation：CodeBlock仍位于原生增量闭包",
+    "normalCIRun": 42411264924,
+    "normalCIPassed": true,
+    "provenance": "父线程提供的实际运行结果，本审查未另行查询GitHub/下载私有构建JS；候选失败图尚未持久化，仅基线元数据可用",
+    "qualification": "失败不能反向覆盖上一份局部报告为真实图通过；上一报告已明确真实新生产图未验证"
+  },
+  "findings": [
+    {
+      "severity": "P3",
+      "location": "scripts/native-artifact-bundle-audit.mjs:78",
+      "title": "失败隔离图虽已计算，构建异常使其无法落盘",
+      "reproduction": "report在assertNativeOpeningIsolation前已赋值；该断言抛出使await build拒绝，底部writeFile和NATIVE_ARTIFACT_BUNDLE_PROFILE日志均不可达。父线程本轮仅获得baseline元数据，与此控制流一致。",
+      "minimumFix": "在外层build失败路径中，对已存在report先await写入相同脱敏元数据，随后原样rethrow。记录auditStatus=failed、buildCompleted=false、qualified=false、固定failureCode及sourceInputsUnchanged；不记录任意异常文本/代码/私包路径，不把失败图称隔离通过。正常路径保持原全部断言，CI依然失败，上传if:always保持。",
+      "scopeLimit": "只需当前report已计算的失败路径；不为未观察到的更早构建错误扩展复杂恢复。"
+    }
+  ],
+  "finiteGroupAssessment": {
+    "verifiedConsumers": {
+      "firstPartyFileCount": 71,
+      "uniquePublicSymbols": 60,
+      "uniquePublicModulePaths": 60,
+      "nativeLeafCount": 57,
+      "rteSeparateCount": 3,
+      "rteSeparateNames": [
+        "Bold",
+        "Italic",
+        "Underline"
+      ],
+      "unresolvedPublicAliases": 0
+    },
+    "benefit": "如果新失败图仍证实是Lucide公共leaf共置，有限原生leaf同一显式块可一次切断该有界集合与重型界面的共同归属，避免逐对追加使Rollup不断重新共置。一个共享块不等于57个请求；不应选择整个Lucide包。",
+    "costEvidence": {
+      "source": "da真实application闭包",
+      "alreadyWarmPublicModules": [
+        {
+          "chunk": "assets/panel-right-CFj_2Gkf.js",
+          "publicModules": [
+            "dist/esm/icons/panel-right.mjs"
+          ]
+        },
+        {
+          "chunk": "assets/transport-Ca48T80q.js",
+          "publicModules": [
+            "dist/esm/icons/book-open.mjs"
+          ]
+        }
+      ],
+      "consequence": "直接57合并后，两个已有暖根消费者会使完整组也进入application预热。仅nativeIncremental下降可能来自成本前移，不能据此认定网络收益。"
+    },
+    "boundedNextExperiment": "先采真实6f失败图。若仍为Lucide交集，可试原生57中排除两个已在暖闭包独立持有的leaf（有界55），或明确接受57组的前移成本后比较；RTE额外3个保持原归属。以锁定公共barrel别名解析到精确文件名的白名单，同一块、onlyExplicitManualChunks=true，保留createLucideIcon/React正常单例归属。不是立即建议交付该扩组。",
+    "requiredChecks": [
+      "实际失败图的Native/RTE首跳、绑定数、publicDependencyModules交集和拥有者，不能凭CodeBlock断言猜下一枚图标",
+      "新块只有指定公共leaf，无React/createLucideIcon/其他依赖或第一方组件；原导出realm/兼容/会话与CodeBlock隔离断言全部保留",
+      "比较application、nativeIncremental与application∪native的块字节，避免扣除暖块掩盖前移",
+      "真实页面图标/React初始化回归及Design和Slides各自起点的实际网络，随后原性能门槛；静态估计不代替10组ABBA"
+    ]
+  },
+  "evidence": "/workspace/lingxi-issue707-scratch/review-6f-failed-analysis.json",
+  "unverified": [
+    "没有6f失败候选chunk元数据，无法确定新的最小共享绑定或证明仍由Lucide而非其他共有导出导致",
+    "未改代码、未运行新构建或浏览器；无新增真实性能样本",
+    "普通CI通过不等于专用静态隔离通过；全计划视觉、服务、性能仍未完成"
+  ]
+}

@@ -471,3 +471,7 @@ da2552a6[真实生产采集](performance/static-profile-da2552a6.json)4241054003
 第二处实际共置为Native→protected-file-links两个绑定，对应[公开ChevronDown/MoreHorizontal消费者](performance/shared-preview-icon-consumers.json)，连带CodeBlock/streamdown/parse5；仅追加chevron-down/ellipsis两个leaf到同一共享块，未扩成57图标整包。生产审计检查4leaf且无React，并排除启动CodeBlock。对应映射及预览共置回归先失败后通过，现8采集+1映射、构建配置类型检查通过。f4手柄独立复审通过，bf实际应用诊断42410966590正在运行（两图标版本，指纹覆盖限定同da）；不是最终候选或10组资格。
 
 6f71d610正常CI42411264924和[独立复审](reviews/6f71d610.json)通过，原指纹P3闭合；但[实际采集42411260291失败](performance/static-profile-6f71d610-failed.json)于新启动隔离断言：CodeBlock仍在原生闭包。只有基线元数据输出，四leaf后字节数和剩余消费者未知，不能写为隔离成功。现仅让断言抛出前输出既有白名单结构并标openingIsolationPassed=false，仍保留断言和失败退出，重采真实失败图后再定位。bf702aa5正常CI42410790800和[只读复审](reviews/bf702aa5.json)通过，实际诊断42410966590仍运行，不是最终资格。
+
+02dc46c3正常CI42411895076通过，但[失败重采42411890483](performance/static-profile-02dc46c3-failed.json)仍命中CodeBlock，且致命退出前console.log异步写出被截断，候选JSON不能解析。没有补造数据或声称已取得完整失败图。真实子进程300000字符回归在旧实现复现JSON截断，改writeSync同步输出后9项采集检查通过，exit1及原异常保留。另补明确buildCompleted=false/sourceInputsUnchanged/固定failureCode；[独立复审](reviews/af4d6f05.json)已核02+af元数据口径及原错误rethrow。
+
+复核[历史完整图的全部路径](performance/shared-transitive-icon-paths.json)证明：Native到CodeBlock有直接和经左右箭头包装块两条路径。前次仅处理直接边不充分。新增实际历史图传递路径回归先失败，再仅追加ChevronLeft/Right（总6leaf）通过，共2项映射/图回归；不扩55/57图标整组，避免已暖book-open/panel-right把成本前移。此次来源是已取得的历史完整图，不冒称6f/02精确新图。新候选真实生产消边、应用与原生总成本及完整性能待验证。
