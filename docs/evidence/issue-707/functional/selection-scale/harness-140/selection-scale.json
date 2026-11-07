@@ -1,0 +1,25 @@
+{
+  "kind": "画板元素缩放手柄门槛",
+  "observations": [
+    {
+      "percent": "50%",
+      "handles": 9
+    },
+    {
+      "percent": "25%",
+      "handles": 9
+    },
+    {
+      "percent": "20%",
+      "handles": 0
+    },
+    {
+      "percent": "25%",
+      "handles": 9
+    }
+  ],
+  "noWrites": true,
+  "documentUnchanged": true,
+  "consoleOrPageErrors": [],
+  "scope": "受控HTTP夹具，真实缩放、选择和快捷键；不是完整来源或性能验收"
+}

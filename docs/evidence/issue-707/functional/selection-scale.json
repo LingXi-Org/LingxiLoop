@@ -135,5 +135,26 @@
   "scope": "画板DOM元素，仅修复25%交互门槛。自由画布和Slides维持各自现有行为。来源25%实际10个命中区域，原生9个按钮，未宣称手柄形态/数目已一比一。两浏览器原生25%可用，20%隐藏，恢复25%可用、选择轮廓保留、文档零写入。",
   "functionalQualified": false,
   "visualQualified": false,
-  "performanceQualified": false
+  "performanceQualified": false,
+  "legacyGestureProbe": {
+    "failure": "原22%视图等待.native-handle-e超时30000ms，符合新来源门槛",
+    "fix": "仅四项需要缩放手柄的旧探针默认通过真实菜单切50%；普通尺寸和视觉样稿不变，显式sizing-zoom优先。",
+    "cases": [
+      "width-hug-resize",
+      "width-hug-cancel",
+      "width-percent-click",
+      "width-important-click",
+      "selection-scale"
+    ],
+    "results": {
+      "140": "5/5通过",
+      "154": "5/5通过"
+    },
+    "preservedAssertions": "真实拖动、取消、auto/important优先级、共享历史、重开、其他页面哈希与中文错误检查不变",
+    "receipts": [
+      "selection-scale/harness-140/",
+      "selection-scale/harness-154/"
+    ],
+    "ciContractsPassed": 23
+  }
 }

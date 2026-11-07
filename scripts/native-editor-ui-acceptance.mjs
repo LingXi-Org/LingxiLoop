@@ -488,7 +488,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(receipts.length,0);assert.deepEqual(document,original);assert.deepEqual(errors,[])
         return{kind:'画板元素缩放手柄门槛',observations,noWrites:true,documentUnchanged:true,consoleOrPageErrors:errors,scope:'受控HTTP夹具，真实缩放、选择和快捷键；不是完整来源或性能验收'}
       }
-      if(options['sizing-zoom']){await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:options['sizing-zoom'],exact:true}).click();await scrollCanvasTo(document.pages['page-1'])}
+      const sizingZoom=options['sizing-zoom']??(['width-hug-resize','width-hug-cancel','width-percent-click','width-important-click'].includes(editorCase)?'50%':undefined)
+      if(sizingZoom){await page.getByLabel('画布缩放',{exact:true}).click();await page.getByRole('button',{name:sizingZoom,exact:true}).click();await scrollCanvasTo(document.pages['page-1'])}
       if(editorCase==='theme-fill')assert.equal(await page.locator(`[data-node-id="${nodeId}"] svg rect`).getAttribute('fill'),'#ff0000')
       await page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`).click()
       await page.getByRole('button',{name:'显示属性',exact:true}).click()
