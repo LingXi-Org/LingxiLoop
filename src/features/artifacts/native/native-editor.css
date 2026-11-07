@@ -415,3 +415,20 @@
 .native-element-alignment>button:hover:not(:disabled){background:var(--native-alignment-hover)}
 .native-editor .native-element-alignment>button:focus-visible{outline:2px solid transparent;box-shadow:inset 0 0 0 1px var(--native-alignment-page),0 0 0 1px #257de0,0 0 6px 1px var(--native-alignment-glow)}
 @media(prefers-color-scheme:dark){.native-element-alignment{--native-alignment-page:#0b0b0b;--native-alignment-glow:rgb(23 87 172 / .6);--native-alignment-hover:rgba(255,255,255,.075);color:rgba(255,255,255,.57)}}
+.native-element-layout .native-layout-box+.native-layout-box{margin-top:0}
+.native-element-layout .native-layout-expand{margin-left:-4px;display:flex;align-items:center;justify-content:center;flex:none;width:24px;height:24px;min-height:24px;padding:0;border:0;border-radius:6px;color:var(--native-layout-secondary);background:transparent}
+.native-element-layout .native-layout-expand:hover{background:var(--native-layout-hover)}
+.native-element-layout .native-layout-sides{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1px;margin-left:96px;margin-right:36px}
+.native-element-layout .native-layout-sides>label{display:flex;align-items:center;gap:0;min-width:0}
+.native-element-layout .native-layout-sides>label>span:first-child{flex:0 0 22px;font-size:10px;color:var(--native-layout-secondary)}
+.native-element-layout .native-sizing-row>.native-sizing-number{flex:1;min-width:0}
+
+.native-element-layout .native-layout-sides{padding:0 0 1px}
+
+.native-element-layout .native-sizing-unitless .native-sizing-number-end{display:none}
+.native-element-layout .native-sizing-unitless:hover .native-sizing-number-end,.native-element-layout .native-sizing-unitless:focus-within .native-sizing-number-end{display:flex}
+
+.native-element-layout{--native-layout-secondary:rgba(0,0,0,.6);--native-layout-hover:rgba(0,0,0,.1);--native-layout-selected:#1757ac}
+.native-element-layout .native-layout-expand[aria-expanded=true]{color:var(--native-layout-selected)}
+@media(prefers-color-scheme:dark){.native-element-layout{--native-layout-secondary:rgba(255,255,255,.57);--native-layout-hover:rgba(255,255,255,.075);--native-layout-selected:#6aabf1}}
+@container(max-width:599px){.native-element-layout .native-sizing-label{flex-basis:92px}.native-element-layout .native-layout-sides{margin-left:112px}}

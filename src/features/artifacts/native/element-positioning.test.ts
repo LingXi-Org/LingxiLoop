@@ -51,3 +51,12 @@ test('键盘微移保留双侧居中锚点，只调整方向键所控制的偏�
  const right={...node,css:{left:'auto',right:'0px'}}
  assert.deepEqual(elementNudgePatch(right,{...pins,useRight:true,right:0},1,0),{css:{left:'auto',right:'-1px'}})
 })
+
+test('内容盒缩放从绘制尺寸扣除内边距和边框，零内容尺寸保留为CSS声明',()=>{
+ const node={...createNode('text','text'),width:1152,height:76,css:{padding:'20px','box-sizing':'content-box'}}
+ const painted={...node,width:1192,height:116},boxPins={...pins,boxWidth:40,boxHeight:40}
+ const patch=elementResizePatch(node,boxPins,painted,{...painted,width:1232},'e')
+ assert.equal(patch.width,1192);assert.equal(patch.css?.width,'1192px')
+ const zero=elementResizePatch(node,boxPins,painted,{...painted,width:8},'e')
+ assert.equal(zero.width,undefined);assert.equal(zero.css?.width,'0px')
+})

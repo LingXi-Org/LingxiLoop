@@ -1,0 +1,65 @@
+{
+  "before": {
+    "x": 62.147369384765625,
+    "y": 420.88897705078125,
+    "width": 66.01528930664062,
+    "height": 16.79998779296875
+  },
+  "paper": {
+    "x": 48,
+    "y": 412.046875,
+    "width": 424.40625,
+    "height": 238.734375
+  },
+  "scale": 0.221044921875,
+  "handle": {
+    "x": 123.3375015258789,
+    "y": 425.7901306152344,
+    "width": 6.997703552246094,
+    "height": 6.997711181640625
+  },
+  "resized": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 389,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    },
+    "css": {
+      "width": "389px"
+    }
+  },
+  "after": {
+    "x": 62.147369384765625,
+    "y": 420.88897705078125,
+    "width": 85.98947143554688,
+    "height": 16.79998779296875
+  }
+}

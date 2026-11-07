@@ -9840,6 +9840,55 @@
         "receipt": "functional/element-alignment.json",
         "scope": "固定来源与受控HTTP浏览器；不代替完整授权服务、Agent、缩略图、导出或性能资格。"
       }
+    },
+    {
+      "id": "D36-design",
+      "editor": "design",
+      "control": "元素内外边距与内容盒",
+      "trigger": "选择画板元素，修改统一内外边距、展开四边、缩放或导出",
+      "states": [
+        "统一值",
+        "四边",
+        "浅色",
+        "深色",
+        "混合四边",
+        "归零",
+        "负值",
+        "还原",
+        "取消",
+        "保存快捷键",
+        "共享历史",
+        "重开",
+        "只读",
+        "权限撤回",
+        "冲突",
+        "无效草稿恢复",
+        "内容盒缩放",
+        "隔离导出"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "lookup": "Edit padding per side",
+        "start": 4381000,
+        "end": 4384500,
+        "offsetUnit": "UTF-16 code units",
+        "runtime": "source-element-layout.json"
+      },
+      "implementation": "src/features/artifacts/native/ElementLayoutProperties.tsx",
+      "screenshots": {
+        "reference": "visual/element-layout/reference/",
+        "native": "visual/element-layout/implementation/",
+        "manifest": "visual/element-layout/differences/raw-pixel-results.json",
+        "matchedStateVerified": true
+      },
+      "result": "140/154各17功能状态通过；8种容器/主题的8项输入/展开控件边界偏差≤1 CSS px、颜色一致。81定向单元、23CI契约、真实140/156共用输入器拼音、两编辑器50页/47哈希、Design两浏览器各六格式和内容盒捕获通过。整图原始差3.1184%–11.0870%，0/8通过0.5%；旧稿隐式盒模型、多选、数值菜单、完整分组布局及缩略图仍待验收。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-layout.json",
+        "scope": "固定来源与受控HTTP真实浏览器、实际隔离导出；不代替完整授权服务或最终性能。"
+      }
     }
   ],
   "registeredReplacements": [

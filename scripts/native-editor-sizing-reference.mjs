@@ -58,6 +58,10 @@ try{
         }
         if(args['after-width']){await width.fill(args['after-width']);await width.press('Enter')}
         if(args['after-height']){const height=page.getByRole('textbox',{name:'Height',exact:true});await height.fill(args['after-height']);await height.press('Enter')}
+      }else if(['padding','margin','padding-expand','margin-expand','padding-step-down','margin-step-down','padding-blank','margin-blank'].includes(name)){
+        const property=name.startsWith('padding')?'padding':'margin',label=property==='padding'?'Padding':'Margin'
+        if(name.endsWith('-expand'))await page.getByRole('button',{name:`Edit ${property} per side`,exact:true}).click()
+        else{const input=page.getByRole('textbox',{name:label,exact:true});if(name.endsWith('-step-down'))await input.press('ArrowDown');else{await input.fill(name.endsWith('-blank')?'':args.value??'20');await input.press('Enter')}}
       }else if(name.startsWith('position-')){
         await page.getByRole('button',{name:'Position: Absolute',exact:true}).click()
         const label=name.slice(9);await page.getByRole('menuitemradio',{name:label[0].toUpperCase()+label.slice(1),exact:true}).click()
@@ -99,7 +103,7 @@ try{
       const panel=page.getByRole('complementary',{name:'Properties panel',exact:true})
       const readControls=()=>panel.locator('button,input').evaluateAll(elements=>elements.map(element=>{const style=getComputedStyle(element);return{tag:element.tagName,label:element.getAttribute('aria-label'),disabled:element.disabled,text:element.textContent,value:element.value,placeholder:element.getAttribute('placeholder'),rect:element.getBoundingClientRect().toJSON(),fontSize:style.fontSize,lineHeight:style.lineHeight,padding:style.padding,borderRadius:style.borderRadius,color:style.color,background:style.backgroundColor,opacity:style.opacity,outline:style.outline,boxShadow:style.boxShadow,iconGeometry:element.getAttribute('aria-label')?.startsWith('Align')?[...element.querySelectorAll('svg,i,span')].map(child=>{const css=getComputedStyle(child);return{tag:child.tagName,rect:child.getBoundingClientRect().toJSON(),fontSize:css.fontSize,strokeWidth:css.strokeWidth,display:css.display,color:css.color,background:css.backgroundColor,opacity:css.opacity}}):undefined}}))
       const controlsBeforeGlobalSave=await readControls()
-      const readGeometry=()=>heading.evaluate(element=>{const style=getComputedStyle(element);return{style:element.getAttribute('style'),rect:element.getBoundingClientRect().toJSON(),width:style.width,height:style.height,position:style.position,left:style.left,top:style.top,minWidth:style.minWidth,maxWidth:style.maxWidth,minHeight:style.minHeight,maxHeight:style.maxHeight,right:style.right,bottom:style.bottom}})
+      const readGeometry=()=>heading.evaluate(element=>{const style=getComputedStyle(element);return{layoutWidth:element.offsetWidth,layoutHeight:element.offsetHeight,boxSizing:style.boxSizing,paddingTop:style.paddingTop,paddingRight:style.paddingRight,paddingBottom:style.paddingBottom,paddingLeft:style.paddingLeft,marginTop:style.marginTop,marginRight:style.marginRight,marginBottom:style.marginBottom,marginLeft:style.marginLeft,style:element.getAttribute('style'),rect:element.getBoundingClientRect().toJSON(),width:style.width,height:style.height,position:style.position,left:style.left,top:style.top,minWidth:style.minWidth,maxWidth:style.maxWidth,minHeight:style.minHeight,maxHeight:style.maxHeight,right:style.right,bottom:style.bottom}})
       const geometryBeforeGlobalSave=await readGeometry()
       const beforeGlobalSave=await readFile(join(project,'project/Page1.dc.html'),'utf8');await page.evaluate(()=>document.activeElement?.blur());await page.keyboard.press('Control+s');await page.waitForTimeout(600)
       if(args['align-state']){
@@ -114,10 +118,12 @@ try{
       if(args['align-key']){await page.keyboard.press(args['align-key']);await page.waitForTimeout(450)}
       if(args['align-state'])await page.waitForTimeout(250)
       const controls=await readControls(),geometry=await readGeometry()
+      const layoutChrome=await panel.getByText('Layout',{exact:true}).evaluate(element=>[element,element.parentElement,element.parentElement.parentElement].map(node=>{const css=getComputedStyle(node);return{tag:node.tagName,rect:node.getBoundingClientRect().toJSON(),padding:css.padding,margin:css.margin,height:css.height,fontSize:css.fontSize,lineHeight:css.lineHeight}}))
       const html=await readFile(join(project,'project/Page1.dc.html'),'utf8'),snippet=html.match(/<h1\b[\s\S]*?<\/h1>/)?.[0]
+      if(/^(padding|margin)/.test(name))await page.mouse.move(20,200)
       await page.screenshot({path:join(output,`sizing-${name}.png`)})
       const frameRect=await board.locator('iframe').boundingBox(),camera={beforeDomEntry:rect,frameRect,scale:frameRect.width/1920,headingScreenRect:await heading.boundingBox()}
-      cases.push({name,subject:args.node??'text',camera,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
+      cases.push({name,layoutChrome,subject:args.node??'text',camera,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
       await writeFile(join(output,'reference.json'),JSON.stringify({sourceCommit:'016b39d7fdcc30bfacee31ea5541498ac53921c6',referenceResourceHashesVerified:inventory.sources.length,browser:browser.version(),theme:args.theme??'light',viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},cases},null,2)+'\n')
       console.log(name+' 已捕获')
     }finally{await page?.close();server?.kill('SIGTERM');await rm(project,{recursive:true,force:true})}

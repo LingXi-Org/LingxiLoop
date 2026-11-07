@@ -25,3 +25,15 @@ test('fractional layout positions survive rotated and mirrored parents at magnif
     assert.ok(Math.abs(position.x-actual.x)<1e-8);assert.ok(Math.abs(position.y-actual.y)<1e-8)
   }finally{if(source)Object.defineProperty(globalThis,'getComputedStyle',source);else Reflect.deleteProperty(globalThis,'getComputedStyle')}
 })
+
+test('内容盒选择与评论使用含边框内边距的实际尺寸，并保留小数',()=>{
+ const page=createPage('p'),node={...createNode('text','text'),x:10,y:20,width:120.25,height:50.5}
+ const element={offsetWidth:140,offsetHeight:70,getBoundingClientRect:()=>({left:10,top:20})} as unknown as HTMLElement
+ const source=Object.getOwnPropertyDescriptor(globalThis,'getComputedStyle')
+ Object.defineProperty(globalThis,'getComputedStyle',{configurable:true,value:()=>({width:'120.25px',height:'50.5px',boxSizing:'content-box',paddingLeft:'8.5px',paddingRight:'8.5px',paddingTop:'8.5px',paddingBottom:'8.5px',borderLeftWidth:'1.25px',borderRightWidth:'1.25px',borderTopWidth:'1.25px',borderBottomWidth:'1.25px'})})
+ try{
+  const frame=readElementFrame({getBoundingClientRect:()=>({left:0,top:0})} as HTMLElement,element,page,node,1)
+  assert.equal(frame.width,139.75);assert.equal(frame.height,70)
+  const anchor=anchorInFrame('p','text',frame,{x:149.75,y:90});assert.equal(anchor.x,1);assert.equal(anchor.y,1)
+ }finally{if(source)Object.defineProperty(globalThis,'getComputedStyle',source);else Reflect.deleteProperty(globalThis,'getComputedStyle')}
+})

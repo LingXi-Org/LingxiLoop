@@ -29,7 +29,7 @@ const concat = (chunks: Uint8Array[]) => {
 export function encodeArtifactPdf(pages: readonly PdfPageImage[], title: string): Uint8Array {
   const glyphs = new Map<string, number>()
   for (const page of pages) for (const character of page.text) if (!glyphs.has(character)) glyphs.set(character, glyphs.size + 1)
-  if (glyphs.size > 65534) throw new Error('PDF 字符种类超过容量')
+  if (glyphs.size > 65534) throw new Error('便携文档的字符种类超过容量。')
   const objects: Uint8Array[] = []
   const reserve = () => { objects.push(utf8('')); return objects.length }
   const set = (id: number, content: string | Uint8Array) => { objects[id - 1] = typeof content === 'string' ? utf8(content) : content }

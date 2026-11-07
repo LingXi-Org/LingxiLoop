@@ -12,7 +12,9 @@ export function readNodeFrame(root: HTMLElement | null, page: ArtifactPage, node
 }
 /** Preserve fractional CSS boxes when the canvas is magnified. */
 export function readElementFrame(surface:HTMLElement,element:HTMLElement,page:ArtifactPage,node:ArtifactNode,scale:number):RenderedNodeFrame {
-  const style=getComputedStyle(element),width=Number.parseFloat(style.width)||element.offsetWidth,height=Number.parseFloat(style.height)||element.offsetHeight
+  const style=getComputedStyle(element),number=(value:string)=>Number.parseFloat(value)||0
+  const box=(value:string,fallback:number,sides:string[])=>{const size=Number.parseFloat(value);return Number.isFinite(size)?size+(style.boxSizing==='content-box'?sides.reduce((sum,key)=>sum+number(style[key as keyof CSSStyleDeclaration] as string),0):0):fallback}
+  const width=box(style.width,element.offsetWidth,['paddingLeft','paddingRight','borderLeftWidth','borderRightWidth']),height=box(style.height,element.offsetHeight,['paddingTop','paddingBottom','borderTopWidth','borderBottomWidth'])
   const matrix=nodeMatrix(page,node),rect=element.getBoundingClientRect(),origin=surface.getBoundingClientRect()
   const corners=[[0,0],[width,0],[0,height],[width,height]].map(([x,y])=>({x:matrix[0]*x+matrix[2]*y,y:matrix[1]*x+matrix[3]*y}))
   matrix[4]=(rect.left-origin.left)/scale-Math.min(...corners.map(p=>p.x))

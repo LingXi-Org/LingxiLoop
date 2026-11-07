@@ -1,0 +1,161 @@
+{
+  "qualified": false,
+  "scope": "固定来源和受控HTTP真实React/Worker/浏览器、真实隔离导出；不代表真实鉴权服务、全部盒模型和最终性能。",
+  "checks": {
+    "cases-154": [
+      "reset-padding",
+      "readonly",
+      "margin-left",
+      "padding",
+      "padding-step-down",
+      "history",
+      "cancel",
+      "padding-top",
+      "margin",
+      "margin-step-down",
+      "margin-expand",
+      "reset-margin",
+      "padding-expand"
+    ],
+    "recovery-154": [
+      "conflict",
+      "invalid",
+      "save",
+      "permission"
+    ],
+    "cases-140": [
+      "reset-padding",
+      "readonly",
+      "conflict",
+      "margin-left",
+      "padding",
+      "padding-step-down",
+      "history",
+      "cancel",
+      "padding-top",
+      "margin",
+      "invalid",
+      "margin-step-down",
+      "save",
+      "permission",
+      "margin-expand",
+      "reset-margin",
+      "padding-expand"
+    ],
+    "resize-154": [
+      "padding"
+    ],
+    "resize-140": [
+      "padding"
+    ],
+    "negative-154": [
+      "padding"
+    ],
+    "capture-154": [
+      "content-box-capture",
+      "capture"
+    ],
+    "exports-154": [
+      "实际内边距六格式导出回归"
+    ],
+    "exports-140": [
+      "content-box-capture",
+      "capture",
+      "实际内边距六格式导出回归"
+    ],
+    "old-gesture-154": [
+      "width-percent-click",
+      "resize-observation",
+      "width-hug-cancel",
+      "width-important-click",
+      "width-hug-resize"
+    ],
+    "old-theme-154": [
+      "theme-fill"
+    ],
+    "ink-154": [
+      "isolated-export-ink-diagnostic",
+      "isolated-export-ink-diagnostic"
+    ],
+    "regression50": [
+      "isolated-native-editor-ui-diagnostic",
+      "isolated-native-editor-ui-diagnostic"
+    ]
+  },
+  "unitPassed": 81,
+  "ciOrchestrationContractsPassed": 23,
+  "source": "source-element-layout.json",
+  "controls": {
+    "containers": 8,
+    "controlsPerContainer": 8,
+    "rectToleranceCssPixels": 1,
+    "colorsMatched": true,
+    "receipt": "functional/element-layout/control-geometry-comparison.json"
+  },
+  "geometry": {
+    "fields": [
+      "width",
+      "height",
+      "left",
+      "top",
+      "boxSizing",
+      "paddingTop",
+      "paddingRight",
+      "paddingBottom",
+      "paddingLeft",
+      "marginTop",
+      "marginRight",
+      "marginBottom",
+      "marginLeft",
+      "layoutWidth",
+      "layoutHeight"
+    ],
+    "exactPairs": 4,
+    "knownDifferences": "未编辑内边距的旧稿保留既有隐式边框盒；来源默认内容盒。margin样本除boxSizing外14字段一致，不能声明全部默认盒模型一比一。",
+    "receipt": "functional/element-layout/computed-geometry-comparison.json"
+  },
+  "ime": {
+    "browsers": [
+      "140",
+      "156"
+    ],
+    "target": "提取后的共用长度输入器（宽度内中文样式注释），不是全部内外边距字段IME逐项资格。",
+    "trustedOsInput": true,
+    "compositionEndTrusted": false,
+    "javascriptCompositionDispatch": false
+  },
+  "exports": {
+    "140": 6,
+    "154": 6,
+    "scope": "Design实际下载；HTML重解析15字段，PDF独立栅格化两页验证20px偏移，PPTX包及媒体、三种图像尺寸/墨色；不代表所有属性、Slides新布局或缩略图。"
+  },
+  "failuresRetained": [
+    "数值递减padding变成-1，已按来源钳制为0；margin允许负数。",
+    "选择框读取内容宽高导致漏掉内边距，先失败后补边框盒测量及缩放补偿。",
+    "捕获克隆重复计算内边距，右/下出血alpha255；修复后alpha0。",
+    "新HTTP夹具漏注册实时事件；新导出条件漏预优化及逗号组合，PPTX触发Vite主页面导航。修正夹具条件并保持原超时，新增主页面零导航断言。",
+    "首次viewport-loading错误使用both，该检查仅Design；改用既有默认两模式50页入口，实际各50页/47哈希通过。",
+    "PDF隐藏搜索文字层不携带真实位置，不用其bbox冒充视觉；改为独立栅格化已生成PDF比较两页文字像素。",
+    "一次错误将仅文字的旧Hug手势探针与shape参数组合，已按实际文字入口复跑4项，另独立复跑shape主题。"
+  ],
+  "knownGaps": [
+    "多选混合值、所有CSS单位、编辑为文本、数值上下文菜单及拖动数值尚未完整还原。",
+    "旧稿隐式盒模型与来源默认content-box仍有差别，本批只对新增padding编辑显式写入content-box，作者明确border-box保留。",
+    "分组flex/grid完整布局、全部变换/滚动/只读视觉状态及缩略图仍待验收。",
+    "原始整图8对均未达到0.5%，没有中文/身份掩码或抗锯齿排除。",
+    "真实授权服务、全部新增视觉属性导出及最终10组AB/BA性能资格未完成。"
+  ],
+  "localOwningChecks": {
+    "lint": {
+      "passed": true,
+      "warnings": 43,
+      "infos": 4
+    },
+    "typecheck": {
+      "passed": false,
+      "diagnostics": 76,
+      "changedNativeDiagnostics": 0,
+      "reason": "本地缺少精确私有LingxiOS依赖，完整typecheck不能报通过；正式CI安装发布依赖验证。"
+    }
+  }
+}

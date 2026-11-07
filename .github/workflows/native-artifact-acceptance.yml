@@ -123,6 +123,8 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=nested-export --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-nested"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-link --link-case=same-node --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-same-node"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-layout --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-layout"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-layout --layout-case=exports,capture --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-layout-exports"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-left,align-center,align-right,align-top,align-middle,align-bottom --align-history=true --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-history"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-center,align-right --align-resize=e --sizing-zoom=50% --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-resize"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-case=align-right,align-center --align-nudge=ArrowRight --align-drag=20 --sizing-zoom=50% --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-alignment-nudge"
@@ -273,6 +275,13 @@ jobs:
             ${{ runner.temp }}/native-element-sizing*/*.png
             ${{ runner.temp }}/native-element-alignment-*/*.json
             ${{ runner.temp }}/native-element-alignment-*/*.png
+            ${{ runner.temp }}/native-element-layout*/*.json
+            ${{ runner.temp }}/native-element-layout*/*.png
+            ${{ runner.temp }}/native-element-layout*/*.html
+            ${{ runner.temp }}/native-element-layout*/*.pdf
+            ${{ runner.temp }}/native-element-layout*/*.pptx
+            ${{ runner.temp }}/native-element-layout*/*.svg
+            ${{ runner.temp }}/native-element-layout*/*.jpeg
             ${{ runner.temp }}/native-artboard-*/*.json
             ${{ runner.temp }}/native-artboard-*/*.png
             ${{ runner.temp }}/native-page-print-oracle.json

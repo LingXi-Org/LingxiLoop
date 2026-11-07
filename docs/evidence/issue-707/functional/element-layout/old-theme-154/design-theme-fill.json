@@ -1,0 +1,420 @@
+{
+  "kind": "中文元素尺寸回归",
+  "mode": "design",
+  "case": "theme-fill",
+  "node": {
+    "id": "page-1-shape",
+    "type": "shape",
+    "x": 760,
+    "y": 440,
+    "width": 180,
+    "height": 80,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "themeFill": "accent",
+      "borderRadius": 12
+    },
+    "shape": "rect",
+    "css": {
+      "width": "50%"
+    }
+  },
+  "geometry": {
+    "width": "960px",
+    "height": "80px",
+    "position": "absolute",
+    "left": "760px",
+    "top": "440px",
+    "minWidth": "0px",
+    "maxWidth": "none",
+    "minHeight": "0px",
+    "maxHeight": "none",
+    "right": "200px",
+    "bottom": "560px"
+  },
+  "controls": [
+    {
+      "label": "添加尺寸属性",
+      "rect": {
+        "x": 1408,
+        "y": 251,
+        "width": 24,
+        "height": 24,
+        "top": 251,
+        "right": 1432,
+        "bottom": 275,
+        "left": 1408
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "label": "宽度",
+      "value": "50%",
+      "rect": {
+        "x": 1201,
+        "y": 287,
+        "width": 151,
+        "height": 24,
+        "top": 287,
+        "right": 1352,
+        "bottom": 311,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "宽度模式：固定",
+      "rect": {
+        "x": 1360,
+        "y": 287,
+        "width": 72,
+        "height": 24,
+        "top": 287,
+        "right": 1432,
+        "bottom": 311,
+        "left": 1360
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "高度",
+      "value": "80px",
+      "rect": {
+        "x": 1201,
+        "y": 319,
+        "width": 151,
+        "height": 24,
+        "top": 319,
+        "right": 1352,
+        "bottom": 343,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "高度模式：固定",
+      "rect": {
+        "x": 1360,
+        "y": 319,
+        "width": 72,
+        "height": 24,
+        "top": 319,
+        "right": 1432,
+        "bottom": 343,
+        "left": 1360
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "位置：绝对",
+      "rect": {
+        "x": 1201,
+        "y": 351,
+        "width": 231,
+        "height": 24,
+        "top": 351,
+        "right": 1432,
+        "bottom": 375,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "水平偏移",
+      "value": "760",
+      "rect": {
+        "x": 1221.5,
+        "y": 383,
+        "width": 83,
+        "height": 24,
+        "top": 383,
+        "right": 1304.5,
+        "bottom": 407,
+        "left": 1221.5
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "label": "垂直偏移",
+      "value": "440",
+      "rect": {
+        "x": 1341,
+        "y": 383,
+        "width": 83,
+        "height": 24,
+        "top": 383,
+        "right": 1424,
+        "bottom": 407,
+        "left": 1341
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "label": "内边距",
+      "value": "0",
+      "rect": {
+        "x": 1209,
+        "y": 464,
+        "width": 168.625,
+        "height": 24,
+        "top": 464,
+        "right": 1377.625,
+        "bottom": 488,
+        "left": 1209
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "label": "外边距",
+      "value": "0",
+      "rect": {
+        "x": 1209,
+        "y": 496,
+        "width": 168.625,
+        "height": 24,
+        "top": 496,
+        "right": 1377.625,
+        "bottom": 520,
+        "left": 1209
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    }
+  ],
+  "alignmentControls": [
+    {
+      "label": "左对齐",
+      "disabled": false,
+      "rect": {
+        "x": 1117,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1141,
+        "bottom": 238,
+        "left": 1117
+      },
+      "color": "rgba(0, 0, 0, 0.6)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "outline": "rgba(0, 0, 0, 0.6) none 3px",
+      "boxShadow": "none",
+      "borderRadius": "6px",
+      "iconRect": {
+        "x": 1121,
+        "y": 218,
+        "width": 16,
+        "height": 16,
+        "top": 218,
+        "right": 1137,
+        "bottom": 234,
+        "left": 1121
+      }
+    },
+    {
+      "label": "水平居中",
+      "disabled": false,
+      "rect": {
+        "x": 1175.203125,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1199.203125,
+        "bottom": 238,
+        "left": 1175.203125
+      },
+      "color": "rgba(0, 0, 0, 0.6)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "outline": "rgba(0, 0, 0, 0.6) none 3px",
+      "boxShadow": "none",
+      "borderRadius": "6px",
+      "iconRect": {
+        "x": 1179.203125,
+        "y": 218,
+        "width": 16,
+        "height": 16,
+        "top": 218,
+        "right": 1195.203125,
+        "bottom": 234,
+        "left": 1179.203125
+      }
+    },
+    {
+      "label": "右对齐",
+      "disabled": false,
+      "rect": {
+        "x": 1233.40625,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1257.40625,
+        "bottom": 238,
+        "left": 1233.40625
+      },
+      "color": "rgba(0, 0, 0, 0.6)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "outline": "rgba(0, 0, 0, 0.6) none 3px",
+      "boxShadow": "none",
+      "borderRadius": "6px",
+      "iconRect": {
+        "x": 1237.40625,
+        "y": 218,
+        "width": 16,
+        "height": 16,
+        "top": 218,
+        "right": 1253.40625,
+        "bottom": 234,
+        "left": 1237.40625
+      }
+    },
+    {
+      "label": "顶部对齐",
+      "disabled": false,
+      "rect": {
+        "x": 1291.59375,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1315.59375,
+        "bottom": 238,
+        "left": 1291.59375
+      },
+      "color": "rgba(0, 0, 0, 0.6)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "outline": "rgba(0, 0, 0, 0.6) none 3px",
+      "boxShadow": "none",
+      "borderRadius": "6px",
+      "iconRect": {
+        "x": 1295.59375,
+        "y": 218,
+        "width": 16,
+        "height": 16,
+        "top": 218,
+        "right": 1311.59375,
+        "bottom": 234,
+        "left": 1295.59375
+      }
+    },
+    {
+      "label": "垂直居中",
+      "disabled": false,
+      "rect": {
+        "x": 1349.796875,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1373.796875,
+        "bottom": 238,
+        "left": 1349.796875
+      },
+      "color": "rgba(0, 0, 0, 0.6)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "outline": "rgba(0, 0, 0, 0.6) none 3px",
+      "boxShadow": "none",
+      "borderRadius": "6px",
+      "iconRect": {
+        "x": 1353.796875,
+        "y": 218,
+        "width": 16,
+        "height": 16,
+        "top": 218,
+        "right": 1369.796875,
+        "bottom": 234,
+        "left": 1353.796875
+      }
+    },
+    {
+      "label": "底部对齐",
+      "disabled": false,
+      "rect": {
+        "x": 1408,
+        "y": 214,
+        "width": 24,
+        "height": 24,
+        "top": 214,
+        "right": 1432,
+        "bottom": 238,
+        "left": 1408
+      },
+      "color": "rgba(0, 0, 0, 0.6)",
+      "background": "rgba(0, 0, 0, 0)",
+      "opacity": "1",
+      "outline": "rgba(0, 0, 0, 0.6) none 3px",
+      "boxShadow": "none",
+      "borderRadius": "6px",
+      "iconRect": {
+        "x": 1412,
+        "y": 218,
+        "width": 16,
+        "height": 16,
+        "top": 218,
+        "right": 1428,
+        "bottom": 234,
+        "left": 1412
+      }
+    }
+  ],
+  "batches": 1,
+  "savedAndReopened": true,
+  "otherPagesUnchanged": true,
+  "consoleOrPageErrors": []
+}

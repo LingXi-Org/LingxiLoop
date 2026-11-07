@@ -2,7 +2,7 @@ import type {ArtifactNode} from '../../../../shared/artifact-document'
 
 export interface ElementPositionPins{
   bothX:boolean;bothY:boolean;useRight:boolean;useBottom:boolean
-  left:number;right:number;top:number;bottom:number
+  left:number;right:number;top:number;bottom:number;boxWidth?:number;boxHeight?:number
 }
 export function readElementPositionPins(element:HTMLElement):ElementPositionPins|null{
   const style=getComputedStyle(element)
@@ -11,7 +11,7 @@ export function readElementPositionPins(element:HTMLElement):ElementPositionPins
   const set=(name:string)=>{const value=String(typed?.get(name)??element.style.getPropertyValue(name)).trim();return value!==''&&value!=='auto'}
   const left=set('left'),right=set('right'),top=set('top'),bottom=set('bottom')
   const number=(value:string)=>Number.parseFloat(value)||0
-  return{bothX:left&&right,bothY:top&&bottom,useRight:right&&!left,useBottom:bottom&&!top,left:number(style.left),right:number(style.right),top:number(style.top),bottom:number(style.bottom)}
+  return{boxWidth:style.boxSizing==='border-box'?0:number(style.paddingLeft)+number(style.paddingRight)+number(style.borderLeftWidth)+number(style.borderRightWidth),boxHeight:style.boxSizing==='border-box'?0:number(style.paddingTop)+number(style.paddingBottom)+number(style.borderTopWidth)+number(style.borderBottomWidth),bothX:left&&right,bothY:top&&bottom,useRight:right&&!left,useBottom:bottom&&!top,left:number(style.left),right:number(style.right),top:number(style.top),bottom:number(style.bottom)}
 }
 export function elementMoveValues(pins:ElementPositionPins,dx:number,dy:number){
   const values:Partial<Record<'left'|'right'|'top'|'bottom',number>>={}
@@ -35,12 +35,12 @@ export function elementResizePatch(node:ArtifactNode,pins:ElementPositionPins,pa
   const patch:Partial<ArtifactNode>={},css={...node.css}
   const put=(name:string,number:number)=>{css[name]=`${number}px${/!important\s*$/i.test(css[name]??'')?' !important':''}`}
   if(/[ew]/.test(handle)){
-    patch.width=Math.round(resized.width);put('width',patch.width)
+    const width=Math.max(0,Math.round(resized.width-(pins.boxWidth??0)));if(width>0)patch.width=width;put('width',width)
     if(pins.useRight){if(handle.includes('e'))put('right',Math.round(pins.right-(resized.x-painted.x)-(resized.width-painted.width)))}
     else if(handle.includes('w')){patch.x=Math.round(pins.left+resized.x-painted.x);put('left',patch.x)}
   }
   if(/[ns]/.test(handle)){
-    patch.height=Math.round(resized.height);put('height',patch.height)
+    const height=Math.max(0,Math.round(resized.height-(pins.boxHeight??0)));if(height>0)patch.height=height;put('height',height)
     if(pins.useBottom){if(handle.includes('s'))put('bottom',Math.round(pins.bottom-(resized.y-painted.y)-(resized.height-painted.height)))}
     else if(handle.includes('n')){patch.y=Math.round(pins.top+resized.y-painted.y);put('top',patch.y)}
   }

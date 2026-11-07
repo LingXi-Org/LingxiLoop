@@ -1,0 +1,80 @@
+{
+  "kind": "实际内边距六格式导出回归",
+  "mode": "design",
+  "ui": {
+    "width": "1152px",
+    "height": "76px",
+    "color": "rgb(24, 51, 43)",
+    "padding": "20px",
+    "boxSizing": "content-box",
+    "layoutWidth": 1192,
+    "layoutHeight": 116
+  },
+  "formats": [
+    {
+      "format": "html",
+      "bytes": 12996,
+      "reparsedGeometry": {
+        "width": "1152px",
+        "height": "76px",
+        "color": "rgb(24, 51, 43)",
+        "padding": "20px",
+        "boxSizing": "content-box",
+        "layoutWidth": 1192,
+        "layoutHeight": 116
+      }
+    },
+    {
+      "format": "pdf",
+      "bytes": 87439,
+      "independentReader": true,
+      "rasterInk": [
+        {
+          "left": 88,
+          "top": 71,
+          "count": 3063
+        },
+        {
+          "left": 68,
+          "top": 51,
+          "count": 3160
+        }
+      ]
+    },
+    {
+      "format": "pptx",
+      "bytes": 666427,
+      "packageParsed": true
+    },
+    {
+      "format": "svg",
+      "bytes": 61433,
+      "pixels": {
+        "width": 1920,
+        "height": 1080,
+        "ink": 3291
+      }
+    },
+    {
+      "format": "png",
+      "bytes": 201781,
+      "pixels": {
+        "width": 3840,
+        "height": 2160,
+        "ink": 14188
+      }
+    },
+    {
+      "format": "jpeg",
+      "bytes": 204997,
+      "pixels": {
+        "width": 3840,
+        "height": 2160,
+        "ink": 14184
+      }
+    }
+  ],
+  "documentUnchanged": true,
+  "consoleOrPageErrors": [],
+  "scope": "受控HTTP组件与真实隔离导出；不代表真实授权产品端到端或全部CSS属性"
+}

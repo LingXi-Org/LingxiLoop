@@ -1,0 +1,248 @@
+{
+  "kind": "中文元素内外边距回归",
+  "mode": "design",
+  "case": "capture",
+  "node": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b",
+      "backgroundColor": "#ed3521",
+      "padding": 20
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    },
+    "css": {
+      "box-sizing": "content-box"
+    }
+  },
+  "geometry": {
+    "layoutWidth": 1192,
+    "layoutHeight": 116,
+    "width": "1152px",
+    "height": "76px",
+    "left": "64px",
+    "top": "40px",
+    "boxSizing": "content-box",
+    "paddingTop": "20px",
+    "paddingRight": "20px",
+    "paddingBottom": "20px",
+    "paddingLeft": "20px",
+    "marginTop": "0px",
+    "marginRight": "0px",
+    "marginBottom": "0px",
+    "marginLeft": "0px"
+  },
+  "controls": [
+    {
+      "tag": "H3",
+      "label": null,
+      "text": "布局",
+      "rect": {
+        "x": 1117,
+        "y": 430.5,
+        "width": 26.015625,
+        "height": 19,
+        "top": 430.5,
+        "right": 1143.015625,
+        "bottom": 449.5,
+        "left": 1117
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "BUTTON",
+      "label": "还原内边距",
+      "value": "",
+      "rect": {
+        "x": 1173,
+        "y": 466,
+        "width": 20,
+        "height": 20,
+        "top": 466,
+        "right": 1193,
+        "bottom": 486,
+        "left": 1173
+      },
+      "color": "rgba(0, 0, 0, 0.55)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "INPUT",
+      "label": "内边距",
+      "value": "20",
+      "rect": {
+        "x": 1209,
+        "y": 464,
+        "width": 168.625,
+        "height": 24,
+        "top": 464,
+        "right": 1377.625,
+        "bottom": 488,
+        "left": 1209
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "BUTTON",
+      "label": "增大内边距",
+      "value": "",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "color": "rgba(0, 0, 0, 0.55)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "BUTTON",
+      "label": "减小内边距",
+      "value": "",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "color": "rgba(0, 0, 0, 0.55)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "BUTTON",
+      "label": "分别设置内边距",
+      "value": "",
+      "rect": {
+        "x": 1408,
+        "y": 464,
+        "width": 24,
+        "height": 24,
+        "top": 464,
+        "right": 1432,
+        "bottom": 488,
+        "left": 1408
+      },
+      "color": "rgba(0, 0, 0, 0.6)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "INPUT",
+      "label": "外边距",
+      "value": "0",
+      "rect": {
+        "x": 1209,
+        "y": 496,
+        "width": 168.625,
+        "height": 24,
+        "top": 496,
+        "right": 1377.625,
+        "bottom": 520,
+        "left": 1209
+      },
+      "color": "rgba(0, 0, 0, 0.9)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "BUTTON",
+      "label": "增大外边距",
+      "value": "",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "color": "rgba(0, 0, 0, 0.55)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "BUTTON",
+      "label": "减小外边距",
+      "value": "",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "top": 0,
+        "right": 0,
+        "bottom": 0,
+        "left": 0
+      },
+      "color": "rgba(0, 0, 0, 0.55)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    },
+    {
+      "tag": "BUTTON",
+      "label": "分别设置外边距",
+      "value": "",
+      "rect": {
+        "x": 1408,
+        "y": 496,
+        "width": 24,
+        "height": 24,
+        "top": 496,
+        "right": 1432,
+        "bottom": 520,
+        "left": 1408
+      },
+      "color": "rgba(0, 0, 0, 0.6)",
+      "fontSize": "13px",
+      "lineHeight": "19px"
+    }
+  ],
+  "batches": 1,
+  "savedAndReopened": true,
+  "otherPagesUnchanged": true,
+  "consoleOrPageErrors": []
+}

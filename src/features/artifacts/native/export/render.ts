@@ -1,3 +1,4 @@
+import {nodeTypeLabels} from '../editor-copy'
 import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
 import {canvasTextMetrics} from '../../../../../shared/artifact-canvas-typography'
 import { artifactShapeGeometry,artifactUsesBoxRectangle } from '../../../../../shared/artifact-shapes'
@@ -80,7 +81,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
       case 'video': {
         if (node.posterAssetId) { const crop=node.crop;content=`<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text??'视频')}" src="${escapeHtml(await resources.asset(node.posterAssetId))}" ${crop?` style="max-width:none;width:${100/Math.max(.01,crop.width)}%;height:${100/Math.max(.01,crop.height)}%;transform:translate(${-crop.x*100}%,-${crop.y*100}%);object-fit:cover"`:''}></div>` }
         else content = `<div class="artifact-export-unsupported">${escapeHtml(node.text ?? '视频')}</div>`
-        resources.warnings.add(`${page.title} / ${node.id}：视频以封面导出，原稿保留视频。`)
+        resources.warnings.add(`${page.title} / ${node.name??nodeTypeLabels[node.type]}：视频以封面导出，原稿保留视频。`)
         break
       }
       case 'image': {
@@ -129,9 +130,9 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
       }
       case 'embed': {
         const previewId = node.embed?.previewAssetId
-        if (!previewId) throw new Error(`${page.title} / ${node.id}：隔离内容缺少当前版本的预览快照，请重新导出。`)
+        if (!previewId) throw new Error(`${page.title} / ${node.name??nodeTypeLabels[node.type]}：隔离内容缺少当前版本的预览快照，请重新导出。`)
         content = `<img alt="隔离内容的静态快照" src="${escapeHtml(await resources.asset(previewId))}">`
-        resources.warnings.add(`${page.title} / ${node.id}：交互内容以静态快照导出；原稿保留可执行源码与交互。`)
+        resources.warnings.add(`${page.title} / ${node.name??nodeTypeLabels[node.type]}：交互内容以静态快照导出；原稿保留可执行源码与交互。`)
         break
       }
     }

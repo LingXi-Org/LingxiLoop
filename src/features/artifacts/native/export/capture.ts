@@ -75,6 +75,13 @@ export async function captureWithBleed(
     transform: 'none',
     margin: '0',
   })
+  if (computed.boxSizing === 'content-box') {
+    // width/height above describe the painted border box, including padding.
+    clone.style.boxSizing = 'border-box'
+    for (const property of ['padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width']) {
+      clone.style.setProperty(property, computed.getPropertyValue(property))
+    }
+  }
   wrapper.append(clone)
   page.append(wrapper)
   try {

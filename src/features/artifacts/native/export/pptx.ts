@@ -1,3 +1,4 @@
+import {nodeTypeLabels} from '../editor-copy'
 import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
 import {isSafeArtifactLink} from '../../../../../shared/artifact-links'
 import {resolvedPadding} from '../../../../../shared/artifact-appearance'
@@ -21,7 +22,7 @@ function packPptx(job: PptxJob, signal?: AbortSignal): Promise<ArrayBuffer> {
     worker.onmessage = (event: MessageEvent<{ bytes?: ArrayBuffer; error?: string }>) => {
       cleanup()
       if (event.data.bytes) resolve(event.data.bytes)
-      else reject(new Error(event.data.error ?? 'PPTX 打包失败'))
+      else reject(new Error(event.data.error ?? '演示文稿打包失败，请重试。'))
     }
     worker.onerror = event => { cleanup(); reject(new Error(event.message)) }
     worker.postMessage(job)
@@ -105,7 +106,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             const image=await capture()
             resources.check(); slide.addImage({...image,flipH:node.flipX,flipV:node.flipY})
             if (node.type === 'group') rasterGroups.add(node.id)
-            resources.warnings.add(`${page.title} / ${node.id}：复杂外观以图片导出；原稿保留可编辑属性。`)
+            resources.warnings.add(`${page.title} / ${node.name??nodeTypeLabels[node.type]}：复杂外观以图片导出；原稿保留可编辑属性。`)
           } else if (node.type === 'group') {
             if (style.fill) slide.addShape('rect', { ...box, fill: { color: color(style.fill, 'FFFFFF') }, line: { transparency: 100 } })
           } else if ((node.type === 'text' || node.type === 'note') && !nodeHasMath(node)) {
@@ -125,7 +126,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             const image=await capture()
             resources.check()
             slide.addImage(image)
-            if (['math', 'svg', 'embed', 'text', 'table', 'line', 'drawing'].includes(node.type)) resources.warnings.add(`${page.title} / ${node.id}：${node.type === 'math' ? '公式' : '复杂内容'}以图片导出；文档保留源数据。`)
+            if (['math', 'svg', 'embed', 'text', 'table', 'line', 'drawing'].includes(node.type)) resources.warnings.add(`${page.title} / ${node.name??nodeTypeLabels[node.type]}：${node.type === 'math' ? '公式' : '复杂内容'}以图片导出；文档保留源数据。`)
           }
         }
         // Group and whole-page raster fallbacks keep their authored link targets.
