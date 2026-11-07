@@ -22,6 +22,7 @@ function sourceFingerprint() {
 }
 const inputSha256 = sourceFingerprint()
 let report
+const emitOpeningProfile=(value,openingIsolationPassed)=>console.log('NATIVE_ARTIFACT_BUNDLE_PROFILE '+JSON.stringify({commit:value.commit,sourceInputsSha256:value.sourceInputsSha256,uncommittedInputsPossible:value.uncommittedInputsPossible,openingIsolationPassed,...value.openingProfile}))
 await build({
   build: { outDir, emptyOutDir: true },
   plugins: [{
@@ -74,7 +75,7 @@ await build({
         exportRealm: realm.fileName,
         exportHtmlPreloadsApplication: false,
       }
-      assertNativeOpeningIsolation(report.openingProfile)
+      try{assertNativeOpeningIsolation(report.openingProfile)}catch(error){emitOpeningProfile(report,false);throw error}
     },
   }],
 })
@@ -83,4 +84,4 @@ assert.equal(sourceFingerprint(), inputSha256, 'Build inputs changed during the 
 await mkdir(dirname(output), { recursive: true })
 await writeFile(output, `${JSON.stringify(report, null, 2)}\n`)
 console.log(`Native production graph audit: ${output}`)
-console.log('NATIVE_ARTIFACT_BUNDLE_PROFILE '+JSON.stringify({commit:report.commit,sourceInputsSha256:report.sourceInputsSha256,uncommittedInputsPossible:report.uncommittedInputsPossible,...report.openingProfile}))
+emitOpeningProfile(report,true)

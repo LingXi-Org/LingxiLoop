@@ -1,0 +1,48 @@
+{
+  "candidate": "6f71d6106ec32e47d7d74650a52ac713fe89de99",
+  "baseline": "bf702aa5a496a2b97bd07d465df21659e65fd7f0",
+  "scope": "独立detached只读复审：最小共享图标追加chevron-down/ellipsis、新CodeBlock隔离防线、配置输入指纹P3修复；未读root后续WIP",
+  "result": "原P3闭合，本范围未发现新增P1/P2",
+  "findings": [],
+  "closedFindings": [
+    {
+      "severity": "P3",
+      "originalCandidate": "da2552a624b398d9e63f6727923d07fd007afeb9",
+      "location": "scripts/native-artifact-bundle-audit.mjs:16",
+      "result": "新配置helper已纳入真实指纹文件集；仅内存模拟修改helper时哈希改变。新测试读取实际vite配置的scripts导入并验证覆盖。产品文件未修改。"
+    }
+  ],
+  "verified": [
+    {
+      "check": "8项collector单元+1项图标映射单元",
+      "result": "全部通过",
+      "logs": [
+        "/tmp/lingxi-review-6f-profile-tests.log",
+        "/tmp/lingxi-review-6f-icons-tests.log"
+      ]
+    },
+    {
+      "check": "配置类型与脚本语法",
+      "result": "tsc -p tsconfig.node.json及audit/profile node --check通过",
+      "log": "/tmp/lingxi-review-6f-config-tsc.log"
+    },
+    {
+      "check": "精确生产调整",
+      "result": "只追加已实证chevron-down/ellipsis到原共享块；仍精确匹配四个公开leaf且onlyExplicitManualChunks保持，shared块生产断言改为4模块并排除其他依赖。没有产品src/shared/依赖/React源码变动；git diff --check通过。"
+    },
+    {
+      "check": "隔离防线有效且原防线保留",
+      "result": "真实da数据被新增CodeBlock防线拒绝，固定721基线通过；旧会话组件名单保留、导出realm/兼容解析/导出预加载旧断言保持。"
+    },
+    {
+      "check": "消费者归属与证据边界",
+      "result": "先前独立核对的严格唯一两个交集与本次新增leaf相符；冻结da原始数据及P3报告保留，后续采集待运行且qualified=false，未将静态gzip估算冒充网络或性能通过。"
+    }
+  ],
+  "unverified": [
+    "本机未做正式SDK全生产构建；新四图标版本实际生产图是否消除protected-file-links静态边，须等待新采集，不能仅凭映射单元判定",
+    "未重跑浏览器或完整产品单元，运行时代码未变；没有声称React初始化/真实页面行为全面通过",
+    "未验证真实授权服务、最终视觉0.5%、实际HTTP/Worker/输入/PSS或最终10组ABBA",
+    "本结论仅覆盖该精确候选局部，不代表全计划完成"
+  ]
+}

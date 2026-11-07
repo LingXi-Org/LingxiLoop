@@ -469,3 +469,5 @@ bb4107e1[冻结独立复审](reviews/bb4107e1.json)通过，5合成检查及额�
 da2552a6[真实生产采集](performance/static-profile-da2552a6.json)42410540031通过：Native/RTE均无Thread路径，两图标共享块903raw/444gzip且仅2leaf，原生静态gzip604237→378616（30→24块），不是实际网络收益。正常CI42410545786被下一推送取消，不记通过。独立[复审](reviews/da2552a6.json)无P1/P2但发现P3：构建指纹遗漏新配置helper。保留原数据及限定，新增实际配置导入覆盖测试先失败后通过，将helper纳入指纹；新候选须重采。
 
 第二处实际共置为Native→protected-file-links两个绑定，对应[公开ChevronDown/MoreHorizontal消费者](performance/shared-preview-icon-consumers.json)，连带CodeBlock/streamdown/parse5；仅追加chevron-down/ellipsis两个leaf到同一共享块，未扩成57图标整包。生产审计检查4leaf且无React，并排除启动CodeBlock。对应映射及预览共置回归先失败后通过，现8采集+1映射、构建配置类型检查通过。f4手柄独立复审通过，bf实际应用诊断42410966590正在运行（两图标版本，指纹覆盖限定同da）；不是最终候选或10组资格。
+
+6f71d610正常CI42411264924和[独立复审](reviews/6f71d610.json)通过，原指纹P3闭合；但[实际采集42411260291失败](performance/static-profile-6f71d610-failed.json)于新启动隔离断言：CodeBlock仍在原生闭包。只有基线元数据输出，四leaf后字节数和剩余消费者未知，不能写为隔离成功。现仅让断言抛出前输出既有白名单结构并标openingIsolationPassed=false，仍保留断言和失败退出，重采真实失败图后再定位。bf702aa5正常CI42410790800和[只读复审](reviews/bf702aa5.json)通过，实际诊断42410966590仍运行，不是最终资格。
