@@ -1,4 +1,5 @@
 import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
+import {isSafeArtifactLink} from '../../../../../shared/artifact-links'
 import {resolvedPadding} from '../../../../../shared/artifact-appearance'
 import { trackExportWorker, releaseExportWorker } from './worker-lifecycle'
 import type { ArtifactDocument, ArtifactRichText } from '../../../../../shared/artifact-document'
@@ -125,6 +126,15 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             resources.check()
             slide.addImage(image)
             if (['math', 'svg', 'embed', 'text', 'table', 'line', 'drawing'].includes(node.type)) resources.warnings.add(`${page.title} / ${node.id}：${node.type === 'math' ? '公式' : '复杂内容'}以图片导出；文档保留源数据。`)
+          }
+        }
+        // Group and whole-page raster fallbacks keep their authored link targets.
+        // Transparent hit areas also cover links attached to non-text objects.
+        for(const anchor of mounted.element.querySelectorAll<HTMLAnchorElement>('a[href]')){
+          const href=anchor.getAttribute('href');if(!href||!isSafeArtifactLink(href))continue
+          for(const rect of anchor.getClientRects()){
+            if(rect.width<=0||rect.height<=0)continue
+            slide.addShape('rect',{x:(rect.x-pageBounds.x)/96*scale,y:(rect.y-pageBounds.y)/96*scale,w:rect.width/96*scale,h:rect.height/96*scale,fill:{color:'FFFFFF',transparency:100},line:{transparency:100},hyperlink:{url:href}})
           }
         }
       } finally { mounted.dispose() }

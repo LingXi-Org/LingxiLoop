@@ -1,3 +1,4 @@
+import {isSafeArtifactLink} from '../../../../shared/artifact-links'
 import { Bold, Italic, Underline } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
@@ -12,7 +13,7 @@ function normalizedRichText(raw: ArtifactRichText): ArtifactRichText {
     ...(raw.attrs ? { attrs: { ...(raw.attrs.level !== undefined ? { level: raw.attrs.level } : {}), ...(raw.attrs.start !== undefined ? { start: raw.attrs.start } : {}), ...(raw.attrs.textAlign ? { textAlign: raw.attrs.textAlign } : {}) } } : {}),
     ...(raw.marks ? { marks: raw.marks.flatMap<NonNullable<ArtifactRichText['marks']>[number]>(mark => {
       if (mark.type !== 'link') return [{ type: mark.type }]
-      if (!mark.attrs?.href || !/^(https?:\/\/|mailto:|#)/i.test(mark.attrs.href)) return []
+      if (!mark.attrs?.href || !isSafeArtifactLink(mark.attrs.href)) return []
       return [{ type: 'link' as const, attrs: { href: mark.attrs.href, ...(mark.attrs.target === '_blank' || mark.attrs.target === '_self' ? { target: mark.attrs.target } : {}) } }]
     }) } : {}),
     ...(raw.content ? { content: raw.content.map(normalizedRichText) } : {}),
@@ -28,7 +29,7 @@ export default function RichTextEditor({ value, text, onChange, onFinish }: {
   const composing = useRef(false)
   const lastSaved = useRef('')
   const editor = useEditor({
-    extensions: [StarterKit.configure({ undoRedo: false, codeBlock: false, horizontalRule: false, trailingNode: false })],
+    extensions: [StarterKit.configure({ undoRedo: false, codeBlock: false, horizontalRule: false, trailingNode: false, link:{openOnClick:false,isAllowedUri:isSafeArtifactLink,HTMLAttributes:{rel:'noopener noreferrer',target:null,style:'color: inherit'}} })],
     content: value ?? { type: 'doc', content: [{ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] }] },
     autofocus: 'end',
     editorProps: {

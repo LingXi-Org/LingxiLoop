@@ -1,3 +1,4 @@
+import {isSafeArtifactLink} from './artifact-links.js'
 import { parseInspectorCode } from './artifact-inspector-code.js'
 
 const reserved = new Set(['__proto__','prototype','constructor'])
@@ -20,7 +21,7 @@ export function isNativeCodeAttribute(name:string,value:string):boolean {
   if(name==='hidden')return value===''||value==='hidden'
   if(name==='tabindex')return value==='0'||value==='-1'
   if(name==='target')return value==='_blank'||value==='_self'
-  if(name==='href')return /^(?:https?:\/\/|mailto:|tel:|#)/i.test(value)&&!/[\u0000-\u0020<>\\]/.test(value)
+  if(name==='href')return !value.includes('\\')&&isSafeArtifactLink(value)
   return false
 }
 

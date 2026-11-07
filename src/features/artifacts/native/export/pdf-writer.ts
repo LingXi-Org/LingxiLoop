@@ -1,3 +1,4 @@
+import {isSafeArtifactLink} from '../../../../../shared/artifact-links'
 import {artifactPaperPoints,type ArtifactPaper} from '../../../../../shared/artifact-page-print'
 /** Small streaming-friendly PDF writer: raster appearance, searchable Unicode text and links.
  * The invisible text font is the standard Adobe CJK STSong-Light CID font; page appearance
@@ -55,10 +56,10 @@ export function encodeArtifactPdf(pages: readonly PdfPageImage[], title: string)
     set(pictureId, stream(`/Type /XObject /Subtype /Image /Width ${Math.round(page.width)} /Height ${Math.round(page.height)} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`, page.jpeg))
     const encoded = [...page.text].map(character => hex4(glyphs.get(character)!)).join('')
     set(contentId, stream('', utf8(`q ${width} 0 0 ${height} 0 0 cm /Im0 Do Q\nBT /F0 12 Tf 3 Tr 1 0 0 1 0 ${height} Tm <${encoded}> Tj ET`)))
-    const annotations = (page.links ?? []).filter(link => /^(https?:\/\/|mailto:|#)/i.test(link.href)).map(link => {
+    const annotations = (page.links ?? []).filter(link => isSafeArtifactLink(link.href)).map(link => {
       const annotationId = reserve()
       const x = link.x * scaleX, y = height - (link.y + link.height) * scaleY
-      const href = link.href.replace(/([\\()])/g, '\\$1').replace(/[\r\n]/g, '')
+      const href = link.href.replace(/[^\x21-\x7e]/gu,character=>encodeURIComponent(character)).replace(/([\\()])/g, '\\$1').replace(/[\r\n]/g, '')
       set(annotationId, `<< /Type /Annot /Subtype /Link /Rect [${x} ${y} ${x + link.width * scaleX} ${y + link.height * scaleY}] /Border [0 0 0] /A << /S /URI /URI (${href}) >> >>`)
       return `${annotationId} 0 R`
     })

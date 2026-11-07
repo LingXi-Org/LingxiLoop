@@ -116,6 +116,8 @@ jobs:
           node --import tsx scripts/native-board-transform-oracle.mjs "${{ github.workspace }}/reference/skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js" "$RUNNER_TEMP/native-board-transform-oracle.json"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-transform --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-transform"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=board-title --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-board-title"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link"
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-link --link-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-link-exports"
           for task_artboard_case in default exports readonly fit-repeat fit-hidden fit-policy; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-artboard --artboard-case="$task_artboard_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-artboard-$task_artboard_case"
           done
@@ -130,6 +132,7 @@ jobs:
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=inspector-code --code-case=empty --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-code-empty"
           NATIVE_IME_BROWSER="$CHROMIUM_PATH" bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime"
           NATIVE_IME_BROWSER="$CHROMIUM_PATH" NATIVE_IME_TARGET=board-title bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime-title"
+          NATIVE_IME_BROWSER="$CHROMIUM_PATH" NATIVE_IME_TARGET=element-link bash scripts/native-editor-os-ime-check.sh "$RUNNER_TEMP/native-os-ime-link"
           node --import tsx scripts/native-canvas-text-export-check.mjs "$RUNNER_TEMP/native-canvas-text-export.json"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-pen --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-pen"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=canvas-vector --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-canvas-vector"
@@ -244,6 +247,9 @@ jobs:
             ${{ runner.temp }}/native-board-transform-oracle.json
             ${{ runner.temp }}/native-board-title/*.json
             ${{ runner.temp }}/native-board-title/*.png
+            ${{ runner.temp }}/native-element-link/*.json
+            ${{ runner.temp }}/native-element-link/*.png
+            ${{ runner.temp }}/native-element-link-exports/*
             ${{ runner.temp }}/native-artboard-*/*.json
             ${{ runner.temp }}/native-artboard-*/*.png
             ${{ runner.temp }}/native-page-print-oracle.json
@@ -251,6 +257,8 @@ jobs:
             ${{ runner.temp }}/native-os-ime/*-os-ime-*.png
             ${{ runner.temp }}/native-os-ime-title/*.json
             ${{ runner.temp }}/native-os-ime-title/*-os-ime-*.png
+            ${{ runner.temp }}/native-os-ime-link/*.json
+            ${{ runner.temp }}/native-os-ime-link/*.png
           if-no-files-found: ignore
           retention-days: 7
       - name: Remove ephemeral services and private login state

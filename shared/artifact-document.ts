@@ -1,3 +1,4 @@
+import {isSafeArtifactLink} from './artifact-links.js'
 import { z } from 'zod'
 import { canvasPages, canvasPageOf, artifactPageIds, MAX_CANVAS_PAGES } from './artifact-canvas-pages.js'
 import {isArtifactPenPath} from './artifact-path.js'
@@ -29,7 +30,7 @@ export const artifactStyleSchema = z.object({
 }).strict()
 export type ArtifactStyle = z.infer<typeof artifactStyleSchema>
 
-const safeLink = (value: string) => /^(https?:\/\/|mailto:|#)/i.test(value) && !/[\u0000-\u0020<>]/.test(value)
+const safeLink = isSafeArtifactLink
 export interface ArtifactRichText {
   type: 'doc' | 'paragraph' | 'heading' | 'text' | 'bulletList' | 'orderedList' | 'listItem' | 'hardBreak' | 'blockquote'
   text?: string

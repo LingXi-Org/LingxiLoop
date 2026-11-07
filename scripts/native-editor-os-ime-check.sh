@@ -44,5 +44,5 @@ task_ime_pid=$!
 trap 'kill "$task_ime_pid" 2>/dev/null || true' EXIT
 task_target=${NATIVE_IME_TARGET:-text}
 task_mode=both
-if [[ "$task_target" == board-title ]]; then task_mode=design; fi
+if [[ "$task_target" == board-title || "$task_target" == element-link ]]; then task_mode=design; fi
 node --import tsx scripts/native-editor-ui-acceptance.mjs --mode="$task_mode" --ime-target="$task_target" --checks=os-ime --headed=true --browser="$task_browser" --output="$task_output"

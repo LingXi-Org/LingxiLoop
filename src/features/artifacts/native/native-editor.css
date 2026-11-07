@@ -347,3 +347,15 @@
 .native-editor .native-board-heading>.native-board-rename{--native-board-name-bg:#f9f9f9;min-width:0;flex:1;width:0;height:18px;min-height:0;box-sizing:border-box;border:0;border-radius:4px;padding:1px 4px;background:var(--native-board-name-bg);color:var(--native-fg);font-family:inherit;font-size:12px;font-weight:400;line-height:16px;outline:none;box-shadow:0 0 0 1px #257de0;cursor:text}
 
 .dark .native-editor .native-board-heading>.native-board-rename,.native-editor[data-theme=dark] .native-board-heading>.native-board-rename{--native-board-name-bg:#0b0b0b}
+
+.native-element-link.native-property-section{padding:12px 8px 12px 12px}
+.native-element-link.native-property-section h3{font-size:13px;line-height:19px;margin:0 0 12px}
+.native-element-link.native-property-section .native-field{height:24px;min-height:24px;font-size:13px}
+.native-element-link.native-property-section .native-field>span{flex-basis:76px;min-width:76px}
+.native-element-link.native-property-section .native-field input{height:24px;min-height:24px;border-radius:6px;padding:0 8px;font-size:13px;line-height:19px}
+.native-element-link [role=alert]{margin:6px 0 0;font-size:12px;color:var(--native-danger,#a42528)}
+.native-element-link{--native-link-background:rgb(255 255 255 / .5);--native-link-border:rgb(0 0 0 / .08);--native-link-page:#f9f9f9;--native-link-glow:rgb(37 125 224 / .12)}
+.native-element-link.native-property-section .native-field input{border:0;background:var(--native-link-background);box-shadow:inset 0 0 0 1px var(--native-link-border)}
+.native-element-link.native-property-section .native-field input:focus{outline:2px solid transparent;outline-offset:2px;box-shadow:inset 0 0 0 1px var(--native-link-page),0 0 0 1px #257de0,0 0 6px 1px var(--native-link-glow)}
+.dark .native-element-link,.native-editor[data-theme=dark] .native-element-link{--native-link-background:rgb(255 255 255 / .05);--native-link-border:rgb(255 255 255 / .12);--native-link-page:#0b0b0b;--native-link-glow:rgb(23 87 172 / .6)}
+.native-editor a.native-node{display:block;color:inherit}

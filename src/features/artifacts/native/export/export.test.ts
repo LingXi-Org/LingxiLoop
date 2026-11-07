@@ -229,3 +229,12 @@ test('显式A4打印使用纸张物理尺寸，图片和链接按相同比例缩
   assert.deepEqual(rect,[80*sx,841.89-120*sy,240*sx,841.89-100*sy])
   assert.ok(pdf.includes('/Width 800 /Height 1131'),'栅格像素尺寸保持原值')
 })
+
+test('PDF链接保留相对地址及电话，并以URI编码保存中文而不重复编码原地址',()=>{
+  const hrefs=['https://example.test/中文','https://example.test/%E4%B8%AD%E6%96%87','../页面.html','tel:+861234567890']
+  const bytes=encodeArtifactPdf([{width:800,height:600,jpeg:new Uint8Array([0xff,0xd8,0xff,0xd9]),text:'中文链接',links:hrefs.map((href,index)=>({href,x:0,y:index*30,width:100,height:20}))}],'链接')
+  const pdf=new TextDecoder().decode(bytes)
+  assert.equal((pdf.match(/\/URI \(https:\/\/example\.test\/%E4%B8%AD%E6%96%87\)/g)??[]).length,2)
+  assert.ok(pdf.includes('/URI (../%E9%A1%B5%E9%9D%A2.html)'))
+  assert.ok(pdf.includes('/URI (tel:+861234567890)'))
+})

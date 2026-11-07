@@ -1,5 +1,14 @@
 /** Private editor destinations use stable IDs; grants and document data never enter links. */
 const identity=/^[A-Za-z0-9_-]{1,128}$/
+
+/** Relative document destinations remain data; executable URL schemes do not. */
+export function isSafeArtifactLink(value:string):boolean {
+  if(!value||/[\u0000-\u0020<>]/.test(value))return false
+  // Retain the legacy mark contract; a draft may still contain only https://.
+  if(/^(?:https?:\/\/|mailto:|#)/i.test(value))return true
+  if(value.startsWith('//')||/[\u007f\\]/.test(value))return false
+  try{return ['http:','https:','mailto:','tel:'].includes(new URL(value,'https://artifact.invalid/').protocol)}catch{return false}
+}
 export interface DesignLink {artifactId:string;canvasPageId?:string}
 export function readDesignLink(parameters:URLSearchParams):DesignLink|null {
   const artifactId=parameters.get('design'),canvasPageId=parameters.get('canvasPage')

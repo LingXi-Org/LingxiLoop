@@ -388,3 +388,12 @@ D31等距已实现限定状态，见 `functional/design-board-spacing.json`、`s
 3b907c45正式CI42366626619通过，但冻结只读审查 `reviews/3b907c45.json` 发现两项P2：Enter确认后BODY焦点导致原生局部CtrlZ失效；CtrlS提前提交/退出而固定原版保留输入。新增失败回归不手动focus，修复为键盘确认恢复标题焦点、普通blur保留点击目标、标题CtrlS保留草稿；140/154各7项及140/156真实系统输入法直接共享撤销重做通过，21定向单元/lint通过。来源撤销先核对DOM再显式保存文件，严格区分内存与落盘。首轮属性按钮名称误断言及Source落盘时机误断言均保留为探针修正，不作为产品缺陷。见 `functional/design-board-title-focus.json`、`source-design-board-title-keyboard.json`；新冻结候选待CI和复审，完整资格仍false。
 
 真实授权服务另有正式CI证据 `functional/comments-authorized-ci-3b907c45.json`：PostgreSQL、签名会话网关、同源评论CRUD/解决重开/删除、无会话和项目/租户隔离、正式LingxiOS Worker、真实outbox投递与Agent回复持久化通过。外部模型/IM适配在该集成中使用受控服务，不能作为真实外部模型或浏览器端完整回路验收；Design独立Worker评论回路和全定位仍待验证。
+
+
+元素链接新增D33，清单现165行，仍未穷尽。见 [源码及许可定位](source-element-link.json)、[功能收据](functional/element-link.json) 与 [截图及差异](visual/element-link/manifest.json)。按原版仅在Design增加目标属性；Slides沿用既有面板，验证已有行内链接编辑。中文网址、相对地址、邮件、电话、锚点、混合值取消、两种表示的版本依赖、权限恢复、共享历史与六格式实际下载均有局部证据。保留旧稿未完成网址、作者目标和文字颜色；缩略图装饰摘要剥离地址且有界。55项定向单元通过，140/154各22种场景、140/156真实系统拼音及既有文字/标题拼音回归通过；HTTP夹具不代表真实授权产品端到端。
+
+四对1440截图的输入框横坐标、宽高一致；上方尺寸/布局控件尚缺，纵向相差241px，原始像素差5.0576%–9.1362%，0/4通过，没有掩码或抗锯齿排除。本批本地web lint保持43 warnings/4 infos，完整类型检查仍被正式SDK缺失及76项级联诊断阻塞，不能记作通过；冻结候选正式CI与独立审查待执行。225ef822本身的CI及独立审查已通过，见 [只读报告](reviews/225ef822.json)。
+
+[225ef822性能前置失败](performance/diagnostic-225ef822-preflight.json)发生在正式测量前：侧栏宽度检查未等待ResizeObserver，Chrome140读取560而预期520。现检查等待实际aria-valuemax更新，保留原键盘/拖动/持久化断言；140记录560→520，154记录520→520。没有改产品逻辑或放宽阈值。该失败运行没有可用的生产性能数据，仍需冻结候选新诊断与至少10组交替AB/BA。
+
+链接缩略图修改后，两编辑器各50页遍历、三页编辑重开、主题/排序/共享历史及47个未修改页面哈希回归均通过；Design最大挂载6页/22节点，Slides为1页/7节点，无控制台异常。仍为受控HTTP夹具，不能代替性能测量。

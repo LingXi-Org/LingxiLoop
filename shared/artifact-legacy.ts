@@ -1,4 +1,5 @@
 import {normalizePageRadius} from './artifact-page-radius.js'
+import {isSafeArtifactLink} from './artifact-links.js'
 import { Parser } from 'htmlparser2'
 import {
   createDocument, createNode, createPage, isSafeArtifactSvg, validateArtifactDocument,
@@ -101,8 +102,8 @@ function richInline(node: HtmlNode, marks: NonNullable<ArtifactRichText['marks']
   const tag = node.tag.toLowerCase()
   if (tag === 'br') return [{ type: 'hardBreak' }]
   const mapped = ({ b: 'bold', strong: 'bold', i: 'italic', em: 'italic', u: 'underline', s: 'strike', del: 'strike', code: 'code' } as const)[tag as 'b']
-  const next = mapped ? [...marks, { type: mapped }] : marks
-  if (tag === 'a' && /^(https?:\/\/|mailto:|#)/i.test(node.attrs.href ?? '') && !/[\u0000-\u0020<>]/.test(node.attrs.href!)) next.push({ type: 'link', attrs: { href: node.attrs.href! } })
+  const next = mapped ? [...marks, { type: mapped }] : [...marks]
+  if (tag === 'a' && isSafeArtifactLink(node.attrs.href??'')) next.push({ type: 'link', attrs: { href: node.attrs.href!,...(node.attrs.target==='_blank'||node.attrs.target==='_self'?{target:node.attrs.target}:{}) } })
   return node.children.flatMap(child => richInline(child, next))
 }
 function richBlock(node: HtmlElement): ArtifactRichText {

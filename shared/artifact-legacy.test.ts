@@ -6,6 +6,16 @@ const sha = 'a'.repeat(64)
 const file = (content: string) => ({ content, sha256: sha })
 
 describe('legacy artifact conversion', () => {
+  it('preserves relative inline links and targets without leaking link marks into siblings',()=>{
+    const result=convertLegacyArtifact({id:'links',kind:'slides',title:'链接',files:{
+      'project/deck.json':file(JSON.stringify({v:4,order:['a']})),
+      'project/slides/a.html':file('<section><h1 id="heading">前文<a href="../页面.html" target="_blank"><b>链接</b></a>后文</h1></section>'),
+    }})
+    const parts=result.document.pages.a.nodes.heading.richText!.content![0].content!
+    assert.equal(parts[0].marks,undefined)
+    assert.deepEqual(parts[1].marks,[{type:'link',attrs:{href:'../页面.html',target:'_blank'}},{type:'bold'}])
+    assert.equal(parts[2].marks,undefined)
+  })
   it('retains every pinned Slides transition and matching element identities across slides', () => {
     for (const transition of ['none', 'fade', 'push', 'magic', 'slide']) {
       const result = convertLegacyArtifact({id:'transitions',kind:'slides',title:'转场',files:{

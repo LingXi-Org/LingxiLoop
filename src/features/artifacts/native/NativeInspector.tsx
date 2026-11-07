@@ -1,3 +1,4 @@
+import ElementLinkField from './ElementLinkField'
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject, type ComponentProps } from 'react'
 import type { ArtifactDocument, ArtifactNode, ArtifactPage } from '../../../../shared/artifact-document'
 import type { ArtifactOperation } from '../../../../shared/artifact-operations'
@@ -20,7 +21,8 @@ interface Props {
   inspectorTab: 'properties' | 'outline' | 'code' | 'theme'
   setInspectorTab(tab: 'properties' | 'outline' | 'code' | 'theme'): void
   onNotice(message:string):void
-  commitCode(operations:ArtifactOperation[],base:ArtifactDocument):boolean
+  retainDraft(operations:ArtifactOperation[]):void
+  commitCode(operations:ArtifactOperation[],base:ArtifactDocument,readKeys?:readonly string[]):boolean
   codeDrafts:NativeCodeDraftAccess
   setInspectorOpen(open: boolean): void
   doc: ArtifactDocument
@@ -51,7 +53,7 @@ interface Props {
   selectedWithChildren(): ArtifactNode[]
 }
 
-export default function NativeInspector({measureArtboardHeight,panelWidth,setPanelWidth,outline,inspectorTab, setInspectorTab, setInspectorOpen, doc, primary, current, primaryPadding, kind, canvasContentId, writable, selected, setSelected, inspectorBase, fileInput, replaceImage, getBase, beginInspector, dispatch, inspectDispatch, patchNode, beginCrop, reorderLayer, ungroup, groupSelection, align, distribute, deleteSelection, pasteNodes, selectedWithChildren,onNotice,commitCode,codeDrafts}: Props) {
+export default function NativeInspector({measureArtboardHeight,panelWidth,setPanelWidth,outline,inspectorTab, setInspectorTab, setInspectorOpen, doc, primary, current, primaryPadding, kind, canvasContentId, writable, selected, setSelected, inspectorBase, fileInput, replaceImage, getBase, beginInspector, dispatch, inspectDispatch, patchNode, beginCrop, reorderLayer, ungroup, groupSelection, align, distribute, deleteSelection, pasteNodes, selectedWithChildren,onNotice,commitCode,retainDraft,codeDrafts}: Props) {
   const aside=useRef<HTMLElement|null>(null),[sheet,setSheet]=useState(false)
   useLayoutEffect(()=>{const root=aside.current?.closest<HTMLElement>('[data-native-artifact-editor]');if(!root)return;const update=()=>{setSheet(root.clientWidth<(kind==='design'?600:768));aside.current?.style.setProperty('--native-inspector-root-height',`${root.clientHeight}px`)},observer=new ResizeObserver(update);observer.observe(root);update();return()=>observer.disconnect()},[kind])
   useEffect(()=>{const root=aside.current?.closest<HTMLElement>('[data-native-artifact-editor]');if(root&&root.clientWidth>=600&&inspectorTab==='outline')setInspectorTab('properties')},[sheet,inspectorTab,setInspectorTab])
@@ -79,6 +81,7 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
               {primary.layout&&primary.layout.mode!=='absolute'&&<><Field label="间距" type="number" min={0} value={primary.layout.gap??0} onChange={v=>patchNode({layout:{...primary.layout!,gap:Math.max(0,Number(v))}})} /><label className="native-field"><span>交叉轴</span><select aria-label="交叉轴对齐" value={primary.layout.align??'stretch'} onChange={e=>patchNode({layout:{...primary.layout!,align:e.target.value as 'start'|'center'|'end'|'stretch'}})}><option value="start">起始</option><option value="center">居中</option><option value="end">末尾</option><option value="stretch">拉伸</option></select></label><label className="native-field"><span>主轴</span><select aria-label="主轴对齐" value={primary.layout.justify??'start'} onChange={e=>patchNode({layout:{...primary.layout!,justify:e.target.value as 'start'|'center'|'end'|'space-between'}})}><option value="start">起始</option><option value="center">居中</option><option value="end">末尾</option><option value="space-between">两端对齐</option></select></label></>}
             </>}
           </section>
+          {kind==='design'&&current&&<ElementLinkField key={`${current.id}:${primary.id}`} node={primary} pageId={current.id} writable={writable} getBase={getBase} commit={commitCode} retain={retainDraft}/>}
           {(primary.type==='text'||primary.type==='note'||primary.type==='table')&&<section className="native-property-section"><h3>文本</h3>
             {primary.type!=='table'&&<label className="native-field"><span>文本样式</span><select aria-label="文本样式" value={primary.richText?.content?.[0]?.type==='heading'?String(primary.richText.content[0].attrs?.level??1):'body'} onChange={e=>{const level=Number(e.target.value),heading=!!level,content=primary.richText?.content??[{type:'paragraph' as const,content:[{type:'text' as const,text:primary.text??''}]}];patchNode({richText:{type:'doc',content:content.map(block=>block.type==='paragraph'||block.type==='heading'?{...block,type:heading?'heading':'paragraph',attrs:{...block.attrs,...(heading?{level}: {})}}:block)},style:{fontSize:heading?({1:48,2:36,3:30,4:26,5:22,6:20} as Record<number,number>)[level]:24,fontWeight:heading?700:400}})}}><option value="body">正文</option>{[1,2,3,4,5,6].map(level=><option key={level} value={level}>标题 {level}</option>)}</select></label>}
             <FontField disabled={!writable} value={artifactResolvedStyle(primary.style,doc).fontFamily} theme={primary.style.themeFont} onBegin={()=>{inspectorBase.current=doc}} onChange={changeFont} />

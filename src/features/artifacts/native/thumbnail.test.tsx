@@ -4,6 +4,24 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createDocument, createNode, createPage } from '../../../../shared/artifact-document'
 import { PageThumbnail } from './thumbnail'
+import {Parser} from 'htmlparser2'
+import {artifactPreviews} from '../../../../shared/artifact-previews'
+
+test('链接缩略图保留局部下划线，紧凑摘要不携带网址或挂载链接',()=>{
+  const document=createDocument('slides','link-thumb'),page=createPage('link-page'),node=createNode('text','link-text')
+  node.text='前链接后';node.richText={type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'前'},{type:'text',text:'链接',marks:[{type:'link',attrs:{href:'https://private-link.test/author-data'}}]},{type:'text',text:'后'}]}]}
+  page.nodes[node.id]=node;page.nodeOrder=[node.id];document.pages[page.id]=page;document.pageOrder=[page.id]
+  const before=JSON.stringify(document)
+  for(const value of [page,artifactPreviews(document)[page.id]]){
+    const output=renderToStaticMarkup(createElement(PageThumbnail,{page:value,document,loaded:true})),stack:boolean[]=[],characters:Array<[string,boolean]>=[]
+    const parser=new Parser({onopentag(_tag,attributes){const decoration=attributes['text-decoration']??attributes.style?.match(/text-decoration:([^;]+)/)?.[1];stack.push(decoration?decoration.includes('underline'):stack.at(-1)??false)},ontext(text){for(const character of text)characters.push([character,stack.at(-1)??false])},onclosetag(){stack.pop()}})
+    parser.write(output);parser.end()
+    assert.deepEqual(characters,[['前',false],['链',true],['接',true],['后',false]])
+    assert.doesNotMatch(output,/href=|private-link|<a\b/)
+    if(value!==page)assert.ok(!JSON.stringify(value).includes('private-link'))
+  }
+  assert.equal(JSON.stringify(document),before)
+})
 
 test('代码样式进入有界缩略图，隐藏属性不绘制，属性与源码不成为导航内容',()=>{
   const document=createDocument('slides','code-thumb'),page=createPage('code-thumb-page')
