@@ -18,6 +18,7 @@ import InspectorCode from './InspectorCode'
 import DesignOutline from './DesignOutline'
 import InspectorWidthGrip,{useDesignInspectorWidth} from './InspectorWidthGrip'
 import type {NativeCodeDraftAccess} from './session'
+import {nodeCodeEntries,nodeCodePatch} from './inspector-code-edit'
 
 interface Props {
   measureArtboardHeight():number|undefined
@@ -73,6 +74,20 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
     const family = artifactResolvedStyle({ ...initial.style, ...choice, ...(font.theme ? { fontFamily: undefined } : {}) }, doc).fontFamily ?? font.family
     patchNode({ style: { ...choice, ...editorFontFacePatch(family, initial.style) } }, font.theme ? ['style.fontFamily'] : ['style.themeFont', 'style.themeFontFallback'])
   }
+  const changeElementTextColor=(value:string)=>{
+    const base=inspectorBase.current??getBase(),page=current&&base?.pages[current.id]
+    if(!base||!page||!writable)return
+    try{
+      const operations:ArtifactOperation[]=[]
+      for(const id of selected){
+        const node=page.nodes[id];if(!node||node.locked)continue
+        const before=nodeCodeEntries(node,page),values=new Map(before.map(entry=>[entry.name,entry.value]));values.set('color',value==='none'?'transparent':value)
+        const {patch,unset}=nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))
+        if(Object.keys(patch).length||unset.length)operations.push({type:'node.patch',pageId:page.id,nodeId:id,patch,...(unset.length?{unset}:{})})
+      }
+      inspectDispatch(operations)
+    }catch{onNotice('文字颜色未能修改，请检查颜色后重试。')}
+  }
   return <aside ref={aside} className="native-inspector" data-sheet={sheet} aria-label="属性面板" onFocusCapture={beginInspector}>{kind==='design'&&!sheet&&<InspectorWidthGrip width={panelWidth} max={panelResize.max} defaultWidth={panelResize.defaultWidth} setWidth={setPanelWidth}/>}<header className="native-inspector-header"><div role="tablist" aria-label="属性选项卡" className="native-inspector-tabs">{tabs.map((tab,index)=><button key={tab.id} data-inspector-tab={tab.id} type="button" role="tab" className="native-panel-tab" aria-selected={inspectorTab===tab.id} tabIndex={inspectorTab===tab.id?0:-1} onClick={()=>{if(tab.id==='code'){if(inspectorTab==='code')codeField.current?.focus();else codeFocus.current=true}setInspectorTab(tab.id)}} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();event.stopPropagation();const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;codeFocus.current=false;setInspectorTab(tabs[next].id);event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role=tab]')[next]?.focus()}}>{tab.name}</button>)}</div><span style={{flex:1}} /><IconButton icon="close" label="关闭属性" onClick={() => setInspectorOpen(false)} /></header>
       {kind==='design'&&<div className="native-inspector-outline-slot" data-sheet={sheet} hidden={inspectorTab==='theme'||sheet&&inspectorTab!=='outline'}><DesignOutline {...outline} document={doc} selected={selected} sheet={sheet} writable={writable} dispatch={dispatch}/></div>}
       {inspectorTab==='code'&&current&&<InspectorCode key={`${current.id}:${selected.join('|')}:${codeDrafts.generation()}`} document={doc} pageId={current.id} selected={selected} codeDrafts={codeDrafts} readOnly={!writable} field={codeField} requestFocus={codeFocus} getBase={getBase} dispatch={commitCode} onNotice={onNotice}/>}
@@ -97,7 +112,7 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
             <FontVariantField disabled={!writable} family={artifactResolvedStyle(primary.style,doc).fontFamily} weight={primary.style.fontWeight} style={primary.style.fontStyle} onBegin={()=>{inspectorBase.current=getBase()}} onChange={variant=>patchNode({style:{fontWeight:variant.weight,fontStyle:variant.style}})} />
             <Field label="字号" type="number" min={1} max={1000} value={primary.style.fontSize??32} onChange={v=>patchNode({style:{fontSize:Math.max(1,Math.min(1000,Number(v)))}})} />
             <div className="native-property-pair"><span>间距</span><Field label="行高" type="number" min={.5} max={10} value={primary.style.lineHeight??1.25} onChange={v=>patchNode({style:{lineHeight:Math.max(.5,Math.min(10,Number(v)))}})} /><Field label="字距" type="number" value={primary.style.letterSpacing??0} onChange={v=>patchNode({style:{letterSpacing:Number(v)}})} /></div>
-            {kind==='design'&&current&&current.id!==canvasContentId&&primary.type!=='table'?<ElementTextColor document={doc} pageId={current.id} nodeId={primary.id} value={artifactResolvedStyle(primary.style,doc).color??'#222222'} disabled={!writable||!!primary.locked||selected.length!==1} onChange={v=>patchNode({style:{color:v==='none'?'transparent':v}},['style.themeColor'])}/>:<Field label="颜色" type="color" value={artifactResolvedStyle(primary.style,doc).color??'#222222'} onChange={v=>patchNode({style:{color:v==='none'?'transparent':v}},['style.themeColor'])} />}
+            {kind==='design'&&current&&current.id!==canvasContentId&&primary.type!=='table'?<ElementTextColor document={doc} pageId={current.id} nodeId={primary.id} value={primary.css?.color??artifactResolvedStyle(primary.style,doc).color??'#222222'} disabled={!writable||!!primary.locked||selected.length!==1} onChange={changeElementTextColor}/>:<Field label="颜色" type="color" value={artifactResolvedStyle(primary.style,doc).color??'#222222'} onChange={v=>patchNode({style:{color:v==='none'?'transparent':v}},['style.themeColor'])} />}
             {kind==='design'&&current&&current.id!==canvasContentId?<ElementTextAlignment node={current.nodes[primary.id]??primary} page={current} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/>:<div className="native-property-segment"><span>对齐</span><div>{(['left','center','right'] as const).map(direction=><IconButton key={direction} icon={direction} label={({left:'文本左对齐',center:'文本居中',right:'文本右对齐'})[direction]} active={(primary.style.textAlign??'left')===direction} onClick={()=>patchNode({style:{textAlign:direction}})} />)}<button type="button" aria-label="文本两端对齐" aria-pressed={primary.style.textAlign==='justify'} onClick={()=>patchNode({style:{textAlign:'justify'}})}>☰</button></div></div>}
           </section>}
           {(primary.type==='image'||primary.type==='video')&&<section className="native-property-section"><h3>{primary.type==='image'?'图片':'视频'}</h3><div className="native-inspector-actions"><button type="button" onClick={()=>{replaceImage.current=true;fileInput.current?.click()}}>替换{primary.type==='video'?'视频':'图片'}</button><button type="button" onClick={()=>current&&beginCrop(primary,current)}>裁剪</button></div></section>}

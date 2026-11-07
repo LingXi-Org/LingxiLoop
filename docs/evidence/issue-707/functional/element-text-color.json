@@ -1,0 +1,53 @@
+{
+  "state": "D39画板文字CSS颜色字段与透明中文",
+  "baselineForDisplayFailure": "4dd72ae30d5039f8a3d1e6e18f5c23b67872956d",
+  "regressionsBeforeImplementation": [
+    "element-text-color/failures/css-display.json",
+    "element-text-color/failures/transparent-copy.json"
+  ],
+  "implementation": "src/features/artifacts/native/NativeInspector.tsx",
+  "changedBehavior": [
+    "文字颜色字段先显示作者CSS声明，再回退现有原生主题解析。",
+    "颜色修改沿现有inspectorBase与inspectDispatch进入共享操作；复用nodeCodeEntries/Patch替换CSS声明及语义引用，保留其他属性。",
+    "透明色显示为中文“透明”，文档CSS值transparent不变。没有更改颜色草稿、观察器、模型、服务或导出代码。"
+  ],
+  "browserResults": {
+    "140": 5,
+    "154": 5,
+    "sharedColorFieldDesignAndSlides154": 2
+  },
+  "verified": [
+    "两版各5场景通过：CSS覆盖颜色编辑、原颜色历史、CSS同字段并发冲突、主题颜色转自定义及透明中文。",
+    "修改后计算颜色变为rgb(250,248,244)、对比度1.0:1，CSS旧声明删除；撤销恢复原节点和CSS、重做及重开保存一致。",
+    "弹窗打开期间对端改CSS颜色及padding，本地提交进入冲突且对端文档逐字段保留，无本地成功写入。",
+    "原有两模式共享颜色选择：透明度、键盘、保存/重开及焦点恢复通过。",
+    "16项代码声明/对齐/对比度单元与15CI契约通过；lint仍43警告/4信息；本地全量类型检查仍76项SDK/级联诊断，新代码无诊断。"
+  ],
+  "probeFailures": [
+    {
+      "path": "element-text-color/probe-errors/theme-precedence.json",
+      "reason": "初次主题夹具错误假定语义颜色高于显式颜色，与现模型规则不符；改为只有主题引用的有效夹具，两版通过。不列为产品缺陷。"
+    }
+  ],
+  "sourceInputsSha256": {
+    "src/features/artifacts/native/NativeInspector.tsx": "ffb784d15e02200a85ab96c705442aada8329f9ab2db0592dee6bed554cbc7e3",
+    "src/features/artifacts/native/ColorField.tsx": "426e101e8cf1c377e2b0fef4eb3ab5e39dd803c75c1144fe4acaeea19f29971c",
+    "scripts/native-editor-ui-acceptance.mjs": "c8d4410fc989ccec6b69efd836376aaf768581e794514937ce732c0b92671de3",
+    "scripts/native-editor-sizing-reference.mjs": "c6f986a46c8558aaf601618c75ef1593bc00176c6b173c2750b391270a549c81"
+  },
+  "screenshots": {
+    "reference": "visual/element-text-color/reference/",
+    "native": "visual/element-text-color/implementation/",
+    "pixelQualified": false,
+    "scope": "已保存相同白色文字/属性面板的原始截图；未固定全部焦点/图标/字体并做本项最终像素验收。"
+  },
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false,
+  "unverified": [
+    "完整文本/混合选择、!important弹窗回退、原版完整渐变/颜色标签和CSS变量继承。",
+    "全部8容器/主题、导出视觉、授权服务及最终10组性能。"
+  ],
+  "newCandidateChecks": "新候选提交后的精确SDK CI、生产图与独立只读复审待执行。",
+  "scope": "受控HTTP共享操作和真实浏览器；不是完整授权API、完整视觉或最终性能通过证据。"
+}

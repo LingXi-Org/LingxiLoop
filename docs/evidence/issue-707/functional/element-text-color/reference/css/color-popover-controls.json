@@ -1,0 +1,228 @@
+{
+  "inputs": [
+    {
+      "type": "text",
+      "label": "Width",
+      "placeholder": "1152px",
+      "value": "1152px"
+    },
+    {
+      "type": "text",
+      "label": "Height",
+      "placeholder": "76px",
+      "value": "76px"
+    },
+    {
+      "type": "text",
+      "label": "Offset X",
+      "placeholder": "64",
+      "value": "64"
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": "64"
+    },
+    {
+      "type": "text",
+      "label": "Offset Y",
+      "placeholder": "40",
+      "value": "40"
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": "40"
+    },
+    {
+      "type": "text",
+      "label": "Padding",
+      "placeholder": "0",
+      "value": "0"
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": "0"
+    },
+    {
+      "type": "text",
+      "label": "Margin",
+      "placeholder": "0",
+      "value": "0"
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": "0"
+    },
+    {
+      "type": "text",
+      "label": "Destination",
+      "placeholder": "https://…",
+      "value": ""
+    },
+    {
+      "type": "text",
+      "label": "Size",
+      "placeholder": "",
+      "value": "48"
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": "48"
+    },
+    {
+      "type": "text",
+      "label": "Line height",
+      "placeholder": "60px",
+      "value": "1.25"
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": "1.25"
+    },
+    {
+      "type": "text",
+      "label": "Letter spacing",
+      "placeholder": "normal",
+      "value": ""
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": ""
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "left"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "center"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "right"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "justify"
+    },
+    {
+      "type": "text",
+      "label": "Opacity",
+      "placeholder": "1",
+      "value": "1"
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": "1"
+    },
+    {
+      "type": "text",
+      "label": "Radius",
+      "placeholder": "0",
+      "value": "0"
+    },
+    {
+      "type": "number",
+      "label": null,
+      "placeholder": null,
+      "value": "0"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "none"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "solid"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "dashed"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "dotted"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "color"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "gradient"
+    },
+    {
+      "type": "radio",
+      "label": null,
+      "placeholder": null,
+      "value": "image"
+    },
+    {
+      "type": "text",
+      "label": "Hex color",
+      "placeholder": null,
+      "value": "#888888"
+    },
+    {
+      "type": "text",
+      "label": "Alpha percent",
+      "placeholder": null,
+      "value": "100"
+    }
+  ],
+  "buttons": [
+    {
+      "label": "Color: #888888",
+      "text": "#888888"
+    },
+    {
+      "label": "Close",
+      "text": ""
+    },
+    {
+      "label": "Pick color from screen",
+      "text": ""
+    }
+  ],
+  "dialogs": [
+    {
+      "label": null,
+      "text": "ColorThemeCustomTypeColorGradientLeft and Right arrows change saturation. Up and Down arrows change brightness.%Good contrastGood contrast, 3.3 to 1 on background color"
+    }
+  ]
+}

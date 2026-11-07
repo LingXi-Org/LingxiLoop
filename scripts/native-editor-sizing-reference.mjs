@@ -53,8 +53,14 @@ try{
       if(args.position){await page.getByRole('button',{name:'Position: Absolute',exact:true}).click();await page.getByRole('menuitemradio',{name:args.position,exact:true}).click()}
       const original=await readFile(join(project,'project/Page1.dc.html'),'utf8')
       let dragObservation
+      if(name==='contrast-color-probe')await writeFile(join(output,'color-controls.json'),JSON.stringify(await page.getByRole('button').evaluateAll(elements=>elements.map(element=>({label:element.getAttribute('aria-label'),title:element.getAttribute('title'),text:element.textContent.slice(0,60)}))),null,2)+'\n')
       const width=page.getByRole('textbox',{name:'Width',exact:true})
-      if(['width','percent','escape','blank','save','auto'].includes(name)){
+      if(['contrast-color-open','contrast-color-custom','contrast-color-edit'].includes(name)){
+        await page.getByRole('button',{name:/^Color: /}).click()
+        if(name!=='contrast-color-open')await page.getByRole('tab',{name:'Custom',exact:true}).click()
+        await writeFile(join(output,'color-popover-controls.json'),JSON.stringify({inputs:await page.locator('input').evaluateAll(elements=>elements.map(element=>({type:element.type,label:element.getAttribute('aria-label'),placeholder:element.getAttribute('placeholder'),value:element.value}))),buttons:await page.getByRole('button').evaluateAll(elements=>elements.map(element=>({label:element.getAttribute('aria-label'),text:element.textContent.slice(0,70)}))),dialogs:await page.getByRole('dialog').evaluateAll(elements=>elements.map(element=>({label:element.getAttribute('aria-label'),text:element.textContent.slice(0,300)})))},null,2)+'\n')
+        if(name==='contrast-color-edit'){const hex=page.getByRole('textbox',{name:'Hex color',exact:true});await hex.fill(args['color-target']??'#faf8f4');await hex.press('Enter');await page.getByRole('button',{name:'Close',exact:true}).click()}
+      }else if(['width','percent','escape','blank','save','auto'].includes(name)){
         await width.fill(name==='auto'?'auto':name==='percent'?'50%':name==='blank'?'':'800')
         await width.press(name==='escape'?'Escape':name==='save'?'Control+s':'Enter')
       }else if(name.endsWith('-hug')||name.endsWith('-fill')){

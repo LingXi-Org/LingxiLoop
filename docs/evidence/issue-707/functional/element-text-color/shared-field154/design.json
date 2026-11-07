@@ -1,0 +1,10 @@
+{
+  "kind": "isolated-color-editor-diagnostic",
+  "mode": "design",
+  "alphaPreserved": true,
+  "keyboardColorChange": true,
+  "focusRestored": true,
+  "reloadRetained": true,
+  "scope": "actual color popover and shared reducer through HTTP fixture",
+  "consoleOrPageErrors": []
+}

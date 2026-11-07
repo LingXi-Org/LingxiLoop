@@ -57,7 +57,7 @@ export function ColorField({
           className="native-color-swatch"
           style={{ background: value === 'none' ? undefined : value }}
         />
-        <span>{value === 'none' ? '无' : value.toUpperCase()}</span>
+        <span>{value === 'none' ? '无' : value.trim().toLowerCase() === 'transparent' ? '透明' : value.toUpperCase()}</span>
       </button>
       {open && (
         <Suspense fallback={null}>

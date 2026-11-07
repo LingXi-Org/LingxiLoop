@@ -116,8 +116,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(editorCase==='contrast-opacity')node.style.opacity=.5
     if(editorCase==='contrast-gradient')node.css={'background-image':'linear-gradient(red,blue)'}
     if(editorCase==='contrast-parent-opacity')document.pages['page-1'].nodes['page-1-root'].style.opacity=.5
-    if(editorCase==='contrast-css')node.css={color:'#888888'}
+    if(editorCase==='contrast-css'||editorCase.startsWith('contrast-color-css-'))node.css={color:'#888888'}
     if(editorCase==='contrast-clipped')node.css={'background-clip':'text'}
+    if(editorCase==='contrast-color-theme-edit'){delete node.css;delete node.style.color;node.style.themeColor='text';document.themeId='text-colors';document.themes['text-colors']={id:'text-colors',name:'文字配色',tokens:{text:'#888888'}}}
     if(editorCase.startsWith('contrast-overlap-')){
       const overlap={...createNode(editorCase==='contrast-overlap-image'?'image':'group','contrast-overlap'),parentId:node.parentId,x:node.x,y:node.y,width:node.width,height:node.height,style:{}}
       if(editorCase==='contrast-overlap-paint')overlap.style.backgroundColor='#ff0000'
@@ -525,17 +526,29 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         if(editorCase.startsWith('contrast-overlap-'))assert.equal(await page.locator('[data-node-id=contrast-overlap]').count(),1,'实际遮挡图层必须已挂载')
         if(editorCase==='contrast-overlap-image'){await page.locator('[data-node-id=contrast-overlap] img').waitFor();assert.equal(await page.locator('[data-page-id=page-1] [data-node-type=image] img').count(),2)}
         const badge=page.locator('.native-text-contrast'),hidden=['contrast-transparent','contrast-opacity','contrast-gradient','contrast-parent-opacity','contrast-clipped','contrast-readonly','contrast-overlap-paint','contrast-overlap-border','contrast-overlap-image'].includes(editorCase)
+        if(editorCase==='contrast-transparent')assert.match(await page.getByRole('button',{name:'颜色',exact:true}).innerText(),/透明/)
         if(hidden)assert.equal(await badge.count(),0)
         else{
           await badge.waitFor()
-          const ratio=editorCase==='contrast-alpha'?'2.9':['contrast-base','contrast-history','contrast-overlap-empty','contrast-overlap-transparent-border'].includes(editorCase)?'12.7':'3.3',passed=['contrast-base','contrast-large','contrast-css','contrast-history','contrast-overlap-empty','contrast-overlap-transparent-border'].includes(editorCase)
+          const ratio=editorCase==='contrast-alpha'?'2.9':['contrast-base','contrast-history','contrast-overlap-empty','contrast-overlap-transparent-border'].includes(editorCase)?'12.7':'3.3',passed=editorCase.startsWith('contrast-color-css-')||['contrast-base','contrast-large','contrast-css','contrast-history','contrast-overlap-empty','contrast-overlap-transparent-border','contrast-color-theme-edit'].includes(editorCase)
           assert.equal(await badge.getAttribute('data-verdict'),passed?'pass':'fail')
           assert.equal(await badge.innerText(),passed?'对比度良好':'对比度不足')
           assert.equal(await badge.getAttribute('title'),`与背景颜色的对比度为 ${ratio}:1`)
           assert.equal(await page.getByRole('button',{name:'颜色',exact:true}).getAttribute('aria-description'),`文字与背景颜色的对比度为 ${ratio}:1，${passed?'对比度良好':'对比度不足'}。`)
         }
+        if(editorCase==='contrast-color-css-conflict'){
+          await page.getByRole('button',{name:'颜色',exact:true}).click()
+          const picker=page.getByRole('dialog',{name:'颜色颜色',exact:true});await picker.getByRole('button',{name:'自定义',exact:true}).click()
+          document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId,patch:{css:{color:'#0000ff','padding-left':'3px'}}}],'peer-text-color')).document;const peerDocument=structuredClone(document)
+          await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).color==='rgb(0, 0, 255)')
+          const hex=picker.getByLabel('十六进制颜色',{exact:true});await hex.fill('#faf8f4');await hex.press('Enter')
+          await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='conflict')
+          assert.deepEqual(document,peerDocument);assert.equal(receipts.length,0);assert.deepEqual(errors,[])
+          return{kind:'文字CSS颜色草稿冲突',case:editorCase,remoteColorPreserved:true,remoteCssPreserved:true,staleEditConflicts:true,noLocalWrites:true,consoleOrPageErrors:errors}
+        }
         let historyChecked=false
-        if(editorCase==='contrast-history'){
+        if(['contrast-history','contrast-color-css-edit','contrast-color-theme-edit'].includes(editorCase)){
+          if(editorCase==='contrast-color-css-edit')assert.match(await page.getByRole('button',{name:'颜色',exact:true}).innerText(),/#888888/)
           await page.getByRole('button',{name:'颜色',exact:true}).click()
           const picker=page.getByRole('dialog',{name:'颜色颜色',exact:true})
           await picker.getByRole('button',{name:'自定义',exact:true}).click()
@@ -543,6 +556,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
           let pending=saved();await hex.press('Enter');await pending
           await picker.getByLabel('关闭颜色选择',{exact:true}).click()
           await page.waitForFunction(()=>document.querySelector('.native-text-contrast')?.dataset.verdict==='fail')
+          assert.equal(document.pages['page-1'].nodes[nodeId].css?.color,undefined)
+          assert.equal(document.pages['page-1'].nodes[nodeId].style.themeColor,undefined)
+          assert.equal(await page.locator(`[data-node-id="${nodeId}"]`).evaluate(element=>getComputedStyle(element).color),'rgb(250, 248, 244)')
           assert.equal(await badge.getAttribute('title'),'与背景颜色的对比度为 1.0:1')
           await page.locator('[data-native-artifact-editor]').focus();pending=saved();await page.keyboard.press('Control+z');await pending
           await page.waitForFunction(()=>document.querySelector('.native-text-contrast')?.dataset.verdict==='pass')

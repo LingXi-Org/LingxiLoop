@@ -1,0 +1,75 @@
+{
+  "candidate": "4dd72ae30d5039f8a3d1e6e18f5c23b67872956d",
+  "baseline": "ed7a984c0253cba3e9e8b1710997230cbf17ca40",
+  "scope": "独立detached只读复审实际paint遮挡修复、原生裁剪媒体适配及回归/证据；不读取root后续WIP，不改产品/分包/服务、不外发",
+  "result": "原透明空图层P2已定向闭合，本局部未发现新增P1/P2；完整资格仍未通过",
+  "findings": [],
+  "closedFindings": [
+    {
+      "severity": "P2",
+      "originalCandidate": "ed7a984c0253cba3e9e8b1710997230cbf17ca40",
+      "originalReport": "/tmp/lingxi-review-ed7a984c.json",
+      "result": "不相关命中先经过hasVisiblePaint：透明空group及透明边框均保留已知12.7:1提示；媒体、文字、背景图/颜色、边框仍按可见绘制判定unknown。与上一轮固定Source空DIV对照一致，原失败报告/JSON/来源证据保持。"
+    }
+  ],
+  "verified": [
+    {
+      "check": "140/154各8正式真实浏览器场景",
+      "cases": [
+        "contrast-overlap-empty",
+        "contrast-overlap-transparent-border",
+        "contrast-overlap-paint",
+        "contrast-overlap-border",
+        "contrast-overlap-image",
+        "contrast-base",
+        "contrast-css",
+        "contrast-history"
+      ],
+      "result": "全部通过。透明空和透明border提示12.7:1/中文good说明；背景色、真实border及双图片隐藏；默认/CSS计算及颜色保存/共享undo/redo/重开保持，零页面或控制台错误。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-4dd-contrast140",
+        "/workspace/lingxi-issue707-scratch/review-4dd-contrast154"
+      ],
+      "logs": [
+        "/tmp/lingxi-review-4dd-contrast140.log",
+        "/tmp/lingxi-review-4dd-contrast154.log"
+      ]
+    },
+    {
+      "check": "额外真实SVG图形、裁剪媒体反例",
+      "result": "154实际svg/rect fill=rgb214/230/255、opacity1，仍unknown/badge0。另图片IMG pointer-events=none且complete=true/naturalWidth32，包装节点检测仍返回unknown/badge0；均零写入。验证媒体适配确实处理当前原生裁剪路径，不是仅空容器case通过。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-4dd-shape154/transparent-overlap.json",
+        "/workspace/lingxi-issue707-scratch/review-4dd-image154/transparent-overlap.json"
+      ],
+      "script": "/workspace/lingxi-issue707-scratch/review-4dd-probes/contrast.mjs"
+    },
+    {
+      "check": "9项定向单元、32项合同",
+      "result": "3对比度+6文字对齐单元、9静态collector+23CI/存储/失败合同均通过。node脚本语法及git diff --check通过。",
+      "logs": [
+        "/tmp/lingxi-review-4dd-units.log",
+        "/tmp/lingxi-review-4dd-contracts.log"
+      ]
+    },
+    {
+      "check": "只读与生命周期范围",
+      "result": "唯一产品变化是rendered-text-contrast读取函数；ElementTextColor观察器、ColorField、数学与Inspector文件与ed7逐字相同。只读computedStyle/DOM查询，不读iframe内容、不挂载媒体、不派发操作、不修改权限或执行隔离。上一轮生命周期结果仍可作为未变代码的历史证据，本轮未把它记作重跑。"
+    },
+    {
+      "check": "测试ready修正",
+      "result": "first只用于等待图像存在；随后要求至少一图且所有当前挂载图complete/naturalWidth>0。新图片场景另等待专属媒体并明确断言页内2图，避免单图严格选择器或空图层充数。原一般ready不再假设一页只能有一图，没有删除解码断言。"
+    },
+    {
+      "check": "证据真实性及资格",
+      "result": "原ed7 P2、固定Source和初次局部修复图片错误均保留；修复后重新两版8项。文档明确功能/视觉/性能qualified=false，普通CI与静态图成功未充当原P2闭合证据。"
+    }
+  ],
+  "unverified": [
+    "本轮没有重跑固定Source：上一轮相同透明空布局的固定016b、12资源哈希及实际12.7:1对照保持；未宣称所有复杂paint组合均与Source一致",
+    "视频/iframe包装节点分支仅静态核对，未运行真实video/embed加载或所有透明SVG/效果/混合场景",
+    "未重新测试disabled/多选/observer清理（相关代码逐字未改，上一轮已有实测）；未做新真实授权服务/跨租户/Agent检查",
+    "未执行正式SDK全类型/build/新生产图或最终实际HTTP/Worker/冷启动/输入/PSS/10组ABBA；静态或单组诊断不代表性能通过",
+    "未补全四容器双主题/完整面板/0.5%原始像素；本局部闭合不代表全计划完成"
+  ]
+}

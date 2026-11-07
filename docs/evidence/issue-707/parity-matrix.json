@@ -9975,6 +9975,42 @@
         "receipt": "functional/element-text-contrast.json",
         "scope": "Design画板单文字颜色对比度，受控HTTP及真实浏览器；不代表完整模型、授权API、全部文本、Slides或最终性能。"
       }
+    },
+    {
+      "id": "D39-design",
+      "editor": "design",
+      "control": "画板文字CSS颜色字段和透明中文",
+      "trigger": "选择有作者CSS颜色的文字，改颜色、共享历史、重开及并发冲突；透明色中文",
+      "states": [
+        "CSS覆盖",
+        "保存",
+        "撤销重做",
+        "重开",
+        "并发草稿冲突",
+        "主题转自定义",
+        "透明中文"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "start": 4214961,
+        "lookup": "ColorPopover",
+        "offsetUnit": "UTF-16 code units",
+        "runtime": "source-element-text-color.json"
+      },
+      "implementation": "src/features/artifacts/native/NativeInspector.tsx",
+      "screenshots": {
+        "reference": "visual/element-text-color/reference/",
+        "native": "visual/element-text-color/implementation/",
+        "matchedStateVerified": false
+      },
+      "result": "先复现CSS画布灰色而字段显示旧绿色，以及透明英文残留；已修复并由140/154各5场景和两模式共享颜色回归验证。!important来源弹窗回退、全部颜色/梯度及容器状态未对齐；无最终像素/性能资格。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-text-color.json",
+        "scope": "Design画板颜色操作及共享色值中文；不代表完整原版颜色弹窗、多选、服务或性能。"
+      }
     }
   ],
   "registeredReplacements": [
@@ -10017,6 +10053,10 @@
     {
       "area": "文字对比度提示与无障碍说明",
       "reason": "Good/Poor contrast及背景对比说明替换为对比度良好/不足和中文完整句；保留数学比值及作者颜色语法。六对原始像素诊断不排除替换或抗锯齿区域。"
+    },
+    {
+      "area": "透明色显示值",
+      "reason": "共享颜色字段将transparent显示为“透明”，保留文档CSS语法和作者代码；没有以此排除截图像素。"
     }
   ],
   "removedServiceEntrances": [
