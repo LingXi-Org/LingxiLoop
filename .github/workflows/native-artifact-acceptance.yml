@@ -127,6 +127,7 @@ jobs:
           for task_sizing_node in image shape; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-node="$task_sizing_node" --sizing-case=width-hug,height-hug --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-$task_sizing_node"
           done
+          node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=element-sizing --sizing-node=shape --sizing-case=theme-fill --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-theme"
           node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=both --checks=element-sizing --sizing-case=exports --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-element-sizing-exports"
           for task_artboard_case in default exports readonly fit-repeat fit-hidden fit-policy; do
             node --import tsx scripts/native-editor-ui-acceptance.mjs --mode=design --checks=design-artboard --artboard-case="$task_artboard_case" --browser="$CHROMIUM_PATH" --output="$RUNNER_TEMP/native-artboard-$task_artboard_case"

@@ -1,0 +1,199 @@
+{
+  "kind": "中文元素尺寸回归",
+  "mode": "design",
+  "case": "height-hug",
+  "node": {
+    "id": "page-1-shape",
+    "type": "shape",
+    "x": 760,
+    "y": 440,
+    "width": 180,
+    "height": 80,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fill": "#426b46",
+      "borderRadius": 12
+    },
+    "shape": "rect",
+    "implicitHeight": true,
+    "css": {
+      "height": "auto"
+    }
+  },
+  "geometry": {
+    "width": "180px",
+    "height": "0px",
+    "position": "absolute",
+    "left": "760px",
+    "top": "440px",
+    "minWidth": "0px",
+    "maxWidth": "none",
+    "minHeight": "0px",
+    "maxHeight": "none",
+    "right": "980px",
+    "bottom": "640px"
+  },
+  "controls": [
+    {
+      "label": "添加尺寸属性",
+      "rect": {
+        "x": 1408,
+        "y": 219,
+        "width": 24,
+        "height": 24,
+        "top": 219,
+        "right": 1432,
+        "bottom": 243,
+        "left": 1408
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "label": "宽度",
+      "value": "180px",
+      "rect": {
+        "x": 1201,
+        "y": 255,
+        "width": 151,
+        "height": 24,
+        "top": 255,
+        "right": 1352,
+        "bottom": 279,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "宽度模式：固定",
+      "rect": {
+        "x": 1360,
+        "y": 255,
+        "width": 72,
+        "height": 24,
+        "top": 255,
+        "right": 1432,
+        "bottom": 279,
+        "left": 1360
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "高度",
+      "value": "80px",
+      "rect": {
+        "x": 1201,
+        "y": 287,
+        "width": 151,
+        "height": 24,
+        "top": 287,
+        "right": 1352,
+        "bottom": 311,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "高度模式：自适应",
+      "rect": {
+        "x": 1360,
+        "y": 287,
+        "width": 72,
+        "height": 24,
+        "top": 287,
+        "right": 1432,
+        "bottom": 311,
+        "left": 1360
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "位置：绝对",
+      "rect": {
+        "x": 1201,
+        "y": 319,
+        "width": 231,
+        "height": 24,
+        "top": 319,
+        "right": 1432,
+        "bottom": 343,
+        "left": 1201
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px 6px 0px 8px",
+      "borderRadius": "6px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(255, 255, 255, 0.5)"
+    },
+    {
+      "label": "水平偏移",
+      "value": "760",
+      "rect": {
+        "x": 1221.5,
+        "y": 351,
+        "width": 83,
+        "height": 24,
+        "top": 351,
+        "right": 1304.5,
+        "bottom": 375,
+        "left": 1221.5
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "label": "垂直偏移",
+      "value": "440",
+      "rect": {
+        "x": 1341,
+        "y": 351,
+        "width": 83,
+        "height": 24,
+        "top": 351,
+        "right": 1424,
+        "bottom": 375,
+        "left": 1341
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "0px",
+      "borderRadius": "0px",
+      "color": "rgba(0, 0, 0, 0.9)",
+      "background": "rgba(0, 0, 0, 0)"
+    }
+  ],
+  "batches": 1,
+  "savedAndReopened": true,
+  "otherPagesUnchanged": true,
+  "consoleOrPageErrors": []
+}
