@@ -149,3 +149,11 @@
 .dark .native-editor .native-font-variant-popup,.native-editor[data-theme=dark] .native-font-variant-popup{background:rgb(48,48,48);color:rgba(255,255,255,.93);border-bottom:1px solid rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.32),0 2px 6px rgba(0,0,0,.2)}
 
 .native-editor .native-font-variant-option>svg{width:12px;height:16px;flex:none;color:var(--native-accent)}
+
+.native-editor .native-font-weight-input{display:flex;position:relative;min-width:0;flex:1}
+.native-editor .native-font-weight-input>input{box-sizing:border-box;width:100%;height:24px;min-height:24px;padding:0 8px;border:0;border-radius:6px;background:rgba(255,255,255,.5);box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);color:var(--native-fg);font:inherit}
+.native-editor .native-font-weight-input>[role=alert]{position:absolute;top:100%;left:0;z-index:1;background:var(--native-panel);color:var(--native-fg);padding:4px 8px;min-width:100%}
+
+@media(pointer:coarse){.native-editor .native-font-weight-input>input{height:40px;min-height:40px;padding:0 12px;border-radius:8px;font-size:16px;line-height:20px}}
+
+.dark .native-editor .native-font-weight-input>input,.native-editor[data-theme=dark] .native-font-weight-input>input{background:color(srgb 1 1 1 / .05);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}

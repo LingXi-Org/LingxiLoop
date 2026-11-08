@@ -1,0 +1,19 @@
+{
+  "rect": {
+    "x": 1201,
+    "y": 722,
+    "width": 203,
+    "height": 24,
+    "top": 722,
+    "right": 1404,
+    "bottom": 746,
+    "left": 1201
+  },
+  "fontSize": "13px",
+  "lineHeight": "19px",
+  "padding": "0px 8px",
+  "borderRadius": "6px",
+  "background": "color(srgb 1 1 1 / 0.05)",
+  "color": "rgba(255, 255, 255, 0.93)",
+  "boxShadow": "rgba(255, 255, 255, 0.12) 0px 0px 0px 1px inset"
+}

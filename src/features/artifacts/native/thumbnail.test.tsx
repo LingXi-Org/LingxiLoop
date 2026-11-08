@@ -89,3 +89,14 @@ test('画板四角裁切背景和全部缩略内容，不改写节点',()=>{
   assert.match(html,/<clipPath/);assert.match(html,/M10 0 H1260 A20 20/);assert.match(html,/<g clip-path="url\(#/)
   assert.equal(JSON.stringify(page),before)
 })
+
+
+test('标题缩略图保持默认粗体、显式普通与CSS字重优先级',()=>{
+ const document=createDocument('design','weight-thumb'),page=createPage('weight-page'),node=createNode('text','heading')
+ node.text='中文标题';node.richText={type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:node.text}]}]};node.style={fontSize:48};page.nodes[node.id]=node;page.nodeOrder=[node.id];document.pages[page.id]=page;document.pageOrder=[page.id]
+ const output=()=>renderToStaticMarkup(createElement(PageThumbnail,{page,document,loaded:true}))
+ assert.match(output(),/<text[^>]+font-weight="700"/)
+ const before=JSON.stringify(document),preview=artifactPreviews(document)[page.id];assert.match(renderToStaticMarkup(createElement(PageThumbnail,{page:preview,document,loaded:true})),/<text[^>]+font-weight="700"/);assert.equal(JSON.stringify(document),before)
+ const plain={...page,nodes:{...page.nodes,heading:{...node,style:{...node.style,fontWeight:400}}}};assert.match(renderToStaticMarkup(createElement(PageThumbnail,{page:plain,document,loaded:true})),/<text[^>]+font-weight="400"/)
+ const css={...page,nodes:{...page.nodes,heading:{...node,css:{'font-weight':'var(--weight,500)'}}}};const html=renderToStaticMarkup(createElement(PageThumbnail,{page:css,document,loaded:true}));assert.match(html,/font-weight:var\(--weight,500\)/);assert.doesNotMatch(html,/<text[^>]+font-weight=/)
+})

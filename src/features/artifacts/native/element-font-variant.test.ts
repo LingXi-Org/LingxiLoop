@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {createNode,createPage} from '../../../../shared/artifact-document'
-import {elementFontVariantPatch} from './element-font-variant'
+import {elementFontVariantPatch,parseElementFontWeight,elementFontWeightText} from './element-font-variant'
 
 test('还原字重同时清除自有字重与字形声明，保留装饰和其他作者属性',()=>{
  const node=createNode('text','text'),page=createPage('page');node.style={fontWeight:700,fontStyle:'italic',textDecoration:'underline',fontFamily:'Arial'};node.css={'font-weight':'600 !important','font-style':'oblique 10deg',color:'red'}
@@ -19,4 +19,17 @@ test('当前自有字形不写回，继承字形的明确选择成为可保存�
  const node=createNode('text','text'),page=createPage('page');node.style={fontWeight:700,fontStyle:'italic'}
  assert.deepEqual(elementFontVariantPatch(node,page,{weight:700,style:'italic'},{weight:700,italic:true}),{patch:{},unset:[]})
  node.style={};const result=elementFontVariantPatch(node,page,{weight:700,style:'italic'},{weight:700,italic:true});assert.equal(result.patch.style?.fontWeight,700);assert.equal(result.patch.style?.fontStyle,'italic')
+})
+
+
+test('字重字面解析采用来源语义，变量与优先级表达式保留文本输入',()=>{
+ for(const [input,expected]of [['700',700],[' 500.5 ',500.5],['normal',400],['bold',700]] as const)assert.equal(parseElementFontWeight(input),expected)
+ for(const input of ['var(--weight)','calc(400 + 100)','inherit','bolder','700 !important','+700','7e2','BOLD',''])assert.equal(parseElementFontWeight(input),undefined)
+ const node=createNode('text','text');node.style={fontWeight:700};node.css={'font-weight':'var(--weight)'};assert.equal(elementFontWeightText(node),'var(--weight)');delete node.css;assert.equal(elementFontWeightText(node),'700');node.style={};assert.equal(elementFontWeightText(node),'')
+})
+
+
+test('来源字形当前值采用自有伴随声明，重选普通字形保留inherit而不覆盖实际继承的斜体',()=>{
+ const node=createNode('text','text'),page=createPage('page');node.style={fontWeight:700};node.css={'font-style':'inherit'}
+ assert.deepEqual(elementFontVariantPatch(node,page,{weight:700,style:'normal'},{weight:700,italic:true}),{patch:{},unset:[]})
 })

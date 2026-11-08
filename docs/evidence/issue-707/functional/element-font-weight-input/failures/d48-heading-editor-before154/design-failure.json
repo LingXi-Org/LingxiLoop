@@ -1,0 +1,979 @@
+{
+  "message": "AssertionError [ERR_ASSERTION]: 切换列表必须保留现有文字编辑器实例和光标\n\nnull !== 'kept'\n",
+  "errors": [],
+  "diagnostic": {
+    "geometry": [
+      {
+        "direction": "reply",
+        "id": 11,
+        "revision": 0,
+        "value": [
+          "page-2-root",
+          "page-2-heading",
+          "page-2-image",
+          "page-2-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 12,
+        "revision": 0,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-3",
+          "elements": [
+            {
+              "id": "page-3-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-3-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-3-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-3-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 13,
+        "revision": 0,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 14,
+        "revision": 0,
+        "value": [
+          "page-3-root",
+          "page-3-heading",
+          "page-3-image",
+          "page-3-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 16,
+        "revision": 0,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 18,
+        "revision": 0,
+        "value": [
+          "page-2-root",
+          "page-2-heading",
+          "page-2-image",
+          "page-2-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 20,
+        "revision": 0,
+        "value": [
+          "page-3-root",
+          "page-3-heading",
+          "page-3-image",
+          "page-3-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 21,
+        "revision": 1,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-1",
+          "elements": [
+            {
+              "id": "page-1-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-1-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-1-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-1-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "request",
+        "id": 22,
+        "revision": 1,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 24,
+        "revision": 1,
+        "task": {
+          "kind": "visible",
+          "viewport": {
+            "x": -217.14285714285657,
+            "y": -1864.0476190476193,
+            "width": 6642.285714285715,
+            "height": 4651.809523809524
+          }
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 23,
+        "revision": 1,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 24,
+        "revision": 1,
+        "value": [
+          "page-1",
+          "page-2",
+          "page-3"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 25,
+        "revision": 1,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 27,
+        "revision": 1,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 29,
+        "revision": 1,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-1",
+          "elements": [
+            {
+              "id": "page-1-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-1-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-1-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-1-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "request",
+        "id": 30,
+        "revision": 1,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 32,
+        "revision": 1,
+        "task": {
+          "kind": "visible",
+          "viewport": {
+            "x": -217.14285714285657,
+            "y": -1864.0476190476193,
+            "width": 6642.285714285715,
+            "height": 4651.809523809524
+          }
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 31,
+        "revision": 1,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 32,
+        "revision": 1,
+        "value": [
+          "page-1",
+          "page-2",
+          "page-3"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 33,
+        "revision": 1,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 35,
+        "revision": 1,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 36,
+        "revision": 1,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-2",
+          "elements": [
+            {
+              "id": "page-2-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-2-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-2-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-2-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 37,
+        "revision": 1,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 38,
+        "revision": 1,
+        "value": [
+          "page-2-root",
+          "page-2-heading",
+          "page-2-image",
+          "page-2-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 39,
+        "revision": 1,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-3",
+          "elements": [
+            {
+              "id": "page-3-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-3-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-3-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-3-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 40,
+        "revision": 1,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 41,
+        "revision": 1,
+        "value": [
+          "page-3-root",
+          "page-3-heading",
+          "page-3-image",
+          "page-3-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 43,
+        "revision": 1,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 45,
+        "revision": 1,
+        "value": [
+          "page-2-root",
+          "page-2-heading",
+          "page-2-image",
+          "page-2-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 47,
+        "revision": 1,
+        "value": [
+          "page-3-root",
+          "page-3-heading",
+          "page-3-image",
+          "page-3-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 52,
+        "revision": 1,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 54,
+        "revision": 1,
+        "task": {
+          "kind": "visible",
+          "viewport": {
+            "x": -217.14285714285657,
+            "y": -1882.1428571428573,
+            "width": 6642.285714285715,
+            "height": 4651.809523809524
+          }
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 53,
+        "revision": 1,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 54,
+        "revision": 1,
+        "value": [
+          "page-1",
+          "page-2",
+          "page-3"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 56,
+        "revision": 1,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 57,
+        "revision": 1,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-2",
+          "elements": [
+            {
+              "id": "page-2-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-2-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-2-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-2-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 58,
+        "revision": 1,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 59,
+        "revision": 1,
+        "value": [
+          "page-2-root",
+          "page-2-heading",
+          "page-2-image",
+          "page-2-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 60,
+        "revision": 1,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-3",
+          "elements": [
+            {
+              "id": "page-3-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-3-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-3-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-3-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 61,
+        "revision": 1,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 62,
+        "revision": 1,
+        "value": [
+          "page-3-root",
+          "page-3-heading",
+          "page-3-image",
+          "page-3-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 63,
+        "revision": 2,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-1",
+          "elements": [
+            {
+              "id": "page-1-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-1-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-1-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-1-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "request",
+        "id": 64,
+        "revision": 2,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 66,
+        "revision": 2,
+        "task": {
+          "kind": "visible",
+          "viewport": {
+            "x": -217.14285714285657,
+            "y": -1882.1428571428573,
+            "width": 6642.285714285715,
+            "height": 4651.809523809524
+          }
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 65,
+        "revision": 2,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 66,
+        "revision": 2,
+        "value": [
+          "page-1",
+          "page-2",
+          "page-3"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 67,
+        "revision": 2,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 70,
+        "revision": 2,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-1",
+          "elements": [
+            {
+              "id": "page-1-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-1-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-1-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-1-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "request",
+        "id": 71,
+        "revision": 2,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 73,
+        "revision": 2,
+        "task": {
+          "kind": "visible",
+          "viewport": {
+            "x": -217.14285714285657,
+            "y": -1882.1428571428573,
+            "width": 6642.285714285715,
+            "height": 4651.809523809524
+          }
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 72,
+        "revision": 2,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 73,
+        "revision": 2,
+        "value": [
+          "page-1",
+          "page-2",
+          "page-3"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 74,
+        "revision": 2,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 76,
+        "revision": 2,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 77,
+        "revision": 2,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-2",
+          "elements": [
+            {
+              "id": "page-2-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-2-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-2-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-2-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 78,
+        "revision": 2,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 79,
+        "revision": 2,
+        "value": [
+          "page-2-root",
+          "page-2-heading",
+          "page-2-image",
+          "page-2-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 80,
+        "revision": 2,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-3",
+          "elements": [
+            {
+              "id": "page-3-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-3-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-3-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-3-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 81,
+        "revision": 2,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 82,
+        "revision": 2,
+        "value": [
+          "page-3-root",
+          "page-3-heading",
+          "page-3-image",
+          "page-3-shape"
+        ]
+      }
+    ],
+    "zoom": "22%",
+    "stage": [
+      {
+        "scrollLeft": 2880,
+        "scrollTop": 1996,
+        "w": 1440,
+        "h": 1000,
+        "scrollWidth": 7200,
+        "scrollHeight": 5000
+      }
+    ],
+    "boards": [
+      {
+        "id": "page-1",
+        "rect": {
+          "x": 48,
+          "y": 416.046875,
+          "width": 424.40625,
+          "height": 238.734375,
+          "top": 416.046875,
+          "right": 472.40625,
+          "bottom": 654.78125,
+          "left": 48
+        }
+      },
+      {
+        "id": "page-2",
+        "rect": {
+          "x": 507.78125,
+          "y": 416.046875,
+          "width": 424.40625,
+          "height": 238.734375,
+          "top": 416.046875,
+          "right": 932.1875,
+          "bottom": 654.78125,
+          "left": 507.78125
+        }
+      },
+      {
+        "id": "page-3",
+        "rect": {
+          "x": 967.578125,
+          "y": 416.046875,
+          "width": 424.40625,
+          "height": 238.734375,
+          "top": 416.046875,
+          "right": 1391.984375,
+          "bottom": 654.78125,
+          "left": 967.578125
+        }
+      }
+    ],
+    "notices": []
+  }
+}

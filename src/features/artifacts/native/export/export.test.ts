@@ -256,3 +256,16 @@ test('PDF链接保留相对地址及电话，并以URI编码保存中文而不�
   assert.ok(pdf.includes('/URI (../%E9%A1%B5%E9%9D%A2.html)'))
   assert.ok(pdf.includes('/URI (tel:+861234567890)'))
 })
+
+
+test('单个标题导出为实际标题根元素，字重与内联标记不会被嵌套标题覆盖',async()=>{
+ const document=fixture(),page=document.pages.page!,node=page.nodes.text!
+ node.richText={type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:'中文标题',marks:[{type:'italic'}]}]}]}
+ node.style={fontSize:48,fontWeight:400};node.css={'font-weight':'var(--weight,400)'}
+ const before=JSON.stringify(document),html=await renderPageHtml(page,new ExportResources(document,{format:'html'}))
+ assert.match(html,/<h1 class="artifact-export-node"[^>]+font-weight:var\(--weight,400\)/)
+ assert.equal((html.match(/<h1\b/g)??[]).length,1);assert.match(html,/<em>中文标题<\/em>/);assert.equal(JSON.stringify(document),before)
+ delete node.css;delete node.style.fontWeight
+ const restored=await renderPageHtml(page,new ExportResources(document,{format:'html'}))
+ assert.match(restored,/<h1 class="artifact-export-node"/);assert.doesNotMatch(restored,/font-weight:/)
+})

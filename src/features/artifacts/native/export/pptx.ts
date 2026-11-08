@@ -1,3 +1,4 @@
+import {artifactTextHeading} from '../../../../../shared/artifact-text-root'
 import {inheritedSvgFont} from '../svg-presentation'
 import {nodeTypeLabels} from '../editor-copy'
 import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
@@ -112,7 +113,7 @@ export async function exportDocument(document: ArtifactDocument, options: Artifa
             if (style.fill) slide.addShape('rect', { ...box, fill: { color: color(style.fill, 'FFFFFF') }, line: { transparency: 100 } })
           } else if ((node.type === 'text' || node.type === 'note') && !nodeHasMath(node)) {
             slide.addText(node.richText ? textRuns(node.richText) : node.text ?? '', { ...box, fontSize, fontFace: (inheritedSvgFont(node,page,document) ?? 'Arial').split(',')[0]!.replace(/["']/g, ''),
-              color: color(style.color), bold: (style.fontWeight ?? 400) >= 600, italic: style.fontStyle === 'italic', align: style.textAlign ?? 'left',
+              color: color(style.color), bold: (style.fontWeight ?? (artifactTextHeading(node)?700:400)) >= 600, italic: style.fontStyle === 'italic', align: style.textAlign ?? 'left',
               lineSpacingMultiple:style.lineHeight, charSpacing:style.letterSpacing===undefined?undefined:style.letterSpacing*.75*scale, margin:(()=>{const padding=resolvedPadding(style)??{x:0,y:0};return[padding.x,padding.x,padding.y,padding.y].map(value=>value*.75*scale)})(), ...(node.type==='note' && style.fill ? {fill:{color:color(style.fill,'FFF3B0')}} : {}), breakLine: false, valign: 'top', rotate: rotation, transparency: (1 - (style.opacity ?? 1)) * 100 })
           } else if (node.type === 'shape') {
             const shape = ({ rect: style.borderRadius ? 'roundRect' : 'rect', ellipse: 'ellipse', triangle: 'triangle', diamond: 'diamond', arrow: 'rightArrow', 'arrow-right':'rightArrow','arrow-left':'leftArrow','arrow-up':'upArrow','arrow-down':'downArrow' } as const)[node.shape ?? 'rect']

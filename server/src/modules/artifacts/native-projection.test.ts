@@ -77,3 +77,10 @@ test('独立字体摘要保留无字号分组声明，不加载页体或改变�
  assert.deepEqual(projection.fontFamilies,{page:{first:['Georgia'],display:['Georgia']}});assert.deepEqual(projection.document.pages.page.nodes,{})
  assert.equal(projection.pageVersions.page,'immutable-font-hash');assert.equal(JSON.stringify(document),before)
 })
+
+
+test('标题预览只读派生默认粗体，未加载正文与不可变原始页保持原样',()=>{
+ const document=createDocument('design','heading-projection'),page=createPage('page'),node=createNode('text','heading');node.text='标题正文';node.style={fontSize:48};node.richText={type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:node.text}]}]};page.nodes.heading=node;page.nodeOrder=['heading'];document.pages.page=page;document.pageOrder=['page']
+ const before=JSON.stringify(document),projection=projectNativeSnapshot({document,history:{version:0,undo:null,redo:null},pageVersions:{page:'immutable-heading-hash'}},[])
+ assert.equal(projection.previews.page.nodes.heading.style.fontWeight,700);assert.deepEqual(projection.document.pages.page.nodes,{});assert.equal(projection.pageVersions.page,'immutable-heading-hash');assert.equal(JSON.stringify(document),before);assert.equal(node.style.fontWeight,undefined)
+})

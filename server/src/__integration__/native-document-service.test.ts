@@ -86,6 +86,17 @@ test('独立字体摘要随持久化和共享历史更新，未加载页体仍�
  const undone=await apply(item.id,{operationId:'undo-font-family',kind:'undo',targetOperationId:'change-font-family',expectedHistoryVersion:changed.history.version});assert.equal((await read()).fontFamilies?.[other.id].first[0],'Georgia')
  await apply(item.id,{operationId:'redo-font-family',kind:'redo',targetOperationId:'change-font-family',expectedHistoryVersion:undone.history.version});const reopened=await read();assert.equal(reopened.fontFamilies?.[other.id].first[0],'Lato');assert.equal(reopened.pageVersions['page-1'],untouched);assert.deepEqual(reopened.document.pages[other.id].nodes,{})
 })
+test('标题预览只读派生与字重历史持久化不回填原页，其他页哈希保持不变',async()=>{
+ const item=await artifact('design'),initial=await snapshot(item.id),other=createPage('heading-other'),heading=createNode('text','heading');heading.text='原始标题';heading.style={fontSize:48,fontFamily:'Arial'};heading.richText={type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:heading.text}]}]};other.nodes.heading=heading;other.nodeOrder=['heading']
+ const inserted=await apply(item.id,prepareBatch(initial.document,[{type:'page.insert',page:other}],'insert-heading-page')),oldHash=inserted.pageVersions[other.id],untouched=inserted.pageVersions['page-1']
+ const read=async()=>projectNativeSnapshot(await snapshot(item.id),['page-1'])
+ assert.equal((await read()).previews[other.id].nodes.heading.style.fontWeight,700);assert.deepEqual((await read()).document.pages[other.id].nodes,{});assert.equal((await readNativePage(db,item.id,other.id,oldHash))?.nodes.heading.style.fontWeight,undefined)
+ const changed=await apply(item.id,prepareBatch(inserted.document,[{type:'node.patch',pageId:other.id,nodeId:'heading',patch:{style:{fontWeight:400}}}],'plain-heading'))
+ assert.equal((await read()).previews[other.id].nodes.heading.style.fontWeight,400);assert.equal(changed.pageVersions['page-1'],untouched);assert.equal((await readNativePage(db,item.id,other.id,oldHash))?.nodes.heading.style.fontWeight,undefined)
+ const undone=await apply(item.id,{operationId:'undo-plain-heading',kind:'undo',targetOperationId:'plain-heading',expectedHistoryVersion:changed.history.version});assert.equal((await snapshot(item.id)).document.pages[other.id].nodes.heading.style.fontWeight,undefined);assert.equal((await read()).previews[other.id].nodes.heading.style.fontWeight,700)
+ await apply(item.id,{operationId:'redo-plain-heading',kind:'redo',targetOperationId:'plain-heading',expectedHistoryVersion:undone.history.version});const reopened=await read();assert.equal(reopened.previews[other.id].nodes.heading.style.fontWeight,400);assert.equal(reopened.pageVersions['page-1'],untouched);assert.deepEqual(reopened.document.pages[other.id].nodes,{})
+})
+
 async function withText() {
   const item = await artifact()
   const initial = await snapshot(item.id), node = createNode('text', 'title')

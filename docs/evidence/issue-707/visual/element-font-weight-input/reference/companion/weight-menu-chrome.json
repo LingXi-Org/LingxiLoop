@@ -1,0 +1,120 @@
+{
+  "popup": {
+    "rect": {
+      "x": 1201,
+      "y": 752,
+      "width": 203,
+      "height": 104,
+      "top": 752,
+      "right": 1404,
+      "bottom": 856,
+      "left": 1201
+    },
+    "font": "",
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "fontWeight": "400",
+    "padding": "0px",
+    "borderRadius": "10px",
+    "background": "rgb(255, 255, 255)",
+    "color": "rgba(0, 0, 0, 0.9)"
+  },
+  "options": [
+    {
+      "text": "Regular",
+      "checked": "false",
+      "icon": null,
+      "rect": {
+        "x": 1205,
+        "y": 756,
+        "width": 195,
+        "height": 24,
+        "top": 756,
+        "right": 1400,
+        "bottom": 780,
+        "left": 1205
+      },
+      "font": "",
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "fontWeight": "435",
+      "padding": "2.5px 8px",
+      "borderRadius": "6px",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(0, 0, 0, 0.9)"
+    },
+    {
+      "text": "Italic",
+      "checked": "false",
+      "icon": null,
+      "rect": {
+        "x": 1205,
+        "y": 780,
+        "width": 195,
+        "height": 24,
+        "top": 780,
+        "right": 1400,
+        "bottom": 804,
+        "left": 1205
+      },
+      "font": "",
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "fontWeight": "435",
+      "padding": "2.5px 8px",
+      "borderRadius": "6px",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(0, 0, 0, 0.9)"
+    },
+    {
+      "text": "Bold",
+      "checked": "true",
+      "icon": {
+        "color": "rgba(0, 0, 0, 0.9)",
+        "width": 12,
+        "height": 16
+      },
+      "rect": {
+        "x": 1205,
+        "y": 804,
+        "width": 195,
+        "height": 24,
+        "top": 804,
+        "right": 1400,
+        "bottom": 828,
+        "left": 1205
+      },
+      "font": "",
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "fontWeight": "435",
+      "padding": "2.5px 8px",
+      "borderRadius": "6px",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(0, 0, 0, 0.9)"
+    },
+    {
+      "text": "Bold italic",
+      "checked": "false",
+      "icon": null,
+      "rect": {
+        "x": 1205,
+        "y": 828,
+        "width": 195,
+        "height": 24,
+        "top": 828,
+        "right": 1400,
+        "bottom": 852,
+        "left": 1205
+      },
+      "font": "",
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "fontWeight": "435",
+      "padding": "2.5px 8px",
+      "borderRadius": "6px",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(0, 0, 0, 0.9)"
+    }
+  ]
+}

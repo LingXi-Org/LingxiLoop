@@ -432,3 +432,6 @@
 .native-element-layout .native-layout-expand[aria-expanded=true]{color:var(--native-layout-selected)}
 @media(prefers-color-scheme:dark){.native-element-layout{--native-layout-secondary:rgba(255,255,255,.57);--native-layout-hover:rgba(255,255,255,.075);--native-layout-selected:#6aabf1}}
 @container(max-width:599px){.native-element-layout .native-sizing-label{flex-basis:92px}.native-element-layout .native-layout-sides{margin-left:112px}}
+
+.native-editor :is(h1,h2,h3,h4,h5,h6).native-node-text{font-weight:700}
+.native-editor [data-native-heading] [data-native-text-editor=true]>:is(h1,h2,h3,h4,h5,h6){font-weight:inherit}

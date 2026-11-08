@@ -10304,6 +10304,47 @@
         "receipt": "functional/element-font-variant.json",
         "scope": "有限状态，非完整字体系统或全产品验收"
       }
+    },
+    {
+      "id": "D48-design",
+      "editor": "design",
+      "control": "字重文本、标题实际绘制与导出/摘要",
+      "trigger": "单选文字→字重表达式→编辑、重置、清空、切换字面值；普通/默认标题保存和导出。",
+      "states": [
+        "变量",
+        "优先级",
+        "中文输入法",
+        "取消",
+        "清空",
+        "还原",
+        "字面转换",
+        "继承伴随",
+        "只读",
+        "锁定",
+        "并发恢复",
+        "实际标题绘制",
+        "链接名称",
+        "全局重置隔离",
+        "缩略图与未加载摘要",
+        "六格式"
+      ],
+      "reference": {
+        "path": "source-element-font-weight-input.json",
+        "runtime": "visual/element-font-weight-input/reference/"
+      },
+      "implementation": "ElementFontWeightInput.tsx、ElementFontVariantField.tsx、artifact-text-root.ts、renderer.tsx、artifact-previews.ts及导出/缩略图",
+      "screenshots": {
+        "reference": "visual/element-font-weight-input/reference/",
+        "native": "visual/element-font-weight-input/implementation/",
+        "matchedStateVerified": false
+      },
+      "result": "限定单选原生流程、字形绘制、导出结构、只读摘要和局部控件几何通过；全量混合、绝对触屏位置、整图及最终性能未完成。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-font-weight-input.json",
+        "scope": "限定组件状态，不是全编辑器资格。"
+      }
     }
   ],
   "registeredReplacements": [

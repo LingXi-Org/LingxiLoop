@@ -1,0 +1,126 @@
+{
+  "stage": "D48 Design字重表达式与实际标题字形",
+  "baselineCandidate": "86a18de1c3c5d442795bd33975be351941b563f9",
+  "scope": "单选字重文本、字面/继承显示及实际绘制/导出；不代表完整字体系统或其他菜单完成。",
+  "source": "../source-element-font-weight-input.json",
+  "implementation": [
+    "ElementFontWeightInput.tsx",
+    "ElementFontVariantField.tsx",
+    "element-font-variant.ts",
+    "NativeInspector.tsx",
+    "shared/artifact-text-root.ts",
+    "renderer.tsx",
+    "shared/artifact-previews.ts",
+    "thumbnail.tsx",
+    "export/render.ts",
+    "export/pptx.ts",
+    "native-editor.css"
+  ],
+  "changes": [
+    "自有非字面字重使用中文标记的文本输入，作者代码原样保留，复用useLocalDraft、捕获base、现有操作/readKeys及恢复副本。",
+    "自有字面及伴随声明按来源决定当前字形，缺省时读取实际计算样式；保留inherit伴随值，不以实际继承斜体覆盖作者声明。",
+    "单个标题由实际h1-h6根承载，不再由外层div和内层h1产生字重分歧。编辑期间保留div根，列表切换保持原ProseMirror实例与光标。",
+    "标题默认粗体在编辑器局部基础样式中显式隔离，抵抗产品全局Tailwind标题重置。",
+    "带整体链接的标题通过正文标识提供可访问名称，避免辅助打开链接标签成为标题名称。",
+    "缩略图、只读导航摘要、HTML/图片/PDF及可编辑PPTX同步默认标题字重；原始文档、历史与页体裁剪不回填。"
+  ],
+  "checks": {
+    "140": {
+      "flows": 18,
+      "passed": true,
+      "sourceCurrentCompanion": true,
+      "transitions": [
+        "清空后焦点",
+        "数字后焦点",
+        "失焦提交保留下一控件焦点",
+        "还原后焦点"
+      ],
+      "scopedHeadingAndLink": true,
+      "ordinary400AndRestored700SixFormats": true,
+      "headingLinkNameAndGlobalReset": true
+    },
+    "154": {
+      "rawTextAndHistory": true,
+      "ime": true,
+      "cancel": true,
+      "pairResetAndFocus": true,
+      "originalAndCssAliasConflictRecovery": true,
+      "remoteAlreadyMatchesNoWrite": true,
+      "permissionAndPeerLockRecovery": true,
+      "sourceCompanionNoop": true,
+      "actual400AndDefault700Paint": true,
+      "rteInstancePreserved": true,
+      "transitions": true,
+      "scopedHeadingAndLink": true,
+      "ordinary400AndRestored700SixFormats": true,
+      "headingLinkSixFormats": true
+    },
+    "geometry": {
+      "fineDelta": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "darkDelta": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "coarseDelta": {
+        "x": 0,
+        "y": -50,
+        "width": 0,
+        "height": 0
+      },
+      "foregroundBackgroundFontPaddingRadiusPassed": true,
+      "wholeVisualQualified": false
+    },
+    "unit": "48 owning units包括投影、摘要边界、缩略图、导出、字形与中文文案通过。",
+    "serviceIntegration": "真实临时PG 1项：派生预览、显式400持久化、撤销/重做/重开、旧快照不回填与其他页hash保持通过；非真实用户授权API。",
+    "regressions": "154原字体两模式、6文本样式、链接http/history、Design可见加载及50页两模式save通过，47未修改页hash不变。",
+    "lint": "web43警告4信息；server631文件无诊断。",
+    "localTypes": {
+      "web": 76,
+      "server": 748,
+      "owningNewErrors": 0,
+      "passed": false,
+      "reason": "精确私有SDK本地不可获取的既有级联。"
+    },
+    "localBuild": {
+      "passed": false,
+      "typeErrors": 76,
+      "owningNewErrors": 0,
+      "reason": "精确私有SDK缺失，构建在既有类型检查阶段停止；不能称构建通过。"
+    }
+  },
+  "exportLimits": "网页实际重读400/700，PPTX可编辑文本bold标志验证；其余格式独立解析/解码，PDF/PPTX像素保真未验收。",
+  "failuresRetained": [
+    "首红缺少CSS字重文本输入。",
+    "无效夹具自定义属性名导致整文档Zod错误，已修正夹具并先校验，未弱化产品验证。",
+    "模板还原探针误等数值按钮，已接入文本控件ready；首次脚本替换目标不匹配未生效，均保留。",
+    "还原按钮未预先hover导致测试点击被标签拦截；按来源触发路径hover后验证真实焦点失败并修复。",
+    "显式400旧内层h1仍700；清空外层400/内层700；语义根修复。",
+    "列表切换初版语义根导致编辑器重建；固定编辑根后实例探针通过。",
+    "HTML全局font:inherit压掉默认700；改为只继承字号后通过。",
+    "未加载页摘要缺少标题语义导致缩略图400；只读派生700后通过且文档不变。",
+    "清空文本后的新值控件焦点未恢复；按来源修复，并验证失焦提交不抢焦点。",
+    "整体链接污染标题可访问名称；正文标识修复。",
+    "产品全局标题重置把缺省标题改成400；局部基础样式恢复700。",
+    "错误使用both模式运行仅Design的viewport-loading，被kind断言拒绝；改正确入口并另跑save两模式。",
+    "真实PG首次环境变量INVITE_BASE_URL名称错误，补LINGXILOOP前缀后通过。"
+  ],
+  "remaining": [
+    "完整多选混合字体/字重/伴随值，首红已记录，继续实施。",
+    "字号还原与CSS单位/表达式、系统样式、全部键盘和全部菜单状态。",
+    "四尺寸双主题整图0.5%门槛、绝对粗指针位置、所有导出像素及最终10组AB/BA。"
+  ],
+  "waiver": "用户明确豁免本次真实评论/智能体授权API验收并授权后续上线；详见acceptance-exceptions.json。",
+  "qualification": {
+    "wholeFunctional": false,
+    "wholeVisual": false,
+    "performance": false
+  },
+  "candidate": "正式CI、静态图及冻结独立审查提交后登记。"
+}

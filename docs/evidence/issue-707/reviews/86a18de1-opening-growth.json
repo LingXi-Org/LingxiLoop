@@ -1,0 +1,725 @@
+{
+  "candidate": "86a18de1c3c5d442795bd33975be351941b563f9",
+  "baseline": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "reviewType": "独立只读opening静态增长归属；无浏览器、bench、构建/SDK下载或产品修改。",
+  "conclusion": "增长集中在第一方原生主块及共享模型/呈现块；不是Tiptap/ProseMirror升级。主块净增47383gzip，占原生增量增长76.56%，共享document/themes→svg组合块再占10.61%。逐模块第一方rendered缺失，不能将主块增长精确分摊到具体功能。实际性能资格仍false。",
+  "findings": [],
+  "evidence": {
+    "profile": "/workspace/lingxi-issue707-scratch/static-profile-86a18de1.json",
+    "run": 42458168332,
+    "job": 128661523714,
+    "checkout": "/workspace/lingxi-issue707-scratch/review-86a18de1",
+    "ledgerScript": "/workspace/lingxi-issue707-scratch/review-86a-growth/quantify.py",
+    "ledgerResult": "/workspace/lingxi-issue707-scratch/review-86a-growth/ledger.json",
+    "packageAggregates": "/workspace/lingxi-issue707-scratch/review-86a-growth/packages.json",
+    "allProjectModuleLists": "/workspace/lingxi-issue707-scratch/review-86a-growth/module-inventory.json",
+    "sourceAstScript": "/workspace/lingxi-issue707-scratch/review-86a-growth/source-graph.cjs",
+    "sourceAstResult": "/workspace/lingxi-issue707-scratch/review-86a-growth/source-graph.json",
+    "publicIconAliasProof": "/workspace/lingxi-issue707-scratch/review-86a-growth/icon-consumers.json",
+    "rootSubclosures": "/workspace/lingxi-issue707-scratch/review-86a-growth/root-subclosures.json"
+  },
+  "totals": {
+    "units": "raw为生成chunk字节；gzip为逐chunk本地压缩估算；rendered/original为模块UTF16码元，三者不能互相直接减除。",
+    "baseline": {
+      "applicationRaw": 2038926,
+      "applicationGzip": 618927,
+      "nativeRaw": 481852,
+      "nativeGzip": 155935,
+      "unionGzip": 774862
+    },
+    "candidate": {
+      "applicationRaw": 2042690,
+      "applicationGzip": 621224,
+      "nativeRaw": 662359,
+      "nativeGzip": 217824,
+      "unionGzip": 839048
+    },
+    "delta": {
+      "applicationRaw": 3764,
+      "applicationGzip": 2297,
+      "nativeRaw": 180507,
+      "nativeGzip": 61889,
+      "unionGzip": 64186,
+      "unionGrowthPercent": 8.283539520585602,
+      "nativeGrowthPercent": 39.68897296950653
+    }
+  },
+  "nativeChunkLedger": {
+    "additiveAndVerified": true,
+    "rows": [
+      {
+        "group": "NativeEditor 主块",
+        "beforeFiles": [
+          "assets/NativeEditor-T6Oc1wP0.js"
+        ],
+        "afterFiles": [
+          "assets/NativeEditor-C8ckxLyX.js"
+        ],
+        "beforeRaw": 84812,
+        "afterRaw": 232274,
+        "rawDelta": 147462,
+        "beforeGzip": 27620,
+        "afterGzip": 75003,
+        "gzipDelta": 47383,
+        "rawShareOfGrowthPercent": 81.69323073343416,
+        "gzipShareOfGrowthPercent": 76.56126290617073
+      },
+      {
+        "group": "共享document/themes旧块→svg-presentation组合块",
+        "beforeFiles": [
+          "assets/artifact-themes-CH1mrNLA.js"
+        ],
+        "afterFiles": [
+          "assets/svg-presentation-BbKL5g4y.js"
+        ],
+        "beforeRaw": 10046,
+        "afterRaw": 27108,
+        "rawDelta": 17062,
+        "beforeGzip": 4084,
+        "afterGzip": 10653,
+        "gzipDelta": 6569,
+        "rawShareOfGrowthPercent": 9.45226500911322,
+        "gzipShareOfGrowthPercent": 10.614164067928066
+      },
+      {
+        "group": "RichTextEditor",
+        "beforeFiles": [
+          "assets/RichTextEditor-BU_0yAgU.js"
+        ],
+        "afterFiles": [
+          "assets/RichTextEditor-C9_AZRm3.js"
+        ],
+        "beforeRaw": 3350,
+        "afterRaw": 4879,
+        "rawDelta": 1529,
+        "beforeGzip": 1508,
+        "afterGzip": 2185,
+        "gzipDelta": 677,
+        "rawShareOfGrowthPercent": 0.8470585628258184,
+        "gzipShareOfGrowthPercent": 1.0938939068332014
+      },
+      {
+        "group": "artifact-appearance",
+        "beforeFiles": [],
+        "afterFiles": [
+          "assets/artifact-appearance-YwqzURUB.js"
+        ],
+        "beforeRaw": 0,
+        "afterRaw": 3927,
+        "rawDelta": 3927,
+        "beforeGzip": 0,
+        "afterGzip": 1963,
+        "gzipDelta": 1963,
+        "rawShareOfGrowthPercent": 2.175538898768469,
+        "gzipShareOfGrowthPercent": 3.1718075910097108
+      },
+      {
+        "group": "svg-image-cache",
+        "beforeFiles": [],
+        "afterFiles": [
+          "assets/svg-image-cache-DaG9nm7s.js"
+        ],
+        "beforeRaw": 0,
+        "afterRaw": 523,
+        "rawDelta": 523,
+        "beforeGzip": 0,
+        "afterGzip": 315,
+        "gzipDelta": 315,
+        "rawShareOfGrowthPercent": 0.28973945608757556,
+        "gzipShareOfGrowthPercent": 0.5089757469017111
+      },
+      {
+        "group": "14个纯Lucide增量块",
+        "beforeFiles": [],
+        "afterFiles": [
+          "assets/arrow-right-CBsxWPls.js",
+          "assets/arrow-up-1zRcLYb9.js",
+          "assets/artifact-shared-icons-BG7GrqyX.js",
+          "assets/check-D2pCwzTB.js",
+          "assets/link-2-CCkE6xTc.js",
+          "assets/loader-circle-jHvjPVoY.js",
+          "assets/minimize-2-D_GxaUsI.js",
+          "assets/minus-CKo79LL6.js",
+          "assets/play-IYMyKQDo.js",
+          "assets/plus-6iSf9zR8.js",
+          "assets/rotate-ccw-clock-BodU_H8k.js",
+          "assets/search-DRfW2pmj.js",
+          "assets/trash-2-CIgp9Tk0.js",
+          "assets/underline-KIROEKs5.js"
+        ],
+        "beforeRaw": 0,
+        "afterRaw": 10004,
+        "rawDelta": 10004,
+        "beforeGzip": 0,
+        "afterGzip": 4988,
+        "gzipDelta": 4988,
+        "rawShareOfGrowthPercent": 5.5421673397707565,
+        "gzipShareOfGrowthPercent": 8.059590557288049
+      },
+      {
+        "group": "ProseMirror",
+        "beforeFiles": [
+          "assets/index-BewBsE4c.js"
+        ],
+        "afterFiles": [
+          "assets/index-BewBsE4c.js"
+        ],
+        "beforeRaw": 214845,
+        "afterRaw": 214845,
+        "rawDelta": 0,
+        "beforeGzip": 66558,
+        "afterGzip": 66558,
+        "gzipDelta": 0,
+        "rawShareOfGrowthPercent": 0.0,
+        "gzipShareOfGrowthPercent": 0.0
+      },
+      {
+        "group": "Tiptap",
+        "beforeFiles": [
+          "assets/index-DkJTDV_m.js"
+        ],
+        "afterFiles": [
+          "assets/index-4N1FoxYG.js"
+        ],
+        "beforeRaw": 166638,
+        "afterRaw": 166638,
+        "rawDelta": 0,
+        "beforeGzip": 55227,
+        "afterGzip": 55226,
+        "gzipDelta": -1,
+        "rawShareOfGrowthPercent": 0.0,
+        "gzipShareOfGrowthPercent": -0.001615796021910194
+      },
+      {
+        "group": "use-sync-external-store",
+        "beforeFiles": [
+          "assets/with-selector-B3_dFiXZ.js"
+        ],
+        "afterFiles": [
+          "assets/with-selector-CyQ5rQ5Y.js"
+        ],
+        "beforeRaw": 2161,
+        "afterRaw": 2161,
+        "rawDelta": 0,
+        "beforeGzip": 938,
+        "afterGzip": 933,
+        "gzipDelta": -5,
+        "rawShareOfGrowthPercent": 0.0,
+        "gzipShareOfGrowthPercent": -0.00807898010955097
+      }
+    ],
+    "interpretation": [
+      "主块84812→232274raw、27620→75003gzip；这是旧内联逻辑移出、现有模块变大和新模块加入后的净变化，不能视作34个新增模块的体积之和。",
+      "旧artifact-document/themes两模块10046raw/4084gzip被包含10模块的svg-presentation组合块27108raw/10653gzip替代，净17062raw/6569gzip；不能把整组差值说成SVG函数体积。",
+      "14个纯Lucide块10004raw/4988gzip只占部分图标成本；另有31个Lucide模块内联于NativeEditor块、2个在RichTextEditor块，不能重复把包rendered27369码元当作额外raw字节相加。",
+      "两块Tiptap/ProseMirror合计381483raw，基线和候选完全相同；gzip合计只差-1。use-sync-external-store原始字节也不变，gzip-5不算功能收益。"
+    ]
+  },
+  "packages": {
+    "nativeChanges": [
+      {
+        "package": "dependency:lucide-react",
+        "before": {
+          "moduleCount": 0,
+          "renderedCodeUnits": 0,
+          "originalCodeUnits": 0
+        },
+        "after": {
+          "moduleCount": 61,
+          "renderedCodeUnits": 27369,
+          "originalCodeUnits": 35797
+        },
+        "delta": {
+          "moduleCount": 61,
+          "renderedCodeUnits": 27369,
+          "originalCodeUnits": 35797
+        }
+      }
+    ],
+    "applicationChanges": [
+      {
+        "package": "dependency:@base-ui/react",
+        "before": {
+          "moduleCount": 17,
+          "renderedCodeUnits": 22412,
+          "originalCodeUnits": 32798
+        },
+        "after": {
+          "moduleCount": 17,
+          "renderedCodeUnits": 22992,
+          "originalCodeUnits": 32798
+        },
+        "delta": {
+          "moduleCount": 0,
+          "renderedCodeUnits": 580,
+          "originalCodeUnits": 0
+        }
+      },
+      {
+        "package": "dependency:lucide-react",
+        "before": {
+          "moduleCount": 14,
+          "renderedCodeUnits": 6325,
+          "originalCodeUnits": 9109
+        },
+        "after": {
+          "moduleCount": 14,
+          "renderedCodeUnits": 6321,
+          "originalCodeUnits": 9109
+        },
+        "delta": {
+          "moduleCount": 0,
+          "renderedCodeUnits": -4,
+          "originalCodeUnits": 0
+        }
+      }
+    ],
+    "unionChanges": [
+      {
+        "package": "dependency:lucide-react",
+        "before": {
+          "moduleCount": 14,
+          "renderedCodeUnits": 6325,
+          "originalCodeUnits": 9109
+        },
+        "after": {
+          "moduleCount": 75,
+          "renderedCodeUnits": 33690,
+          "originalCodeUnits": 44906
+        },
+        "delta": {
+          "moduleCount": 61,
+          "renderedCodeUnits": 27365,
+          "originalCodeUnits": 35797
+        }
+      },
+      {
+        "package": "dependency:@base-ui/react",
+        "before": {
+          "moduleCount": 17,
+          "renderedCodeUnits": 22412,
+          "originalCodeUnits": 32798
+        },
+        "after": {
+          "moduleCount": 17,
+          "renderedCodeUnits": 22992,
+          "originalCodeUnits": 32798
+        },
+        "delta": {
+          "moduleCount": 0,
+          "renderedCodeUnits": 580,
+          "originalCodeUnits": 0
+        }
+      }
+    ],
+    "interpretation": [
+      "原生增量唯一新增包为Lucide：0→61模块、+27369rendered/+35797original码元。Tiptap、ProseMirror及其依赖全部同量，没有新React副本。",
+      "union Lucide14→75模块，rendered6325→33690(+27365)，包含应用预热同包rendered-4。",
+      "应用@base-ui/react仍17模块、原始32798码元不变，仅rendered22412→22992(+580)。元数据不含对应子模块变化原因，不能据此断言依赖升级或实际运行成本增加。"
+    ]
+  },
+  "projectModules": {
+    "native": {
+      "beforeCount": 16,
+      "afterCount": 64,
+      "added": [
+        "shared/artifact-appearance.ts",
+        "shared/artifact-board-spacing.ts",
+        "shared/artifact-board-transform.ts",
+        "shared/artifact-canvas-pages.ts",
+        "shared/artifact-canvas-typography.ts",
+        "shared/artifact-comment-anchor.ts",
+        "shared/artifact-editor-actions.ts",
+        "shared/artifact-geometry.ts",
+        "shared/artifact-inspector-code.ts",
+        "shared/artifact-link-preview.ts",
+        "shared/artifact-node-code.ts",
+        "shared/artifact-page-radius.ts",
+        "shared/artifact-path.ts",
+        "shared/artifact-shapes.ts",
+        "shared/artifact-tables.ts",
+        "shared/artifact-text-decoration.ts",
+        "shared/artifact-typography-roles.ts",
+        "src/features/artifacts/native/BoardExportMenu.tsx",
+        "src/features/artifacts/native/BoardPreviewLoading.tsx",
+        "src/features/artifacts/native/BoardTitle.tsx",
+        "src/features/artifacts/native/ColorField.tsx",
+        "src/features/artifacts/native/EditorPrimitives.tsx",
+        "src/features/artifacts/native/PageRail.tsx",
+        "src/features/artifacts/native/SpeakerAccessRecovery.tsx",
+        "src/features/artifacts/native/SpeakerNotesField.tsx",
+        "src/features/artifacts/native/SvgImage.tsx",
+        "src/features/artifacts/native/artifact-realm.ts",
+        "src/features/artifacts/native/asset-read-context.ts",
+        "src/features/artifacts/native/asset-reads.ts",
+        "src/features/artifacts/native/board-transforms.tsx",
+        "src/features/artifacts/native/canvas-camera.ts",
+        "src/features/artifacts/native/canvas-fit.ts",
+        "src/features/artifacts/native/canvas-playback.ts",
+        "src/features/artifacts/native/comment-drafts.ts",
+        "src/features/artifacts/native/editor-copy.ts",
+        "src/features/artifacts/native/editor-fonts.ts",
+        "src/features/artifacts/native/element-positioning.ts",
+        "src/features/artifacts/native/natural-layout.ts",
+        "src/features/artifacts/native/popover-position.ts",
+        "src/features/artifacts/native/rendered-geometry.ts",
+        "src/features/artifacts/native/speaker-note-drafts.ts",
+        "src/features/artifacts/native/svg-image-cache.ts",
+        "src/features/artifacts/native/svg-image-recovery.ts",
+        "src/features/artifacts/native/svg-presentation.ts",
+        "src/features/artifacts/native/use-code-selection.ts",
+        "src/features/artifacts/native/use-pen-preview.ts",
+        "src/features/artifacts/native/vector-drafts.ts",
+        "src/features/artifacts/native/vector-edit-drafts.ts"
+      ],
+      "removed": []
+    },
+    "application": {
+      "beforeCount": 188,
+      "afterCount": 189,
+      "added": [
+        "shared/artifact-links.ts"
+      ],
+      "removed": []
+    },
+    "nativeModuleCount": {
+      "before": 59,
+      "after": 168,
+      "delta": 109,
+      "newFirstParty": 48,
+      "newLucide": 61
+    },
+    "groups": [
+      {
+        "chunk": "NativeEditor",
+        "beforeProjectModules": 13,
+        "afterProjectModules": 47,
+        "newProjectModules": 34,
+        "examples": [
+          "board-transforms.tsx",
+          "artifact-board-transform.ts",
+          "artifact-board-spacing.ts",
+          "EditorPrimitives.tsx",
+          "BoardTitle.tsx",
+          "PageRail.tsx",
+          "rendered-geometry.ts",
+          "element-positioning.ts",
+          "use-code-selection.ts",
+          "natural-layout.ts",
+          "vector-drafts.ts",
+          "vector-edit-drafts.ts",
+          "SpeakerNotesField.tsx",
+          "speaker-note-drafts.ts"
+        ]
+      },
+      {
+        "chunk": "旧themes→svg-presentation",
+        "beforeProjectModules": 2,
+        "afterProjectModules": 10,
+        "newProjectModules": 8,
+        "examples": [
+          "artifact-canvas-pages.ts",
+          "artifact-inspector-code.ts",
+          "artifact-node-code.ts",
+          "artifact-path.ts",
+          "artifact-text-decoration.ts",
+          "artifact-typography-roles.ts",
+          "editor-fonts.ts",
+          "svg-presentation.ts"
+        ]
+      },
+      {
+        "chunk": "artifact-appearance",
+        "newProjectModules": 5,
+        "modules": [
+          "shared/artifact-appearance.ts",
+          "shared/artifact-canvas-typography.ts",
+          "shared/artifact-page-radius.ts",
+          "shared/artifact-shapes.ts",
+          "src/features/artifacts/native/editor-copy.ts"
+        ]
+      },
+      {
+        "chunk": "svg-image-cache",
+        "newProjectModules": 1,
+        "module": "src/features/artifacts/native/svg-image-cache.ts"
+      }
+    ],
+    "warmAddition": "应用预热新增shared/artifact-links.ts，所在独立块1260raw/695gzip；实际最短应用入口为ChatPane→artifact-links，Native和RTE也直接导入。应用总增长仍计入union，没有用移到预热抵销成本。",
+    "limits": "projectModules只有成员路径，没有每个第一方模块rendered/original长度，无法量化NativeEditor.tsx自身与BoardTitle/transform/renderer等每项贡献；新增模块计数不等于每项体积或执行次数。"
+  },
+  "actualProductionChains": {
+    "svg-presentation": {
+      "assets/NativeEditor-C8ckxLyX.js": [
+        "assets/NativeEditor-C8ckxLyX.js",
+        "assets/svg-presentation-BbKL5g4y.js"
+      ],
+      "assets/RichTextEditor-C9_AZRm3.js": [
+        "assets/RichTextEditor-C9_AZRm3.js",
+        "assets/svg-presentation-BbKL5g4y.js"
+      ]
+    },
+    "artifact-appearance": {
+      "assets/NativeEditor-C8ckxLyX.js": [
+        "assets/NativeEditor-C8ckxLyX.js",
+        "assets/artifact-appearance-YwqzURUB.js"
+      ],
+      "assets/RichTextEditor-C9_AZRm3.js": [
+        "assets/RichTextEditor-C9_AZRm3.js",
+        "assets/artifact-appearance-YwqzURUB.js"
+      ]
+    },
+    "loader-circle": {
+      "assets/NativeEditor-C8ckxLyX.js": [
+        "assets/NativeEditor-C8ckxLyX.js",
+        "assets/loader-circle-jHvjPVoY.js"
+      ],
+      "assets/RichTextEditor-C9_AZRm3.js": [
+        "assets/RichTextEditor-C9_AZRm3.js",
+        "assets/loader-circle-jHvjPVoY.js"
+      ]
+    },
+    "artifact-shared-icons": {
+      "assets/NativeEditor-C8ckxLyX.js": [
+        "assets/NativeEditor-C8ckxLyX.js",
+        "assets/artifact-shared-icons-BG7GrqyX.js"
+      ],
+      "assets/RichTextEditor-C9_AZRm3.js": [
+        "assets/RichTextEditor-C9_AZRm3.js",
+        "assets/artifact-shared-icons-BG7GrqyX.js"
+      ]
+    },
+    "svg-image-cache": {
+      "assets/NativeEditor-C8ckxLyX.js": [
+        "assets/NativeEditor-C8ckxLyX.js",
+        "assets/svg-image-cache-DaG9nm7s.js"
+      ],
+      "assets/RichTextEditor-C9_AZRm3.js": [
+        "assets/RichTextEditor-C9_AZRm3.js",
+        "assets/svg-image-cache-DaG9nm7s.js"
+      ]
+    },
+    "artifact-links": {
+      "warmApplication": [
+        "assets/ChatPane-DhSsT3L1.js",
+        "assets/artifact-links-C8nEqoVQ.js"
+      ],
+      "assets/NativeEditor-C8ckxLyX.js": [
+        "assets/NativeEditor-C8ckxLyX.js",
+        "assets/artifact-links-C8nEqoVQ.js"
+      ],
+      "assets/RichTextEditor-C9_AZRm3.js": [
+        "assets/RichTextEditor-C9_AZRm3.js",
+        "assets/artifact-links-C8nEqoVQ.js"
+      ]
+    }
+  },
+  "sourceChainsAndObstacles": [
+    {
+      "chain": "NativeEditor.tsx:3 → board-transforms.tsx:5/6 → artifact-board-transform.ts:2 → artifact-board-spacing.ts",
+      "production": "上述成员当前都在NativeEditor主块，静态保留。",
+      "runtimeBoundary": "NativeEditor.tsx:311调用hook，enabled限定Design/canvas/select，但模块为静态导入，Slides根也携带它。",
+      "obstacle": "NativeEditor.tsx:2还直接导入boardBounds，并在:826多画板选择框中使用同一transform模块；仅把hook改为动态并不保证该整个模块退出静态图。画板标题/手柄和选择事件依赖同一会话/选区/焦点；需要保留首帧轻量bounds及共享owner，不能条件调用hook。"
+    },
+    {
+      "chain": "NativeEditor.tsx:12 → use-pen-preview.ts；:202/:206 → VectorDraftStore/VectorEditDraftStore",
+      "production": "这些薄预览/恢复包装当前在主块。",
+      "alreadyLazy": "真正CanvasPenTool/CanvasPointEditor和shared/artifact-pen在:165/:174/:182动态导入，vector-node-geometry、artifact-vector-edit不在opening并集。",
+      "obstacle": "存储故意在editor owner存活，避免工具切换/撤权/失败卸载丢草稿及旧CAS基准；不能把保留store随懒加载工具一同卸载，也不能称重型点编辑实现本来就在opening。"
+    },
+    {
+      "chain": "NativeEditor.tsx:55 → element-positioning.ts；:54/use-code-selection → rendered-geometry/natural-layout",
+      "production": "静态在主块，支持作者CSS坐标和盒模型。",
+      "obstacle": ":563/:570普通pointerDown、:613/:648拖动缩放提交使用这些函数，非仅打开布局检查器才需要；Hug/自然尺寸参与画布当前渲染。不能全部移入已lazy的Inspector后破坏普通选择/拖动或首帧尺寸。"
+    },
+    {
+      "chain": "NativeEditor → shared/artifact-operations.ts → artifact-document.ts:5 → artifact-node-code.ts:3 → artifact-inspector-code.ts",
+      "production": "底层code/parser/decorations与document/themes同在svg-presentation组合块。",
+      "obstacle": "文档schema与操作校验读取isNativeCodeStyle/Attribute；renderer/thumbnail也调用codeStyleProperties。即使代码面板未打开，读取旧/新文档及绘制作者CSS仍需这条路径。不能把整条验证/呈现链随代码面板延后。"
+    },
+    {
+      "chain": "NativeEditor.tsx:38 → renderer.tsx:17 → svg-presentation.ts；NativeEditor:51 → thumbnail.tsx:8 →同一模块",
+      "production": "实际Native/RTE根均直接imports svg-presentation，28个来自Native的binding。",
+      "obstacle": "默认字体继承、SVG安全检查和节点CSS用于初始画布/可见缩略图；组内部分core模型也被会话直接引用。可能的纯呈现/导出辅助分离需先有逐模块码元，不能将整个27108raw视作可删除或可延后成本。"
+    },
+    {
+      "chain": "NativeEditor.tsx:57 → artifact-editor-actions.ts",
+      "production": "含布局模板、分布、复制/组合、绘图构造/缩放等同步入口，保留在主块。",
+      "obstacle": "复制/常规resize与键盘入口也复用它，不能把整模块当作仅插入新布局时才需要。可进一步按具体动作拆叶，但目前没有函数级或第一方模块级体积证明。"
+    }
+  ],
+  "alreadyLazy": {
+    "confirmedAbsentFromOpeningUnion": [
+      "src/features/artifacts/native/NativeInspector.tsx",
+      "src/features/artifacts/native/FontField.tsx",
+      "src/features/artifacts/native/FontPopover.tsx",
+      "src/features/artifacts/native/ElementFontMenu.tsx",
+      "src/features/artifacts/native/ElementFontVariantField.tsx",
+      "src/features/artifacts/native/CanvasPointEditor.tsx",
+      "src/features/artifacts/native/CanvasPenTool.tsx",
+      "src/features/artifacts/native/vector-node-geometry.ts",
+      "src/features/artifacts/native/BoardPreview.tsx",
+      "src/features/artifacts/native/SlidesPresentation.tsx",
+      "src/features/artifacts/native/SlidesSpeaker.tsx",
+      "src/features/artifacts/native/ColorPopover.tsx",
+      "src/features/artifacts/native/CommentsPanel.tsx",
+      "src/features/artifacts/native/CropEditor.tsx",
+      "src/features/artifacts/native/VersionHistory.tsx",
+      "src/features/artifacts/native/export-artifact.ts",
+      "src/features/artifacts/native/export-pages.ts",
+      "src/features/artifacts/native/capture-embeds.ts",
+      "src/features/artifacts/native/media.ts",
+      "src/features/artifacts/native/svg-font-image.ts",
+      "shared/artifact-pen.ts",
+      "shared/artifact-vector-edit.ts"
+    ],
+    "sourceEvidence": [
+      "NativeInspector.tsx由NativeEditor:147/153在inspectorOpen后加载，默认false；字体/字形/Code/布局属性实现不在opening并集。",
+      "BoardPreview:251、CommentsPanel/CropEditor/VersionHistory:62-64、SlidesPresentation:134和其内SlidesSpeaker按状态加载。",
+      "ColorPopover由ColorField:12 lazy，不能把已拆分颜色弹窗当尚未lazy的优化。",
+      "SVG字体处理通过SvgImage:16 import(svg-font-image)；重型导出/capture-embeds/export-pages在NativeEditor:487动态导入，视频poster在:451按需。",
+      "renderer.tsx:21的RichTextEditor在源码已lazy。collector仍显式以NativeEditor和RTE两根定义opening，因此本表包含Tiptap；不能据此说默认画布一定请求它，或建议再lazy RTE作为新收益。"
+    ]
+  },
+  "rootDefinitionCaveat": {
+    "subclosures": [
+      {
+        "commit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+        "root": "assets/NativeEditor-T6Oc1wP0.js",
+        "nativeOnlyIncrementalChunks": 2,
+        "raw": 94858,
+        "gzip": 31704
+      },
+      {
+        "commit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+        "root": "assets/RichTextEditor-BU_0yAgU.js",
+        "nativeOnlyIncrementalChunks": 6,
+        "raw": 481852,
+        "gzip": 155935
+      },
+      {
+        "commit": "86a18de1c3c5d442795bd33975be351941b563f9",
+        "root": "assets/NativeEditor-C8ckxLyX.js",
+        "nativeOnlyIncrementalChunks": 17,
+        "raw": 273462,
+        "gzip": 92637
+      },
+      {
+        "commit": "86a18de1c3c5d442795bd33975be351941b563f9",
+        "root": "assets/RichTextEditor-C9_AZRm3.js",
+        "nativeOnlyIncrementalChunks": 22,
+        "raw": 662359,
+        "gzip": 217824
+      }
+    ],
+    "interpretation": "若只看NativeEditor自身静态根并扣同一warm集合，基线94858raw/31704gzip，候选273462raw/92637gzip，增长178604raw/60933gzip，仍占联合增长约98.5%。RTE根因draft-context的useLocalDraft共置于NativeEditor主块而有1个回边binding，RTE source本身并不import整个NativeEditor。把context单独分块不降低既定两根union，不能冒称预算收益。application预热六根也是collector口径，并不证明每种真实路由都已网络加载全部根。"
+  },
+  "boundedIconCoLocation": {
+    "publicLibraryVersion": "1.34.0",
+    "equalsFrozenLockVersion": true,
+    "sourceUniqueBindings": 60,
+    "warmUsed": [
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/panel-right.mjs",
+        "renderedCodeUnits": 389,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ],
+        "chunk": "assets/panel-right-BIhatdXw.js"
+      },
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/book-open.mjs",
+        "renderedCodeUnits": 507,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ],
+        "chunk": "assets/transport-BkBAHkFh.js"
+      }
+    ],
+    "nativeLeafCount": 61,
+    "nativeReferencedLeafCount": 58,
+    "unreferencedNativeLeaves": [
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/circle-alert.mjs",
+        "renderedCodeUnits": 472,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ],
+        "chunk": "assets/loader-circle-jHvjPVoY.js"
+      },
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/download.mjs",
+        "renderedCodeUnits": 435,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ],
+        "chunk": "assets/loader-circle-jHvjPVoY.js"
+      },
+      {
+        "packageName": "lucide-react",
+        "packageRelativeModulePath": "dist/esm/icons/loader-circle.mjs",
+        "renderedCodeUnits": 325,
+        "renderedExports": [
+          "__iconNode",
+          "default"
+        ],
+        "chunk": "assets/loader-circle-jHvjPVoY.js"
+      }
+    ],
+    "unreferencedRenderedCodeUnits": 1232,
+    "limits": "source graph only native/shared static imports; application API boundaries already warm; no code or private dependency internals sampled",
+    "productionChain": "NativeEditor-C8ckxLyX.js→loader-circle-jHvjPVoY.js，importedBindingCount=1；块1414raw/536gzip，含Copy及CircleAlert/Download/LoaderCircle四leaf。",
+    "interpretation": "公开Lucide1.34.0本地ESM别名与冻结锁文件相符，静态源consumer60种中PanelRight/BookOpen已warm，58个需原生；实际native有61，额外三leaf共1232rendered码元。能证实小共置点，但不能从536gzip中精确扣除三模块压缩后体积，不能解释主增长。"
+  },
+  "potentialSplits": [
+    {
+      "priority": "先量化主块内部，再考虑模式边界",
+      "candidate": "Design画板交互层/变换预览与等距吸附",
+      "evidence": "Native主块占76.56% gzip增长；链已确认，hook在Slides仍静态可达但enabled=false。",
+      "condition": "保留轻量bounds/初始化与owner状态；重型手势层按Design模式或工具启用加载。",
+      "limits": "可能首先减少Slides路径；Design默认可编辑若需同一交互层，冷可编辑时仍要加载。无逐模块长度，不能承诺节省多少；异步首手势、焦点、CAS、未加载页与草稿需真实回归。"
+    },
+    {
+      "priority": "有界的动作叶分离候选",
+      "candidate": "布局模板/绘图构造等非初始动作与共享基础函数分开；讲者备注/访问恢复UI可以按notesOpen或speakerWindow评估",
+      "evidence": "动作与两UI模块均在主块，notesOpen默认false、speakerWindow相关恢复UI按条件才显示。",
+      "condition": "把store/恢复操作/共享session留在editor owner；基础copy/resize/selection仍同步。",
+      "limits": "不能延迟访问失败时唯一备份入口，不能把草稿持久性放到可卸载UI中。节省量未知，需先取第一方rendered数字，不能把47KB全部归给它们。"
+    },
+    {
+      "priority": "很小的已证实共置点",
+      "candidate": "仅Copy叶与loader-circle块其余三个非native consumer叶分离",
+      "evidence": "1binding+公开路径/源consumer证据，额外1232rendered码元，整个块536gzip。",
+      "condition": "只做最小生产分块实验并重跑原隔离guard，不扩至整套Lucide/57独立请求。",
+      "limits": "Rollup可能重排共享边，尚无实际构建收益；体量很小，不应取代主块调查，也不保证降低网络请求数。"
+    },
+    {
+      "priority": "应避免的无效建议",
+      "candidate": "再次lazy Inspector/字体菜单/点编辑器/重型导出，或把全CSS验证及所有缩略图延迟",
+      "evidence": "前四者已经按需；底层验证与首帧呈现确实依赖；PageRail.tsx:25/:49已slice(first,end)虚拟化。",
+      "limits": "本数据不支持全50页eager渲染或Worker导致PSS增长的推断；NativeCompute.ts:20只在request时ensureWorker，不在构造函数立即创建。"
+    }
+  ],
+  "missingForFinerAttribution": {
+    "available": "两版本生产chunk静态图、包聚合码元、已公开依赖模块码元、第一方模块成员路径均有，基线chunk图不缺；第一方导入链另以固定git源码的类型过滤AST验证，不冒充打包后逐模块图。",
+    "missing": "两版本没有打包后的逐模块importedIds图，也没有第一方每模块renderedCodeUnits/originalCodeUnits。现有是完整chunk静态图、成员列表和冻结源码AST；不能恢复同块内精确保留函数边、私包内部模块边，或精确排名主块47个项目模块。",
+    "minimalSafeFollowup": "若后续需要，仍限已有公开normalized第一方路径，按chunk增加每项目模块rendered/original数字即可；不采代码、私包内部路径、URL、文档或prompt。",
+    "limits": "即使加rendered数值，也不能按模块相加分摊gzip；需要保持断言与计量口径的真实候选生产构建，随后正式实际性能样本验证。"
+  },
+  "qualification": [
+    "opening静态raw/gzip/rendered只是归属证据，不等于真实网络、解析/执行时间、PSS或p75；不据此认定已达到5%预算。",
+    "已知跨运行基线输出漂移仍存在；本次固定用86内同一baseline对照，未以历史gzip微差作为功能或收益证据。",
+    "最终至少10组AB/BA尚未运行，全部真实性能资格仍false；本任务未启动Chrome或读主树D48 WIP。"
+  ],
+  "modifiedProductFiles": false,
+  "browserLaunched": false,
+  "publishedOrDeployed": false
+}

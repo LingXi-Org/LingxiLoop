@@ -1,0 +1,18 @@
+{
+  "waivers": [
+    {
+      "id": "live-comment-agent-authorized-api",
+      "status": "user-waived",
+      "userQuote": "允许不经过此次测试完成后续的开发和上线",
+      "context": "用户回复本次真实评论/智能体服务验收应使用的产品测试环境与租户/项目问题。",
+      "scope": "仅豁免此次真实授权API验收；评论/智能体实现、现有单元/集成、权限与数据隔离要求仍保留。"
+    }
+  ],
+  "deliveryAuthorization": {
+    "draftPr": 709,
+    "independentBranch": "feat/baoyu-editor-fidelity",
+    "productionDeploymentAuthorized": true,
+    "condition": "其他约定功能、视觉、性能及独立候选审查完成后按仓库deploy流程完成合并与上线。",
+    "currentCompletion": "实施中，其他门槛尚未全部通过。"
+  }
+}

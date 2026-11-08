@@ -1,0 +1,6 @@
+{
+  "case": "variant-expression-same",
+  "alreadyMatches": true,
+  "noWrites": true,
+  "consoleOrPageErrors": []
+}

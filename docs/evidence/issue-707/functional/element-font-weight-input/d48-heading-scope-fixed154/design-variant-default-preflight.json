@@ -1,0 +1,5 @@
+{
+  "case": "variant-default-preflight",
+  "localHeadingDefaultIsolated": true,
+  "noWrites": true
+}

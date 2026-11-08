@@ -1,3 +1,4 @@
+import {artifactTextHeading,artifactTextRootTag} from '../../../../../shared/artifact-text-root'
 import {nodeTypeLabels} from '../editor-copy'
 import {pageRadiusCss} from '../../../../../shared/artifact-page-radius'
 import {canvasTextMetrics} from '../../../../../shared/artifact-canvas-typography'
@@ -55,18 +56,20 @@ export const EXPORT_PAGE_CSS = `.artifact-export-page{position:relative;overflow
 .artifact-export-element-link{position:absolute;inset:0;display:block;color:inherit;pointer-events:auto}
 .artifact-export-node[data-element-link]>:not(.artifact-export-element-link){pointer-events:none}
 .artifact-export-node[data-element-link] a[href]{pointer-events:auto}
-.artifact-export-node[data-element-link] a[href]:not(.artifact-export-element-link){position:relative;z-index:1}.artifact-export-node{overflow:visible;min-width:0;min-height:0}.artifact-export-node p,.artifact-export-node h1,.artifact-export-node h2,.artifact-export-node h3,.artifact-export-node h4,.artifact-export-node h5,.artifact-export-node h6{font:inherit;line-height:inherit;margin:0}.artifact-export-node img,.artifact-export-node svg{display:block;width:100%;height:100%;object-fit:contain}.artifact-export-node img{object-fit:cover}.artifact-export-node table{display:grid;width:100%;height:100%;box-sizing:border-box;border-top:2px solid color-mix(in srgb,currentColor 22%,transparent);border-left:2px solid color-mix(in srgb,currentColor 22%,transparent)}.artifact-export-node table>tbody,.artifact-export-node table tr{display:contents}.artifact-export-node td,.artifact-export-node th{box-sizing:content-box;min-width:0;min-height:1lh;padding:.35em .6em;border-right:2px solid color-mix(in srgb,currentColor 22%,transparent);border-bottom:2px solid color-mix(in srgb,currentColor 22%,transparent);white-space:pre-wrap;overflow-wrap:break-word;text-align:inherit;font-weight:inherit}.artifact-export-node th{font-weight:600;background:color-mix(in srgb,currentColor 8%,transparent)}.artifact-export-node .katex-display{margin:0;max-width:100%;overflow:hidden}.artifact-export-node a{color:inherit}.artifact-export-unsupported{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border:1px dashed #73726c;color:#73726c;font-size:18px;white-space:pre-wrap}`
+.artifact-export-node[data-element-link] a[href]:not(.artifact-export-element-link){position:relative;z-index:1}.artifact-export-node{overflow:visible;min-width:0;min-height:0}.artifact-export-node p,.artifact-export-node h1,.artifact-export-node h2,.artifact-export-node h3,.artifact-export-node h4,.artifact-export-node h5,.artifact-export-node h6{font-size:inherit;line-height:inherit;margin:0}.artifact-export-node img,.artifact-export-node svg{display:block;width:100%;height:100%;object-fit:contain}.artifact-export-node img{object-fit:cover}.artifact-export-node table{display:grid;width:100%;height:100%;box-sizing:border-box;border-top:2px solid color-mix(in srgb,currentColor 22%,transparent);border-left:2px solid color-mix(in srgb,currentColor 22%,transparent)}.artifact-export-node table>tbody,.artifact-export-node table tr{display:contents}.artifact-export-node td,.artifact-export-node th{box-sizing:content-box;min-width:0;min-height:1lh;padding:.35em .6em;border-right:2px solid color-mix(in srgb,currentColor 22%,transparent);border-bottom:2px solid color-mix(in srgb,currentColor 22%,transparent);white-space:pre-wrap;overflow-wrap:break-word;text-align:inherit;font-weight:inherit}.artifact-export-node th{font-weight:600;background:color-mix(in srgb,currentColor 8%,transparent)}.artifact-export-node .katex-display{margin:0;max-width:100%;overflow:hidden}.artifact-export-node a{color:inherit}.artifact-export-unsupported{display:flex;width:100%;height:100%;align-items:center;justify-content:center;border:1px dashed #73726c;color:#73726c;font-size:18px;white-space:pre-wrap}`
 
 export async function renderPageHtml(page: ArtifactPage, resources: ExportResources): Promise<string> {
   resources.check()
   const children = (id: string | null) => page.nodeOrder.map(key => page.nodes[key]!).filter(node => node.parentId === id && !node.hidden && node.scope !== 'canvas')
   async function render(node: ArtifactNode): Promise<string> {
     resources.check()
+    const heading=artifactTextHeading(node),tag=artifactTextRootTag(node)
     const parent = node.parentId ? page.nodes[node.parentId] : null
     const inFlow = parent?.layout?.mode === 'flex' || parent?.layout?.mode === 'grid'
     const position = inFlow ? 'position:relative;flex-shrink:1' : `position:absolute;left:${node.x}px;top:${node.y}px`
     const style = artifactResolvedStyle(node.style, resources.document)
     let css = `${position};width:${node.textSizing==='content'?'max-content':`${node.width}px`};${node.textSizing==='content'?`max-width:${node.width}px;height:auto;min-height:${canvasTextMetrics(style.fontSize??24).minHeight}px`:`height:${node.height}px`};transform:${nodeTransform(node)};${textStyle(style)}`
+    if(heading)css+=';margin:0'
     let content = ''
     switch (node.type) {
       case 'group': {
@@ -77,7 +80,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
         break
       }
       case 'note':
-      case 'text': content = node.richText ? await richText(node.richText, resources) : await sourceText(node.text ?? '', resources); break
+      case 'text': content = node.richText ? await richText(heading?{type:'doc',content:heading.content}:node.richText, resources) : await sourceText(node.text ?? '', resources); break
       case 'video': {
         if (node.posterAssetId) { const crop=node.crop;content=`<div style="width:100%;height:100%;overflow:hidden"><img alt="${escapeHtml(node.text??'视频')}" src="${escapeHtml(await resources.asset(node.posterAssetId))}" ${crop?` style="max-width:none;width:${100/Math.max(.01,crop.width)}%;height:${100/Math.max(.01,crop.height)}%;transform:translate(${-crop.x*100}%,-${crop.y*100}%);object-fit:cover"`:''}></div>` }
         else content = `<div class="artifact-export-unsupported">${escapeHtml(node.text ?? '视频')}</div>`
@@ -144,7 +147,9 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
     }
     const href=node.attributes?.href,attributes=Object.entries(node.attributes??{}).filter(([name])=>name!=='href'&&name!=='target').map(([name,value])=>` ${name}="${escapeHtml(value)}"`).join('')
     const link=href?`<a class="artifact-export-element-link" href="${escapeHtml(href)}"${node.attributes?.target?` target="${escapeHtml(node.attributes.target)}"`:''} rel="noopener noreferrer" aria-label="打开元素链接"></a>`:''
-    return `<div class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'}${href?' data-element-link':''}${attributes} style="${escapeHtml(css)}">${link}${content}</div>`
+    const headingId=heading&&href&&!node.attributes?.['aria-label']&&!node.attributes?.['aria-labelledby']?`lx-heading:${encodeURIComponent(page.id)}:${encodeURIComponent(node.id)}`:undefined
+    if(headingId)content=`<span id="${escapeHtml(headingId)}" style="display:contents">${content}</span>`
+    return `<${tag} class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'}${href?' data-element-link':''}${attributes}${headingId?` aria-labelledby="${escapeHtml(headingId)}"`:''} style="${escapeHtml(css)}">${link}${content}</${tag}>`
   }
   return `<section class="artifact-export-page" data-page-id="${page.id}" data-transition="${page.transition}" aria-label="${escapeHtml(page.title)}" style="${pageDefaultFontFamily(resources.document,page.id)?`font-family:${escapeHtml(pageDefaultFontFamily(resources.document,page.id)!)};`:''}width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}${pageRadiusCss(page.radius)?`;border-radius:${pageRadiusCss(page.radius)}`:''}">${(await Promise.all(children(null).map(render))).join('')}</section>`
 }

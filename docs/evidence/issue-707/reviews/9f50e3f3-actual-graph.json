@@ -1,0 +1,101 @@
+{
+  "candidate": "9f50e3f38087928340999170efcd2e418d890439",
+  "comparison": "d2b8b37a85c97513dfa360fe592b4765fe3cf9dd",
+  "reviewType": "独立只读完整生产脱敏静态图后验；无浏览器/SDK或构建产物下载。",
+  "status": "静态闭包/隔离与合计核对通过；基线再次发生已定位但原因未证实的输出漂移。此结果不关闭功能报告中的焦点P2，不代表性能达标。",
+  "findings": [],
+  "evidence": {
+    "profile": "/workspace/lingxi-issue707-scratch/static-profile-9f50e3f3.json",
+    "run": 42457253763,
+    "job": 128658811029,
+    "ordinaryCiReportedByParent": 42457258729,
+    "closureScript": "/workspace/lingxi-issue707-scratch/review-9f50-actual/verify.py",
+    "closureResult": "/workspace/lingxi-issue707-scratch/review-9f50-actual/checks.json",
+    "chunkDrift": "/workspace/lingxi-issue707-scratch/review-9f50-actual/chunk-drift.json",
+    "targetMappedStaticEdges": "/workspace/lingxi-issue707-scratch/review-9f50-actual/target-mapped-edges.json",
+    "functionalReport": "/tmp/lingxi-review-9f50e3f3.json"
+  },
+  "verified": [
+    "原始顶层使用commit/runId/jobId/actualPerformanceQualified，与之前collectorCommit/run/job包装不同；按本轮真实字段核对，未假设不存在的passed字段。",
+    "两个profile的提交/输入摘要/flags完整，openingIsolationPassed/buildCompleted/sourceInputsUnchanged均true、uncommittedInputsPossible=false，qualified=false；顶层actualPerformanceQualified=false。",
+    "递归复算application和Native/RTE两根静态闭包、application与nativeIncremental互斥、各chunk/raw/gzip总计一致。",
+    "Native/RTE分别28/33静态块，联合33；原生增量22块，无Thread/CodeBlock/parse5/streamdown/高亮器/Query重型静态路径。",
+    "共享图标仍严格七个公开lucide leaf，2286raw/647gzip，没有第一方模块或React；工厂模块独立。",
+    "React/ReactDOM各8模块，仅一个应用预热块，渲染/原始码元与基线一致。",
+    "新增ElementFontVariantField/element-font-variant与NativeInspector/FontField等均不进入application∪native静态闭包，新增菜单仍按需。",
+    "相对d2逐块归属配对后，baseline42块/181静态边、candidate63块/257静态边按目标完整归属身份映射的imports与binding数量一致；不是只按index等同名stem粗略匹配。候选各配对chunk原始字节/包聚合/公开模块数据均与d2相同。"
+  ],
+  "gzipBytes": {
+    "currentBaseline": {
+      "application": 619295,
+      "nativeIncremental": 155925,
+      "union": 775220
+    },
+    "currentCandidate": {
+      "application": 621279,
+      "nativeIncremental": 217860,
+      "union": 839139
+    },
+    "sameRunDelta": {
+      "application": 1984,
+      "nativeIncremental": 61935,
+      "union": 63919,
+      "unionPercent": 8.245272309795926,
+      "nativePercent": 39.721019721019715
+    },
+    "crossRunVsD2": {
+      "application": -2,
+      "nativeIncremental": 15,
+      "union": 13,
+      "applicationRaw": 0,
+      "nativeRaw": 0,
+      "actualPerformanceConclusion": false
+    }
+  },
+  "baselineDrift": {
+    "sourceInputsSha256Both": "66d9f949341b96b852a2c04862751cbf28648db8e6787e79beb3348a5213202f",
+    "applicationModulesBoth": 998,
+    "nativeModulesBoth": 59,
+    "d2": {
+      "applicationRaw": 2038926,
+      "applicationGzip": 618927,
+      "nativeRaw": 481852,
+      "nativeGzip": 155935,
+      "unionGzip": 774862
+    },
+    "current": {
+      "applicationRaw": 2039174,
+      "applicationGzip": 619295,
+      "nativeRaw": 481852,
+      "nativeGzip": 155925,
+      "unionGzip": 775220
+    },
+    "soleRawChange": {
+      "chunk": "DesktopApp",
+      "rawBefore": 381801,
+      "rawAfter": 382049,
+      "rawDelta": 248,
+      "gzipBefore": 121249,
+      "gzipAfter": 121622,
+      "gzipDelta": 373,
+      "onlyPackageAggregateChange": {
+        "package": "dependency:@bible-strong/avatar-core",
+        "moduleCountBoth": 162,
+        "originalCodeUnitsBoth": 294963,
+        "renderedBefore": 271863,
+        "renderedAfter": 273348,
+        "renderedDelta": 1485
+      }
+    },
+    "causeEstablished": false,
+    "limits": "第一方/公开模块归属与静态边相同并不证明全部构建环境和优化输出相同；此包聚合不足以定位具体子模块原因。没有将SDK/并发/依赖版本/文件hash视为已证实原因。dynamicImports仅核对声明逻辑名，不解析未纳入静态闭包的动态模块内容。"
+  },
+  "qualification": [
+    "application∪native839139相对本轮基线775220为+8.245272%，仍不符合静态5%口径，且不是实际传输门槛结果。应用预热和增量都计入，未以成本前移冒充收益。",
+    "候选跨运行gzip+13、原始字节与归属相同；基线union另增358。不能将这种输出差额归因为代码性能改善或退化。",
+    "模块长度为UTF16码元，逐chunk本地gzip与包/绑定计数均不能替代实际脚本网络、Worker、冷启动/输入/PSS，不能唯一归因。",
+    "未执行bench或最终10组AB/BA；整体性能仍unqualified。静态隔离通过不改变功能审查的P2和全计划未完成事实。"
+  ],
+  "modifiedProductFiles": false,
+  "browserLaunched": false
+}

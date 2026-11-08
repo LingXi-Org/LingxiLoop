@@ -1,3 +1,4 @@
+import {artifactTextHeading} from '../../../../shared/artifact-text-root'
 import {artifactLinkPreview,type LinkPreviewRun} from '../../../../shared/artifact-link-preview'
 import {pageRadiusCss,pageRadiusPath} from '../../../../shared/artifact-page-radius'
 import { useArtifactAssetRead } from './asset-read-context'
@@ -95,7 +96,7 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
       color: safeColor(style.color, '#222'),
       stroke: safeColor(style.stroke ?? style.borderColor, node.type === 'line' ? '#333' : 'transparent'),
       strokeWidth: style.strokeWidth ?? style.borderWidth ?? (node.type === 'line' ? 3 : 1),
-      fontFamily:editorFontFamily(inheritedSvgFont(node,page,document))??'sans-serif', opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
+      fontFamily:editorFontFamily(inheritedSvgFont(node,page,document))??'sans-serif', opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? (artifactTextHeading(node)?700:400),
       text: (node.type === 'math' ? node.source ?? '' : node.text ?? plainText(node.richText)).slice(0, 512),
       shape: node.shape, crop: node.crop, gradient: style.gradient, shadow: style.shadow, flipX: node.flipX, flipY: node.flipY,
       ...(asset ? { assetId, imageKey: imageKey(document.id, asset) } : {}),
@@ -229,7 +230,7 @@ function PreviewShape({ node, document, loaded }: { node: PreviewNode; document:
       <text x={node.fontSize*.6} y={Math.min(node.fontSize*1.35,rowHeight-2)} fill={node.color} fontSize={Math.min(node.fontSize,rowHeight*.65)} fontWeight={rowIndex===0&&node.tableHeader?600:node.fontWeight}>{cell.slice(0,24)}</text>
     </g>))}</>
   } else if (node.type === 'group') content = <><rect width={w} height={h} rx={node.radius} {...paint} />{node.children?.map(child => <PreviewShape key={child.id} node={child} document={document} loaded={loaded} />)}</>
-  else content = <><rect width={w} height={h} rx={node.radius} {...paint} />{(node.type === 'embed' ? ['交互内容'] : node.linkLines??node.text.split('\n').slice(0, 4).map(text=>[{text:text.slice(0,100),underline:false}])).map((line, index) => <text key={index} x={0} y={node.fontSize * (index * 1.2 + 1)} fill={node.color} fontSize={node.fontSize} fontWeight={node.fontWeight} textDecoration={decoration}>{typeof line==='string'?line:line.map((run,index)=><tspan key={index} textDecoration={run.underline?[...new Set([...(decoration?.split(' ')??[]),'underline'])].join(' '):decoration}>{run.text}</tspan>)}</text>)}</>
+  else content = <><rect width={w} height={h} rx={node.radius} {...paint} />{(node.type === 'embed' ? ['交互内容'] : node.linkLines??node.text.split('\n').slice(0, 4).map(text=>[{text:text.slice(0,100),underline:false}])).map((line, index) => <text key={index} x={0} y={node.fontSize * (index * 1.2 + 1)} fill={node.color} fontSize={node.fontSize} fontWeight={node.css?.['font-weight']===undefined?node.fontWeight:undefined} textDecoration={decoration}>{typeof line==='string'?line:line.map((run,index)=><tspan key={index} textDecoration={run.underline?[...new Set([...(decoration?.split(' ')??[]),'underline'])].join(' '):decoration}>{run.text}</tspan>)}</text>)}</>
   return <g fontFamily={node.fontFamily} transform={`translate(${node.x} ${node.y}) rotate(${node.rotation} ${w / 2} ${h / 2}) translate(${node.flipX ? w : 0} ${node.flipY ? h : 0}) scale(${node.flipX ? -1 : 1} ${node.flipY ? -1 : 1})`} opacity={node.opacity}>{node.gradient && <defs>{node.gradient.type === 'radial' ? <radialGradient id={gradientId}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</radialGradient> : <linearGradient id={gradientId} gradientTransform={`rotate(${node.gradient.angle-90} .5 .5)`}>{node.gradient.stops.map((s,i) => <stop key={i} offset={s.offset} stopColor={s.color} />)}</linearGradient>}</defs>}{node.css?<foreignObject width={w} height={h} overflow="visible"><div style={{width:w,height:h,...codeStyleProperties(node.css)}}><svg width="100%" height="100%" overflow="visible">{content}</svg></div></foreignObject>:content}</g>
 }
 

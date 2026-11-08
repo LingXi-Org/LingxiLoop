@@ -1,3 +1,5 @@
+本次最新授权：用户明确豁免真实评论／智能体授权API验收，并允许后续开发与上线；其他约定门槛保持。见[验收豁免与交付授权](acceptance-exceptions.json)。下文历史候选的未验证记录保留，未改写为已通过。
+
 # Native editor parity — issue 707
 
 Reference: JimLiu/baoyu-design v2.8.0, `016b39d7fdcc30bfacee31ea5541498ac53921c6`.
@@ -588,3 +590,8 @@ D47增加[字形菜单、成对还原与继承读数](functional/element-font-va
 
 
 9f50e3f3普通CI42457258729与[静态图](performance/static-profile-9f50e3f3.json)42457253763成功，但独立实测短触屏1440×500的长字形列表当前焦点被裁剪，两版相同，候选功能未通过。[最小修复及前后证据](functional/element-font-variant-focus.json)仅令自身列表滚动以容纳焦点；140/154短窗冷/重开scrollTop82、正常1000高scrollTop0及Home/End/返回焦点、零写入通过，最终冻结复审待新候选。9f本轮union839139/775220=+8.245272%，baseline同输入哈希但输出再次漂移，跨轮差异不当收益；不是实际性能。Source短窗严格ready未通过，没有把未进入字重菜单的截图当作来源对照通过。
+
+
+86a18de1普通CI42458172132、[静态图](performance/static-profile-86a18de1.json)42458168332与[功能复审](reviews/86a18de1.json)/[图后验](reviews/86a18de1-actual-graph.json)限定通过，原短窗焦点P2闭合。静态联合839048/774862=+8.283540%，baseline恢复d2输出，前轮漂移具体原因仍未证实。[增长归属](reviews/86a18de1-opening-growth.json)显示主块与共享模型/呈现组贡献87.18% gzip增长，Tiptap/ProseMirror原始体积未增，重型工具原已lazy；缺第一方逐模块rendered数据，不把跨run差值当收益。
+
+D48增加[字重文本与实际标题语义](functional/element-font-weight-input.json)，清单180项。Source实际确认变量/important文本、伴随inherit不改写、清空/字面值后焦点。原生接现有草稿/CAS，修复内外层标题字重分歧、编辑时列表切换重建、HTML默认粗体被重置及未加载摘要丢默认粗体；同步现有导出。两版18核心流程及焦点补充、普通400/还原700各六格式通过，网页/PPTX结构可验证，非像素；真实临时PG1项与48 owning单位通过；50页两模式47未改页hash保持。局部输入框浅/深零偏差，粗指针绝对y=-50仍未过；参考其他作者声明不同，仅比较输入控件，不做整图资格。新增整体链接标题名称与全局标题重置的先红后绿回归；源码独立候选CI/静态图/只读审查提交后登记。完整混合、字号等属性、全图及最终性能继续实施。
