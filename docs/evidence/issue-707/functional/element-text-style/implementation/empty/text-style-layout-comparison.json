@@ -1,0 +1,36 @@
+{
+  "delta": [
+    {
+      "name": "popup",
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      }
+    },
+    {
+      "name": "search",
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": -0.5,
+        "height": 0
+      }
+    },
+    {
+      "name": "searchBox",
+      "geometry": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      }
+    }
+  ],
+  "absolute": {
+    "x": 0,
+    "y": 0
+  },
+  "wholeVisualQualified": false
+}

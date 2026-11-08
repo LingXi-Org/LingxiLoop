@@ -1,0 +1,5 @@
+- 'menu "Text style: Heading 2"':
+  - textbox "Search styles"
+  - group:
+    - menuitemradio "Heading 1 48px"
+    - menuitemradio "Heading 2 36px" [checked]

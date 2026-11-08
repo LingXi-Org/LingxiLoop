@@ -275,3 +275,10 @@ test('写入被拒绝后重读文档仍须显示未保存状态，恢复权限�
  assert.equal(session.getSnapshot().write,false);assert.equal(session.getSnapshot().pending,1);assert.match(session.getSnapshot().error,/尚未保存/);assert.equal(session.getSnapshot().document?.pages['page-one'].notes,'拒绝后保留的本地备注');assert.equal(document.pages['page-one'].notes,'')
  write=true;denied=false;await session.open();await session.retry();assert.equal(document.pages['page-one'].notes,'拒绝后保留的本地备注');assert.equal(session.getSnapshot().pending,0);assert.equal(session.getSnapshot().error,'');assert.equal(new Set(ids).size,1);session.dispose()
 })
+
+ test('派生排版摘要随文档收据更新，缺失摘要不复用旧版本',async()=>{
+  const h=harness(),read=h.transport.read,census={'page-two':[{size:48,roles:{Body:1},families:{Arial:1}}]};let include=true
+  h.transport.read=async signal=>({...await read(signal),...(include?{typography:census}:{})})
+  await h.session.open();assert.deepEqual(h.session.getSnapshot().typography,census)
+  include=false;await h.session.open();assert.equal(h.session.getSnapshot().typography,undefined);h.session.dispose()
+ })

@@ -1,0 +1,89 @@
+{
+  "类型": "指定冻结生产图只读后验",
+  "候选提交": "645ff2bd8dd2e661b6dd3bedff0370d68282b73f",
+  "固定基线": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "比较父提交": "4f755a3a2553d85c48382e3e79f4385b3f9c5f62",
+  "来源": {
+    "文件": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-645ff2bd.json",
+    "run": 42439767136,
+    "job": 128606283731,
+    "collectorCommit": "645ff2bd8dd2e661b6dd3bedff0370d68282b73f",
+    "普通CI": "42439770900成功为主线程提供信息；本次没有独立重跑普通CI。"
+  },
+  "结论": "限定静态图后验通过，未发现新增P1/P2/P3。闭包、七图标和React隔离保持；相对4f的静态gzip总和增加157字节。此处不是实际网络、启动或PSS收益，也不是最终性能资格。",
+  "发现": [],
+  "精确来源与完整性": [
+    "两条记录精确对应721固定基线及645候选；顶层passed=true/qualified=false；两臂openingIsolationPassed/buildCompleted/sourceInputsUnchanged=true，uncommittedInputsPossible=false、qualified=false。",
+    "本次baseline完整profile与4f轮baseline深相等，没有改变固定基线、根或统计口径。",
+    "独立递归所有静态imports，目标均可解析；application根闭包与application列表完全一致，native双根闭包减app与nativeIncremental完全一致，二者不相交；逐块codeBytes/gzipBytes之和与汇总相等。"
+  ],
+  "原生闭包": {
+    "数量": {
+      "app": 41,
+      "native双根静态并集": 33,
+      "native减app": 22,
+      "NativeEditor完整闭包": 28,
+      "RichTextEditor完整闭包": 33
+    },
+    "隔离": "两个完整原生根闭包均没有Query-core/ReactQuery、所列会话UI/CodeBlock、parse5/streamdown/shiki/@shikijs/htmlparser2有代码模块。application根也没有Query包，未出现将该路径移入所采预热。完整chunkDetails递归证明，而非只看模块汇总Top100。",
+    "范围": "仅所采应用和原生根的静态imports，不覆盖所有动态页面、Worker或实际浏览器预热/缓存。"
+  },
+  "七图标与React": {
+    "共享块": "assets/artifact-shared-icons-BzzbmHJT.js",
+    "rawBytes": 2286,
+    "gzipBytes": 647,
+    "leaf": [
+      "bot",
+      "chevron-down",
+      "chevron-left",
+      "chevron-right",
+      "ellipsis",
+      "image",
+      "x"
+    ],
+    "检查": "模块准确为七个lucide-react/dist/esm/icons/*.mjs，依赖聚合仅lucide-react/7模块，projectModules为空，没有React/ReactDOM/图标工厂。生产audit通过精确moduleIds=7及白名单。x仍337 rendered UTF16码元。",
+    "工厂": "共享块只import独立createLucideIcon块，工厂再使用正常应用index，不吸入七leaf块。",
+    "React唯一": "所采app∪native静态闭包中React与ReactDOM仅在一个应用index块；两臂均8/8模块、renderedCodeUnits19130/544433，完全一致。未据此宣称未采动态闭包或运行时绝对唯一。"
+  },
+  "静态字节独立复算": {
+    "721": {
+      "appGzipBytes": 618927,
+      "nativeGzipBytes": 155935,
+      "unionGzipBytes": 774862
+    },
+    "4f": {
+      "appGzipBytes": 621247,
+      "nativeGzipBytes": 217428,
+      "unionGzipBytes": 838675
+    },
+    "645": {
+      "appGzipBytes": 621272,
+      "nativeGzipBytes": 217560,
+      "unionGzipBytes": 838832
+    },
+    "645减4f": {
+      "appGzipBytes": 25,
+      "nativeGzipBytes": 132,
+      "unionGzipBytes": 157,
+      "appRawBytes": 0,
+      "nativeRawBytes": 378
+    },
+    "645相对721百分比": {
+      "union": 8.255663589129414,
+      "native": 39.51967165806265
+    },
+    "解释": "逐块本地gzip是静态估算；union仍比固定基线高8.2557%，native静态增量高39.5197%。这些值不能替代实际HTTP传输、动态加载、Worker、PSS及最终10组AB/BA，也不能宣称5%预算通过。"
+  },
+  "复现核验": {
+    "脚本": "/workspace/lingxi-issue707-scratch/review-645-actual/verify.py",
+    "结果": "/workspace/lingxi-issue707-scratch/review-645-actual/checks.json",
+    "日志": "/tmp/lingxi-review-645-actual-verify.log",
+    "运行": "全部断言通过；另核对两轮baseline完整记录相等。"
+  },
+  "未验证与只读边界": [
+    "保留原645功能审查 /tmp/lingxi-review-645ff2bd.json，未覆盖原报告的完整菜单/触摸绝对偏移/视觉与真实性能未验证项。",
+    "只读明确授权JSON、645冻结checkout及自身分析结果；未读取D44或其他主工作区WIP，未修改产品、提交/推送/部署/外发。",
+    "未下载SDK、构建JS或artifact，未重新构建/跑UI/benchmark；最新候选的实际性能收益与最终资格仍未知。"
+  ],
+  "最终性能资格": false
+}

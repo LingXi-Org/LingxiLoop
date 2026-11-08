@@ -1,0 +1,6 @@
+- 'menu "Text style: Custom"':
+  - textbox "Search styles"
+  - group:
+    - menuitemradio "Custom 43px" [checked]
+    - separator
+    - menuitemradio "Heading 1 48px"

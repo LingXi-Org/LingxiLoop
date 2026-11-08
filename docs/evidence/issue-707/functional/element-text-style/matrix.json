@@ -1,0 +1,62 @@
+[
+  {
+    "name": "census",
+    "geometryPassed": true,
+    "absolute": {
+      "x": 0,
+      "y": 0
+    },
+    "comparison": "implementation/census/text-style-layout-comparison.json",
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "unset",
+    "geometryPassed": true,
+    "absolute": {
+      "x": 0,
+      "y": 0
+    },
+    "comparison": "implementation/unset/text-style-layout-comparison.json",
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "empty",
+    "geometryPassed": true,
+    "absolute": {
+      "x": 0,
+      "y": 0
+    },
+    "comparison": "implementation/empty/text-style-layout-comparison.json",
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "narrow-dark",
+    "geometryPassed": true,
+    "absolute": {
+      "x": 0,
+      "y": 0.28125
+    },
+    "comparison": "implementation/narrow-dark/text-style-layout-comparison.json",
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "coarse",
+    "geometryPassed": true,
+    "absolute": {
+      "x": 0.328125,
+      "y": -50
+    },
+    "comparison": "implementation/coarse/text-style-layout-comparison.json",
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "coarse-140",
+    "geometryPassed": true,
+    "absolute": {
+      "x": 0.328125,
+      "y": -50
+    },
+    "comparison": "implementation/coarse-140/text-style-layout-comparison.json",
+    "wholeVisualQualified": false
+  }
+]

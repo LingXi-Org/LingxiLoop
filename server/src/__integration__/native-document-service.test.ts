@@ -15,6 +15,7 @@ import {
 import type { ArtifactRow } from '../modules/artifacts/repository-types.js'
 import { listing, publish, readProjectFile, sha256 } from '../modules/artifacts/store.js'
 import { installStorageProvider, type Storage } from '../storage.js'
+import {projectNativeSnapshot} from '../modules/artifacts/native-projection.js'
 
 // Real PostgreSQL transactions exercise the document service independently of model/runtime availability.
 // The owning full migration test checks the same additive DDL against the complete product schema.
@@ -57,6 +58,22 @@ const snapshot = async (id: string) => (await readNativeDocument(db, id))!
 const apply = (id: string, request: unknown, actorKind: 'user' | 'agent' = 'user') => withTransaction(db, client => submitNativeOperations(client, {
   artifactId: id, companyId: 'company', actorId: actorKind === 'user' ? 'human' : 'agent', actorKind, request,
 }))
+
+test('排版摘要覆盖未加载画板，角色持久化及共享历史不改写其他页面',async()=>{
+ const item=await artifact('design'),initial=await snapshot(item.id),title={...createNode('text','title'),text:'主标题',typographyRole:'Heading 1' as const,style:{fontSize:48,fontFamily:'Arial'}},other=createPage('other'),caption={...createNode('text','caption'),text:'说明文字',typographyRole:'Caption' as const,style:{fontSize:14,fontFamily:'Arial'}}
+ other.nodeOrder=[caption.id];other.nodes[caption.id]=caption
+ await apply(item.id,prepareBatch(initial.document,[{type:'node.insert',pageId:'page-1',node:title},{type:'page.insert',page:other}],'insert-typography'))
+ const saved=await snapshot(item.id),hash=saved.pageVersions.other,projection=projectNativeSnapshot(saved,['page-1'])
+ assert.deepEqual(projection.document.pages.other.nodes,{})
+ assert.deepEqual(projection.typography?.other,[{size:14,roles:{Caption:1},families:{Arial:1}}])
+ assert.ok(!JSON.stringify(projection.typography).includes('主标题'))
+ const patched=await apply(item.id,prepareBatch(saved.document,[{type:'node.patch',pageId:'page-1',nodeId:'title',patch:{typographyRole:'Display'}}],'change-typography-role'))
+ assert.equal((await snapshot(item.id)).document.pages['page-1'].nodes.title.typographyRole,'Display');assert.equal(patched.pageVersions.other,hash)
+ const undone=await apply(item.id,{operationId:'undo-typography-role',kind:'undo',targetOperationId:'change-typography-role',expectedHistoryVersion:patched.history.version})
+ assert.equal(undone.document.pages['page-1'].nodes.title.typographyRole,'Heading 1');assert.equal(undone.pageVersions.other,hash)
+ const redone=await apply(item.id,{operationId:'redo-typography-role',kind:'redo',targetOperationId:'change-typography-role',expectedHistoryVersion:undone.history.version})
+ assert.equal(redone.document.pages['page-1'].nodes.title.typographyRole,'Display');assert.equal(redone.pageVersions.other,hash)
+})
 async function withText() {
   const item = await artifact()
   const initial = await snapshot(item.id), node = createNode('text', 'title')

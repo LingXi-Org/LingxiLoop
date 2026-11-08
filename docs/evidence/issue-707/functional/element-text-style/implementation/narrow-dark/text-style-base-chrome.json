@@ -1,0 +1,113 @@
+{
+  "popup": {
+    "rect": {
+      "x": 112,
+      "y": 700.28125,
+      "width": 242,
+      "height": 74,
+      "top": 700.28125,
+      "right": 354,
+      "bottom": 774.28125,
+      "left": 112
+    },
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "padding": "0px",
+    "borderRadius": "10px",
+    "boxShadow": "rgba(255, 255, 255, 0.04) 0px 0px 0px 1px inset, rgba(0, 0, 0, 0.32) 0px 8px 24px 0px, rgba(0, 0, 0, 0.2) 0px 2px 6px 0px",
+    "background": "rgb(48, 48, 48)",
+    "color": "rgba(255, 255, 255, 0.93)",
+    "boxSizing": "border-box",
+    "flex": "0 1 auto",
+    "minWidth": "0px",
+    "maxWidth": "374px",
+    "width": "242px",
+    "height": "74px",
+    "margin": "0px",
+    "transform": "none"
+  },
+  "search": {
+    "rect": {
+      "x": 148,
+      "y": 708.28125,
+      "width": 190,
+      "height": 24,
+      "top": 708.28125,
+      "right": 338,
+      "bottom": 732.28125,
+      "left": 148
+    },
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "padding": "0px",
+    "borderRadius": "0px",
+    "boxShadow": "none",
+    "background": "rgba(0, 0, 0, 0)",
+    "color": "rgba(255, 255, 255, 0.93)",
+    "boxSizing": "border-box",
+    "flex": "1 1 0%",
+    "minWidth": "0px",
+    "maxWidth": "none",
+    "width": "190px",
+    "height": "24px",
+    "margin": "0px",
+    "transform": "none"
+  },
+  "searchBox": {
+    "rect": {
+      "x": 120,
+      "y": 708.28125,
+      "width": 226,
+      "height": 24,
+      "top": 708.28125,
+      "right": 346,
+      "bottom": 732.28125,
+      "left": 120
+    },
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "padding": "0px 8px",
+    "borderRadius": "6px",
+    "boxShadow": "rgb(48, 48, 48) 0px 0px 0px 1px inset, rgb(37, 125, 224) 0px 0px 0px 1px, rgba(23, 87, 172, 0.6) 0px 0px 6px 1px",
+    "background": "rgba(255, 255, 255, 0.05)",
+    "color": "rgba(255, 255, 255, 0.93)",
+    "boxSizing": "border-box",
+    "flex": "0 1 auto",
+    "minWidth": "0px",
+    "maxWidth": "none",
+    "width": "226px",
+    "height": "24px",
+    "margin": "0px",
+    "transform": "none"
+  },
+  "options": [
+    {
+      "text": "标题 148像素",
+      "rect": {
+        "x": 116,
+        "y": 740.28125,
+        "width": 234,
+        "height": 30,
+        "top": 740.28125,
+        "right": 350,
+        "bottom": 770.28125,
+        "left": 116
+      },
+      "fontSize": "13px",
+      "lineHeight": "19px",
+      "padding": "2.5px 8px",
+      "borderRadius": "6px",
+      "boxShadow": "none",
+      "background": "rgba(0, 0, 0, 0)",
+      "color": "rgba(255, 255, 255, 0.93)",
+      "boxSizing": "border-box",
+      "flex": "0 1 auto",
+      "minWidth": "0px",
+      "maxWidth": "none",
+      "width": "234px",
+      "height": "30px",
+      "margin": "0px",
+      "transform": "none"
+    }
+  ]
+}

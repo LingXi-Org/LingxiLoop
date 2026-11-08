@@ -10153,6 +10153,45 @@
         "receipt": "functional/element-font-popup.json",
         "scope": "仅字体浮层局部，不代表全部选项/语义或最终性能。"
       }
+    },
+    {
+      "id": "D44-design",
+      "editor": "design",
+      "control": "文字样式搜索菜单、跨页字号摘要及角色持久化",
+      "trigger": "文字→样式→搜索/当前自定义/多选→保存、共享历史、重开、锁定与CAS",
+      "states": [
+        "分类",
+        "多选混合",
+        "自定义",
+        "变量",
+        "中文组词",
+        "键盘",
+        "空搜索",
+        "只读",
+        "锁定",
+        "撤权",
+        "冲突",
+        "触摸"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "runtime": "source-element-text-style.json"
+      },
+      "implementation": "src/features/artifacts/native/ElementTextStyle.tsx",
+      "screenshots": {
+        "reference": "visual/element-text-style/reference/",
+        "native": "visual/element-text-style/implementation/",
+        "manifest": "functional/element-text-style/matrix.json",
+        "matchedStateVerified": false
+      },
+      "result": "文档字号菜单、派生元数据及角色原生持久化通过定向功能与局部几何；系统样式/完整混合面板、焦点前驱及整图/性能未完成。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-text-style.json",
+        "scope": "Design文字字号菜单及派生摘要，不是完整排版系统、授权API或最终性能。"
+      }
     }
   ],
   "registeredReplacements": [
@@ -10203,6 +10242,10 @@
     {
       "area": "文本可选属性中文菜单与标签",
       "reason": "Emphasis、List、Case及选项、移除和错误提示全部中文；代码声明与作者文字保留。没有据此排除像素或图标。"
+    },
+    {
+      "area": "文本样式菜单与字号单位",
+      "reason": "角色、当前自定义、混合、空搜索及无障碍文案中文，px显示为像素；作者正文和代码语法保留。没有排除像素或图标。"
     }
   ],
   "removedServiceEntrances": [

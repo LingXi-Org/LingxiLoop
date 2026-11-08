@@ -1,0 +1,184 @@
+{
+  "候选提交": "645ff2bd8dd2e661b6dd3bedff0370d68282b73f",
+  "比较基线": "4f755a3a2553d85c48382e3e79f4385b3f9c5f62",
+  "冻结目录": "/workspace/lingxi-issue707-scratch/review-645ff2bd",
+  "审查依据": ".agents/skills/repository-review/SKILL.md / AGENTS.md Delivery 2",
+  "结论": "本次限定源码与定向交互/局部几何复审通过，未发现新增可复现P1/P2/P3。Combobox与来源菜单的语义/分组等差距、触摸绝对位置及完整视觉/性能资格仍未通过。",
+  "发现": [],
+  "源码路径与安全边界": [
+    "FontField的element变体只由Design画板文字谓词启用；Slides/表格/画布路径保留element=false。selected字体仍由value/theme计算；清空按钮只setQuery并聚焦搜索，没有调用onChange或删除文档字体；onValueChange仍只在非空font时提交原onChange。",
+    "新元素变体使用受控query，其他分支保留原defaultInputValue。onBegin/CAS快照、异步字体资源、权限关闭和Escape恢复触发器路径没有替换。",
+    "FloatingPopover新增matchAnchorWidth/stableWhileOpen默认false、gap默认4；历史/评论等调用未传入新值。新collisionHeight不传时与旧position公式相同。仅字体element启用anchor宽度/gap6/最大已见高度作为碰撞判断；上方定位仍按当前实际高度，搜索变矮保持上方和底边。",
+    "最大高度ref随本次FloatingPopover条件挂载生命周期释放，不持有DOM或文档数据。清理仍disconnect ResizeObserver并移除toggle/resize/scroll监听；宽度设定不会变更anchor文档字段。",
+    "除浮层样式外，新增背景/边框变量也限定于Design启用的文字分组；暗色浮层局部#303030，不覆盖产品全局变量。未改模型/API/服务或测量阈值。"
+  ],
+  "本轮真实浏览器验证": [
+    {
+      "项目": "140及154字体两模式",
+      "命令关键参数": "--mode=both --checks=fonts",
+      "结果": "两版各Slides/Design通过：29中文选项、搜索键盘选择、字体变体、共享undo、保存重开、窄边界、无开场字体请求、支持字体与打包HTML加载。Slides仍192×350/126×28；Design203×300/151×24。",
+      "日志": [
+        "/tmp/lingxi-review-645-fonts140.log",
+        "/tmp/lingxi-review-645-fonts154.log"
+      ],
+      "目录前缀": "/workspace/lingxi-issue707-scratch/review-645-fonts"
+    },
+    {
+      "项目": "154异步模块取消两模式",
+      "命令关键参数": "--mode=both --checks=fonts-lazy",
+      "结果": "两模式各outside/escape共4流程通过：实际延迟模块请求，关闭后迟到模块不重新打开或抢焦点，缓存重入正常聚焦；零错误。",
+      "日志": "/tmp/lingxi-review-645-lazy154.log"
+    },
+    {
+      "项目": "154撤权两模式",
+      "命令关键参数": "--mode=both --checks=fonts-readonly",
+      "结果": "弹窗关闭、字体和字重禁用、零提交/零错误。",
+      "日志": "/tmp/lingxi-review-645-readonly154.log"
+    },
+    {
+      "项目": "154并发草稿两模式",
+      "命令关键参数": "--mode=both --checks=font-cas",
+      "结果": "搜索不因远端修改丢失、对端字体保留、本地选择可恢复、conflict反馈可见；零错误。",
+      "日志": "/tmp/lingxi-review-645-cas154.log"
+    },
+    {
+      "项目": "局部几何/清空/焦点golden",
+      "结果": "154浅色/深色/窄屏/空搜索及140粗指针共5状态通过；对应popup/search/searchBox相对矩形≤1px、字号/行高/圆角及浮层颜色断言通过。空搜索后保持上方/底边，清空后query空、焦点回搜索、文档完全不变。Escape回触发器。",
+      "状态": [
+        {
+          "case": "wide154",
+          "maxRelativeDeltaPx": 0,
+          "absolute": {
+            "x": 0,
+            "y": 0
+          },
+          "popupSize": [
+            203,
+            300
+          ],
+          "searchSize": [
+            151,
+            24
+          ],
+          "background": "rgb(255, 255, 255)",
+          "wholeVisualQualified": false
+        },
+        {
+          "case": "dark154",
+          "maxRelativeDeltaPx": 0,
+          "absolute": {
+            "x": 0,
+            "y": 0
+          },
+          "popupSize": [
+            203,
+            300
+          ],
+          "searchSize": [
+            151,
+            24
+          ],
+          "background": "rgb(48, 48, 48)",
+          "wholeVisualQualified": false
+        },
+        {
+          "case": "narrow154",
+          "maxRelativeDeltaPx": 0,
+          "absolute": {
+            "x": 0,
+            "y": 0.28125
+          },
+          "popupSize": [
+            242,
+            300
+          ],
+          "searchSize": [
+            190,
+            24
+          ],
+          "background": "rgb(255, 255, 255)",
+          "wholeVisualQualified": false
+        },
+        {
+          "case": "empty154",
+          "maxRelativeDeltaPx": 0.5,
+          "absolute": {
+            "x": 0,
+            "y": 0
+          },
+          "popupSize": [
+            203,
+            68
+          ],
+          "searchSize": [
+            131.5,
+            24
+          ],
+          "background": "rgb(255, 255, 255)",
+          "wholeVisualQualified": false
+        },
+        {
+          "case": "coarse140",
+          "maxRelativeDeltaPx": 0.328125,
+          "absolute": {
+            "x": 0.328125,
+            "y": -50
+          },
+          "popupSize": [
+            212.671875,
+            396
+          ],
+          "searchSize": [
+            119.1708984375,
+            26
+          ],
+          "background": "rgb(255, 255, 255)",
+          "wholeVisualQualified": false
+        }
+      ],
+      "日志前缀": "/tmp/lingxi-review-645-",
+      "目录前缀": "/workspace/lingxi-issue707-scratch/review-645-"
+    },
+    {
+      "项目": "154单次挂载观察者清理补查",
+      "探针": "/workspace/lingxi-issue707-scratch/review-645-probes/lifecycle.mjs",
+      "结果": "只统计观察.native-font-popup的真实ResizeObserver；连续3次打开/中文空搜索/清空/关闭，计数[0,1,0,1,0,1,0]，0写入/0错误。产品未修改。",
+      "证据": "/workspace/lingxi-issue707-scratch/review-645-life154/lifecycle.json",
+      "日志": "/tmp/lingxi-review-645-life154.log"
+    },
+    {
+      "项目": "154 D42默认文字分组回归",
+      "命令关键参数": "--checks=element-sizing --sizing-case=contrast-base --capture-text-structure=true --text-reference=docs/evidence/issue-707/functional/element-text-layout/reference/1440x1000-light.json",
+      "结果": "12控件局部golden通过，0写入/文档不变/无错误；select行高未匹配状态仍保留。",
+      "日志": "/tmp/lingxi-review-645-d42154.log"
+    }
+  ],
+  "单位与合同": [
+    {
+      "项目": "字体/文案单位",
+      "命令": "node --import tsx --test src/features/artifacts/native/editor-fonts.test.ts src/features/artifacts/native/editor-copy.test.ts",
+      "结果": "本轮5项通过/0失败，不将未运行的额外项目凑成主线程所述12项。",
+      "日志": "/tmp/lingxi-review-645-units.log"
+    },
+    {
+      "项目": "接受合同",
+      "命令": "node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs scripts/native-artifact-diagnostic-breakdown.test.mjs",
+      "结果": "25通过/0失败",
+      "日志": "/tmp/lingxi-review-645-contracts.log"
+    },
+    {
+      "项目": "冻结检查",
+      "结果": "精确HEAD匹配，git diff --check全范围通过，产品工作树未修改。复用公共node_modules，无SDK或桩安装。"
+    }
+  ],
+  "证据与接线": "新增3条既有CI接受命令分别核对wide、empty和coarse；没有替换原功能测试、放宽超时/重试/阈值。来源固定016b39d7，记录细指针203×300/151×24；coarse保留16px字体经scale(.8125)的实际矩形，而非把computed字号直接缩小。矩阵与scopeNotes明确相对/绝对差异、未进行完整像素资格；所有functional/visual/performance qualification为false。归档4f及cf性能报告仅按原提交保存，没有作为本项新收益。",
+  "限制与未验证": [
+    "粗指针检查使用浏览器hasTouch/媒体查询和activeElement；确认打开不自动聚焦搜索，不声称已验证实体手机软键盘或本项真实OS中文IME。",
+    "清理探针直接量测ResizeObserver数量；其他事件监听按代码核对remove，未量测浏览器全部监听器或内存。",
+    "仍是Combobox，Source为搜索菜单；全部字体/分组/排序/预览/图标/语义状态未还原，不是完整D43或全计划通过。",
+    "coarse绝对y仍提前50px，narrow绝对y差0.28125px；局部通过不能等于完整定位或整图像素0.5%资格。没有在本轮作完整像素通过比较。",
+    "受控HTTP夹具不是实际授权API/外部Agent；本候选正式CI、完整web类型/构建、新生产图及最终10组AB/BA性能未在本轮独立验证。"
+  ],
+  "只读边界": "仅冻结checkout及自己的外部探针/日志；未读root后续WIP、未修改共享产品、提交/推送/部署/外发、下载私有SDK或build artifact。",
+  "完整计划资格": false
+}

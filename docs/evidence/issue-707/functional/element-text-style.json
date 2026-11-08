@@ -1,0 +1,33 @@
+{
+  "state": "D44 Design原生文本样式菜单与派生字号摘要",
+  "baseline": "645ff2bd8dd2e661b6dd3bedff0370d68282b73f",
+  "verified": [
+    "原固定7语义选项替换为文档字号/角色生成的中文搜索菜单；选项只修改字号，保留富文本结构、字重和字体。",
+    "154与140各14流程（空状态/最后键盘扩展前）通过，包含基本、分类、多选、CSS、跨页字号、字体家族、继承、变量、受控CDP组词、只读、锁定、撤权、对端锁定、CAS恢复。",
+    "空搜索恢复正常禁用menuitem；154空状态金标准通过，最后键盘扩展的154与140结果单独归档。",
+    "6局部几何比较≤1px，单项/四项/自定义/空/窄深色/触摸；触摸绝对提前50px、窄深色尺寸及位置≤1px偏差仍记录。",
+    "新增可选typographyRole保存来源标签/class分类；旧文档按富文本/默认角色读取，不回填原文件或快照。角色字段纳入原版本键、复制及共享历史；原缺失unset白名单失败已修复。",
+    "现有同源Design收据新增按页派生排版摘要，未加载页不传节点正文；本地加载页修改替换旧统计，删除页不残留。Slides收据不增加摘要。",
+    "独立PostgreSQL服务集成1项通过：角色保存重读、撤销重做、未加载页摘要及其他页面哈希不变；测试容器已移除。这不是授权HTTP或跨租户完整验收。",
+    "81项模型/转换/会话/投影/字体/文案组合单位通过，随后改动的7项角色单位重跑通过（二者有重叠）；25合同通过；两模式保存/组词及字体回归通过。",
+    "最终空状态与键盘补充：154和140均通过；ArrowDown从触发器打开并聚焦选项，选项键入转搜索，Tab关闭前进到现有字体控件，ShiftTab回触发器，不写文档。"
+  ],
+  "matrix": "element-text-style/matrix.json",
+  "remainingGaps": [
+    "设计系统文本样式、完整字体家族/复杂CSS声明和所有混合值尚未穷尽。",
+    "多选本次只补文本样式入口，其他完整文字分组布局及控制项仍未还原。",
+    "Tab前进到原生现有的字体按钮；来源先到未还原的Unset Font，不能称完整焦点顺序相同。",
+    "旧转换已丢失的class角色不因可选字段自动恢复；早期转换生成的默认字号与作者原始声明区别尚需继续核对。",
+    "完整像素对比及最终候选性能尚未通过；没有拿局部几何替代整图门槛。"
+  ],
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false,
+  "localChecks": {
+    "webLint": "43 warnings / 4 infos",
+    "webTypecheck": "76 SDK/cascade diagnostics, changed files 0; not passed",
+    "serverLint": "passed",
+    "serverTypecheck": "748 normalized diagnostics exactly equal frozen645 baseline, changed files 0; not passed",
+    "formalCandidateCi": "提交后待执行"
+  }
+}

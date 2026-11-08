@@ -414,7 +414,7 @@ export function Modal({
   )
 }
 
-export function FloatingPopover({anchor,label,className='',align='end',initialFocusSelector,matchAnchorWidth=false,stableWhileOpen=false,gap=4,onClose,children}:{anchor:RefObject<HTMLElement|null>;label:string;className?:string;align?:'start'|'end';initialFocusSelector?:string;matchAnchorWidth?:boolean;stableWhileOpen?:boolean;gap?:number;onClose(restoreFocus?:boolean):void;children:ReactNode}) {
+export function FloatingPopover({anchor,label,className='',align='end',initialFocusSelector,matchAnchorWidth=false,stableWhileOpen=false,gap=4,role='dialog',onClose,children}:{anchor:RefObject<HTMLElement|null>;label:string;className?:string;align?:'start'|'end';initialFocusSelector?:string;matchAnchorWidth?:boolean;stableWhileOpen?:boolean;gap?:number;role?:'dialog'|'menu';onClose(restoreFocus?:boolean):void;children:ReactNode}) {
   const popup=useRef<HTMLDivElement>(null),largestHeight=useRef(0),close=useRef(onClose);close.current=onClose
   useLayoutEffect(()=>{
     const element=popup.current,button=anchor.current;if(!element||!button)return
@@ -427,5 +427,5 @@ export function FloatingPopover({anchor,label,className='',align='end',initialFo
     return()=>{observer.disconnect();element.removeEventListener('toggle',toggle);window.removeEventListener('resize',update);document.removeEventListener('scroll',update,true);queueMicrotask(()=>{if(!element.isConnected)element.hidePopover()})}
   },[anchor,align,initialFocusSelector,matchAnchorWidth,stableWhileOpen,gap])
   useLayoutEffect(()=>{if(popup.current?.matches(':popover-open')&&anchor.current){if(matchAnchorWidth)popup.current.style.width=`${anchor.current.getBoundingClientRect().width}px`;largestHeight.current=Math.max(largestHeight.current,popup.current.offsetHeight);positionEditorPopover(popup.current,anchor.current,align,undefined,gap,stableWhileOpen?largestHeight.current:undefined)}})
-  return <div ref={popup} popover="auto" role="dialog" aria-label={label} className={`native-floating-popover ${className}`} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();onClose(true)}}}>{children}</div>
+  return <div ref={popup} popover="auto" role={role} aria-label={label} className={`native-floating-popover ${className}`} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();onClose(true)}}}>{children}</div>
 }

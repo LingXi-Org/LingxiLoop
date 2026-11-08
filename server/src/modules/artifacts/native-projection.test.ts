@@ -62,3 +62,11 @@ test('打印设置随未加载页元数据返回，保持画板增长字段独�
   const projection=projectNativeSnapshot({document,history:{version:0,undo:null,redo:null},pageVersions:{p:'immutable-print-hash'},original:{version:'old',files:{},warnings:[]}},[])
   assert.equal(projection.document.pages.p.print,'flow');assert.equal(projection.document.pages.p.paper,'A4');assert.equal(projection.document.pages.p.sizing,'fixed');assert.deepEqual(projection.document.pages.p.nodes,{})
 })
+
+test('文字样式摘要覆盖未加载画板，保持节点裁剪及不可变版本',()=>{
+ const document=createDocument('design','typography-projection'),page=createPage('p'),node=createNode('text','t');node.style={fontSize:48,fontFamily:'Arial'};node.text='不应传入字号摘要的正文';page.nodes.t=node;page.nodeOrder=['t'];document.pages.p=page;document.pageOrder=['p']
+ const before=JSON.stringify(document),projection=projectNativeSnapshot({document,history:{version:0,undo:null,redo:null},pageVersions:{p:'immutable-typography-hash'}},[])
+ assert.deepEqual(projection.document.pages.p.nodes,{})
+ assert.deepEqual(projection.typography,{p:[{size:48,roles:{Body:1},families:{Arial:1}}]})
+ assert.equal(projection.pageVersions.p,'immutable-typography-hash');assert.equal(JSON.stringify(document),before)
+})

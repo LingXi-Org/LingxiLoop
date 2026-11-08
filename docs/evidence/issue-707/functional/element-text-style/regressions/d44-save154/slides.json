@@ -1,0 +1,16 @@
+{
+  "kind": "isolated-native-editor-save-diagnostic",
+  "mode": "slides",
+  "focusedPropertyCtrlS": true,
+  "focusedTableCtrlS": true,
+  "repeatedFocusedNotesSave": true,
+  "dirtyBeforeSubmit": true,
+  "pendingUntilAcknowledged": true,
+  "compositionNotSubmittedByCtrlS": true,
+  "unrelatedAgentStylePreserved": true,
+  "activeRichTextSharedUndoRedo": true,
+  "reloadRetainedAllValues": true,
+  "designTitleRequiresConfirmation": false,
+  "coordinateCoverage": "board-transform keyboard/move regressions",
+  "consoleOrPageErrors": []
+}

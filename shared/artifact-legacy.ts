@@ -7,6 +7,7 @@ import {
 } from './artifact-document'
 import { projectArtifactThemes } from './artifact-themes'
 import { importCanvasAnnotations } from './artifact-canvas-import'
+import {inferTypographyRole} from './artifact-typography.js'
 
 /** Compatibility is a data conversion boundary. This module never evaluates imported source. */
 export interface LegacyArtifactInput {
@@ -209,7 +210,8 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       const x = pixels(css.left, box.width, 0), y = css.bottom ? box.height - pixels(css.bottom, box.height, 0) - height : pixels(css.top, box.height, cursor)
       const style = nodeStyle(css)
       const rotation = Number(/rotate\(([-\d.]+)deg\)/.exec(css.transform ?? '')?.[1] ?? 0)
-      const common = { x: absolute ? box.x + x : x, y: absolute ? box.y + y : y, width, height, rotation, parentId: absolute ? null : parentId, style }
+      const typographyRole=inferTypographyRole(tag,source.attrs.class??'',source.attrs.role==='button')
+      const common = { x: absolute ? box.x + x : x, y: absolute ? box.y + y : y, width, height, rotation, parentId: absolute ? null : parentId, style,...(typographyRole?{typographyRole}:{}) }
       if (tag === 'iframe' && source.attrs.srcdoc !== undefined && !Object.keys(source.attrs).some(key => /^on/i.test(key))) {
         embed(source.attrs.srcdoc, common.x, common.y, width, height, common.parentId); return absolute ? 0 : height
       }

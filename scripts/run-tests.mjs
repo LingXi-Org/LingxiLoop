@@ -71,6 +71,7 @@ const testsByScope = {
     'shared/artifact-comment-anchor.test.ts',
     'shared/artifact-previews.test.ts',
     'shared/artifact-legacy.test.ts',
+    'shared/artifact-typography.test.ts',
     'shared/artifact-check.test.ts',
     'shared/artifact-node-code.test.ts',
     'src/features/artifacts/native/session.test.ts',
