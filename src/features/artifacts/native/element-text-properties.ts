@@ -6,11 +6,10 @@ export const textCaseLabels={none:'无',uppercase:'大写',lowercase:'小写',ca
 export type TextListKind='none'|'bullet'|'number'
 export function textPropertyPatch(node:ArtifactNode,page:ArtifactPage,changes:Record<string,string|null>){
  const before=nodeCodeEntries(node,page)
- let values=new Map(before.map(entry=>[entry.name,entry.value]))
+ const values=new Map(before.map(entry=>[entry.name,entry.value]))
  if(Object.hasOwn(changes,'text-decoration-line')&&values.has('text-decoration')){
-  const expanded=new Map<string,string>()
-  for(const [name,value]of values)for(const [key,part]of Object.entries(name==='text-decoration'?expandTextDecoration(value):{[name]:value}))expanded.set(key,part)
-  values=expanded
+  values.delete('text-decoration')
+  for(const [name,value]of Object.entries(textDecorationValues(node)))values.set(name,value)
  }
  for(const [name,value]of Object.entries(changes))if(value===null)values.delete(name);else values.set(name,value)
  return nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))
@@ -28,4 +27,12 @@ export function textListPatch(node:ArtifactNode,kind:TextListKind):Partial<Artif
  return {richText}
 }
 
-export function textDecorationLine(node:ArtifactNode):string{return(node.css?.['text-decoration-line']??(node.css?.['text-decoration']?expandTextDecoration(node.css['text-decoration'])['text-decoration-line']:node.style.textDecoration)??'none').replace(/\s*!important\s*$/i,'')}
+export function textDecorationValues(node:ArtifactNode):Record<string,string>{
+ const values=expandTextDecoration(node.style.textDecoration??'none')
+ for(const [name,value]of Object.entries(node.css??{})){
+  if(name==='text-decoration')Object.assign(values,expandTextDecoration(value))
+  else if(Object.hasOwn(values,name))values[name]=value
+ }
+ return values
+}
+export function textDecorationLine(node:ArtifactNode):string{return textDecorationValues(node)['text-decoration-line'].replace(/\s*!important\s*$/i,'')}

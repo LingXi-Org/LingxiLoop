@@ -533,3 +533,6 @@ D41补齐[文本可选属性](functional/element-text-properties.json)：强调�
 
 
 9687ef07普通CI42432427976及[真实静态图](performance/static-profile-9687ef07.json)42432423469成功；联合850267仅为静态估计。[独立复审](reviews/9687ef07.json)确认原两P2闭合，又实测发现作者先写blue长写、后写red简写时编辑错误恢复blue。现按原声明顺序展开后仅编辑线条，正反顺序单位和140/154各3反例保存/重开/历史通过；测试也等待实际DOM提交，不用HTTP完成代替渲染完成。18单位、lint43/4通过；修复后CI与冻结复审待执行。[顺序修复证据](functional/element-text-properties-order.json)保留原输入/前后DOM。全局资格仍false。
+
+
+8b3a1c6e普通CI42433149942及[真实静态图](performance/static-profile-8b3a1c6e.json)42433144142成功，联合850338仅为静态估计。[复审](reviews/8b3a1c6e.json)确认原三个反例通过，又在旧typed装饰与同名CSS并存文档实测顺序变体。现直接读取typed基值和原始CSS顺序，不将去重Map插入位置当作者顺序。两版各4保存/历史反例及各72固定浏览器样式组合通过、20单位通过；保留新单位修复前失败。新增按钮状态也遵循实际长短写顺序。见[旧稿修复](functional/element-text-properties-typed-order.json)。新候选CI和只读复审待执行，完整资格仍false。

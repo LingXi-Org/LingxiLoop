@@ -1,0 +1,28 @@
+{
+  "candidateUnderReview": "8b3a1c6eea3dd755d52f9b9d9e051b3b3e2d988a",
+  "review": "reviews/8b3a1c6e.json",
+  "finding": {
+    "severity": "P2",
+    "trigger": "旧typed style.textDecoration=underline与早期blue颜色长写、后置red装饰简写并存",
+    "before": "nodeCodeEntries去重Map保留typed首次插入位置，导致编辑后错误变蓝",
+    "correction": "读取typed基值后严格按原始Object.entries(node.css)应用覆盖，编辑与按钮状态共用此结果。代码面板原顺序保持。"
+  },
+  "verified": [
+    "新增旧稿单位修复前失败，修复后20项属性/共享CSS/缩略图单位通过",
+    "140/154各4反例保存/undo/redo/reopen/其他页面与零控制台错误通过",
+    "140/154各72固定字面量声明顺序/typed组合，以浏览器真实原生样式和实际声明设置为对照，通过companion保持；此检查不写产品数据",
+    "lint43warnings4infos",
+    "本地完整types仍76项SDK及级联诊断；自有修改0诊断"
+  ],
+  "previousCandidateCI": {
+    "run": 42433149942,
+    "passed": true
+  },
+  "previousCandidateStaticProfile": "performance/static-profile-8b3a1c6e.json",
+  "scope": "只闭合旧typed及原始CSS并存的真实反例；72组合不是全部合法CSS语法、持久化、视觉或性能资格。",
+  "newCandidateCI": "待提交",
+  "newIndependentReview": "待冻结",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

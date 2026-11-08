@@ -1,0 +1,7 @@
+{
+  "kind": "装饰声明全部顺序浏览器级联回归",
+  "checked": 72,
+  "mismatches": [],
+  "noProductWrites": true,
+  "scope": "72组合以浏览器真实原生样式与实际声明设置为对照；非持久化或像素资格"
+}

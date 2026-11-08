@@ -1,0 +1,111 @@
+{
+  "候选提交": "8b3a1c6eea3dd755d52f9b9d9e051b3b3e2d988a",
+  "比较基线": "9687ef07ae9bb2ce56f2597c060913d4a3f5ef2b",
+  "审查依据": ".agents/skills/repository-review/SKILL.md / AGENTS.md Delivery 2",
+  "冻结目录": "/workspace/lingxi-issue707-scratch/review-8b3a1c6e",
+  "结论": "未通过：前次精确CSS反例与最初两反例通过，但顺序P2在兼容的typed样式与作者CSS同时存在的旧稿中仍可复现。没有新的独立P1；此结论不代表完整文字属性/Source视觉/最终性能资格。",
+  "发现": [
+    {
+      "级别": "P2",
+      "标题": "旧原生装饰字段与作者CSS并存时，顺序修复仍把未编辑的红色改成蓝色",
+      "位置": {
+        "文件": "src/features/artifacts/native/element-text-properties.ts",
+        "行": 12,
+        "关联": "src/features/artifacts/native/inspector-code-edit.ts:16-23；nodeCodeEntries先录入typed样式，再以同名Map.set覆盖CSS，键保留早期插入位置。"
+      },
+      "最小原始数据": {
+        "style.textDecoration": "underline",
+        "css": {
+          "text-decoration-color": "blue",
+          "text-decoration": "underline dotted red 2px"
+        }
+      },
+      "触发步骤": [
+        "加载含以上合法旧原生字段及作者CSS的文字节点并选中。",
+        "初始浏览器计算为underline/dotted/rgb(255, 0, 0)。",
+        "仅点击强调行“删除线”，等待operations成功。"
+      ],
+      "实际": "Chrome 140及154均成功保存underline line-through/dotted，但颜色变成rgb(0, 0, 255)，保存CSS保留blue。没有控制台错误；原生style.textDecoration仍为underline。",
+      "预期": "新增删除线，保留原有效红色、线型与厚度。",
+      "根因": "本次展开遍历nodeCodeEntries的去重Map顺序。旧typed textDecoration先占用text-decoration键，随后rawCSS覆盖其值不会移动键；因此早期blue长写被错误排到red简写之后。Map顺序并不等于浏览器应用作者CSS的顺序。",
+      "最小修复": "仅在装饰解析中按typed基值→原Object.entries(node.css)顺序处理覆盖，先算实际四个长写，再修改line；before仍可保持原nodeCodeEntries用于差异/CAS。不需为此改所有代码面板字段顺序。增加typed+CSS组合的双浏览器保存/历史回归。",
+      "复现探针": "/workspace/lingxi-issue707-scratch/review-8b3-probes/text.mjs",
+      "命令": "在探针目录运行 FONTCONFIG_FILE=/tmp/review-font-environment/compatible.conf TMPDIR=/workspace/lingxi-issue707-scratch PLAYWRIGHT_MODULE=/tmp/lingxi-browser-tools/node_modules/playwright/index.mjs node --import tsx text.mjs --mode=design --checks=element-sizing --sizing-case=text-properties-menu --review-text=typed-order --browser=/usr/bin/chromium --output=/workspace/lingxi-issue707-scratch/review-8b3-typed-order154",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-8b3-typed-order140/text-counterexample.json",
+        "/workspace/lingxi-issue707-scratch/review-8b3-typed-order140/text-counterexample.png",
+        "/workspace/lingxi-issue707-scratch/review-8b3-typed-order154/text-counterexample.json",
+        "/workspace/lingxi-issue707-scratch/review-8b3-typed-order154/text-counterexample.png",
+        "/tmp/lingxi-review-8b3-typed-order140.log",
+        "/tmp/lingxi-review-8b3-typed-order154.log"
+      ]
+    }
+  ],
+  "已闭合精确反例": [
+    {
+      "项目": "不带typed装饰的前次顺序P2",
+      "结果": "140/154各text-property-emphasis-order完整保存、共享undo/redo、重开、其他页不变及零控制台错误通过；原红色保持。"
+    },
+    {
+      "项目": "最初复合简写P2",
+      "结果": "140/154各text-property-emphasis-shorthand完整保存/undo/redo/reopen通过；underline line-through、dotted、red、2px，零错误。"
+    },
+    {
+      "项目": "最初嵌套列表P2",
+      "结果": "140/154各text-property-list-nested完整保存/undo/redo/reopen及两顶层项/子列表仍隶属首项通过，零错误。"
+    }
+  ],
+  "本轮实际验证": [
+    {
+      "项目": "18定向单位",
+      "命令": "node --import tsx --test shared/artifact-node-code.test.ts src/features/artifacts/native/element-text-properties.test.ts src/features/artifacts/native/thumbnail.test.tsx",
+      "结果": "18通过/0失败",
+      "日志": "/tmp/lingxi-review-8b3-units.log"
+    },
+    {
+      "项目": "25接受编排合同",
+      "命令": "node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs scripts/native-artifact-diagnostic-breakdown.test.mjs",
+      "结果": "25通过/0失败",
+      "日志": "/tmp/lingxi-review-8b3-contracts.log"
+    },
+    {
+      "项目": "原3反例两浏览器UI",
+      "命令关键参数": "--mode=design --checks=element-sizing --sizing-case=text-property-emphasis-shorthand,text-property-emphasis-order,text-property-list-nested",
+      "结果": "140和154各3通过；本轮新waitPaint没有出现前次undo HTTP先于DOM的失败。",
+      "目录": [
+        "/workspace/lingxi-issue707-scratch/review-8b3-stock140",
+        "/workspace/lingxi-issue707-scratch/review-8b3-stock154"
+      ],
+      "日志": [
+        "/tmp/lingxi-review-8b3-ui140.log",
+        "/tmp/lingxi-review-8b3-ui154.log"
+      ]
+    },
+    {
+      "项目": "反向CSS顺序兼容补查154",
+      "结果": "text-decoration先、text-decoration-color:blue后，初始及点击删除线后都保持blue；无错误。",
+      "目录": "/workspace/lingxi-issue707-scratch/review-8b3-reverse154",
+      "日志": "/tmp/lingxi-review-8b3-reverse154.log"
+    },
+    {
+      "项目": "静态等待/接线/证据核验",
+      "结果": "waitPaint只等实际line或列表DOM后仍执行原有颜色/厚度/子树、共享文档、历史和其他页断言；没有提高超时、增加重试或修改资格。原154首失败记录及968未通过报告保留，新order用例加入原CI命令。没有共享模型、服务、DB、计量或门槛变化；证据明确functional/visual/performance false。"
+    },
+    {
+      "项目": "git diff --check与冻结完整性",
+      "结果": "全部范围通过；HEAD精确匹配，工作树无产品修改。链接既有公共node_modules，没有依赖安装。"
+    }
+  ],
+  "本轮未重跑而明确沿用的有限历史证据": [
+    "968上17units、25contracts及154普通控件6状态/六格式下载已报告，8b未重跑完整六格式，不能写成本候选新增通过。",
+    "前次单独important简写companion标记测试没有因本次提交而声称解决既有CSSOM优先级行为。"
+  ],
+  "未验证": [
+    "新候选正式CI与新真实生产图本轮未独立拉取确认；968绿色记录不替代本候选检查。",
+    "没有运行完整web build/typecheck或服务器检查；精确私SDK本机缺失，未下载或造桩。",
+    "完整CSS变量/继承/优先级、全部文本/列表结构、RTE输入、四容器双主题像素0.5%与全部中文控件未全面资格。",
+    "真实服务授权/跨租户/外部Agent、最终10组AB/BA和性能预算均未验证；没有运行、重启或取消a291诊断。"
+  ],
+  "只读边界": "只读精确冻结checkout及自己的探针/日志；未读取root后续D42 WIP，未改产品、提交、推送、部署、下载私有SDK或构建artifact。",
+  "完整计划资格": false
+}

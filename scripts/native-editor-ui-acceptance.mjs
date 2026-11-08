@@ -130,8 +130,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       document.pages['page-1'].nodeOrder.splice(document.pages['page-1'].nodeOrder.indexOf(node.id),0,overlap.id)
     }
   }
-  if(options.checks==='element-sizing'&&['text-property-emphasis-shorthand','text-property-emphasis-order'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-decoration':'underline dotted red 2px'}
-  if(options.checks==='element-sizing'&&editorCase==='text-property-emphasis-order')document.pages['page-1'].nodes['page-1-heading'].css={'text-decoration-color':'blue','text-decoration':'underline dotted red 2px'}
+  if(options.checks==='element-sizing'&&['text-property-emphasis-shorthand','text-property-emphasis-order','text-property-emphasis-typed-order'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-decoration':'underline dotted red 2px'}
+  if(options.checks==='element-sizing'&&['text-property-emphasis-order','text-property-emphasis-typed-order'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-decoration-color':'blue','text-decoration':'underline dotted red 2px'}
+  if(options.checks==='element-sizing'&&editorCase==='text-property-emphasis-typed-order')document.pages['page-1'].nodes['page-1-heading'].style.textDecoration='underline'
   if(options.checks==='element-sizing'&&editorCase==='text-property-list-nested'){
     const paragraph=text=>({type:'paragraph',content:[{type:'text',text}]})
     Object.assign(document.pages['page-1'].nodes['page-1-heading'],{text:'父条目\n子条目\n末条目',richText:{type:'doc',content:[{type:'bulletList',content:[{type:'listItem',content:[paragraph('父条目'),{type:'bulletList',content:[{type:'listItem',content:[paragraph('子条目')]}]}]},{type:'listItem',content:[paragraph('末条目')]}]}]}})
@@ -540,7 +541,23 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.equal(receipts.length,0);assert.deepEqual(document,expected);assert.deepEqual(errors,[])
         return{kind:'文本可选属性禁用状态',case:editorCase,noWrites:true,peerChangePreserved:true,consoleOrPageErrors:errors}
       }
-      if(['text-property-emphasis-shorthand','text-property-emphasis-order','text-property-list-nested'].includes(editorCase)){
+      if(editorCase==='text-property-emphasis-permutations'){
+        const result=await page.evaluate(async({root,node,document:doc})=>{
+          const [{textPropertyPatch},{nativeStyle,applyCodeStyle},{codeStyleProperties}]=await Promise.all([import(`/@fs${root}/src/features/artifacts/native/element-text-properties.ts`),import(`/@fs${root}/src/features/artifacts/native/renderer.tsx`),import(`/@fs${root}/shared/artifact-node-code.ts`)])
+          const permutations=items=>items.length?items.flatMap((item,index)=>permutations(items.filter((_,other)=>other!==index)).map(rest=>[item,...rest])):[[]]
+          const declarations=[['text-decoration','underline dotted red 2px'],['text-decoration-color','blue'],['text-decoration-style','wavy'],['text-decoration-thickness','4px']],mismatches=[];let checked=0
+          const computed=current=>{const element=document.createElement('span');document.body.append(element);try{Object.assign(element.style,nativeStyle(current.style,doc),codeStyleProperties(current.css));applyCodeStyle(element,current.css);const style=getComputedStyle(element);return{line:style.textDecorationLine,color:style.textDecorationColor,style:style.textDecorationStyle,thickness:style.textDecorationThickness}}finally{element.remove()}}
+          for(const typed of [undefined,'underline','line-through'])for(const order of permutations(declarations)){
+            const initial={...node,style:{...node.style,...(typed?{textDecoration:typed}:{})},css:Object.fromEntries(order)},before=computed(initial),{patch,unset}=textPropertyPatch(initial,doc.pages['page-1'],{'text-decoration-line':'underline line-through'}),after={...initial,...patch,style:{...initial.style,...patch.style}}
+            for(const field of unset)if(field==='css')delete after.css;else if(field.startsWith('style.'))delete after.style[field.slice(6)]
+            const actual=computed(after);checked++;if(actual.line!=='underline line-through'||actual.color!==before.color||actual.style!==before.style||actual.thickness!==before.thickness)mismatches.push({typed,order:order.map(([name])=>name),before,actual})
+          }
+          return{checked,mismatches}
+        },{root,node:document.pages['page-1'].nodes[nodeId],document})
+        await writeFile(join(output,'decoration-permutations.json'),JSON.stringify(result,null,2)+'\n');assert.equal(result.checked,72);assert.deepEqual(result.mismatches,[]);assert.equal(receipts.length,0);assert.deepEqual(document,original);assert.deepEqual(errors,[])
+        return{kind:'装饰声明全部顺序浏览器级联回归',...result,noProductWrites:true,scope:'72组合以浏览器真实原生样式与实际声明设置为对照；非持久化或像素资格'}
+      }
+      if(['text-property-emphasis-shorthand','text-property-emphasis-order','text-property-emphasis-typed-order','text-property-list-nested'].includes(editorCase)){
         const subject=page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`),text=page.locator('.native-element-text-properties'),before=structuredClone(document.pages['page-1'].nodes[nodeId])
         const waitPaint=(list,line)=>page.waitForFunction(({nodeId,list,line})=>{const node=document.querySelector(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`);return !!node&&(list?node.querySelectorAll(`.native-text-content > ${list} > li`).length===2:getComputedStyle(node).textDecorationLine===line)},{nodeId,list,line})
         if(!editorCase.endsWith('nested')){

@@ -1,0 +1,98 @@
+{
+  "type": "typed-order",
+  "before": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b",
+      "textDecoration": "underline"
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    },
+    "css": {
+      "text-decoration-color": "blue",
+      "text-decoration": "underline dotted red 2px"
+    }
+  },
+  "after": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    },
+    "css": {
+      "text-decoration-color": "blue",
+      "text-decoration-line": "underline line-through",
+      "text-decoration-style": "dotted",
+      "text-decoration-thickness": "2px"
+    }
+  },
+  "beforeHtml": "<div class=\"native-text-content\"><h1>LingxiLoop 1</h1></div>",
+  "beforeComputed": {
+    "line": "underline",
+    "style": "dotted",
+    "color": "rgb(255, 0, 0)"
+  },
+  "afterHtml": "<div class=\"native-text-content\"><h1>LingxiLoop 1</h1></div>",
+  "computed": {
+    "line": "underline line-through",
+    "style": "dotted",
+    "color": "rgb(0, 0, 255)"
+  },
+  "topOrderedItems": 0,
+  "errors": []
+}

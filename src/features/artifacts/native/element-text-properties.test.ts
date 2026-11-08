@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {createNode,createPage,artifactRichTextSchema} from '../../../../shared/artifact-document'
-import {textPropertyPatch,textListKind,textListPatch} from './element-text-properties'
+import {textPropertyPatch,textListKind,textListPatch,textDecorationLine} from './element-text-properties'
 
 test('装饰和大小写覆盖原作者CSS，保留其他声明与原稿',()=>{
  const node={...createNode('text','text'),css:{'text-transform':'lowercase !important',opacity:'.5'}},page={...createPage('page'),nodes:{text:node},nodeOrder:['text']},original=JSON.stringify(node)
@@ -57,4 +57,17 @@ test('装饰按作者声明顺序取生效伴随值，后置简写覆盖早期�
  assert.equal(result.patch.css?.['text-decoration-color'],'red')
  const reversed={...node,css:{'text-decoration':'underline dotted red 2px','text-decoration-color':'blue'}}
  assert.equal(textPropertyPatch(reversed,page,{'text-decoration-line':'underline line-through'}).patch.css?.['text-decoration-color'],'blue')
+})
+
+test('旧原生装饰字段与作者CSS并存时仍按原CSS顺序覆盖，不使用去重Map位置',()=>{
+ const node={...createNode('text','text'),style:{textDecoration:'underline' as const},css:{'text-decoration-color':'blue','text-decoration':'underline dotted red 2px'}},page={...createPage('page'),nodes:{text:node},nodeOrder:['text']}
+ const result=textPropertyPatch(node,page,{'text-decoration-line':'underline line-through'})
+ assert.equal(result.patch.css?.['text-decoration-color'],'red');assert.ok(result.unset.includes('style.textDecoration'))
+})
+
+
+test('装饰按钮选中状态遵循作者长短写的实际顺序',()=>{
+ const node={...createNode('text','text'),css:{'text-decoration-line':'line-through','text-decoration':'underline dotted red'}}
+ assert.equal(textDecorationLine(node),'underline')
+ assert.equal(textDecorationLine({...node,css:{'text-decoration':'underline dotted red','text-decoration-line':'line-through'}}),'line-through')
 })
