@@ -1,0 +1,98 @@
+{
+  "类型": "实际生产静态图只读后验",
+  "候选提交": "cf656d08f09c914b2cc614ecefc860b70cf904ea",
+  "比较基线": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "附加比较": "59e0c5cd1e4b9a584a962e3150681be4e7c42bc3",
+  "来源": {
+    "固定JSON": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-cf656d08.json",
+    "run": 42436707819,
+    "job": 128596975715,
+    "collectorCommit": "cf656d08f09c914b2cc614ecefc860b70cf904ea",
+    "说明": "仅核对此明确授权的脱敏完整stdout静态元数据；未下载构建JS、SDK或artifact，未额外核取GitHub完整日志。"
+  },
+  "结论": "限定生产图后验通过，未发现新增P1/P2/P3。七个leaf、React/工厂分离、两个原生根完整静态Query路径移除及无应用预热成本前移得到实际图支持。仍是静态gzip估算，不能推出浏览器实际传输、启动、PSS或最终预算通过。",
+  "发现": [],
+  "完整性": {
+    "flags": "两条profile精确对应固定721和cf提交，openingIsolationPassed/buildCompleted/sourceInputsUnchanged=true、uncommittedInputsPossible=false；顶层passed=true、全部qualified=false。",
+    "图闭包": "对所有imports递归遍历，全部静态目标可解析。application根闭包恰等于application列表，native双根闭包减application恰等于nativeIncremental列表；两份增量/预热列表不相交，没有重复记账。每块code/gzip求和与汇总完全一致。",
+    "候选数量": {
+      "applicationChunks": 41,
+      "nativeRootUnionStaticChunks": 33,
+      "nativeIncrementalChunks": 22,
+      "NativeEditorStaticClosureChunks": 28,
+      "RichTextEditorStaticClosureChunks": 33
+    },
+    "基线数量": {
+      "applicationChunks": 36,
+      "nativeRootUnionStaticChunks": 13,
+      "nativeIncrementalChunks": 6
+    },
+    "根范围": "六个应用角色入口（含GlobalInteractionProvider）与NativeEditor/RichTextEditor两个原生角色入口；只分析这些根的静态imports，不把dynamicImports当静态闭包。"
+  },
+  "七leaf实际归属": {
+    "块": "assets/artifact-shared-icons-D_RpeWec.js",
+    "codeBytes": 2286,
+    "gzipBytes": 645,
+    "模块": [
+      "bot",
+      "chevron-down",
+      "chevron-left",
+      "chevron-right",
+      "ellipsis",
+      "image",
+      "x"
+    ],
+    "核验": "公开依赖模块精确是七个lucide-react/dist/esm/icons/*.mjs，包聚合moduleCount=7，只有dependency:lucide-react且projectModules=[]；实际x renderedCodeUnits=337。生产audit已通过严格moduleIds精确7及同一白名单断言。",
+    "React与工厂": "共享块不含React/ReactDOM或createLucideIcon；只import独立createLucideIcon块，该工厂块再import正常应用index。没有将工厂及React吸到七leaf块。",
+    "位置": "共享图标块位于nativeIncremental而非application预热；这里只是静态归属，不能据此假定用户工作区实际冷缓存。"
+  },
+  "React与隔离": {
+    "React唯一": "所采app∪native闭包内，React和ReactDOM只在一个应用index块中；两臂各8个React模块、8个ReactDOM模块，renderedCodeUnits分别19130/544433，基线与候选一致。此证据不覆盖未采动态闭包或完整浏览器运行。",
+    "禁区": "两个原生根的完整静态闭包均无ConversationThread/ConversationMessage/ConversationComposer/NativeMessageContent/ComposerLexicalInput或CodeBlock；无所列parse5/streamdown/shiki/@shikijs/htmlparser2重型包。原隔离规则没有因x调整被放宽。"
+  },
+  "Query路径移除范围": {
+    "实测": "NativeEditor和RichTextEditor各自的完整静态imports闭包都没有dependency:@tanstack/query-core或dependency:@tanstack/react-query有代码模块；NativeEditor直接imports没有useQuery混合块。不是只检查一个直接边或仅看增量模块Top100。",
+    "应用预热": "application完整闭包也不包含上述Query包，未将旧Query成本转进所采应用预热。",
+    "边界": "不能声称全构建/动态页面不再使用Query，也不能仅凭此图断言实际浏览器没有预热、缓存或动态请求。其他入口或懒加载内容不属于本次静态根证明。"
+  },
+  "静态字节独立复算": {
+    "固定基线": {
+      "applicationGzipBytes": 618927,
+      "nativeGzipBytes": 155935,
+      "unionGzipBytes": 774862
+    },
+    "59候选": {
+      "applicationGzipBytes": 621268,
+      "nativeGzipBytes": 229057,
+      "unionGzipBytes": 850325
+    },
+    "cf候选": {
+      "applicationGzipBytes": 621259,
+      "nativeGzipBytes": 217398,
+      "unionGzipBytes": 838657
+    },
+    "cf相对59差值": {
+      "applicationGzipBytes": -9,
+      "nativeGzipBytes": -11659,
+      "unionGzipBytes": -11668
+    },
+    "cf相对721增幅百分比": {
+      "union": 8.233078922440384,
+      "native": 39.41578221694937
+    },
+    "解释": "相对59静态union减少11668字节，app未增长；相对固定721静态union仍增长8.2331%，原生增量静态gzip增长39.4158%。gzip为逐块本地压缩估算，不是实际HTTP传输；这些数值不能认定5%性能门槛通过或替代最新候选10组AB/BA。"
+  },
+  "复现验证": {
+    "脚本": "/workspace/lingxi-issue707-scratch/review-cf-actual/verify.py",
+    "结果": "/workspace/lingxi-issue707-scratch/review-cf-actual/checks.json",
+    "日志": "/tmp/lingxi-review-cf-actual-verify.log",
+    "运行结果": "全部断言通过"
+  },
+  "保留边界": [
+    "原cf限定源码审查 /tmp/lingxi-review-cf656d08.json 保留，未覆盖。",
+    "本轮未跑UI、构建或benchmark，未读root D42 WIP，未下载私有SDK、构建JS或artifact，未修改产品/提交/推送/部署/外发。",
+    "普通CI42436712569成功为主线程提供信息；本报告只核对固定生产图JSON，不冒充独立运行普通CI。",
+    "仍没有本次分块候选的真实浏览器收益或最终10组性能资格；此前a291诊断是另一提交。"
+  ],
+  "最终性能资格": false
+}

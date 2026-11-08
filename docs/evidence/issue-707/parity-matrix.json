@@ -10083,6 +10083,41 @@
         "receipt": "functional/element-text-properties.json",
         "scope": "仅Design文本可选属性局部；PDF/PPTX仅解析，非像素保真。"
       }
+    },
+    {
+      "id": "D42-design",
+      "editor": "design",
+      "control": "文字属性默认分组和输入尺寸",
+      "trigger": "选择画板文字打开属性，检查8容器主题、触摸、滚动及字号/字体保存",
+      "states": [
+        "默认",
+        "深色",
+        "窄容器",
+        "触摸",
+        "滚动",
+        "输入法",
+        "保存重开",
+        "共享历史"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "runtime": "source-element-text-layout.json"
+      },
+      "implementation": "src/features/artifacts/native/element-text-properties.css",
+      "screenshots": {
+        "reference": "visual/element-text-layout/reference/",
+        "native": "visual/element-text-layout/implementation/",
+        "manifest": "functional/element-text-layout/matrix.json",
+        "matchedStateVerified": true
+      },
+      "result": "12局部控件几何≤1px；整图8项均失败。文本样式select行高及文本样式/字体弹窗仍未还原。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-text-layout.json",
+        "scope": "默认文字局部分组，不代表全部菜单、图标、服务或最终性能。"
+      }
     }
   ],
   "registeredReplacements": [

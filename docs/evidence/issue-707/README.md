@@ -543,3 +543,8 @@ D41补齐[文本可选属性](functional/element-text-properties.json)：强调�
 a291[真实性能诊断](performance/diagnostic-a2918e44.json)42428025914完成，完整脱敏stdout解析1公共收据+8有限数值记录，[独立后验](reviews/a291-actual-diagnostic.json)复算一致。8样本6成功2失败，两个基线完整导航各3导出超时保留，qualified=false；每格每臂仅1样本。Design完整导航/工作区脚本+5.44%/+26.35%；Slides启动+23.31%/+15.87%、脚本+5.33%/+10.09%、PSS+30.37%/+16.77%。候选三次输入的nearest-rank p95依次40.9/35.8/36.1/37.7ms，不能代替最终10组统计。Slides两臂均1页6节点，候选缩略图8少于基线13且自然图像像素相同；JS堆计数与最大Worker分组不能唯一解释Renderer PSS差。
 
 [新增关闭图标隔离](performance/seventh-shared-icon.json)：真实图确认原生入口只为x图标绑定查询库混合chunk。沿用已有共享叶子方案仅加入x，组件与路径不改，保持七叶/唯一React校验。12图标/图分析与25合同本地通过；新候选生产图、实际收益和独立审查待验证。没有据此宣称解决全部脚本、内存或启动超预算。
+
+
+cf656d08普通CI42436712569、[真实静态图](performance/static-profile-cf656d08.json)42436707819及[代码](reviews/cf656d08.json)/[真实图复审](reviews/cf656d08-actual-graph.json)通过限定范围。联合838657，比59减少11668静态gzip估计，但仍比基线增加8.23%；未测实际收益，不能声称性能合格。
+
+D42新增[文字默认分组布局](functional/element-text-layout.json)，清单174项。[来源](source-element-text-layout.json)和11状态局部矩阵记录12控件的相对几何；154四容器两主题与触摸、140宽屏与触摸通过≤1px。文本样式原生select行高仍不同，明确不纳入已通过字体断言。390默认绝对纵坐标提前1px、触摸提前50px仍保留；完整滚入视口后对齐。现有字体/冲突、两模式保存/输入法/共享历史及画布标题回归通过。字体和文本样式菜单仍有真实差距；8整图原始差异2.27%—9.61%全部失败，没有掩码或抗锯齿排除。初次窄屏字体与懒加载检查失败留存；正式CI和冻结审查待执行，完整资格仍false。

@@ -1,0 +1,53 @@
+{
+  "候选提交": "cf656d08f09c914b2cc614ecefc860b70cf904ea",
+  "基线提交": "59e0c5cd1e4b9a584a962e3150681be4e7c42bc3",
+  "冻结目录": "/workspace/lingxi-issue707-scratch/review-cf656d08",
+  "审查依据": ".agents/skills/repository-review/SKILL.md / AGENTS.md Delivery 2",
+  "结论": "限定源码接线及测试复审通过，未发现可复现P1/P2/P3。新候选实际生产图、7叶子实际归属与传输/启动/PSS收益仍未验证，不能将配置调整当已消除Query路径或性能资格。",
+  "发现": [],
+  "变更范围确认": "产品组件、模型、依赖、SVG路径、测量代码、阈值和资格均无变更。实际构建变更只有shared-icons名单新增x，以及bundle-audit对应严格模块数6→7和同一白名单；其余为单元及已冻结证据归档。",
+  "实证依据复核": {
+    "引用旧生产图": "docs/evidence/issue-707/performance/static-profile-8b3a1c6e.json，collector8b3a1c6eea3dd755d52f9b9d9e051b3b3e2d988a，run42433144142/job128586219166；只用于说明实验选择，非cf收益。",
+    "已核实": "旧图candidate NativeEditor-37_1caXc.js直接import useQuery-Btnfc9Vn.js，importedBindingCount=1；混合块38253 raw/11648 gzip字节，firstParty模块空，公开Lucide模块仅dist/esm/icons/x.mjs，337 rendered UTF16 code units；其余包为query-core16模块/react-query7模块。",
+    "源码消费者": "NativeEditor静态使用EditorPrimitives；后者lucide-react导入X，并在EditorPrimitives.tsx:105映射close:X。原生目录没有@tanstack/useQuery源码引用。元数据只记录绑定数量、不公开符号名，本轮不声称从该字段直接读出绑定名称。",
+    "限制": "没有本候选真实Rollup元数据，不保证重新分块后所有其他静态边保持不变。旧图1绑定和公开模块交集支持这项最小实验，不是运行时因果或收益证明。"
+  },
+  "边界核对": [
+    "nativeSharedIconChunk只匹配node_modules/lucide-react/dist/esm/icons下bot/image/chevron-down/ellipsis/chevron-left/chevron-right/x七个完整.mjs路径，正则末尾锚定；Windows反斜杠先规范化。",
+    "manualChunks仍为该函数，onlyExplicitManualChunks=true未改；React、ReactDOM及createLucideIcon不显式分入该共享块，依赖继续由Rollup常规归属处理。没有把全部Lucide或整个查询库指定到共享块。",
+    "bundle-audit若存在共享图标块，仍强制精确moduleIds.length=7且每个ID均属于七leaf白名单；禁止吸入React、图标工厂或其他包。原Thread/CodeBlock及兼容/导出隔离规则未放宽。最终React唯一性需由新真实构建图验证。",
+    "sourceFingerprint仍包含实际映射脚本；既有生产图输出脱敏范围、根集合、应用预热扣除、Node22/固定721基线/锁文件及只读工作流权限未变。",
+    "新真实历史图单位读取旧8b共置证据并检查x映射；这是配置回归，不是对本候选实际Query静态闭包排除的证明。文档明确待远端构建且qualified=false，没有虚假收益。"
+  ],
+  "本轮运行": [
+    {
+      "项目": "图分析和共享映射12项",
+      "命令": "node --import tsx --test scripts/native-artifact-bundle-profile.test.mjs scripts/native-artifact-shared-icons.test.ts",
+      "结果": "12通过/0失败",
+      "日志": "/tmp/lingxi-review-cf656-graphs.log"
+    },
+    {
+      "项目": "测量/编排25合同",
+      "命令": "node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs scripts/native-artifact-diagnostic-breakdown.test.mjs",
+      "结果": "25通过/0失败",
+      "日志": "/tmp/lingxi-review-cf656-contracts.log"
+    },
+    {
+      "项目": "补充路径匹配",
+      "结果": "七图标Linux/Windows/pnpm嵌套三种路径共21正例通过；x-plus、xx、.map、?raw、图标工厂、React/DOM、firstparty x、私SDK x及相似包名共10负例通过。",
+      "日志": "/tmp/lingxi-review-cf656-paths.log"
+    },
+    {
+      "项目": "冻结完整性",
+      "结果": "HEAD精确匹配、git diff --check全部范围通过、产品工作树无修改。只链接现有公共node_modules，无安装或SDK桩。"
+    }
+  ],
+  "归档证据真实性": "a291诊断和独立后验、59功能PASS报告及旧生产图按各自commit保存；seventh-shared-icon.json明确旧混合块也存在于包含预热的脚本池，不能单凭字节桶解释增量差，并明确新图/性能待测。未覆盖原8b审查失败记录或把旧图当本候选通过。",
+  "未验证": [
+    "本候选正常CI及真实完整生产图待远端；需核对buildCompleted/sourceInputsUnchanged/openingIsolationPassed及精确commit、新共享块只含7leaf、React/工厂归属和原生到Query是否仍有其他静态路径。",
+    "实际浏览器传输、Worker、冷启动/PSS、最终10组AB/BA未重跑；静态减少量即使随后确认也不等于实际增量网络收益。",
+    "无需UI/媒体/数据库回归，本轮未重跑这些无关项；没有下载SDK/私有构建或artifact，也未运行本机生产构建。"
+  ],
+  "只读范围": "仅冻结checkout与自己的日志；未读root D42 WIP、未改产品、提交/推送/部署/外发。",
+  "完整计划资格": false
+}

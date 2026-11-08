@@ -1,0 +1,74 @@
+{
+  "kind": "matched-synthetic-fixture-raw-pixel-diagnostic",
+  "state": "default",
+  "masks": [],
+  "antialiasExclusions": false,
+  "qualified": false,
+  "scope": "Only the specified matched state; control geometry and complete interaction states remain separate gates.",
+  "results": [
+    {
+      "image": "design-1920-light.png",
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 52371,
+      "rawDifferentRatio": 0.02273046875,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-1920-dark.png",
+      "width": 1920,
+      "height": 1200,
+      "differentPixels": 95103,
+      "rawDifferentRatio": 0.04127734375,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-1440-light.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 41133,
+      "rawDifferentRatio": 0.028564583333333334,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-1440-dark.png",
+      "width": 1440,
+      "height": 1000,
+      "differentPixels": 78206,
+      "rawDifferentRatio": 0.054309722222222225,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-768-light.png",
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 36112,
+      "rawDifferentRatio": 0.045918782552083336,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-768-dark.png",
+      "width": 768,
+      "height": 1024,
+      "differentPixels": 75604,
+      "rawDifferentRatio": 0.09613545735677083,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-390-light.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 28839,
+      "rawDifferentRatio": 0.08761392635800219,
+      "conservativePixelPass": false
+    },
+    {
+      "image": "design-390-dark.png",
+      "width": 390,
+      "height": 844,
+      "differentPixels": 29091,
+      "rawDifferentRatio": 0.08837951148377689,
+      "conservativePixelPass": false
+    }
+  ]
+}

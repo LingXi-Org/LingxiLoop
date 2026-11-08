@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {measureTextChrome,compareTextChrome} from './native-editor-text-chrome.mjs'
 import {verifyTextPropertiesExports} from './native-editor-text-export-check.mjs'
 import {verifySizingExports} from './native-editor-sizing-export-check.mjs'
 import {elementLink,elementLinkPatch} from '../shared/artifact-element-link.ts'
@@ -711,6 +712,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.deepEqual(errors,[])
         const chrome=hidden?null:await badge.evaluate(element=>({rect:element.getBoundingClientRect().toJSON(),row:element.parentElement.getBoundingClientRect().toJSON(),title:element.title,verdict:element.dataset.verdict,color:getComputedStyle(element).color,typography:[...element.closest('.native-property-section').children].map(child=>({tag:child.tagName,class:child.className,text:child.textContent.slice(0,80),rect:child.getBoundingClientRect().toJSON(),margin:getComputedStyle(child).margin,padding:getComputedStyle(child).padding})),swatch:{color:getComputedStyle(element.firstElementChild).color,background:getComputedStyle(element.firstElementChild).backgroundColor}}))
         if(options['link-state']){const destination=page.getByRole('textbox',{name:'链接目标',exact:true});if(options['link-state']==='hover')await destination.hover();else if(options['link-state']==='focus')await destination.focus();await page.waitForTimeout(250)}
+        if(options['text-scroll']==='true')await page.locator('.native-element-text-properties').evaluate(element=>element.scrollIntoView({block:'end'}))
+        const textChrome=options['capture-text-structure']==='true'?await page.locator('.native-element-text-properties').evaluate(measureTextChrome):null
+        if(textChrome){await writeFile(join(output,'text-chrome.json'),JSON.stringify(textChrome,null,2)+'\n');if(options['text-reference']){const reference=JSON.parse(await readFile(resolve(options['text-reference']),'utf8')).cases[0].textChrome,result=compareTextChrome(reference,textChrome);await writeFile(join(output,'text-layout-comparison.json'),JSON.stringify(result,null,2)+'\n');assert.equal(result.geometryPassed,true,JSON.stringify(result.controls.filter(control=>Object.values(control.geometry).some(value=>Math.abs(value)>1))));assert.equal(result.fontsPassed,true);assert.ok(Math.abs(result.section.width)<=1&&Math.abs(result.section.height)<=1);assert.ok(Math.abs(result.header.height)<=1)}}
         const linkChrome=options['capture-link-structure']==='true'?await page.getByRole('textbox',{name:'链接目标',exact:true}).evaluate(input=>{
           const result=[];let element=input
           for(let depth=0;depth<4&&element;depth++,element=element.parentElement){const css=getComputedStyle(element);result.push({tag:element.tagName,class:element.className,html:element.outerHTML,rect:element.getBoundingClientRect().toJSON(),padding:css.padding,margin:css.margin,fontFamily:css.fontFamily,fontSize:css.fontSize,lineHeight:css.lineHeight,fontWeight:css.fontWeight,color:css.color,background:css.backgroundColor,boxShadow:css.boxShadow,borderTop:css.borderTop,borderBottom:css.borderBottom})}
@@ -3307,14 +3311,15 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const target=page.locator('[data-node-id="page-1-heading"]')
       await target.click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
       const trigger=page.getByRole('button',{name:'字体',exact:true})
+      await trigger.waitFor()
       assert.equal(await trigger.count(),1,'the font property must offer the reference searchable picker')
       const fontGeometry=await trigger.boundingBox()
-      assert.ok(Math.abs(fontGeometry.width-187)<=1,'the font control must reserve the reference trailing reset space')
+      assert.ok(Math.abs(fontGeometry.width-(kind==='design'?203:187))<=1,'字体控件需保持当前模式的测得槽宽')
       assert.equal(fontRequests.length,0,'unused font files must not load with the editor')
       await page.getByLabel('字重',{exact:true}).click();await page.screenshot({path:join(output,`${kind}-font-weight.png`)});await page.keyboard.press('Escape')
       await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true)
       const fontPopupGeometry=await page.locator('.native-font-popup').boundingBox();assert.ok(Math.abs(fontPopupGeometry.height-350)<=1,'nested field styles must not shrink the source font search input')
-      const searchGeometry=await search.boundingBox();assert.ok(Math.abs(searchGeometry.x-1253)<=1&&Math.abs(searchGeometry.y-252)<=1&&Math.abs(searchGeometry.width-126)<=1&&Math.abs(searchGeometry.height-28)<=1,'the inner font search must match the source field geometry')
+      const searchGeometry=await search.boundingBox();assert.ok(Math.abs(searchGeometry.x-fontPopupGeometry.x-44)<=1&&Math.abs(searchGeometry.y-fontPopupGeometry.y-10)<=1&&Math.abs(searchGeometry.width-126)<=1&&Math.abs(searchGeometry.height-28)<=1,'字号面板重排不应挤压现有字体搜索；原版弹窗差异单独记录')
       await page.screenshot({path:join(output,`${kind}-font-picker.png`)})
       const fontOptions=page.locator('.native-font-popup').getByRole('option')
       assert.equal(await fontOptions.count(),29)

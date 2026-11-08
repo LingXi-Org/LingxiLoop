@@ -1,0 +1,75 @@
+{
+  "kind": "文字颜色对比度",
+  "case": "contrast-base",
+  "hidden": false,
+  "chrome": {
+    "rect": {
+      "x": 1175.328125,
+      "y": 971,
+      "width": 82.015625,
+      "height": 16,
+      "top": 971,
+      "right": 1257.34375,
+      "bottom": 987,
+      "left": 1175.328125
+    },
+    "row": {
+      "x": 1065,
+      "y": 970,
+      "width": 375,
+      "height": 21,
+      "top": 970,
+      "right": 1440,
+      "bottom": 991,
+      "left": 1065
+    },
+    "title": "与背景颜色的对比度为 12.7:1",
+    "verdict": "pass",
+    "color": "rgba(0, 0, 0, 0.9)",
+    "typography": [
+      {
+        "tag": "HEADER",
+        "class": "",
+        "text": "文本强调列表大小写",
+        "rect": {
+          "x": 1065,
+          "y": 672,
+          "width": 375,
+          "height": 48,
+          "top": 672,
+          "right": 1440,
+          "bottom": 720,
+          "left": 1065
+        },
+        "margin": "0px",
+        "padding": "8px 12px 8px 16px"
+      },
+      {
+        "tag": "DIV",
+        "class": "native-element-text-body",
+        "text": "文本样式正文标题 1标题 2标题 3标题 4标题 5标题 6字体阿里亚尔体字重粗体常规常规斜体粗体粗体斜体字号像素间距行高字距颜色#18332B对比度良好对齐",
+        "rect": {
+          "x": 1065,
+          "y": 720,
+          "width": 375,
+          "height": 321,
+          "top": 720,
+          "right": 1440,
+          "bottom": 1041,
+          "left": 1065
+        },
+        "margin": "0px",
+        "padding": "0px 12px 8px 16px"
+      }
+    ],
+    "swatch": {
+      "color": "rgb(24, 51, 43)",
+      "background": "rgb(250, 248, 244)"
+    }
+  },
+  "linkChrome": null,
+  "historyChecked": false,
+  "writes": 0,
+  "documentUnchanged": true,
+  "consoleOrPageErrors": []
+}

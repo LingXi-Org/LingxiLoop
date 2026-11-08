@@ -1,0 +1,300 @@
+{
+  "message": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n\nfalse !== true\n",
+  "errors": [],
+  "diagnostic": {
+    "geometry": [
+      {
+        "direction": "request",
+        "id": 1,
+        "revision": 0,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [
+            {
+              "id": "page-1",
+              "x": 0,
+              "y": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            {
+              "id": "page-2",
+              "x": 2080,
+              "y": 0,
+              "width": 1920,
+              "height": 1080
+            },
+            {
+              "id": "page-3",
+              "x": 4160,
+              "y": 0,
+              "width": 1920,
+              "height": 1080
+            }
+          ],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 2,
+        "revision": 0,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 3,
+        "revision": 0,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 4,
+        "revision": 0,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 5,
+        "revision": 0,
+        "task": {
+          "kind": "visible",
+          "viewport": {
+            "x": -992.6530612244901,
+            "y": -8765.442176870745,
+            "width": 8193.30612244898,
+            "height": 17582.149659863946
+          }
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 5,
+        "revision": 0,
+        "value": [
+          "page-1",
+          "page-2",
+          "page-3"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 6,
+        "revision": 0,
+        "task": {
+          "kind": "elements",
+          "pageId": "page-1",
+          "elements": [
+            {
+              "id": "page-1-root",
+              "x": -2,
+              "y": -2,
+              "width": 1924,
+              "height": 1084
+            },
+            {
+              "id": "page-1-heading",
+              "x": 62,
+              "y": 38,
+              "width": 1156,
+              "height": 80
+            },
+            {
+              "id": "page-1-image",
+              "x": 62,
+              "y": 198,
+              "width": 644,
+              "height": 364
+            },
+            {
+              "id": "page-1-shape",
+              "x": 758,
+              "y": 438,
+              "width": 184,
+              "height": 84
+            }
+          ]
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 7,
+        "revision": 0,
+        "value": []
+      },
+      {
+        "direction": "reply",
+        "id": 8,
+        "revision": 0,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 10,
+        "revision": 0,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "request",
+        "id": 12,
+        "revision": 0,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "request",
+        "id": 14,
+        "revision": 0,
+        "task": {
+          "kind": "visible",
+          "viewport": {
+            "x": -992.6530612244901,
+            "y": 10105.30612244898,
+            "width": 8193.30612244898,
+            "height": 10033.850340136054
+          }
+        }
+      },
+      {
+        "direction": "request",
+        "id": 15,
+        "revision": 0,
+        "task": {
+          "kind": "update-pages",
+          "upserts": [],
+          "removed": []
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 14,
+        "revision": 0,
+        "value": []
+      },
+      {
+        "direction": "request",
+        "id": 17,
+        "revision": 0,
+        "task": {
+          "kind": "visible",
+          "viewport": {
+            "x": -992.6530612244901,
+            "y": -8755.102040816328,
+            "width": 8193.30612244898,
+            "height": 10033.850340136054
+          }
+        }
+      },
+      {
+        "direction": "reply",
+        "id": 16,
+        "revision": 0,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 17,
+        "revision": 0,
+        "value": [
+          "page-1",
+          "page-2",
+          "page-3"
+        ]
+      },
+      {
+        "direction": "reply",
+        "id": 19,
+        "revision": 0,
+        "value": [
+          "page-1-root",
+          "page-1-heading",
+          "page-1-image",
+          "page-1-shape"
+        ]
+      }
+    ],
+    "zoom": "5%",
+    "stage": [
+      {
+        "scrollLeft": 780,
+        "scrollTop": 776,
+        "w": 390,
+        "h": 479,
+        "scrollWidth": 1950,
+        "scrollHeight": 2395
+      }
+    ],
+    "boards": [
+      {
+        "id": "page-1",
+        "rect": {
+          "x": 48,
+          "y": 423.34375,
+          "width": 92.828125,
+          "height": 52.21875,
+          "top": 423.34375,
+          "right": 140.828125,
+          "bottom": 475.5625,
+          "left": 48
+        }
+      },
+      {
+        "id": "page-2",
+        "rect": {
+          "x": 148.578125,
+          "y": 423.34375,
+          "width": 92.828125,
+          "height": 52.21875,
+          "top": 423.34375,
+          "right": 241.40625,
+          "bottom": 475.5625,
+          "left": 148.578125
+        }
+      },
+      {
+        "id": "page-3",
+        "rect": {
+          "x": 249.15625,
+          "y": 423.34375,
+          "width": 92.828125,
+          "height": 52.21875,
+          "top": 423.34375,
+          "right": 341.984375,
+          "bottom": 475.5625,
+          "left": 249.15625
+        }
+      }
+    ],
+    "notices": []
+  }
+}
