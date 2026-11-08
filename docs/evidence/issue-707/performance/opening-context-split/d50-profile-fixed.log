@@ -1,0 +1,18 @@
+✔ per-chunk project lengths remain complete past the summary limit without leaking code or private modules (12.766411ms)
+✔ failed production audit flushes complete metadata under stdout backpressure before its fatal error (74.45246ms)
+✔ native opening rejects co-located conversation UI but allows lazy comments (2.808818ms)
+✔ native opening also rejects the observed co-located markdown preview UI (0.717886ms)
+✔ opening profile subtracts warm application chunks and includes the text editor only once (0.7403ms)
+✔ profile exposes module sizes and project paths, without code or private package file names (0.551559ms)
+✔ every actual boot preload is subtracted as an application root (0.327565ms)
+✔ build configuration script imports are included in the source fingerprint (0.512047ms)
+✔ chunk ownership separates static edges, lazy routes and co-located project utilities (0.641632ms)
+✔ binding counts distinguish hoisted edges and expose only allowlisted public module metadata (0.930446ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 166.643975

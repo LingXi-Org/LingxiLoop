@@ -5,6 +5,14 @@ import {spawn} from 'node:child_process'
 import {once} from 'node:events'
 import {profileOpeningChunks,openingModuleRoles,assertNativeOpeningIsolation} from './native-artifact-bundle-profile.mjs'
 const chunk=(fileName,imports,modules,code='export const value=1;')=>({type:'chunk',fileName,imports,modules,code})
+test('per-chunk project lengths remain complete past the summary limit without leaking code or private modules',()=>{
+ const modules=Object.fromEntries(Array.from({length:140},(_,index)=>[`/repo/src/fixture/field-${index}.tsx`,{renderedLength:index+1,originalLength:index+10,code:'PRIVATE_FIXTURE_CODE'}]))
+ modules['/repo/node_modules/@lingxi-org/lingxios/dist/private-entry.js']={renderedLength:5,originalLength:10}
+ const report=profileOpeningChunks({'native.js':chunk('native.js',[],modules)},[],['native.js'],'/repo'),details=report.nativeIncremental.chunkDetails[0].projectModuleDetails
+ assert.equal(report.nativeIncremental.modules.length,100);assert.equal(details.length,140)
+ assert.deepEqual(details.find(item=>item.path==='src/fixture/field-139.tsx'),{path:'src/fixture/field-139.tsx',renderedCodeUnits:140,originalCodeUnits:149})
+ assert.ok(!JSON.stringify(report).includes('PRIVATE_FIXTURE_CODE'));assert.ok(!JSON.stringify(report).includes('private-entry'));assert.ok(!JSON.stringify(report).includes('/repo/'))
+})
 test('failed production audit flushes complete metadata under stdout backpressure before its fatal error',{timeout:5000},async()=>{
  const source=readFileSync(new URL('./native-artifact-bundle-audit.mjs',import.meta.url),'utf8'),emit=source.match(/^const emitOpeningProfile=.*$/m)?.[0];assert.ok(emit)
  const child=spawn(process.execPath,['--input-type=module','--eval',`import {writeSync} from 'node:fs';${emit};await new Promise(resolve=>process.stdout.write('warmup\\n',resolve));await emitOpeningProfile({commit:'fixture',sourceInputsSha256:'f'.repeat(64),uncommittedInputsPossible:false,openingProfile:{qualified:false,payload:'x'.repeat(700000)}},false,true);throw new Error('expected isolation failure')`]),closed=once(child,'close'),ended=once(child.stdout,'end')

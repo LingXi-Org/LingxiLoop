@@ -1,5 +1,4 @@
 import {
-  createContext,
   lazy,
   Suspense,
   useCallback,
@@ -10,8 +9,7 @@ import {
 } from 'react'
 import {editorColorLabel} from './editor-copy'
 const ColorPopover = lazy(() => import('./ColorPopover'))
-export const EditorPaletteContext = createContext<string[]>([])
-export const EditorColorSessionContext = createContext<() => void>(() => {})
+import {EditorPaletteContext,EditorColorSessionContext} from './color-context'
 
 export function ColorField({
   label,
