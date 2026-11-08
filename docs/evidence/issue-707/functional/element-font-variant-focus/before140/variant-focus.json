@@ -1,0 +1,36 @@
+{
+  "active": "特粗斜体",
+  "checked": "true",
+  "activeRect": {
+    "x": 1181.328125,
+    "y": 534,
+    "width": 200.671875,
+    "height": 40,
+    "top": 534,
+    "right": 1382,
+    "bottom": 574,
+    "left": 1181.328125
+  },
+  "listRect": {
+    "x": 1175.328125,
+    "y": 8,
+    "width": 212.671875,
+    "height": 484,
+    "top": 8,
+    "right": 1388,
+    "bottom": 492,
+    "left": 1175.328125
+  },
+  "popupRect": {
+    "x": 1175.328125,
+    "y": 8,
+    "width": 212.671875,
+    "height": 484,
+    "top": 8,
+    "right": 1388,
+    "bottom": 492,
+    "left": 1175.328125
+  },
+  "scrollTop": 0,
+  "visible": false
+}

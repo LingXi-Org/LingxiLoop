@@ -115,6 +115,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     // 使用普通可编辑文字导出路径；复杂CSS组仍按现有规则整组栅格化。
     if(options['font-exports']==='true')delete document.pages['page-1'].nodes['page-1-root'].css
 
+    if(editorCase==='variant-scroll'){const node=document.pages['page-1'].nodes['page-1-heading'];node.style.fontFamily='Merriweather';node.style.fontWeight=900;node.style.fontStyle='italic'}
     if(editorCase==='variant-many')document.pages['page-1'].nodes['page-1-heading'].style.fontFamily='Merriweather'
     if(editorCase==='variant-css'){const node=document.pages['page-1'].nodes['page-1-heading'];node.css={'font-weight':'500 !important','font-style':'italic'}}
     if(editorCase==='variant-inherited'){const node=document.pages['page-1'].nodes['page-1-heading'];delete node.style.fontWeight;delete node.style.fontStyle;document.pages['page-1'].nodes['page-1-root'].style.fontStyle='italic'}
@@ -3349,6 +3350,16 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if(options.checks==='font-parity'){
       assert.equal(kind,'design');const node=page.locator('[data-node-id="page-1-heading"]');await node.click();await page.getByRole('button',{name:'显示属性',exact:true}).click();const trigger=page.getByRole('button',{name:'字体',exact:true});await trigger.waitFor()
+      if(editorCase==='variant-scroll'){
+        const before=JSON.stringify(document),weight=page.getByLabel('字重',{exact:true}),observations=[]
+        const capture=()=>page.locator('.native-font-variant-list').evaluate(list=>({active:document.activeElement?.textContent,checked:document.activeElement?.getAttribute('aria-checked'),row:document.activeElement?.getBoundingClientRect().toJSON(),viewport:list.getBoundingClientRect().toJSON(),scrollTop:list.scrollTop,windowScroll:{x:window.scrollX,y:window.scrollY}}))
+        for(const opening of ['cold','reopen']){
+          await weight.click();await page.getByRole('menu',{name:'字形选项',exact:true}).waitFor();const selected=await capture();assert.equal(selected.active,'特粗斜体');assert.equal(selected.checked,'true');assert.ok(selected.row.top>=selected.viewport.top&&selected.row.bottom<=selected.viewport.bottom,JSON.stringify(selected));observations.push({opening,...selected});await page.screenshot({path:join(output,`variant-focus-${opening}.png`)})
+          await page.keyboard.press('Home');const first=await capture();assert.equal(first.active,'细体');assert.ok(first.row.top>=first.viewport.top&&first.row.bottom<=first.viewport.bottom);assert.deepEqual(first.windowScroll,selected.windowScroll)
+          await page.keyboard.press('End');const last=await capture();assert.equal(last.active,'特粗斜体');assert.ok(last.row.top>=last.viewport.top&&last.row.bottom<=last.viewport.bottom);assert.deepEqual(last.windowScroll,selected.windowScroll);await page.keyboard.press('Escape');assert.equal(await weight.evaluate(element=>document.activeElement===element),true)
+        }
+        assert.equal(receipts.length,0);assert.equal(JSON.stringify(document),before);assert.deepEqual(errors,[]);return{case:editorCase,observations,onlyOwnListScrolled:true,noWrites:true,consoleOrPageErrors:errors}
+      }
       if(editorCase==='variant-reset'){
         const before=structuredClone(document.pages['page-1'].nodes['page-1-heading']);await page.getByLabel('字重',{exact:true}).hover();const reset=page.getByRole('button',{name:'还原字重',exact:true});await reset.waitFor();await reset.click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');const changed=document.pages['page-1'].nodes['page-1-heading'];assert.equal(changed.style.fontWeight,undefined);assert.equal(changed.style.fontStyle,undefined);assert.equal(changed.style.fontFamily,before.style.fontFamily);assert.equal(await page.getByLabel('字重',{exact:true}).evaluate(element=>document.activeElement===element),true);await node.click();await page.keyboard.press('Control+z');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontStyle==='italic');await page.keyboard.press('Control+Shift+z');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontStyle==='normal');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');await page.reload();await ready(1);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontWeight,undefined);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontStyle,undefined);assert.deepEqual(errors,[]);return{case:editorCase,pairedReset:true,focusRestored:true,sharedHistoryAndReopen:true,consoleOrPageErrors:errors}
       }

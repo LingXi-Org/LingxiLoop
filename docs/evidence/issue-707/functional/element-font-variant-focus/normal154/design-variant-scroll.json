@@ -1,0 +1,68 @@
+{
+  "case": "variant-scroll",
+  "observations": [
+    {
+      "opening": "cold",
+      "active": "特粗斜体",
+      "checked": "true",
+      "row": {
+        "x": 1181.328125,
+        "y": 753,
+        "width": 200.671875,
+        "height": 40,
+        "top": 753,
+        "right": 1382,
+        "bottom": 793,
+        "left": 1181.328125
+      },
+      "viewport": {
+        "x": 1175.328125,
+        "y": 227,
+        "width": 212.671875,
+        "height": 572,
+        "top": 227,
+        "right": 1388,
+        "bottom": 799,
+        "left": 1175.328125
+      },
+      "scrollTop": 0,
+      "windowScroll": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "opening": "reopen",
+      "active": "特粗斜体",
+      "checked": "true",
+      "row": {
+        "x": 1181.328125,
+        "y": 753,
+        "width": 200.671875,
+        "height": 40,
+        "top": 753,
+        "right": 1382,
+        "bottom": 793,
+        "left": 1181.328125
+      },
+      "viewport": {
+        "x": 1175.328125,
+        "y": 227,
+        "width": 212.671875,
+        "height": 572,
+        "top": 227,
+        "right": 1388,
+        "bottom": 799,
+        "left": 1175.328125
+      },
+      "scrollTop": 0,
+      "windowScroll": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "onlyOwnListScrolled": true,
+  "noWrites": true,
+  "consoleOrPageErrors": []
+}
