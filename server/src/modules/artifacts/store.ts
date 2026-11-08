@@ -42,7 +42,7 @@ function versionOf(files: Record<string, ListedFile>) {
   return 'local-' + digest.slice(0, 16)
 }
 
-/** project/<path> → its path relative to project/, or null when the editor may not see or write it. */
+/** project/<path> → its path relative to project/, or null outside the allowed source/resource read scope. */
 export function fileOf(definition: ArtifactKindDefinition, runtimePath: string) {
   if (!isProjectPath(runtimePath)) return null
   const rel = runtimePath.slice('project/'.length)
