@@ -1,0 +1,110 @@
+{
+  "candidate": "6ec6e293b05312f18554905890b3dc961a4de63d",
+  "baseline": "5b8e2492ff3327f7b30798a10f882d3d2afea83f",
+  "scope": "AGENTS/repository-review独立detached只读审查D41文本可选属性、原生操作/旧富文本、Menu触发语义、renderer装饰及验收真实性；不读取root后续WIP、不改产品/推送/取SDK或构建artifact、不spawn",
+  "result": "发现2项实际P2（140/154均复现），本冻结候选局部审查未通过",
+  "findings": [
+    {
+      "severity": "P2",
+      "location": "src/features/artifacts/native/ElementTextProperties.tsx:42",
+      "relatedLocation": "src/features/artifacts/native/ElementTextProperties.tsx:44",
+      "title": "合法装饰简写被整串当作line值，添加删除线反而清掉下划线",
+      "input": {
+        "css": {
+          "text-decoration": "underline dotted red"
+        }
+      },
+      "reproduction": "以旧稿合法CSS underline dotted red选中默认文字，强调行已可见；点击“删除线”，等待共享/operations成功。140/154均保存text-decoration-line=\"underline dotted red line-through\"，这不是合法line值。实际computed.textDecorationLine=none，原下划线消失；style仍dotted、color仍红；两版均有React shorthand/longhand冲突warning。",
+      "expected": "line=underline line-through，保留dotted和红色，且无简写/longhand冲突；不能仅看按钮pressed或CSS字符串。",
+      "minimumFix": "正确分离已有合法shorthand中的line/style/color等语义，仅操作有效line token，并统一简写/longhand渲染应用路径避免React或CSSOM互相清除；保留原非line装饰数据及同一共享历史。先补上述原输入的真实UI/撤销回归。",
+      "evidence": [
+        "/workspace/lingxi-issue707-scratch/review-6ec-decoration140/text-counterexample.json",
+        "/workspace/lingxi-issue707-scratch/review-6ec-decoration154/text-counterexample.json"
+      ],
+      "screenshots": [
+        "/workspace/lingxi-issue707-scratch/review-6ec-decoration140/text-counterexample.png",
+        "/workspace/lingxi-issue707-scratch/review-6ec-decoration154/text-counterexample.png"
+      ]
+    },
+    {
+      "severity": "P2",
+      "location": "src/features/artifacts/native/element-text-properties.ts:18",
+      "relatedLocation": "src/features/artifacts/native/element-text-properties.ts:19",
+      "title": "切换嵌套列表类型会把子列表从父项拆出成为额外顶层项",
+      "input": "规范bulletList有2个顶层listItem，第1项为paragraph(父条目)+子bulletList(子条目)，第2项paragraph(末条目)。",
+      "reproduction": "选择该文字，在已有列表radio中点击“编号列表”，等待共享保存。140/154均得到3个直接ol>li：父条目、独立包裹子bulletList的li、末条目。原子列表不再属于父条目，末条目编号从应为2变3；文字仍在，但父子组织信息改变。",
+      "cause": "先把旧列表每项的content flatMap成平级blocks，再给每个block单独套listItem，不能保持原item的复合内容。",
+      "expected": "仅切换顶层列表类型，保留原两个listItem及第1项内部子列表关系。",
+      "minimumFix": "切换已有列表类型时保留原listItem完整content结构及需要保留的属性；移除列表与新建列表使用明确转换，避免把复合项拆平。用原节点/DOM及共享undo/redo/重开回归验证。",
+      "evidence": [
+        "/workspace/lingxi-issue707-scratch/review-6ec-nested140/text-counterexample.json",
+        "/workspace/lingxi-issue707-scratch/review-6ec-nested154/text-counterexample.json"
+      ],
+      "expectations": "/workspace/lingxi-issue707-scratch/review-6ec-probes/expectations.json",
+      "additionalCheck": "同一实际UI前后节点用本产品公开Tiptap schema检查，before合法，after报listItem仅含bulletList不符合paragraph-first规则；属于上述拆平问题补充，不新增理论第三项。"
+    }
+  ],
+  "counterexampleReproducer": {
+    "script": "/workspace/lingxi-issue707-scratch/review-6ec-probes/text.mjs",
+    "commandSuffix": "--mode=design --checks=element-sizing --sizing-case=text-properties-menu --review-text=decoration 或 nested-list；指定140/154浏览器和独立output",
+    "dataScope": "实际React/Worker/浏览器、受控HTTP共享操作；JSON含精确before/after节点及前后HTML，不是源码静态猜测。"
+  },
+  "verified": [
+    {
+      "check": "140/154各7核心场景",
+      "cases": [
+        "text-properties-menu",
+        "text-property-case-history",
+        "text-property-emphasis-history",
+        "text-property-list-history",
+        "text-properties-disabled-readonly",
+        "text-properties-disabled-locked",
+        "text-properties-disabled-permission"
+      ],
+      "result": "均通过。添加行零写入、基础选项保存/共享undo/redo/重开、只读/锁定/撤权禁用、菜单expanded及Escape焦点恢复、其他页/快照不变且无错误。基础输入不是上述旧CSS/嵌套旧稿反例。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-6ec-text140",
+        "/workspace/lingxi-issue707-scratch/review-6ec-text154"
+      ],
+      "logs": [
+        "/tmp/lingxi-review-6ec-text140.log",
+        "/tmp/lingxi-review-6ec-text154.log"
+      ]
+    },
+    {
+      "check": "154六格式实际下载与独立读取",
+      "result": "HTML真实重新解析computed uppercase/underline及1个列表项；PDF签名与pdfinfo3页；PPTX解包3页/媒体；SVG/PNG/JPEG解码1920×1080或3840×2160。文档不变、无导航/错误。没有宣称PDF/PPTX或图片像素保真，未覆盖两项反例。",
+      "output": "/workspace/lingxi-issue707-scratch/review-6ec-exports154/design-text-property-exports.json",
+      "log": "/tmp/lingxi-review-6ec-exports154.log"
+    },
+    {
+      "check": "13单元、25合同、脚本/格式",
+      "result": "5文本可选属性+6文本对齐+2文案单位、25接受合同通过；新增脚本node语法和git diff --check通过。",
+      "logs": [
+        "/tmp/lingxi-review-6ec-units.log",
+        "/tmp/lingxi-review-6ec-contracts.log"
+      ]
+    },
+    {
+      "check": "范围及声明",
+      "result": "无模型/服务/数据库变化；Menu新增可选button角色只对传入者启用，旧调用默认保持；原同步/草稿链路沿用。证据明确所有整体资格false、来源内部列表结构差异及导出像素未验收，未宣称完成。"
+    }
+  ],
+  "environmentFailures": [
+    {
+      "result": "detached初建时公共node_modules链接尚未就绪，最初UI/单位因tsx缺失启动失败；只链接现有公共依赖后重跑通过，未安装/伪造SDK。",
+      "logs": [
+        "/tmp/lingxi-review-6ec-text140-before-link.log",
+        "/tmp/lingxi-review-6ec-text154-before-link.log",
+        "/tmp/lingxi-review-6ec-units-before-link.log"
+      ]
+    }
+  ],
+  "unverified": [
+    "未重放固定Source或所有组合富文本/内联链接/段落属性；不把公开Zod结构验证或简单单元当全部Tiptap编辑语义通过",
+    "未另跑窄/粗指针全菜单、完整Tab/Home/End链、中文系统IME和所有正常禁用组合；本轮基本菜单Escape焦点及禁用Enter已实测",
+    "没有重跑共享两模式colors或D40 golden（仅查看父线程冻结证据，不冒充本轮运行），没有真实授权服务/跨租户/Agent/PG变化验证",
+    "未执行正式SDK全类型/build或新生产静态图，未做完整四尺寸双主题0.5%像素及最终10组ABBA/网络/启动/输入/PSS；全部最终资格仍未完成",
+    "原6ec两项失败应保留，后续修复需新精确候选并重跑受影响检查与独立复审"
+  ]
+}

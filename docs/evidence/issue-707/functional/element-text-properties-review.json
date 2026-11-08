@@ -1,0 +1,31 @@
+{
+  "candidateUnderReview": "6ec6e293b05312f18554905890b3dc961a4de63d",
+  "review": "reviews/6ec6e293.json",
+  "findings": [
+    {
+      "severity": "P2",
+      "trigger": "合法CSS text-decoration:underline dotted red时选择删除线",
+      "before": "丢失原下划线，computed line=none且React简写冲突警告",
+      "correction": "装饰简写展开为四个长写；只编辑线条，保留线型、颜色、厚度和优先标记。React渲染统一长写，撤销恢复原作者简写。"
+    },
+    {
+      "severity": "P2",
+      "trigger": "首项包含子列表的两项bullet切换为number",
+      "before": "子列表被提升为第三个顶层条目，产生非法listItem结构",
+      "correction": "种类切换仅替换现有外层列表type，保留所有子树及原文档根属性。"
+    }
+  ],
+  "verified": [
+    "原7项单元中新增2反例在修复前失败",
+    "140/154各2反例真实UI保存重开/撤销重做/其他页面和无控制台错误通过",
+    "17项属性/共享代码样式/缩略图单元通过",
+    "lint43warning4info",
+    "本地types仍76条SDK及级联诊断，修改文件无自有诊断"
+  ],
+  "scope": "只闭合两个实际反例；不是文本全部功能或视觉资格。",
+  "newCandidateCI": "待提交",
+  "newIndependentReview": "待冻结候选",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

@@ -1,0 +1,167 @@
+{
+  "type": "nested-list",
+  "before": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "父条目\n子条目\n末条目",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "bulletList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "父条目"
+                    }
+                  ]
+                },
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "子条目"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "末条目"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "after": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "父条目\n子条目\n末条目",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "orderedList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "父条目"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "bulletList",
+                  "content": [
+                    {
+                      "type": "listItem",
+                      "content": [
+                        {
+                          "type": "paragraph",
+                          "content": [
+                            {
+                              "type": "text",
+                              "text": "子条目"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "末条目"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "beforeHtml": "<div class=\"native-text-content\"><ul><li><p>父条目</p><ul><li><p>子条目</p></li></ul></li><li><p>末条目</p></li></ul></div>",
+  "afterHtml": "<div class=\"native-text-content\"><ol><li><p>父条目</p></li><li><ul><li><p>子条目</p></li></ul></li><li><p>末条目</p></li></ol></div>",
+  "computed": {
+    "line": "none",
+    "style": "solid",
+    "color": "rgb(24, 51, 43)"
+  },
+  "topOrderedItems": 3,
+  "errors": []
+}

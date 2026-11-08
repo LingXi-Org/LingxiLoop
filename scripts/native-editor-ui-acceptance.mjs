@@ -130,6 +130,11 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       document.pages['page-1'].nodeOrder.splice(document.pages['page-1'].nodeOrder.indexOf(node.id),0,overlap.id)
     }
   }
+  if(options.checks==='element-sizing'&&editorCase==='text-property-emphasis-shorthand')document.pages['page-1'].nodes['page-1-heading'].css={'text-decoration':'underline dotted red 2px'}
+  if(options.checks==='element-sizing'&&editorCase==='text-property-list-nested'){
+    const paragraph=text=>({type:'paragraph',content:[{type:'text',text}]})
+    Object.assign(document.pages['page-1'].nodes['page-1-heading'],{text:'父条目\n子条目\n末条目',richText:{type:'doc',content:[{type:'bulletList',content:[{type:'listItem',content:[paragraph('父条目'),{type:'bulletList',content:[{type:'listItem',content:[paragraph('子条目')]}]}]},{type:'listItem',content:[paragraph('末条目')]}]}]}})
+  }
   if(options.checks==='element-sizing'&&['text-align-css','text-align-important','text-align-history'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-align':editorCase==='text-align-important'?'center !important':'center'}
   if(options.checks==='element-sizing'&&['text-align-locked','text-properties-disabled-locked'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].locked=true
   if(options.checks==='element-sizing'&&editorCase==='text-align-inherited')document.pages['page-1'].nodes['page-1-root'].style.textAlign='center'
@@ -533,6 +538,28 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await page.waitForFunction(()=>document.querySelector('[aria-label="添加文本属性"]')?.getAttribute('aria-disabled')==='true');await add.focus();await page.keyboard.press('Enter');assert.equal(await page.getByRole('menu',{name:'添加文本属性选项',exact:true}).count(),0)
         assert.equal(receipts.length,0);assert.deepEqual(document,expected);assert.deepEqual(errors,[])
         return{kind:'文本可选属性禁用状态',case:editorCase,noWrites:true,peerChangePreserved:true,consoleOrPageErrors:errors}
+      }
+      if(['text-property-emphasis-shorthand','text-property-list-nested'].includes(editorCase)){
+        const subject=page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`),text=page.locator('.native-element-text-properties'),before=structuredClone(document.pages['page-1'].nodes[nodeId])
+        if(editorCase.endsWith('shorthand')){
+          const pending=saved();await text.getByRole('button',{name:'删除线',exact:true}).click();await pending
+          assert.deepEqual(await subject.evaluate(element=>{const style=getComputedStyle(element);return{line:style.textDecorationLine,style:style.textDecorationStyle,color:style.textDecorationColor,thickness:style.textDecorationThickness}}),{line:'underline line-through',style:'dotted',color:'rgb(255, 0, 0)',thickness:'2px'})
+          assert.equal(document.pages['page-1'].nodes[nodeId].css['text-decoration'],undefined)
+        }else{
+          const pending=saved();await text.getByRole('radio',{name:'编号列表',exact:true}).click();await pending
+          assert.equal(await subject.locator('.native-text-content > ol > li').count(),2)
+          assert.equal(await subject.locator('.native-text-content > ol > li:first-child > ul > li').count(),1)
+          assert.deepEqual(document.pages['page-1'].nodes[nodeId].richText,{...before.richText,content:[{...before.richText.content[0],type:'orderedList'}]})
+        }
+        const changed=structuredClone(document.pages['page-1'].nodes[nodeId]);await page.locator('[data-native-artifact-editor]').focus();let pending=saved();await page.keyboard.press('Control+z');await pending;assert.deepEqual(document.pages['page-1'].nodes[nodeId],before)
+        if(editorCase.endsWith('shorthand'))assert.equal(await subject.evaluate(element=>getComputedStyle(element).textDecorationLine),'underline')
+        else assert.equal(await subject.locator('.native-text-content > ul > li').count(),2)
+        pending=saved();await page.keyboard.press('Control+Shift+z');await pending;assert.deepEqual(document.pages['page-1'].nodes[nodeId],changed)
+        await page.screenshot({path:join(output,`${editorCase}.png`)});await page.reload();await ready(1);assert.deepEqual(document.pages['page-1'].nodes[nodeId],changed)
+        if(editorCase.endsWith('shorthand'))assert.equal(await subject.evaluate(element=>getComputedStyle(element).textDecorationLine),'underline line-through')
+        else assert.equal(await subject.locator('.native-text-content > ol > li').count(),2)
+        for(const id of original.pageOrder.filter(id=>id!=='page-1'))assert.deepEqual(document.pages[id],original.pages[id]);assert.deepEqual(errors,[])
+        return{kind:'独立审查反例修复回归',case:editorCase,savedAndReopened:true,sharedUndoRedo:true,otherPagesUnchanged:true,node:changed,consoleOrPageErrors:errors}
       }
       if(editorCase==='text-property-exports'){
         const text=page.locator('.native-element-text-properties')

@@ -1,3 +1,4 @@
+import {expandTextDecoration} from './artifact-text-decoration.js'
 import {isSafeArtifactLink} from './artifact-links.js'
 import { parseInspectorCode } from './artifact-inspector-code.js'
 
@@ -26,7 +27,9 @@ export function isNativeCodeAttribute(name:string,value:string):boolean {
 }
 
 export function codeStyleProperties(css:Record<string,string>|undefined):Record<string,string> {
-  return Object.fromEntries(Object.entries(css??{}).map(([key,value])=>[key.startsWith('--')?key:key.replace(/-([a-z])/g,(_,letter:string)=>letter.toUpperCase()),value.replace(/\s*!important\s*$/i,'')]))
+  const expanded=new Map<string,string>()
+  for(const [key,value]of Object.entries(css??{}))for(const [name,part]of Object.entries(key==='text-decoration'?expandTextDecoration(value):{[key]:value}))expanded.set(name,part)
+  return Object.fromEntries([...expanded].map(([key,value])=>[key.startsWith('--')?key:key.replace(/-([a-z])/g,(_,letter:string)=>letter.toUpperCase()),value.replace(/\s*!important\s*$/i,'')]))
 }
 
 export function codeAttributeProperties(attributes:Record<string,string>|undefined):Record<string,string|boolean|number> {

@@ -36,3 +36,17 @@ test('可选文字属性复用保存、逆操作及旧文档读取，其他页�
  const undone=applyOperations(reopened,prepareBatch(reopened,changed.inverse,'undo-optional-text'))
  assert.deepEqual(undone.document.pages.page.nodes.text,node);assert.deepEqual(reopened.pages.other,other);assert.equal(JSON.stringify(document),original)
 })
+
+test('复合装饰添加删除线时保留原下划线、线型、颜色和厚度',()=>{
+ const node={...createNode('text','text'),css:{'text-decoration':'underline dotted red 2px',opacity:'.5'}},page={...createPage('page'),nodes:{text:node},nodeOrder:['text']}
+ const result=textPropertyPatch(node,page,{'text-decoration-line':'underline line-through'})
+ assert.equal(result.patch.css?.['text-decoration'],undefined)
+ assert.equal(result.patch.css?.['text-decoration-style'],'dotted');assert.equal(result.patch.css?.['text-decoration-color'],'red');assert.equal(result.patch.css?.['text-decoration-thickness'],'2px');assert.equal(result.patch.css?.['text-decoration-line'],'underline line-through');assert.equal(result.patch.css?.opacity,'.5')
+})
+test('切换嵌套列表种类只修改外层类型，条目身份顺序和子列表保持原结构',()=>{
+ const paragraph=(text:string)=>({type:'paragraph' as const,content:[{type:'text' as const,text}]})
+ const node={...createNode('text','text'),text:'父条目\n子条目\n末条目',richText:{type:'doc' as const,content:[{type:'bulletList' as const,content:[{type:'listItem' as const,content:[paragraph('父条目'),{type:'bulletList' as const,content:[{type:'listItem' as const,content:[paragraph('子条目')]}]}]},{type:'listItem' as const,content:[paragraph('末条目')]}]}]}}
+ const changed={...node,...textListPatch(node,'number')}
+ assert.deepEqual(changed.richText,{...node.richText,content:[{...node.richText.content[0],type:'orderedList'}]});assert.equal(changed.richText?.content?.[0].content?.length,2)
+ assert.deepEqual({...changed,...textListPatch(changed,'bullet')},node)
+})

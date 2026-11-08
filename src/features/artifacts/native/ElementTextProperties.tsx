@@ -5,7 +5,7 @@ import {List,ListOrdered,Ban,Underline,Strikethrough} from 'lucide-react'
 import type {ArtifactDocument,ArtifactNode,ArtifactPage} from '../../../../shared/artifact-document'
 import {artifactVersionKey,type ArtifactOperation} from '../../../../shared/artifact-operations'
 import {IconButton,Menu,MenuItem} from './EditorPrimitives'
-import {textCaseLabels,textPropertyPatch,textListKind,textListPatch,type TextListKind} from './element-text-properties'
+import {textCaseLabels,textPropertyPatch,textDecorationLine,textListKind,textListPatch,type TextListKind} from './element-text-properties'
 import './element-text-properties.css'
 
 type Extra='emphasis'|'list'|'case'
@@ -20,7 +20,7 @@ interface Props{
 }
 export default function ElementTextProperties({node,page,enabled,writable,children,alignment,getBase,commit,onNotice}:Props){
  const [shown,setShown]=useState<Extra[]>([]),disabled=!writable||!!node.locked
- const decoration=node.css?.['text-decoration-line']??node.css?.['text-decoration']??node.style.textDecoration??'none',list=textListKind(node)
+ const decoration=textDecorationLine(node),list=textListKind(node)
  const caseValue=(node.css?.['text-transform']??'none').replace(/\s*!important\s*$/i,'').trim()
  const caseLabel=Object.hasOwn(textCaseLabels,caseValue)?textCaseLabels[caseValue as keyof typeof textCaseLabels]:'自定义'
  const visible=(key:Extra)=>shown.includes(key)||(key==='emphasis'?node.css?.['font-style']!==undefined||node.style.fontStyle!==undefined||node.css?.['text-decoration']!==undefined||node.css?.['text-decoration-line']!==undefined||node.style.textDecoration!==undefined:key==='list'?list!=='none':node.css?.['text-transform']!==undefined)

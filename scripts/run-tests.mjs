@@ -72,6 +72,7 @@ const testsByScope = {
     'shared/artifact-previews.test.ts',
     'shared/artifact-legacy.test.ts',
     'shared/artifact-check.test.ts',
+    'shared/artifact-node-code.test.ts',
     'src/features/artifacts/native/session.test.ts',
     'src/features/artifacts/native/drafts.test.ts',
     'src/features/artifacts/native/compute.test.ts',

@@ -1,0 +1,91 @@
+{
+  "type": "decoration",
+  "before": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    },
+    "css": {
+      "text-decoration": "underline dotted red"
+    }
+  },
+  "after": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    },
+    "css": {
+      "text-decoration": "underline dotted red",
+      "text-decoration-line": "underline dotted red line-through"
+    }
+  },
+  "beforeHtml": "<div class=\"native-text-content\"><h1>LingxiLoop 1</h1></div>",
+  "afterHtml": "<div class=\"native-text-content\"><h1>LingxiLoop 1</h1></div>",
+  "computed": {
+    "line": "none",
+    "style": "dotted",
+    "color": "rgb(255, 0, 0)"
+  },
+  "topOrderedItems": 0,
+  "errors": [
+    "%s a style property during rerender (%s) when a conflicting property is set (%s) can lead to styling bugs. To avoid this, don't mix shorthand and non-shorthand properties for the same value; instead, replace the shorthand with separate values. Updating textDecorationLine textDecoration"
+  ]
+}
