@@ -1,0 +1,18 @@
+{
+  "trigger": "标题 2",
+  "computed": [
+    {
+      "id": "page-1-heading",
+      "fontSize": "32px"
+    },
+    {
+      "id": "page-1-body",
+      "fontSize": "43px"
+    }
+  ],
+  "checked": [
+    "标题 232像素"
+  ],
+  "writes": 0,
+  "errors": []
+}

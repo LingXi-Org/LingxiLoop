@@ -559,3 +559,6 @@ D43增加[字体弹窗局部还原](functional/element-font-popup.json)，清单
 
 
 D44增加[文本样式菜单及派生摘要](functional/element-text-style.json)，清单176项。[固定来源](source-element-text-style.json)确认跨页字号、当前自定义、变量、空项及多选只改字号；原生保留富文本结构和字重。154/140各14流程及独立PG服务集成通过限定范围，新增角色字段的撤销白名单实际失败、初始多选入口缺失、锁定探针懒加载、触摸2px偏差、自定义项及空状态/键盘缺失均保留。派生摘要保留未加载页裁剪；旧文档可选字段不回填原始或历史文件。6局部几何通过不能代表系统排版样式、完整混合面板和全部CSS；来源Tab后继Unset Font仍缺，原生暂到现有字体按钮。最终键盘、候选CI/生产图与冻结独立审查在提交后登记；全局资格false。
+
+
+240ad77d普通CI42444311225和[真实静态图](performance/static-profile-240ad77d.json)42444308080成功；联合838929、比645增加97，仍比基线+8.2682%。[静态复审](reviews/240ad77d-actual-graph.json)确认Role常量leaf与延迟helper/Inspector不进入启动静态闭包，七图标/唯一React隔离保留，但[功能冻结审查](reviews/240ad77d.json)发现双版P2：继承32与CSS变量43的混合选择被判共同32，候选因此未通过。现按所有已选节点实际字号修复，[前后证据](functional/element-text-style-mixed.json)保留首次失败；不能以原16流程或构建通过覆盖该P2。新候选CI及复审待完成。
