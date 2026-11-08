@@ -33,5 +33,11 @@
     "after": "17项分解/现有CI契约通过，保留旧无resourceHash和环境过滤断言；语法及git diff检查通过。",
     "realOutput": "新候选实际CI诊断输出与独立审查待执行；当前仅契约验证。"
   },
-  "qualified": false
+  "qualified": false,
+  "ciWiring": {
+    "finding": "a291独立审查P3：新两项测试没有进入既有CI合同执行名单；本地通过不等于CI执行。",
+    "fix": "加入现有native-artifact-acceptance合同步骤，原ci/storage/failure加新分解测试共25项。",
+    "localResult": "精确工作流命令25项全部通过。",
+    "remoteExecution": "a291诊断已启动，保留该运行；新名单的远端实际执行尚待后续必要诊断，不重复取消或误称已运行。"
+  }
 }

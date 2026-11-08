@@ -1,0 +1,58 @@
+{
+  "candidate": "a2918e446fe4f0e1bde7c3fe7fe1fc01955b80dc",
+  "baseline": "5a9d8bc53847d771c6e97cba57cef56c53b53be9",
+  "scope": "repository-review独立detached只读审查性能诊断数值投影、公开收据输入数组、诊断stdout调用与回归接线；无浏览器、私包/构建下载或root WIP读取，不改产品/门槛/计时",
+  "result": "未发现P1/P2；发现1项P3新回归未接入CI。算法/隐私/有界定向验证通过，真实新诊断输出待验证",
+  "findings": [
+    {
+      "severity": "P3",
+      "location": ".github/workflows/native-artifact-acceptance.yml:86",
+      "relatedLocation": "scripts/native-artifact-diagnostic-breakdown.test.mjs:1",
+      "title": "新诊断分解回归未进入现有CI测试入口",
+      "reproduction": "专用acceptance合同步骤仍显式只执行ci/storage/failure三个文件；所有workflow无新diagnostic-breakdown测试调用。npm test的run-tests.mjs为显式范围名单，额外CI_TEST_FILES仅接收src/且.test.ts(x)，不能自动发现scripts/*.test.mjs。因此本次新两项隐私/均值/数量回归只在本机命令执行，实际诊断运行前不会自动执行。",
+      "impact": "当前本机17项已通过，不是现算法失败；后续真实CI成功不能误称新分解测试自动覆盖。",
+      "minimumFix": "将新测试文件加入既有acceptance合同步骤执行名单，无需改测量、门槛、触发权限或扩大产品测试面。"
+    }
+  ],
+  "verified": [
+    {
+      "check": "17项既有CI及新分解测试",
+      "result": "全部通过，旧无requestsAtEditable/resourceHash输出与环境严格过滤断言仍保留；脚本语法、git diff --check通过。",
+      "log": "/tmp/lingxi-review-a291-tests.log"
+    },
+    {
+      "check": "附加纯数据反例",
+      "result": "秘密/URL/资源hash/任意字符串哨兵不进入breakdown；safe深冻结后投影不变。8sample/12frame/16input/5role界限、有限数过滤、零值保留、缺失阶段null/字段省略、5观测角色均值、同大小同target合并/不同target分开、未知大小不写零均通过。24桶及遗漏数由新正式测试40组场景验证。",
+      "evidence": "/workspace/lingxi-issue707-scratch/review-a291-probes/results.json",
+      "script": "/workspace/lingxi-issue707-scratch/review-a291-probes/verify.mjs"
+    },
+    {
+      "check": "compactReceipt兼容",
+      "result": "用精确旧函数对照，删除新增inputSamplesMs后新旧输出严格相等；新数组仅有限数最多16，不引入原始网络表/资源hash或修改summary/gates/sample eligibility。"
+    },
+    {
+      "check": "输出只在diagnostic且等待写入",
+      "result": "提取精确分支运行：paired为0 helper调用/0新日志；diagnostic最多8逐样本日志，等待8次异步stdout回调完成。只追加版本/已批准commit元数据、固定标签和数值，没有请求/进程/页面标识。"
+    },
+    {
+      "check": "当前实际采集字段语义",
+      "result": "benchmark process_pss每次初始化root/renderer/gpu/utility/other含零值，host/遍历后各5观测，角色均值为各角色总PSS/进程数的观测均值（不是每进程加权均值）；未测阶段省略/null，不新增采样。文档heap逐帧输出不求和。当前输入为首编辑及25/50页共3值，上限16不截断当前产出。"
+    },
+    {
+      "check": "测量与资格未变",
+      "result": "benchmark.py、产品src/shared/依赖和workflow本提交均无改动；新helper只在summarize读完既有报告及publicEvidence后运行。原Python调用、计时点、配对、预算、eligible/qualified、公开results.json及资源身份过滤不变。新调用不进入被测浏览器/Worker。"
+    }
+  ],
+  "interpretationLimits": [
+    "script分桶使用requestsAtEditable整个已观察池，包含预热，不是增量scriptTransferBytes；同大小/target可合并多资源，排序位置/大小均不能唯一定位源码或证明因果",
+    "最多8样本/每阶段12观测帧/24桶/16输入，遗漏计数不能当零；frameCount是输入中已观测帧数，不保证所有实际浏览器frame均可测",
+    "角色均值对各可用有限值计算；现采集端每次明确五角色含零，因此分母完整。缺失数据不应被消费者补零。每帧heap不能相加当进程堆",
+    "标准收据输入数组上限16，当前每样本3个；后续只能用完整保留下来的值复算分位，不能把受限/缺失数据称最终p95或资格",
+    "breakdown没有引入通过判定，必须结合原public receipt的状态/资格；不能根据可用数值或新日志存在就称样本/预算通过"
+  ],
+  "unverified": [
+    "本机Node24；没有真实Node22诊断输出/整行日志完整性或实际采样数据后验，本次仅Node与额外纯数据合同验证",
+    "父线程通知a291实际diagnostic已启动，其结果未被本报告视为通过；P3补接线须后续新精确候选复审，原运行归属/限定保留",
+    "没有重跑浏览器、SDK构建或最终10组交替ABBA；新日志不是性能修复，所有真实预算与完整视觉/服务资格仍未完成"
+  ]
+}
