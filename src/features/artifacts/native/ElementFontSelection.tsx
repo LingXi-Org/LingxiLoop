@@ -5,7 +5,7 @@ import {FontField} from './FontField'
 import ElementFontVariantField from './ElementFontVariantField'
 import {elementFontFamilyPatch} from './element-font-properties'
 import {elementFontWeightText,parseElementFontWeight} from './element-font-variant'
-import {elementFontSelectionVariantPatch,elementFontSelectionVariantValue,mergeElementFontStates} from './element-font-selection'
+import {elementFontSelectionFamilyChoice,elementFontSelectionVariantPatch,elementFontSelectionVariantValue,mergeElementFontStates} from './element-font-selection'
 import {textPropertyPatch} from './element-text-properties'
 
 interface Props{
@@ -39,7 +39,7 @@ export default function ElementFontSelection({doc,page,nodeIds,families,writable
  const safely=(action:()=>void)=>{try{action()}catch{onNotice('字体未能修改，请检查样式值后重试。')}}
  const raw=!!weight.value&&parseElementFontWeight(weight.value)===undefined
  return <><span ref={root} hidden/>
-  <FontField element mixed={family.mixed} value={family.value??family.fallback} families={families} disabled={disabled} onBegin={begin} onReset={targets.some(node=>node.css?.['font-family']!==undefined||node.style.fontFamily!==undefined||node.style.themeFont!==undefined)?()=>safely(()=>apply((node,page)=>elementFontFamilyPatch(node,page,null),['css','style.fontFamily','style.themeFont','style.themeFontFallback'])):undefined} onChange={font=>safely(()=>apply((node,page)=>elementFontFamilyPatch(node,page,font),['css','style.fontFamily','style.themeFont','style.themeFontFallback']))}/>
+  <FontField element mixed={family.mixed} value={family.value??family.fallback} families={families} disabled={disabled} onBegin={begin} onReset={targets.some(node=>node.css?.['font-family']!==undefined||node.style.fontFamily!==undefined||node.style.themeFont!==undefined)?()=>safely(()=>apply((node,page)=>elementFontFamilyPatch(node,page,null),['css','style.fontFamily','style.themeFont','style.themeFontFallback'])):undefined} onChange={font=>safely(()=>apply((node,page)=>elementFontFamilyPatch(node,page,family.mixed?elementFontSelectionFamilyChoice(font):font,family.mixed),['css','style.fontFamily','style.themeFont','style.themeFontFallback']))}/>
   <ElementFontVariantField family={family.value??family.fallback} weight={variant.weight} italic={variant.italic} mixed={weight.mixed||weight.companionMixed} explicit={targets.some(node=>!!elementFontWeightText(node)||node.css?.['font-style']!==undefined||node.style.fontStyle!==undefined)} disabled={disabled} onBegin={begin} onReset={()=>safely(()=>apply((node,page)=>elementFontSelectionVariantPatch(node,page,null,weight),['css','style.fontWeight','style.fontStyle']))} onChange={choice=>safely(()=>apply((node,page)=>elementFontSelectionVariantPatch(node,page,choice,weight),['css','style.fontWeight','style.fontStyle']))} raw={raw?{value:weight.value!,getBase,onHistory,apply:(value,captured)=>apply((node,page)=>textPropertyPatch(node,page,{'font-weight':value}),['css','style.fontWeight'],captured),retain:(value,captured)=>{const oldPage=captured.pages[page.id];if(oldPage)retain(nodeIds.flatMap(id=>{const node=oldPage.nodes[id];return node?[{type:'node.patch' as const,pageId:page.id,nodeId:id,patch:{css:{...node.css,'font-weight':value}}}]:[]}))}}:undefined}/>
  </>
 }

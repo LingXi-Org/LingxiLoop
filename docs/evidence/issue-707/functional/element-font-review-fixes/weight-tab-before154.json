@@ -1,0 +1,14 @@
+{
+  "first": {
+    "tag": "BUTTON",
+    "text": "常规"
+  },
+  "after": {
+    "tag": "BODY",
+    "role": null,
+    "label": null,
+    "inEditor": false
+  },
+  "receipts": 0,
+  "errors": []
+}

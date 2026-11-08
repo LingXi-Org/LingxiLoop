@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {mergeElementFontStates} from './element-font-selection'
-import {elementFontSelectionVariantPatch} from './element-font-selection'
+import {elementFontSelectionVariantPatch,elementFontSelectionFamilyChoice} from './element-font-selection'
 import {createNode,createPage} from '../../../../shared/artifact-document'
 
 test('多选合并比较自有声明，计算值一致不能掩盖混合声明',()=>{
@@ -39,4 +39,9 @@ test('共同斜体切换常规显式覆盖，当前共同值重复选择不写�
  assert.deepEqual(elementFontSelectionVariantPatch(node,page,{weight:700,style:'italic'},merged),{patch:{},unset:[]})
  const result=elementFontSelectionVariantPatch(node,page,{weight:400,style:'normal'},merged)
  assert.equal(result.patch.style?.fontStyle,'normal');assert.deepEqual(result.patch.css,{color:'red'})
+})
+
+test('混合字体统一使用固定来源目录的通用回退，不翻译作者字体名称',()=>{
+ const choice=(family:string)=>elementFontSelectionFamilyChoice({value:family,family,label:'自定义字体'}).family
+ assert.equal(choice('Arial'),'Arial, sans-serif');assert.equal(choice('Georgia'),'Georgia, serif');assert.equal(choice('Courier New'),'Courier New, monospace');assert.equal(choice('Merriweather'),'Merriweather, serif');assert.equal(choice('宋体'),'"宋体"')
 })

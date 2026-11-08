@@ -1,0 +1,50 @@
+{
+  "stage": "D51 修复冻结复审的两个P2及验收证据缺口",
+  "parentCandidate": "9c2c5e116dc0c8a4986b6a5043e4b691e2920da9",
+  "reviewedCandidate": "cdba71054cecbfcc598134f422eb3131ce00ebe3",
+  "independentFirstRed": "../reviews/cdba7105.json",
+  "findings": [
+    {
+      "problem": "多选字重菜单Tab后焦点BODY",
+      "fix": "沿现有Inspector可见Tab序列移动，无后继回触发器；保留ShiftTab/Escape路径。"
+    },
+    {
+      "problem": "同显示名不同字体栈混合后选择无法统一",
+      "fix": "仅混合组绕过单元素同名noOp，并按Source目录统一到规范回退栈；单选仍保留作者栈。"
+    }
+  ],
+  "otherChanges": [
+    "自动CI改用完整git差异，避免GitHub PRAPI3000文件截断；3100证据文件加src/shared回归先红后绿。",
+    "原始lint日志仅无损gzip归档，记录未压缩SHA256；修复两处源码EOF空行，不忽略代码空白检查。",
+    "查询字体菜单后等待原方向断言成立再抓几何，原1CSSpx断言保留；补齐CI字体JSON/PNG上传。"
+  ],
+  "checks": {
+    "unit": {
+      "passed": 19
+    },
+    "contracts": {
+      "passed": 35
+    },
+    "ciScope": {
+      "passed": 13
+    },
+    "chrome154": "14多选/单选完整回归通过；两个P2分别通过，旧单选栈及generic-first noOp通过。",
+    "chrome140": "两个P2、字体组保存历史/CAS及旧单选栈/generic-first共6流程通过。",
+    "color": "两模式colors/color-cas/legacy-colors通过；asset-colors原限定slides，误用both首slides通过后design参数护栏失败，改slides独立重跑通过。",
+    "popup": "两版本地原检查及等待定位后的Source空项尺寸/样式/方向检查均通过；CI新候选仍待复验。",
+    "webLint": "946文件，43既有警告4信息。",
+    "localTypes": {
+      "diagnostics": 76,
+      "owning": 0,
+      "passed": false
+    },
+    "diffCheck": "git diff --check72162f58通过（包含全部当前源码与证据）。",
+    "exactCandidateCi": "提交后待运行；9c父候选已显式web/server/integration成功，不将其替代当前候选。"
+  },
+  "performance": "9c真实diagnostic在前置字体菜单断言失败，0样本；新候选需复验，未启动最终10ABBA。",
+  "qualification": {
+    "wholeVisual": false,
+    "actualPerformance": false,
+    "completePlan": false
+  }
+}

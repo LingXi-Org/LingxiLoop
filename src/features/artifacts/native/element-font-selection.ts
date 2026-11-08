@@ -1,3 +1,8 @@
+import type {ArtifactNode,ArtifactPage} from '../../../../shared/artifact-document'
+import {editorFontChoice,type EditorFont,type EditorFontVariant} from './editor-fonts'
+import {parseElementFontWeight} from './element-font-variant'
+import {textPropertyPatch} from './element-text-properties'
+
 export interface ElementFontState {
  value?:string|null
  fallback?:string|null
@@ -28,8 +33,12 @@ export function mergeElementFontStates(states:readonly ElementFontState[]){
   ...(!fallbacks.some(value=>value!==fallbacks[0])&&fallbacks[0]?{fallback:fallbacks[0]}:{})
  }
 }
-import type {ArtifactNode,ArtifactPage} from '../../../../shared/artifact-document'
-import type {EditorFontVariant} from './editor-fonts'
-import {parseElementFontWeight} from './element-font-variant'
-import {textPropertyPatch} from './element-text-properties'
 
+/** 来源混合组选择使用目录字体栈；自定义字体使用带引号的字面名称。 */
+export function elementFontSelectionFamilyChoice(font:EditorFont):EditorFont{
+ if(font.theme)return font
+ const known=editorFontChoice(font.family)
+ if(!known||known.theme)return{...font,family:`"${font.family.replaceAll('"','')}"`}
+ const generic=known.family==='Courier New'?'monospace':['Georgia','Times New Roman','Garamond','Playfair Display','Merriweather','Lora'].includes(known.family)?'serif':'sans-serif'
+ return{...font,family:`${known.family}, ${generic}`}
+}

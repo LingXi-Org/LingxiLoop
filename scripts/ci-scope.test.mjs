@@ -1,7 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
 import { computeScope } from './ci-scope.mjs'
 import { classifyPaths } from './ci-scope-paths.mjs'
+
+test('large PR evidence changes cannot truncate owning checks at the GitHub API file limit',()=>{
+ const workflow=readFileSync(new URL('../.github/workflows/ci.yml',import.meta.url),'utf8'),paths=workflow.split('id: paths')[1]?.split('filters: |')[0]
+ assert.match(paths??'',/token:\s*''/,'PR筛选必须使用完整git差异，避免API仅返回前3000项而跳过src/shared')
+ const files=[...Array.from({length:3100},(_,i)=>`docs/evidence/issue-707/${i}.json`),'src/features/artifacts/native/NativeEditor.tsx','shared/artifact-document.ts']
+ const scope=computeScope(classifyPaths(files));assert.equal(scope.web,true);assert.equal(scope.server,true);assert.equal(scope.integration,true)
+})
 
 test('the shared durable-queue fixture retains all four owning files without a broad full run', () => {
   const files = ['runtime-queue-interactive-capacity.test.ts', 'runtime-queue-background-capacity.test.ts',

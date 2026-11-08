@@ -1,0 +1,58 @@
+{
+  "candidate": "9c2c5e116dc0c8a4986b6a5043e4b691e2920da9",
+  "runId": 42469242086,
+  "jobId": 128695892388,
+  "profile": "fidelity",
+  "baseline": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "failedStep": "Verify real worker script accounting before production measurements",
+  "failedCheck": "font-popup-layout / 无匹配字体 / 搜索缩小后方向断言",
+  "excerpt": [
+    "    triggerUncaughtException(",
+    "    ^",
+    "",
+    "AssertionError [ERR_ASSERTION]: 搜索导致弹窗变矮时应保持已打开方向",
+    "    at verifyMode (/home/runner/work/LingxiLoop/LingxiLoop/candidate/scripts/native-editor-ui-acceptance.mjs:3600:88)",
+    "    at async <anonymous> (/home/runner/work/LingxiLoop/LingxiLoop/candidate/scripts/native-editor-ui-acceptance.mjs:81:22) {",
+    "  generatedMessage: false,",
+    "  code: 'ERR_ASSERTION',",
+    "  actual: false,",
+    "  expected: true,",
+    "  operator: '==',",
+    "  diff: 'simple'",
+    "}",
+    "",
+    "Node.js v22.23.4",
+    "##[error]Process completed with exit code 1."
+  ],
+  "samplesCollected": 0,
+  "qualified": false,
+  "geometryArtifact": {
+    "id": 13613436614,
+    "containsFailedFontPopup": false,
+    "followup": "补齐native-element-font* JSON/PNG上传；旧记录缺少这组几何，不能断言真实画面或RO先后。"
+  },
+  "localReproductions": {
+    "chrome140": "原检查通过",
+    "chrome154": "原检查通过"
+  },
+  "followup": "保留原方向与1CSSpx断言，在查询布局观察器定位完成后抓取几何；新的CI复验尚未执行。",
+  "owningCi": {
+    "web": {
+      "run": 42469373137,
+      "job": 128696391814,
+      "result": "success",
+      "scope": "显式scope=web；lint、tests、build"
+    },
+    "server": {
+      "run": 42469917803,
+      "job": 128698115952,
+      "result": "success"
+    },
+    "integration": {
+      "run": 42469917803,
+      "job": 128698115899,
+      "result": "success"
+    }
+  },
+  "automaticPrCiLimit": "PR文件列表超过3000项，自动路径筛选没有选中网页和服务端；自动绿色不构成owning检查证据。"
+}

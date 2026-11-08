@@ -1,0 +1,140 @@
+{
+  "审查提交": "cdba71054cecbfcc598134f422eb3131ce00ebe3",
+  "比较基线": "b6e607b7a8c9e7f2eeae896756547946e41f0271",
+  "冻结目录": "/workspace/lingxi-issue707-scratch/review-cdba7105",
+  "审查方式": "repository-review，独立detached只读；未修改产品、未读取主线程D50源码、未提交/推送/部署；浏览器140/154顺序执行。",
+  "结论": "未通过：两项实际P2；已通过的局部流程不能覆盖这两项失败。",
+  "发现": [
+    {
+      "级别": "P2",
+      "标题": "多选字重菜单按Tab关闭后焦点丢失到BODY",
+      "位置": "src/features/artifacts/native/ElementFontVariantField.tsx:20",
+      "集成位置": "src/features/artifacts/native/ElementFontSelection.tsx:43",
+      "最小复现": [
+        "选择画板标题，再按Shift扩选正文。",
+        "打开属性；在混合字重按钮按ArrowDown，菜单活动项为常规。",
+        "直接按Tab。"
+      ],
+      "实际": "140/154均菜单关闭，document.activeElement为BODY，无role/aria-label且不在编辑器内；0操作写入、无控制台错误。",
+      "原因": "forwardTab阻止默认行为，只查当前.native-field的nextElementSibling；多选字段末尾没有后继，next为空且关闭后未恢复焦点。",
+      "最小修复": "为多选定义现有Inspector中的合法后继，或无可用后继时恢复字重trigger；保留单选已存在的后继路径，不吞掉Tab后失去可见焦点。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-cdba-keyboard140/weight-tab.json",
+        "/workspace/lingxi-issue707-scratch/review-cdba-keyboard154/weight-tab.json",
+        "/tmp/lingxi-review-cdba-keyboard140.log",
+        "/tmp/lingxi-review-cdba-keyboard154.log"
+      ],
+      "范围": "不声称Source完整后继控件序列已对齐；这是新增多选集成的实际可访问焦点回归。"
+    },
+    {
+      "级别": "P2",
+      "标题": "同显示名字体的不同回退栈混合后无法统一",
+      "位置": "src/features/artifacts/native/ElementFontSelection.tsx:42",
+      "相关位置": "src/features/artifacts/native/element-font-properties.ts:9",
+      "最小复现": [
+        "两个选中节点分别声明Arial与Arial, sans-serif。",
+        "属性字体显示混合。",
+        "打开字体菜单，选择全部字体中的阿里亚尔体。"
+      ],
+      "实际": "140/154均仍显示混合，原两份声明保持不变，操作收据0，错误0；明确的整组统一选择被每个节点的单选同显示名noOp短路。",
+      "固定来源实测": {
+        "提交": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+        "资源哈希验证数": 12,
+        "浏览器": "154",
+        "输入": "标题Arial, sans-serif与正文Arial",
+        "操作": "Source Font: Mixed → 搜索Arial，选择最后匹配的菜单结果 → CtrlS并等待网络闲置",
+        "结果": "两节点均为上游字典声明Arial, sans-serif，Font: Arial。原版字典和原生字典字面值不同，但Source确实将整组统一；原生没有写入任何目标。"
+      },
+      "最小修复": "仅在多选family.mixed统一选择时绕过单节点显示名相同noOp，按选中字体的原始family逐节点生成patch，继续保留其他CSS、主题解绑、捕获base及整组readKeys；保留既有单选相同显示名不破坏回退栈的Source语义。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-cdba-stack140/mixed-stack.json",
+        "/workspace/lingxi-issue707-scratch/review-cdba-stack154/mixed-stack.json",
+        "/workspace/lingxi-issue707-scratch/review-cdba-source-stack154/family-before.json",
+        "/workspace/lingxi-issue707-scratch/review-cdba-source-stack154/family-after.json",
+        "/workspace/lingxi-issue707-scratch/review-cdba-source-stack154/reference.json"
+      ],
+      "探针": "/workspace/lingxi-issue707-scratch/review-cdba-probes/multi.mjs；/workspace/lingxi-issue707-scratch/review-cdba-probes/source.mjs"
+    }
+  ],
+  "实际通过": [
+    {
+      "检查": "定向单元",
+      "数量": 20,
+      "命令": "node --import tsx --test src/features/artifacts/native/{element-font-selection,element-font-variant,element-font-picker,element-font-display,element-font-properties}.test.ts",
+      "日志": "/tmp/lingxi-review-cdba-units.log"
+    },
+    {
+      "检查": "当前冻结接受脚本，两浏览器各12流程",
+      "场景": [
+        "multi-font-family",
+        "multi-font-mixed",
+        "multi-font-unset",
+        "multi-font-samecomputed",
+        "multi-font-companion",
+        "multi-font-raw",
+        "multi-font-locked",
+        "multi-font-cas",
+        "multi-font-family-cas",
+        "variant-expression",
+        "variant-companion",
+        "variant-css"
+      ],
+      "结果": "140/154全部通过，包含共享撤销/重做、保存重开、整组冲突/恢复版本、锁定禁用；受控HTTP夹具，不是现实授权服务。",
+      "收据": "/workspace/lingxi-issue707-scratch/review-cdba-probes/stock-results.json"
+    },
+    {
+      "检查": "390×844深色触屏，154",
+      "场景": [
+        "multi-font-family",
+        "multi-font-unset",
+        "multi-font-raw"
+      ],
+      "结果": "三流程通过。",
+      "日志": "/tmp/lingxi-review-cdba-narrow154.log"
+    },
+    {
+      "检查": "额外待保存原始字重草稿的最新锁定与权限撤销，154",
+      "输入": "两个选中节点共同原始字重输入var(--review-weight,600)，peer锁正文或撤销写权限，等待上下文和disabled后关闭属性并下载本地副本。",
+      "结果": "两个原始nodeId的草稿均出现在真实下载JSON；正式文档严格等于远端快照，0写入、无错误。",
+      "收据": [
+        "/workspace/lingxi-issue707-scratch/review-cdba-lock154/design-multi-font-raw.json",
+        "/workspace/lingxi-issue707-scratch/review-cdba-lock154/multi-pending-recovery.json",
+        "/workspace/lingxi-issue707-scratch/review-cdba-permission154/design-multi-font-raw.json",
+        "/workspace/lingxi-issue707-scratch/review-cdba-permission154/multi-pending-recovery.json"
+      ]
+    }
+  ],
+  "其他检查与限制": [
+    {
+      "检查": "git diff --check b6e607b7 HEAD",
+      "通过": false,
+      "退出码": 2,
+      "位置": "src/features/artifacts/native/element-font-selection.ts:35 多余EOF空行；归档原始d49-web-lint.log含尾空格。",
+      "日志": "/tmp/lingxi-review-cdba-diff-check.log",
+      "级别": "低优先级格式事项；保留原始日志，不为消除检查而改写历史输出。"
+    },
+    {
+      "检查": "源与数据流只读追踪",
+      "结果": "操作仍既有commit/CAS/readKeys/retain链路，原始输入draft以捕获旧page与选中ID恢复；无新数据库字段/服务。正常路径通过不排除上述两项具体失败。"
+    },
+    {
+      "检查": "远端CI范围",
+      "结果": "主线程提供cdba CI42468821615绿色。后续9c自动PR CI已发现GitHub文件列表3000上限导致web/server未被选中；本报告没有独立证实cdba该run每项拥有检查，不能将自动绿色当作web/server资格。生产profile42468817729确有独立构建数据，另见图后验；两者不能互相替代。"
+    },
+    {
+      "检查": "本地完整类型/build/服务",
+      "结果": "未重跑本地完整类型或build：精确私有SDK缺失。未安装替身。未独立重跑数据库、全部导出、OS中文IME、50页；父线程证据属于其实际范围，不算本次独立通过。"
+    },
+    {
+      "检查": "全计划门槛",
+      "结果": "完整视觉/复杂CSS/全部键盘和多选面板/真实性能10组ABBA均未通过；未运行bench。评论/Agent实际授权API按用户登记豁免，不扩大豁免范围。"
+    }
+  ],
+  "复现记录": {
+    "冻结脚本重跑": "/workspace/lingxi-issue707-scratch/review-cdba-probes/stock.py",
+    "额外探针": "/workspace/lingxi-issue707-scratch/review-cdba-probes/multi.mjs",
+    "Source只读探针": "/workspace/lingxi-issue707-scratch/review-cdba-probes/source.mjs",
+    "浏览器": "全部已结束并向主线程明确归还。"
+  },
+  "工作树状态": "git status --porcelain为空；仅链接忽略的公共node_modules。"
+}

@@ -10361,7 +10361,9 @@
         "锁定",
         "共享历史",
         "保存重开",
-        "整组冲突恢复"
+        "整组冲突恢复",
+        "混合回退栈统一",
+        "Tab保持可见焦点"
       ],
       "reference": {
         "path": "source-element-font-selection.json",
@@ -10373,12 +10375,13 @@
         "native": "visual/element-font-selection/implementation/",
         "matchedStateVerified": false
       },
-      "result": "限定多选字体/字重流程通过；其他多选属性、全图及最终性能未完成。",
+      "result": "原冻结复审发现两项P2，现已修复并定向复验；新冻结复审与精确提交CI待跑，其他多选属性/全图/性能未完成。",
       "functionalQualified": false,
       "visualQualified": false,
       "testEvidence": {
         "receipt": "functional/element-font-selection.json",
-        "scope": "限定控件状态，不是全部编辑器资格。"
+        "scope": "限定控件状态，不是全部编辑器资格。",
+        "followup": "functional/element-font-selection-review-fixes.json"
       }
     }
   ],

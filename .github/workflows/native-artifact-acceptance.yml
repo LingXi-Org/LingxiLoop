@@ -285,6 +285,8 @@ jobs:
             ${{ runner.temp }}/native-board-title-range/*
             ${{ runner.temp }}/native-text-properties/*
             ${{ runner.temp }}/native-text-properties-exports/*
+            ${{ runner.temp }}/native-element-font*/*.json
+            ${{ runner.temp }}/native-element-font*/*.png
             ${{ runner.temp }}/native-element-link/*.json
             ${{ runner.temp }}/native-element-link/*.png
             ${{ runner.temp }}/native-element-link-exports/*

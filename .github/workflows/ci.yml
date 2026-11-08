@@ -68,6 +68,8 @@ jobs:
       - uses: dorny/paths-filter@v4
         id: paths
         with:
+          # PR API file lists stop at 3000 entries; the full checkout retains every owning change.
+          token: ''
           list-files: json
           predicate-quantifier: some-with-excludes
           filters: |

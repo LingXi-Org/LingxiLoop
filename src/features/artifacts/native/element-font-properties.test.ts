@@ -29,3 +29,11 @@ test('重新选择当前字面字体不丢失作者回退栈或优先级声明',
  assert.deepEqual(elementFontFamilyPatch(node,page,font),{patch:{},unset:[]})
  node.css={'font-family':'Arial, serif !important'};assert.deepEqual(elementFontFamilyPatch(node,page,font),{patch:{},unset:[]})
 })
+
+test('混合组允许统一同名字体栈，单选仍保留作者栈',()=>{
+ const node=createNode('text','stack'),page=createPage('page');node.style={fontFamily:'Arial, serif',fontWeight:700,fontStyle:'italic'}
+ const font={value:'Arial',family:'Arial, sans-serif',label:'阿里亚尔体'}
+ assert.deepEqual(elementFontFamilyPatch(node,page,font),{patch:{},unset:[]})
+ const result=elementFontFamilyPatch(node,page,font,true)
+ assert.equal(result.patch.style?.fontFamily,'Arial, sans-serif');assert.equal(result.patch.style?.fontWeight,undefined);assert.equal(result.patch.style?.fontStyle,undefined)
+})

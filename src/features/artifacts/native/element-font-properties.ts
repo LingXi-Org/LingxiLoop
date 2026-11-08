@@ -4,9 +4,9 @@ import {displayFontFamily} from '../../../../shared/artifact-font-families'
 import {textPropertyPatch} from './element-text-properties'
 
 /** 字体选择只修改字体声明；原字重与斜体继续由作者控制。 */
-export function elementFontFamilyPatch(node:ArtifactNode,page:ArtifactPage,font:EditorFont|null):ReturnType<typeof textPropertyPatch>{
+export function elementFontFamilyPatch(node:ArtifactNode,page:ArtifactPage,font:EditorFont|null,unify=false):ReturnType<typeof textPropertyPatch>{
  const current=node.css?.['font-family']??node.style.fontFamily
- if(font&&!font.theme&&node.style.themeFont===undefined&&node.style.themeFontFallback===undefined&&current&&editorFontKey(displayFontFamily(current))===editorFontKey(displayFontFamily(font.family)))return{patch:{},unset:[]}
+ if(!unify&&font&&!font.theme&&node.style.themeFont===undefined&&node.style.themeFontFallback===undefined&&current&&editorFontKey(displayFontFamily(current))===editorFontKey(displayFontFamily(font.family)))return{patch:{},unset:[]}
  const result=textPropertyPatch(node,page,{'font-family':font?.theme?null:font?.family??null})
  if(font?.theme){
   result.patch.style={...result.patch.style,themeFont:font.theme,themeFontFallback:font.family}
