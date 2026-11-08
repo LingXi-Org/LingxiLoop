@@ -1,0 +1,52 @@
+[
+  {
+    "name": "light",
+    "comparison": "implementation/light/font-popup-comparison.json",
+    "relativeGeometryPassed": true,
+    "absolute": {
+      "x": 0,
+      "y": 0
+    },
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "dark",
+    "comparison": "implementation/dark/font-popup-comparison.json",
+    "relativeGeometryPassed": true,
+    "absolute": {
+      "x": 0,
+      "y": 0
+    },
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "empty",
+    "comparison": "implementation/empty/font-popup-comparison.json",
+    "relativeGeometryPassed": true,
+    "absolute": {
+      "x": 0,
+      "y": 0
+    },
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "narrow",
+    "comparison": "implementation/narrow/font-popup-comparison.json",
+    "relativeGeometryPassed": true,
+    "absolute": {
+      "x": 0,
+      "y": 0.28125
+    },
+    "wholeVisualQualified": false
+  },
+  {
+    "name": "coarse",
+    "comparison": "implementation/coarse/font-popup-comparison.json",
+    "relativeGeometryPassed": true,
+    "absolute": {
+      "x": 0.328125,
+      "y": -50
+    },
+    "wholeVisualQualified": false
+  }
+]

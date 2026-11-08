@@ -3,21 +3,21 @@ import { EditorIcon, Menu, MenuItem, FloatingPopover } from './EditorPrimitives'
 import { editorFontChoice, editorFontVariants, editorFontVariantLabel, type EditorFont, type EditorFontVariant } from './editor-fonts'
 
 const FontPopover = lazy(() => import('./FontPopover'))
-export function FontField({ value, theme, disabled = false, onBegin, onChange }: { value?: string; theme?: string; disabled?: boolean; onBegin(): void; onChange(font: EditorFont): void }) {
+export function FontField({ value, theme, element = false, disabled = false, onBegin, onChange }: { value?: string; theme?: string; element?: boolean; disabled?: boolean; onBegin(): void; onChange(font: EditorFont): void }) {
   const trigger = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
   const restore = useRef(false)
   const close = (restoreFocus = false) => { restore.current = restoreFocus; setOpen(false) }
   useEffect(() => { if (disabled) close() }, [disabled])
   useEffect(() => { if (!open && restore.current) { restore.current = false; if (!disabled) trigger.current?.focus() } }, [open, disabled])
-  const selected = editorFontChoice(value, theme)
+  const selected = editorFontChoice(value, theme),focusSearch=!element||typeof window==='undefined'||!window.matchMedia('(pointer:coarse)').matches
   return <div className="native-field native-font-field" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close() }} onKeyDown={event => { if (open && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(true) } }}>
     <span>字体</span>
     <button ref={trigger} type="button" disabled={disabled} aria-label="字体" aria-haspopup="dialog" aria-expanded={open && !disabled} onClick={() => { if (!open) onBegin(); setOpen(value => !value) }}>
       <span>{selected?.label ?? '自定义字体'}</span><EditorIcon name="chevron" size={12} />
     </button>
-    {open && !disabled && <FloatingPopover anchor={trigger} label="字体选择" align="start" initialFocusSelector="input" className="native-font-popup" onClose={close}>
-      <Suspense fallback={<div role="status" className="native-font-empty">正在加载字体选项…</div>}><FontPopover selected={selected} onChange={onChange} onClose={close} /></Suspense>
+    {open && !disabled && <FloatingPopover anchor={trigger} label="字体选择" align="start" initialFocusSelector={focusSearch?"input":undefined} className={`native-font-popup${element?' native-element-font-popup':''}`} matchAnchorWidth={element} stableWhileOpen={element} gap={element?6:4} onClose={close}>
+      <Suspense fallback={<div role="status" className="native-font-empty">正在加载字体选项…</div>}><FontPopover autoFocus={focusSearch} element={element} selected={selected} onChange={onChange} onClose={close} /></Suspense>
     </FloatingPopover>}
   </div>
 }

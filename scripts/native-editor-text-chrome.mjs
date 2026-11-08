@@ -1,4 +1,10 @@
 /** Browser-only, read-only measurement shared by reference and native probes. */
+export function measureFontPopup(input){
+ const popup=input.closest('.native-font-popup,[role=menu]'),measure=element=>{const css=getComputedStyle(element);return{rect:element.getBoundingClientRect().toJSON(),fontSize:css.fontSize,lineHeight:css.lineHeight,padding:css.padding,borderRadius:css.borderRadius,boxShadow:css.boxShadow,background:css.backgroundColor,color:css.color,boxSizing:css.boxSizing,flex:css.flex,minWidth:css.minWidth,maxWidth:css.maxWidth,width:css.width,height:css.height,margin:css.margin,transform:css.transform}}
+ if(!popup)throw Error('未找到字体弹窗')
+ return{popup:measure(popup),search:measure(input),searchBox:measure(input.parentElement),options:[...popup.querySelectorAll('[role=option],[role=menuitemradio]')].map(element=>({text:element.textContent,...measure(element)}))}
+}
+
 export function measureTextChrome(section){
  const measure=element=>{const style=getComputedStyle(element);return{tag:element.tagName,label:element.getAttribute('aria-label'),role:element.getAttribute('role'),text:element.tagName==='INPUT'?undefined:element.textContent.slice(0,70),rect:element.getBoundingClientRect().toJSON(),fontSize:style.fontSize,lineHeight:style.lineHeight,fontWeight:style.fontWeight,color:style.color,background:style.backgroundColor,padding:style.padding,margin:style.margin,borderRadius:style.borderRadius,borderTop:style.borderTop,boxShadow:style.boxShadow,display:style.display}}
  return{section:measure(section),header:measure(section.firstElementChild),body:measure(section.lastElementChild),controls:[...section.querySelectorAll('input,select,button,summary,[role=radio]')].filter(element=>element.checkVisibility()).map(measure),icons:[...section.querySelectorAll('[data-cds=Icon],svg')].filter(element=>element.checkVisibility()).map(measure),labels:[...section.querySelectorAll('[data-property-row]>div>span:first-child,.native-field>span:first-child,.native-property-pair>span:first-child')].filter(element=>element.checkVisibility()).map(measure)}

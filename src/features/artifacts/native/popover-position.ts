@@ -6,6 +6,7 @@ export function positionEditorPopover(
   align: 'start' | 'end' = 'start',
   minimumWidth?: number,
   gap = 4,
+  collisionHeight?: number,
 ) {
   const editor = anchor
     .closest<HTMLElement>('[data-native-artifact-editor]')
@@ -22,5 +23,5 @@ export function positionEditorPopover(
     width = popup.offsetWidth,
     height = popup.offsetHeight
   popup.style.left = `${Math.max(left + 8, Math.min(right - width - 8, align === 'end' ? bounds.right - width : bounds.left))}px`
-  popup.style.top = `${bounds.bottom + gap + height <= bottom - 8 ? bounds.bottom + gap : Math.max(top + 8, bounds.top - height - gap)}px`
+  popup.style.top = `${bounds.bottom + gap + Math.max(height, collisionHeight ?? height) <= bottom - 8 ? bounds.bottom + gap : Math.max(top + 8, bounds.top - height - gap)}px`
 }

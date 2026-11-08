@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import {measureTextChrome,compareTextChrome} from './native-editor-text-chrome.mjs'
+import {measureTextChrome,compareTextChrome,measureFontPopup} from './native-editor-text-chrome.mjs'
 import {verifyTextPropertiesExports} from './native-editor-text-export-check.mjs'
 import {verifySizingExports} from './native-editor-sizing-export-check.mjs'
 import {elementLink,elementLinkPatch} from '../shared/artifact-element-link.ts'
@@ -32,7 +32,7 @@ import {decodeCommentAnchor,encodeCommentAnchor}from'../shared/artifact-comment-
 const require = createRequire(import.meta.url)
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const options = Object.fromEntries(process.argv.slice(2).map(value => value.replace(/^--/, '').split('=')))
-const supportedChecks = ['element-layout','element-sizing','element-link','board-title','board-transform','design-artboard','os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
+const supportedChecks = ['element-layout','element-sizing','element-link','board-title','board-transform','design-artboard','os-ime','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load', 'slides-present-controls', 'slides-skipped-export', 'slide-speaker', 'slide-transitions', 'undo-focus', 'asset-colors', 'canvas-play-menu', 'asset-reads', 'canvas-board-export', 'canvas-board-preview', 'canvas-board-preview-load', 'canvas-contents', 'canvas-empty', 'canvas-fit-body', 'canvas-fit-switch', 'canvas-flow', 'canvas-import', 'canvas-layout-cache', 'canvas-links', 'canvas-pages', 'canvas-pages-cas', 'canvas-pen', 'canvas-title', 'canvas-vector', 'canvas-vector-edit', 'canvas-vector-edit-cas', 'canvas-vector-edit-load', 'canvas-vector-edit-retention', 'canvas-vector-load', 'canvas-vector-retention', 'cas', 'color-cas', 'colors', 'comments', 'export-ink', 'font-cas', 'font-popup-layout', 'fonts', 'fonts-lazy', 'fonts-readonly', 'history', 'interactions', 'legacy-colors', 'menu-resize', 'narrow', 'parity', 'rail', 'save', 'shapes', 'svg-font', 'svg-font-cancel', 'svg-font-error', 'svg-font-module', 'table', 'table-stability', 'viewport-loading']
 assert.ok(options.checks === undefined || supportedChecks.includes(options.checks), '未知的编辑器检查项：' + options.checks)
 assert.ok(options['source-camera']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-camera requires the matched initial point fixture')
 assert.ok(options['source-toolbar']!=='true'||options['point-matched']==='true'&&options.checks==='canvas-vector-edit'&&options['vector-case']==='initial','--source-toolbar requires the matched initial point fixture')
@@ -104,7 +104,7 @@ async function verifyWholeAndInlineClicks(page,rootSelector='body'){
 }
 
 async function verifyMode(kind, browser, baseUrl, editorCase) {
-  const visualChecks=['element-layout','element-sizing','element-link','board-title','board-transform','design-artboard','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
+  const visualChecks=['element-layout','element-sizing','element-link','board-title','board-transform','design-artboard','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-popup-layout','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
   const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
@@ -3306,6 +3306,26 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.deepEqual(errors,[])
       return{kind:'isolated-font-cas-diagnostic',mode:kind,searchSurvivesRemoteChange:true,remoteFamilyPreserved:true,localSelectionRecoverable:true,saveState:'conflict',scope:'actual React and shared CAS reducer; controlled HTTP fixture',consoleOrPageErrors:errors}
     }
+    if(options.checks==='font-popup-layout') {
+      await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
+      const trigger=page.getByRole('button',{name:'字体',exact:true});await trigger.click()
+      const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor()
+      assert.equal(await search.evaluate(element=>document.activeElement===element),options.touch!=='true','细指针聚焦搜索，触摸打开避免自动唤起软键盘')
+      const initialPopup=await page.locator('.native-font-popup').boundingBox(),anchor=await trigger.boundingBox();if(options['font-query'])await search.fill(options['font-query'])
+      const chrome=await search.evaluate(measureFontPopup);await writeFile(join(output,'font-popup-chrome.json'),JSON.stringify(chrome,null,2)+'\n')
+      await page.screenshot({path:join(output,'font-popup.png')})
+      if(options['font-reference']){
+        const reference=JSON.parse(await readFile(resolve(options['font-reference']),'utf8'))
+        const delta=Object.fromEntries(['popup','search','searchBox'].map(key=>[key,Object.fromEntries(['x','y','width','height'].map(axis=>[axis,(chrome[key].rect[axis]-(['x','y'].includes(axis)?chrome.popup.rect[axis]:0))-(reference[key].rect[axis]-(['x','y'].includes(axis)?reference.popup.rect[axis]:0))]))]))
+        await writeFile(join(output,'font-popup-comparison.json'),JSON.stringify({delta,absolute:{x:chrome.popup.rect.x-reference.popup.rect.x,y:chrome.popup.rect.y-reference.popup.rect.y},wholeVisualQualified:false},null,2)+'\n')
+        assert.ok(Object.values(delta).every(value=>Object.values(value).every(number=>Math.abs(number)<=1)),JSON.stringify(delta))
+        for(const key of ['popup','search','searchBox'])for(const property of ['fontSize','lineHeight','borderRadius'])assert.equal(chrome[key][property],reference[key][property],`${key}.${property}`)
+        for(const property of ['background','color'])assert.equal(chrome.popup[property],reference.popup[property],`popup.${property}`)
+      }
+      if(options['font-query']){if(initialPopup.y+initialPopup.height<=anchor.y)assert.ok(Math.abs(chrome.popup.rect.bottom-(initialPopup.y+initialPopup.height))<=1,'搜索导致弹窗变矮时应保持已打开方向');const before=JSON.stringify(document);await page.getByRole('button',{name:'清空字体搜索',exact:true}).click();assert.equal(await search.inputValue(),'');assert.equal(await search.evaluate(element=>document.activeElement===element),true);assert.equal(JSON.stringify(document),before,'清空搜索不能修改文档')}
+      await search.press('Escape');assert.equal(await trigger.evaluate(element=>document.activeElement===element),true)
+      assert.deepEqual(errors,[]);return{mode:kind,scope:'字体弹窗局部尺寸；完整菜单语义/分组/视觉未通过',consoleOrPageErrors:errors}
+    }
     if(options.checks==='fonts') {
       const fontRequests=editorFontRequests
       const target=page.locator('[data-node-id="page-1-heading"]')
@@ -3318,8 +3338,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(fontRequests.length,0,'unused font files must not load with the editor')
       await page.getByLabel('字重',{exact:true}).click();await page.screenshot({path:join(output,`${kind}-font-weight.png`)});await page.keyboard.press('Escape')
       await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true)
-      const fontPopupGeometry=await page.locator('.native-font-popup').boundingBox();assert.ok(Math.abs(fontPopupGeometry.height-350)<=1,'nested field styles must not shrink the source font search input')
-      const searchGeometry=await search.boundingBox();assert.ok(Math.abs(searchGeometry.x-fontPopupGeometry.x-44)<=1&&Math.abs(searchGeometry.y-fontPopupGeometry.y-10)<=1&&Math.abs(searchGeometry.width-126)<=1&&Math.abs(searchGeometry.height-28)<=1,'字号面板重排不应挤压现有字体搜索；原版弹窗差异单独记录')
+      const fontPopupGeometry=await page.locator('.native-font-popup').boundingBox();await writeFile(join(output,`${kind}-font-popup-chrome.json`),JSON.stringify(await search.evaluate(measureFontPopup),null,2)+'\n');assert.ok(Math.abs(fontPopupGeometry.height-(kind==='design'?300:350))<=1,'字体弹窗高度需匹配对应模式的金标准')
+      const searchGeometry=await search.boundingBox();assert.ok(Math.abs(searchGeometry.x-fontPopupGeometry.x-(kind==='design'?36:44))<=1&&Math.abs(searchGeometry.y-fontPopupGeometry.y-(kind==='design'?8:10))<=1&&Math.abs(searchGeometry.width-(kind==='design'?151:126))<=1&&Math.abs(searchGeometry.height-(kind==='design'?24:28))<=1,'字体搜索框需匹配对应模式的金标准')
       await page.screenshot({path:join(output,`${kind}-font-picker.png`)})
       const fontOptions=page.locator('.native-font-popup').getByRole('option')
       assert.equal(await fontOptions.count(),29)

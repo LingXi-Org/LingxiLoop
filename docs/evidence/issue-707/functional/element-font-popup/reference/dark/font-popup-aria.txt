@@ -1,0 +1,218 @@
+- banner:
+  - button "Page 1, pages": Page 1
+  - button "Select" [pressed]
+  - button "Hand"
+  - button "Text"
+  - button "Artboard"
+  - button "Note"
+  - group "Drawing tools":
+    - button "Pencil"
+    - button "More drawing tools"
+  - group "Shapes":
+    - button "Rectangle"
+    - button "More shapes"
+  - button "Export"
+  - button "Version history"
+  - button "Share"
+  - button "Play"
+  - button "Properties" [pressed]
+  - button "22%, Zoom": 22%
+- main "Canvas":
+  - 'button "Artboard 1 of 3: Page 1"': Page 1
+  - button "Open artboard Page 1 full window"
+  - button "Export artboard Page 1"
+  - iframe
+  - 'button "Artboard 2 of 3: Page 2"': Page 2
+  - button "Open artboard Page 2 full window"
+  - button "Export artboard Page 2"
+  - iframe
+  - 'button "Artboard 3 of 3: Page 3"': Page 3
+  - button "Open artboard Page 3 full window"
+  - button "Export artboard Page 3"
+  - iframe
+- complementary "Properties panel":
+  - tablist "Panel view":
+    - tab "Properties" [selected]
+    - tab "Code"
+    - tab "Tweaks"
+    - tab "Theme"
+  - button "Close properties"
+  - tree "Layers":
+    - treeitem "Page 1" [expanded] [level=1]:
+      - button "Collapse Page 1" [expanded]
+      - text: Page 1
+    - treeitem "group, “LingxiLoop 1”" [expanded] [level=2]:
+      - button "Collapse group “LingxiLoop 1”" [expanded]
+      - text: group “LingxiLoop 1”
+      - button "Hide group “LingxiLoop 1”"
+    - treeitem "Heading, “LingxiLoop 1”" [level=3] [selected]:
+      - text: Heading “LingxiLoop 1”
+      - button "Hide Heading “LingxiLoop 1”"
+    - treeitem "Image" [level=3]:
+      - text: Image
+      - button "Hide Image"
+    - treeitem "group" [level=3]:
+      - text: group
+      - button "Hide group"
+    - treeitem "Page 2" [level=1]:
+      - button "Expand Page 2"
+      - text: Page 2
+    - treeitem "Page 3" [level=1]:
+      - button "Expand Page 3"
+      - text: Page 3
+  - separator "Resize layers list"
+  - button "Align left"
+  - button "Align horizontal centers"
+  - button "Align right"
+  - button "Align top"
+  - button "Align vertical centers"
+  - button "Align bottom"
+  - heading "Size" [level=3]
+  - button "Add to Size"
+  - text: Width
+  - button "Unset Width (use inherited)"
+  - textbox "Width":
+    - /placeholder: 1152px
+    - text: 1152px
+  - 'button "Width mode: Fixed"': Fixed
+  - text: Height
+  - button "Unset Height (use inherited)"
+  - textbox "Height":
+    - /placeholder: 76px
+    - text: 76px
+  - 'button "Height mode: Fixed"': Fixed
+  - text: Position
+  - button "Unset Position (use inherited)"
+  - 'button "Position: Absolute"': Absolute
+  - text: Offset
+  - button "Reset Offset"
+  - text: X
+  - textbox "Offset X":
+    - /placeholder: "64"
+    - text: "64"
+  - text: "Y"
+  - textbox "Offset Y":
+    - /placeholder: "40"
+    - text: "40"
+  - heading "Layout" [level=3]
+  - text: Padding
+  - textbox "Padding":
+    - /placeholder: "0"
+    - text: "0"
+  - text: px
+  - button "Edit padding per side"
+  - text: Margin
+  - button "Reset Margin"
+  - textbox "Margin":
+    - /placeholder: "0"
+    - text: "0"
+  - text: px
+  - button "Edit margin per side"
+  - heading "Link" [level=3]
+  - text: Destination
+  - textbox "Destination":
+    - /placeholder: https://…
+  - heading "Text" [level=3]
+  - button "Add to Text"
+  - text: Text style
+  - 'button "Text style: Heading 1"': Heading 1
+  - text: Font
+  - button "Unset Font (use inherited)"
+  - 'button "Font: Arial" [expanded]': Arial
+  - 'menu "Font: Arial"':
+    - textbox "Search fonts"
+    - text: In this design
+    - group "In this design":
+      - menuitemradio "Arial" [checked]
+    - separator
+    - text: All fonts
+    - group "All fonts":
+      - menuitemradio "Arial" [checked]
+      - menuitemradio "Bebas Neue"
+      - menuitemradio "Caveat"
+      - menuitemradio "Courier New"
+      - menuitemradio "DM Sans"
+      - menuitemradio "Garamond"
+      - menuitemradio "Georgia"
+      - menuitemradio "Helvetica"
+      - menuitemradio "Inter"
+      - menuitemradio "Lato"
+      - menuitemradio "Lora"
+      - menuitemradio "Manrope"
+      - menuitemradio "Merriweather"
+      - menuitemradio "Montserrat"
+      - menuitemradio "Nunito"
+      - menuitemradio "Open Sans"
+      - menuitemradio "Playfair Display"
+      - menuitemradio "Poppins"
+      - menuitemradio "Raleway"
+      - menuitemradio "Roboto"
+      - menuitemradio "Space Grotesk"
+      - menuitemradio "Tahoma"
+      - menuitemradio "Times New Roman"
+      - menuitemradio "Trebuchet MS"
+      - menuitemradio "Verdana"
+      - menuitemradio "Work Sans"
+  - text: Weight
+  - button "Unset Weight (use inherited)"
+  - 'button "Weight: Bold"': Bold
+  - text: Size
+  - button "Unset Size (use inherited)"
+  - textbox "Size":
+    - /placeholder: ""
+    - text: "48"
+  - text: px Spacing
+  - button "Reset Spacing"
+  - textbox "Line height":
+    - /placeholder: 60px
+    - text: "1.25"
+  - textbox "Letter spacing":
+    - /placeholder: normal
+  - text: Color
+  - button "Unset Color (use inherited)"
+  - 'button "Color: #18332B"': "#18332B"
+  - text: Align
+  - radiogroup "Align":
+    - radio "Left" [checked]:
+      - img "Left"
+    - radio "Center":
+      - img "Center"
+    - radio "Right":
+      - img "Right"
+    - radio "Justify":
+      - img "Justify"
+  - heading "Appearance" [level=3]
+  - text: Fill
+  - 'button "Fill: None"': None
+  - text: Opacity
+  - textbox "Opacity":
+    - /placeholder: "1"
+    - text: "1"
+  - text: Radius
+  - textbox "Radius":
+    - /placeholder: "0"
+    - text: "0"
+  - text: px
+  - button "Edit radius per corner"
+  - text: Border
+  - radiogroup "Border":
+    - radio "None" [checked]
+    - radio "Solid":
+      - img "Solid"
+    - radio "Dashed":
+      - img "Dashed"
+    - radio "Dotted":
+      - img "Dotted"
+  - heading "Effects" [level=3]
+  - button "Add to Effects"
+  - heading "Export" [level=3]:
+    - button "Export"
+  - heading "Advanced" [level=3]:
+    - button "Advanced"
+  - heading "Debug" [level=3]
+  - text: "{\"tid\":1,\"tag\":\"h1\",\"parent\":\"div\",\"attrs\":{},\"style\":\"position:absolute;left:64px;top:40px;width:1152px;height:76px;margin:0;font-family:Arial;font-size:48px;font-weight:700;line-height:1.25;color:#18332b\"}"
+  - separator "Resize properties panel"
+- status: Heading, “LingxiLoop 1” selected
+- status
+- status
+- region "Notifications"

@@ -10118,6 +10118,41 @@
         "receipt": "functional/element-text-layout.json",
         "scope": "默认文字局部分组，不代表全部菜单、图标、服务或最终性能。"
       }
+    },
+    {
+      "id": "D43-design",
+      "editor": "design",
+      "control": "画板文字字体弹窗尺寸、搜索清空和方向稳定",
+      "trigger": "字体→搜索无匹配→清空→关闭；深色/窄屏/触摸",
+      "states": [
+        "默认",
+        "空搜索",
+        "深色",
+        "窄容器",
+        "触摸",
+        "撤权",
+        "冲突",
+        "历史重开"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "runtime": "source-element-font-popup.json"
+      },
+      "implementation": "src/features/artifacts/native/FontField.tsx",
+      "screenshots": {
+        "reference": "visual/element-font-popup/reference/",
+        "native": "visual/element-font-popup/implementation/",
+        "manifest": "functional/element-font-popup/matrix.json",
+        "matchedStateVerified": false
+      },
+      "result": "5局部状态几何≤1px；两版两模式原字体功能回归通过。分组/菜单语义、整图及全局触摸偏移未还原。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-font-popup.json",
+        "scope": "仅字体浮层局部，不代表全部选项/语义或最终性能。"
+      }
     }
   ],
   "registeredReplacements": [

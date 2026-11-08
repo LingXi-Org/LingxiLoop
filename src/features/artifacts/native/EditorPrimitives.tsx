@@ -414,18 +414,18 @@ export function Modal({
   )
 }
 
-export function FloatingPopover({anchor,label,className='',align='end',initialFocusSelector,onClose,children}:{anchor:RefObject<HTMLElement|null>;label:string;className?:string;align?:'start'|'end';initialFocusSelector?:string;onClose(restoreFocus?:boolean):void;children:ReactNode}) {
-  const popup=useRef<HTMLDivElement>(null),close=useRef(onClose);close.current=onClose
+export function FloatingPopover({anchor,label,className='',align='end',initialFocusSelector,matchAnchorWidth=false,stableWhileOpen=false,gap=4,onClose,children}:{anchor:RefObject<HTMLElement|null>;label:string;className?:string;align?:'start'|'end';initialFocusSelector?:string;matchAnchorWidth?:boolean;stableWhileOpen?:boolean;gap?:number;onClose(restoreFocus?:boolean):void;children:ReactNode}) {
+  const popup=useRef<HTMLDivElement>(null),largestHeight=useRef(0),close=useRef(onClose);close.current=onClose
   useLayoutEffect(()=>{
     const element=popup.current,button=anchor.current;if(!element||!button)return
     element.showPopover()
-    const update=()=>positionEditorPopover(element,button,align),observer=new ResizeObserver(update)
+    const update=()=>{if(matchAnchorWidth)element.style.width=`${button.getBoundingClientRect().width}px`;largestHeight.current=Math.max(largestHeight.current,element.offsetHeight);positionEditorPopover(element,button,align,undefined,gap,stableWhileOpen?largestHeight.current:undefined)},observer=new ResizeObserver(update)
     observer.observe(element);observer.observe(button)
     const editor=button.closest('[data-native-artifact-editor]');if(editor)observer.observe(editor)
     const toggle=(event:Event)=>{if((event as ToggleEvent).newState==='closed')close.current()}
     element.addEventListener('toggle',toggle);window.addEventListener('resize',update);document.addEventListener('scroll',update,true);update();((initialFocusSelector?element.querySelector<HTMLElement>(initialFocusSelector):null)??element.querySelector<HTMLTextAreaElement>('textarea')??Array.from(element.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')).find(button=>button.checkVisibility()))?.focus({preventScroll:true})
     return()=>{observer.disconnect();element.removeEventListener('toggle',toggle);window.removeEventListener('resize',update);document.removeEventListener('scroll',update,true);queueMicrotask(()=>{if(!element.isConnected)element.hidePopover()})}
-  },[anchor,align,initialFocusSelector])
-  useLayoutEffect(()=>{if(popup.current?.matches(':popover-open')&&anchor.current)positionEditorPopover(popup.current,anchor.current,align)})
+  },[anchor,align,initialFocusSelector,matchAnchorWidth,stableWhileOpen,gap])
+  useLayoutEffect(()=>{if(popup.current?.matches(':popover-open')&&anchor.current){if(matchAnchorWidth)popup.current.style.width=`${anchor.current.getBoundingClientRect().width}px`;largestHeight.current=Math.max(largestHeight.current,popup.current.offsetHeight);positionEditorPopover(popup.current,anchor.current,align,undefined,gap,stableWhileOpen?largestHeight.current:undefined)}})
   return <div ref={popup} popover="auto" role="dialog" aria-label={label} className={`native-floating-popover ${className}`} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();onClose(true)}}}>{children}</div>
 }

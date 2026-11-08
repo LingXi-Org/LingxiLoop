@@ -1,0 +1,82 @@
+{
+  "类型": "冻结生产静态图只读后验",
+  "候选": "4f755a3a2553d85c48382e3e79f4385b3f9c5f62",
+  "基线": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "附加比较": "cf656d08f09c914b2cc614ecefc860b70cf904ea",
+  "来源": {
+    "文件": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-4f755a3a.json",
+    "run": 42438792570,
+    "job": 128603375967,
+    "collectorCommit": "4f755a3a2553d85c48382e3e79f4385b3f9c5f62",
+    "说明": "明确授权固定JSON；不读取其他主工作区WIP。普通CI42438799471成功为主线程提供信息，本轮不冒充独立运行CI。"
+  },
+  "结论": "限定后验通过，未发现新增P1/P2/P3。生产图的提交/闭包/七leaf/React与隔离符合预期。相对cf静态gzip union增加18字节，不能据此推导实际传输、启动或PSS变化；最终性能资格仍false。",
+  "发现": [],
+  "完整性": [
+    "顶层passed=true、qualified=false；两条profile精确为固定721和4f。两臂openingIsolationPassed/buildCompleted/sourceInputsUnchanged=true，uncommittedInputsPossible=false，qualified=false。",
+    "本次baseline整条profile与cf轮的baseline深相等；没有更换固定基线、根或字节口径。",
+    "独立递归全部imports，目标均可解析；app根闭包等于application列表；native双根闭包减app等于nativeIncremental，二者列表不相交。逐块codeBytes/gzipBytes之和与汇总一致。",
+    "候选app41块、native双根静态并集33块、减app后22块；NativeEditor闭包28块、RichTextEditor闭包33块。"
+  ],
+  "图标和React": {
+    "共享块": "assets/artifact-shared-icons-D4niNFtX.js",
+    "codeBytes": 2286,
+    "gzipBytes": 649,
+    "准确名单": [
+      "bot",
+      "chevron-down",
+      "chevron-left",
+      "chevron-right",
+      "ellipsis",
+      "image",
+      "x"
+    ],
+    "核验": "公开模块与名单完全相同，包聚合只有lucide-react/7模块、projectModules为空，无React/ReactDOM/图标工厂；x仍337 rendered UTF16码元。生产audit通过精确7 moduleIds与白名单断言。",
+    "工厂": "共享块只import独立createLucideIcon块，后者使用正常应用index；没有把工厂及React吸入图标块。",
+    "React唯一": "所采app∪native闭包内React和ReactDOM只位于一个应用index块；两臂均8/8模块，renderedCodeUnits分别19130/544433且基线候选相同。该证据不覆盖未采动态闭包或完整浏览器运行。"
+  },
+  "隔离路径": [
+    "两个原生根的完整静态闭包均无@tanstack/query-core/@tanstack/react-query有代码模块；application完整静态闭包也无Query包，没有把这项成本移到所采预热。",
+    "两个原生根均无所列ConversationThread/ConversationMessage/ConversationComposer/NativeMessageContent/ComposerLexicalInput与CodeBlock；无所列parse5/streamdown/shiki/@shikijs/htmlparser2重型包。",
+    "上述结论来自完整chunkDetails递归，不只依赖汇总Top100；仅限所采根静态imports，不等于所有动态路由/Worker/运行时请求。"
+  ],
+  "独立字节复算": {
+    "基线": {
+      "appGzip": 618927,
+      "nativeGzip": 155935,
+      "unionGzip": 774862
+    },
+    "cf": {
+      "appGzip": 621259,
+      "nativeGzip": 217398,
+      "unionGzip": 838657
+    },
+    "4f": {
+      "appGzip": 621247,
+      "nativeGzip": 217428,
+      "unionGzip": 838675
+    },
+    "4f减cf": {
+      "appGzip": -12,
+      "nativeGzip": 30,
+      "unionGzip": 18
+    },
+    "4f相对721增幅百分比": {
+      "union": 8.235401916728403,
+      "native": 39.43502100234071
+    },
+    "范围": "候选app/native raw JS codeBytes仍分别2042690/661217，与cf相同；这里gzip差异为本地逐块压缩估算，未做代码因果分析。CSS资源、动态模块、预热/缓存、实际网络、Worker与PSS不由这些值证明。静态union仍比固定基线高8.2354%，不能宣称5%实际预算合格。"
+  },
+  "复现材料": {
+    "脚本": "/workspace/lingxi-issue707-scratch/review-4f-actual/verify.py",
+    "检查结果": "/workspace/lingxi-issue707-scratch/review-4f-actual/checks.json",
+    "日志": "/tmp/lingxi-review-4f-actual-verify.log",
+    "结果": "全部断言通过；额外核对两轮baseline深相等。"
+  },
+  "边界": [
+    "保留原4f限定功能审查 /tmp/lingxi-review-4f755a3a.json，不覆盖其整体视觉/系统IME/服务与性能未验证项。",
+    "没有重新构建、安装SDK、下载私有build/artifact或跑benchmark；未读取root其他WIP、改产品、提交/推送/部署或外发。",
+    "最新候选尚无本轮真实浏览器收益与最终10组AB/BA性能资格。"
+  ],
+  "最终性能资格": false
+}
