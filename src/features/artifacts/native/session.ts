@@ -1,5 +1,6 @@
 import {artifactPageIds} from '../../../../shared/artifact-canvas-pages'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
+import type {FontFamilyCensus} from '../../../../shared/artifact-font-families'
 import type {TypographyCensus} from '../../../../shared/artifact-typography'
 import { applyOperations, prepareBatch, type ArtifactOperation, type ArtifactOperationBatch } from '../../../../shared/artifact-operations'
 
@@ -26,6 +27,7 @@ export interface DocumentReceipt {
   loadedPageIds?: string[]
   previews?: Record<string, ArtifactPage>
   typography?:TypographyCensus
+  fontFamilies?:FontFamilyCensus
 }
 export interface NativeState {
   document: ArtifactDocument | null
@@ -39,6 +41,7 @@ export interface NativeState {
   loadedPageIds: string[]
   previews?: Record<string, ArtifactPage>
   typography?:TypographyCensus
+  fontFamilies?:FontFamilyCensus
 }
 export interface NativeTransport {
   read(signal?: AbortSignal): Promise<DocumentReceipt>
@@ -97,7 +100,7 @@ export class NativeDocumentSession {
       for (const batch of this.queue) { const result = applyOperations(document, batch); this.rememberSnapshot(result.document, document, batch.operationId, result.changedKeys); document = result.document }
     }
     catch { this.update({ history: receipt.history, error: '同一内容已有新修改。本地修改已保留，请下载副本后重新载入。', conflict: true, loading: false, pending: this.queue.length }); return }
-    this.update({ document, typography:receipt.typography, previews: receipt.previews ?? this.state.previews, history: receipt.history, write: receipt.write ?? this.state.write, original: receipt.original ?? this.state.original, loading: false, pending: this.queue.length, loadedPageIds: [...loaded] })
+    this.update({ document, typography:receipt.typography, fontFamilies:receipt.fontFamilies, previews: receipt.previews ?? this.state.previews, history: receipt.history, write: receipt.write ?? this.state.write, original: receipt.original ?? this.state.original, loading: false, pending: this.queue.length, loadedPageIds: [...loaded] })
   }
   private rememberSnapshot(document: ArtifactDocument, parent: ArtifactDocument, operationId: string, keys: string[]) {
     const anchors = new Map(this.snapshotAnchors.get(parent))

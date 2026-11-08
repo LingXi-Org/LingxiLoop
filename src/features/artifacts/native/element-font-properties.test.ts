@@ -22,3 +22,10 @@ test('来源字重菜单保留当前未列出的字形，不更改文档或重�
  assert.deepEqual(editorFontMenuVariants('Bebas Neue',700,'italic'),[{weight:700,style:'italic',label:'粗体斜体'},{weight:400,style:'normal',label:'常规'}])
  assert.equal(editorFontMenuVariants('Arial',700,'italic').length,4)
 })
+
+test('重新选择当前字面字体不丢失作者回退栈或优先级声明',()=>{
+ const node=createNode('text','same-family'),page=createPage('page');node.style={fontFamily:'Arial, sans-serif'}
+ const font={value:'Arial',family:'Arial',label:'阿里亚尔体'}
+ assert.deepEqual(elementFontFamilyPatch(node,page,font),{patch:{},unset:[]})
+ node.css={'font-family':'Arial, serif !important'};assert.deepEqual(elementFontFamilyPatch(node,page,font),{patch:{},unset:[]})
+})

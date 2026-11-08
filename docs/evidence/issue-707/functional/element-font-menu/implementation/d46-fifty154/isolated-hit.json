@@ -1,0 +1,26 @@
+{
+  "frameBounds": {
+    "x": 952,
+    "y": 273.5,
+    "width": 464,
+    "height": 261
+  },
+  "hit": {
+    "tag": "IFRAME",
+    "class": "native-embed",
+    "outer": "<iframe title=\"隔离内容：点击切换图片透明度\" src=\"http://127.0.0.1:5173/isolated-fixture/page-25/page-25-isolated\" sandbox=\"allow-scripts\" referrerpolicy=\"no-referrer\" class=\"native-embed\" style=\"pointer-events: auto;\"></iframe>"
+  },
+  "iframe": {
+    "box": {
+      "x": 952,
+      "y": 273.5,
+      "width": 464,
+      "height": 261,
+      "top": 273.5,
+      "right": 1416,
+      "bottom": 534.5,
+      "left": 952
+    },
+    "pointer": "auto"
+  }
+}

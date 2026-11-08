@@ -282,3 +282,10 @@ test('写入被拒绝后重读文档仍须显示未保存状态，恢复权限�
   await h.session.open();assert.deepEqual(h.session.getSnapshot().typography,census)
   include=false;await h.session.open();assert.equal(h.session.getSnapshot().typography,undefined);h.session.dispose()
  })
+
+test('字体声明摘要跟随新收据，缺失时清除，避免未加载页面沿用旧字体',async()=>{
+ const h=harness(),read=h.transport.read,fontFamilies={'page-two':{first:['Georgia'],display:['Georgia']}};let include=true
+ h.transport.read=async signal=>({...await read(signal),...(include?{fontFamilies}:{})})
+ await h.session.open();assert.deepEqual(h.session.getSnapshot().fontFamilies,fontFamilies)
+ include=false;await h.session.open();assert.equal(h.session.getSnapshot().fontFamilies,undefined);h.session.dispose()
+})

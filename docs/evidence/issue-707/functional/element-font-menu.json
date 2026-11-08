@@ -1,0 +1,61 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "baselineCommit": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "scope": "D46 Design画板字体菜单分组、只读声明摘要、当前字面字体无变更操作与限定键盘路径。",
+  "source": "element-font-menu/d46-source-font-discovery.json",
+  "implementation": [
+    "独立fontFamilies派生元数据包含无字号分组的字体声明；当前页优先，未加载页摘要参与、本地已加载页覆盖旧摘要、删除页不复活；不修改ArtifactDocument或快照。",
+    "Design按需字体菜单采用26项来源目录，保留此设计中与全部字体的重复项及当前项勾选；继承状态不勾选。Slides保留原组合框。",
+    "所有目录名称、分组、清空、加载、空搜索及标签中文。未知作者字体显示自定义字体序号，声明值原样保存。",
+    "Source实测当前字面字体点击不写回退列表；修复原生曾把Arial, sans-serif写成Arial的一批操作。原生主题引用显式转为字面值时仍解除主题引用。",
+    "键盘方向/Home/End与从选项输入搜索、搜索框Tab进入选项、选项ShiftTab返回字体按钮按来源；向前离开仍缺Source还原字重入口。"
+  ],
+  "validation": {
+    "units": {
+      "passed": 45,
+      "log": "element-font-menu/d46-owning-units.log"
+    },
+    "actualPostgresIntegration": {
+      "passed": 1,
+      "log": "element-font-menu/d46-font-service-integration-final.log",
+      "scope": "现有native-document服务、真实临时PG17、持久化及共享历史、旧快照不可变/未修改页面hash、派生摘要和页体裁剪；不是授权HTTP、Agent或跨租户验收。"
+    },
+    "browser140": "9个menu场景通过：分组、同值回退列表、继承、自定义、键盘、空项、未加载页、主题解绑、真实中文输入法。",
+    "browser154": "同9场景通过；fonts both、CAS both、readonly both及fonts-lazy both（外点/Escape各2）通过；两种编辑器50页遍历/图片公式/共享历史及47未修改页面哈希通过。",
+    "localGeometry": "默认浅色、深色、触摸、390窄容器及细/粗指针空搜索均有局部≤1px通过证据；检查全部菜单行、分组、标题、分隔和空项样式。粗指针全局Y提前50px仍保留。",
+    "lint": "web43警告/4信息，server无诊断；均exit0。",
+    "localTypecheck": "web76和server748私有SDK级联，变更文件0；server与冻结577归一诊断完全相同。未通过，不替代正式CI。",
+    "fiftyPages": {
+      "slides": {
+        "pages": 50,
+        "maxMountedPages": 1,
+        "maxMountedNodes": 7,
+        "untouchedHashes": 47
+      },
+      "design": {
+        "pages": 50,
+        "maxMountedPages": 6,
+        "maxMountedNodes": 22,
+        "untouchedHashes": 47
+      },
+      "scope": "受控HTTP夹具及真实共享reducer/Worker；不是最终性能或授权API验收。"
+    }
+  },
+  "failures": [
+    "首次菜单回归查menu字体选项；旧组件实际为dialog字体选择，修正测试中文名称为既有字体选择并实现菜单角色。",
+    "首次新菜单探针在lazy内容出现前检查分组得到空列表，改为等待搜索输入出现；未改产品计时。",
+    "Tab离开先因下个触发器为summary误选失败，加入summary；随后Source运行确认搜索Tab应先进入菜单项，按来源修改。",
+    "回退列表重选实际产生1批，修复后零写入，Source前后HTML完全相同。",
+    "PG前两次缺测试环境WUKONG/DB变量，补齐公开测试值后真实服务通过；容器已停止移除。",
+    "空搜索触摸输入宽差4.2px；Source清空按钮实测22px、右padding5，修复后通过。",
+    "细指针方向断言首次失败，缺少当时初始bounds，原因未证实；没有修改产品定位或阈值，增加初始/最终矩形记录后同产品三次顺序复查通过，原失败保留。"
+  ],
+  "remaining": [
+    "完整变量/简写CSS、设计系统字体映射、所有混合字体/锁定及全部快捷键状态尚未完成。",
+    "字体菜单向前Tab后继还缺还原字重控件；本次不能称完整键盘还原。",
+    "整图像素、4尺寸双主题所有状态、真实授权评论/Agent与最终至少10组AB/BA性能未通过。"
+  ],
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

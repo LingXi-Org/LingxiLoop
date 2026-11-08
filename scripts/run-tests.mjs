@@ -56,6 +56,7 @@ const testsByScope = {
   web: [
     'src/features/artifacts/native/element-layout.test.ts',
     'src/features/artifacts/native/element-font-properties.test.ts',
+    'src/features/artifacts/native/element-font-picker.test.ts',
     'src/features/artifacts/native/element-alignment.test.ts',
     'src/features/artifacts/native/element-positioning.test.ts',
     'src/features/artifacts/native/element-sizing.test.ts',
@@ -73,6 +74,7 @@ const testsByScope = {
     'shared/artifact-previews.test.ts',
     'shared/artifact-legacy.test.ts',
     'shared/artifact-typography.test.ts',
+    'shared/artifact-font-families.test.ts',
     'shared/artifact-check.test.ts',
     'shared/artifact-node-code.test.ts',
     'src/features/artifacts/native/session.test.ts',

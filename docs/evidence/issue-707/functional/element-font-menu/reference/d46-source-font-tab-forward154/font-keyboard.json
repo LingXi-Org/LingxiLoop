@@ -1,0 +1,67 @@
+[
+  {
+    "step": "open",
+    "active": {
+      "tag": "DIV",
+      "role": "menuitemradio",
+      "label": null,
+      "text": "Arial",
+      "group": "In this design",
+      "menu": null
+    }
+  },
+  {
+    "step": "end",
+    "active": {
+      "tag": "DIV",
+      "role": "menuitemradio",
+      "label": null,
+      "text": "Work Sans",
+      "group": "All fonts",
+      "menu": null
+    }
+  },
+  {
+    "step": "home",
+    "active": {
+      "tag": "DIV",
+      "role": "menuitemradio",
+      "label": null,
+      "text": "Arial",
+      "group": "In this design",
+      "menu": null
+    }
+  },
+  {
+    "step": "type",
+    "active": {
+      "tag": "INPUT",
+      "role": null,
+      "label": "Search fonts",
+      "text": "",
+      "value": "b",
+      "menu": null
+    }
+  },
+  {
+    "step": "tab",
+    "active": {
+      "tag": "DIV",
+      "role": "menuitemradio",
+      "label": null,
+      "text": "Arial",
+      "group": "In this design",
+      "menu": null
+    }
+  },
+  {
+    "step": "tab-forward",
+    "active": {
+      "tag": "BUTTON",
+      "role": null,
+      "label": "Unset Weight (use inherited)",
+      "text": "",
+      "value": ""
+    }
+  }
+]

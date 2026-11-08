@@ -70,3 +70,10 @@ test('文字样式摘要覆盖未加载画板，保持节点裁剪及不可变�
  assert.deepEqual(projection.typography,{p:[{size:48,roles:{Body:1},families:{Arial:1}}]})
  assert.equal(projection.pageVersions.p,'immutable-typography-hash');assert.equal(JSON.stringify(document),before)
 })
+
+test('独立字体摘要保留无字号分组声明，不加载页体或改变页面哈希',()=>{
+ const document=createDocument('design','font-projection'),page=createPage('page'),group=createNode('group','group');group.style={fontFamily:'Georgia'};page.nodes.group=group;page.nodeOrder=['group'];document.pages.page=page;document.pageOrder=['page']
+ const before=JSON.stringify(document),projection=projectNativeSnapshot({document,history:{version:0,undo:null,redo:null},pageVersions:{page:'immutable-font-hash'}},[])
+ assert.deepEqual(projection.fontFamilies,{page:{first:['Georgia'],display:['Georgia']}});assert.deepEqual(projection.document.pages.page.nodes,{})
+ assert.equal(projection.pageVersions.page,'immutable-font-hash');assert.equal(JSON.stringify(document),before)
+})

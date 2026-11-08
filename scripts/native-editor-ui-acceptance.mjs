@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {artifactFontFamilyCensus} from '../shared/artifact-font-families.ts'
 import {artifactTypographyCensus} from '../shared/artifact-typography.ts'
 import {measureTextChrome,compareTextChrome,measureFontPopup} from './native-editor-text-chrome.mjs'
 import {verifyTextPropertiesExports} from './native-editor-text-export-check.mjs'
@@ -113,6 +114,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='font-parity'){
     // 使用普通可编辑文字导出路径；复杂CSS组仍按现有规则整组栅格化。
     if(options['font-exports']==='true')delete document.pages['page-1'].nodes['page-1-root'].css
+    if(editorCase==='menu-theme'){const node=document.pages['page-1'].nodes['page-1-heading'];node.style={...node.style,fontFamily:'Arial',themeFont:'font.custom',themeFontFallback:'Arial'}}
+    if(editorCase==='menu-custom')document.pages['page-1'].nodes['page-1-heading'].style.fontFamily='My Document Font'
+    if(editorCase==='menu-same-stack')document.pages['page-1'].nodes['page-1-heading'].style.fontFamily='Arial, sans-serif'
+    if(editorCase==='menu-unloaded')document.pages['page-3'].nodes['page-3-root'].style.fontFamily='Georgia'
     if(editorCase==='italic')document.pages['page-1'].nodes['page-1-heading'].style.fontStyle='italic'
     if(editorCase==='css-family')document.pages['page-1'].nodes['page-1-heading'].css={'font-family':'Arial'}
     if(editorCase==='reset-parent'){document.pages['page-1'].nodes['page-1-root'].style.fontFamily='Georgia';document.pages['page-1'].nodes['page-1-heading'].css={'font-family':'Arial'}}
@@ -293,8 +298,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   let releaseCanvasBody,canvasBodyLoaded=false,notifyCanvasBody
   const canvasBodyRequested=new Promise(resolve=>{notifyCanvasBody=resolve})
   let speakerPreviewFailure=options['speaker-case']==='preview-error'
-  const delayedPageId=speakerPreviewFailure?'page-3':options.checks==='canvas-fit-body'?'positioned-body':options['preview-body-delay']==='true'?'page-2':null
-  const snapshot = () => ({ typography:kind==='design'?artifactTypographyCensus(document):undefined, document:delayedPageId&&!canvasBodyLoaded?{...document,pages:{...document.pages,[delayedPageId]:{...document.pages[delayedPageId],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:delayedPageId&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!==delayedPageId):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
+  const delayedPageId=options.checks==='font-parity'&&editorCase==='menu-unloaded'?'page-3':speakerPreviewFailure?'page-3':options.checks==='canvas-fit-body'?'positioned-body':options['preview-body-delay']==='true'?'page-2':null
+  const snapshot = () => ({ fontFamilies:kind==='design'?artifactFontFamilyCensus(document):undefined, typography:kind==='design'?artifactTypographyCensus(document):undefined, document:delayedPageId&&!canvasBodyLoaded?{...document,pages:{...document.pages,[delayedPageId]:{...document.pages[delayedPageId],nodes:{},nodeOrder:[]}}}:options.checks==='viewport-loading'?{...document,pages:Object.fromEntries(artifactPageIds(document).map(id=>[id,id==='page-1'?document.pages[id]:{...document.pages[id],nodes:{},nodeOrder:[]}]))}:document, history, write: fixtureWrite, loadedPageIds:delayedPageId&&!canvasBodyLoaded?artifactPageIds(document).filter(id=>id!==delayedPageId):options.checks==='viewport-loading'?['page-1']:artifactPageIds(document),
     pageVersions: Object.fromEntries(artifactPageIds(document).map(id => [id, String(document.versions[`page/${id}`] ?? 0)])) })
   const page = await browser.newPage({ hasTouch:options.touch==='true'||options['speaker-case']==='coarse'||options['presentation-case']==='touch', viewport: { width: Number(options.width??1440), height: Number(options.height??1000) },colorScheme:options['canvas-theme']==='dark'?'dark':'light',reducedMotion:options.checks==='slide-transitions'?'no-preference':'reduce' })
   if (options.checks === 'slides-skipped-export') await page.addInitScript(() => {
@@ -390,7 +395,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(denySpeakerRead&&url.pathname.endsWith('/document')){await route.fulfill({status:403,json:{error:'无权访问'}});return}
     let result = snapshot()
     if(options['speaker-case']==='preview-error'&&url.pathname.endsWith('/pages/page-3')){pageReads.push('page-3');if(speakerPreviewFailure){await route.fulfill({status:503,json:{error:'页面加载失败'}});return}canvasBodyLoaded=true;await route.fulfill({status:200,json:{page:document.pages['page-3']}});return}
-    if(delayedPageId&&url.pathname.endsWith('/pages/'+delayedPageId)){pageReads.push(delayedPageId);await new Promise(resolve=>{releaseCanvasBody=resolve;notifyCanvasBody()});canvasBodyLoaded=true;await route.fulfill({status:200,json:{page:document.pages[delayedPageId]}});return}
+    if(delayedPageId&&!canvasBodyLoaded&&url.pathname.endsWith('/pages/'+delayedPageId)){pageReads.push(delayedPageId);await new Promise(resolve=>{releaseCanvasBody=resolve;notifyCanvasBody()});canvasBodyLoaded=true;await route.fulfill({status:200,json:{page:document.pages[delayedPageId]}});return}
     if(options.checks==='viewport-loading'&&url.pathname.includes('/pages/')){const id=url.pathname.split('/pages/')[1];pageReads.push(id);await route.fulfill({status:200,json:{page:document.pages[id]}});return}
     if (url.pathname.endsWith('/operations')) {
       const batch = request.postDataJSON()
@@ -3196,10 +3201,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
       const trigger=page.getByRole('button',{name:'字体',exact:true}),weight=page.getByLabel('字重',{exact:true})
       if(options.checks==='fonts-readonly'){
-        await trigger.click();await page.getByRole('combobox',{name:'搜索字体',exact:true}).waitFor();fixtureWrite=false
+        await trigger.click();await page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true}).waitFor();fixtureWrite=false
         document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-heading',patch:{style:{opacity:.95}}}])).document
         await page.waitForFunction(()=>document.querySelector('[aria-label="字体"]')?.matches(':disabled'))
-        assert.equal(await page.getByRole('combobox',{name:'搜索字体',exact:true}).count(),0,'losing write permission must close the font popup')
+        assert.equal(await page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true}).count(),0,'losing write permission must close the font popup')
         assert.equal(await trigger.isDisabled(),true);await weight.click();assert.equal(await weight.getAttribute('aria-disabled'),'true');assert.equal(await page.locator('.native-font-variants details[open]').count(),0)
         assert.equal(receipts.length,0);assert.deepEqual(errors,[])
         return{kind:'isolated-readonly-font-diagnostic',mode:kind,fontDisabled:true,weightMenuDisabled:true,committedBatches:receipts.length,consoleOrPageErrors:errors}
@@ -3213,9 +3218,9 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       if(editorCase==='escape')await page.keyboard.press('Escape');else await outside.click()
       release();await page.waitForLoadState('networkidle')
       assert.equal(await trigger.getAttribute('aria-expanded'),'false','an outside action must cancel the pending popup session')
-      assert.equal(await page.getByRole('combobox',{name:'搜索字体',exact:true}).count(),0)
+      assert.equal(await page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true}).count(),0)
       assert.equal(await(editorCase==='escape'?trigger:outside).evaluate(e=>document.activeElement===e),true,'late module arrival must not steal focus')
-      await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true,'cached popup re-entry must focus its search');await search.press('Escape')
+      await trigger.click();const search=page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true,'cached popup re-entry must focus its search');await search.press('Escape')
       assert.deepEqual(errors,[])
       return{kind:'isolated-font-lazy-cancellation-diagnostic',mode:kind,cancelAction:editorCase,actualModuleHeld:true,pendingSessionCancelled:true,lateModuleDoesNotStealFocus:true,cachedReentryFocus:true,consoleOrPageErrors:errors}
     }
@@ -3313,7 +3318,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if(options.checks==='font-cas'){
       await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'字体',exact:true}).click()
-      const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.fill('拉托')
+      const search=page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true});await search.fill('拉托')
       const versionKey='node/page-1/page-1-heading/field/style.fontFamily',capturedVersion=document.versions[versionKey]??0
       document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-heading',patch:{style:{fontFamily:'Tahoma'}}}])).document
       const remoteSeq=String(document.seq)
@@ -3330,9 +3335,38 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if(options.checks==='font-parity'){
       assert.equal(kind,'design');const node=page.locator('[data-node-id="page-1-heading"]');await node.click();await page.getByRole('button',{name:'显示属性',exact:true}).click();const trigger=page.getByRole('button',{name:'字体',exact:true});await trigger.waitFor()
+      if(editorCase.startsWith('menu-')){
+        if(editorCase==='menu-inherited'){await trigger.hover();await page.getByRole('button',{name:'还原字体',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')}
+        const before=JSON.stringify(document),prior=receipts.length
+        if(editorCase==='menu-keyboard')await trigger.press('ArrowDown');else await trigger.click()
+        const menu=page.getByRole('menu',{name:'字体选择',exact:true});await menu.waitFor();const search=menu.getByRole('textbox',{name:'搜索字体',exact:true});await search.waitFor()
+        const used=menu.getByRole('group',{name:'此设计中',exact:true}),all=menu.getByRole('group',{name:'全部字体',exact:true})
+        if(editorCase==='menu-unloaded'){
+          assert.deepEqual(await used.getByRole('menuitemradio').allTextContents(),['阿里亚尔体','乔治亚体']);assert.equal(canvasBodyLoaded,false)
+          await used.getByRole('menuitemradio',{name:'乔治亚体',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'Georgia');canvasBodyLoaded=true;releaseCanvasBody?.();await page.reload();await ready(1);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'Georgia');assert.deepEqual(errors,[]);return{case:editorCase,unloadedFontVisibleBeforeBody:true,ordinarySharedSaveAndReopen:true,consoleOrPageErrors:errors}
+        }
+        if(editorCase==='menu-theme'){
+          await used.getByRole('menuitemradio',{name:'阿里亚尔体',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');const node=document.pages['page-1'].nodes['page-1-heading'];assert.equal(receipts.length,prior+1);assert.equal(node.style.fontFamily,'Arial');assert.equal(node.style.themeFont,undefined);assert.equal(node.style.themeFontFallback,undefined);assert.deepEqual(errors,[]);return{case:editorCase,sameVisibleFamilyClearsNativeThemeReference:true,batches:1,consoleOrPageErrors:errors}
+        }else if(editorCase==='menu-ime'){
+          const cdp=await page.context().newCDPSession(page);await cdp.send('Input.imeSetComposition',{text:'梅里',selectionStart:2,selectionEnd:2});await search.press('Enter');assert.equal(receipts.length,prior);assert.equal(await menu.isVisible(),true);await cdp.send('Input.insertText',{text:'梅里'});await cdp.detach();assert.equal(await search.inputValue(),'梅里');await search.press('Escape')
+        }else if(editorCase==='menu-custom'){
+          assert.deepEqual(await used.getByRole('menuitemradio').allTextContents(),['自定义字体 1','阿里亚尔体']);await search.fill('My Document');assert.equal(await menu.getByRole('menuitemradio').count(),1);await menu.getByRole('menuitemradio',{name:'自定义字体 1',exact:true}).click()
+        }else if(editorCase==='menu-keyboard'){
+          assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('role')),'menuitemradio');await page.keyboard.press('End');assert.equal(await page.evaluate(()=>document.activeElement?.textContent),'工作无衬线体');await page.keyboard.press('Home');assert.equal(await page.evaluate(()=>document.activeElement?.textContent),'阿里亚尔体');await page.keyboard.press('b');assert.equal(await search.inputValue(),'b');assert.equal(await search.evaluate(element=>document.activeElement===element),true);await page.getByRole('button',{name:'清空字体搜索',exact:true}).click();await search.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('role')),'menuitemradio');assert.equal(await menu.isVisible(),true);await page.keyboard.press('Tab');assert.equal(await page.getByLabel('字重',{exact:true}).evaluate(element=>document.activeElement===element),true)
+        }else if(editorCase==='menu-empty'){
+          await search.fill('无匹配的字体');assert.equal(await menu.getByRole('menuitem',{name:'未找到匹配字体',exact:true}).isDisabled(),true);await writeFile(join(output,'font-empty-chrome.json'),JSON.stringify(await search.evaluate(measureFontPopup),null,2)+'\n');await page.getByRole('button',{name:'清空字体搜索',exact:true}).click();assert.equal(await menu.getByRole('menuitemradio').count(),27);await search.press('Escape')
+        }else{
+          assert.deepEqual(await used.getByRole('menuitemradio').allTextContents(),['阿里亚尔体']);assert.equal(await all.getByRole('menuitemradio').count(),26);assert.equal(await menu.getByRole('menuitemradio',{checked:true}).count(),editorCase==='menu-inherited'?0:2)
+          assert.equal(await search.evaluate(element=>document.activeElement===element),options.touch!=='true');await writeFile(join(output,`font-menu-${editorCase}-chrome.json`),JSON.stringify(await search.evaluate(measureFontPopup),null,2)+'\n');await page.screenshot({path:join(output,`font-menu-${editorCase}.png`)})
+          await search.fill('贝巴斯');assert.equal(await menu.getByRole('menuitemradio').count(),1);await page.getByRole('button',{name:'清空字体搜索',exact:true}).click();assert.equal(await menu.getByRole('menuitemradio').count(),27)
+          if(editorCase==='menu-inherited')await search.press('Escape');else await used.getByRole('menuitemradio',{name:'阿里亚尔体',exact:true}).click()
+        }
+        await menu.waitFor({state:'hidden'});assert.equal(receipts.length,prior);assert.equal(JSON.stringify(document),before);if(editorCase!=='menu-keyboard')assert.equal(await trigger.evaluate(element=>document.activeElement===element),true)
+        assert.deepEqual(errors,[]);return{case:editorCase,groupsAnd26Catalog:true,chineseSearch:true,noWrites:true,focusChecked:true,consoleOrPageErrors:errors}
+      }
       const before=structuredClone(document),prior=receipts.length
       if(['reset-parent','reset-default'].includes(editorCase)){await trigger.hover();const reset=page.getByRole('button',{name:'还原字体',exact:true});await reset.waitFor();const chrome=await reset.evaluate(element=>{const result=[];for(let node=element,depth=0;node&&depth<3;node=node.parentElement,depth++){const css=getComputedStyle(node);result.push({tag:node.tagName,rect:node.getBoundingClientRect().toJSON(),display:css.display,padding:css.padding,position:css.position,opacity:css.opacity})}return result});await writeFile(join(output,'font-reset-chrome.json'),JSON.stringify(chrome,null,2)+'\n');await page.screenshot({path:join(output,'font-reset.png')});if(options['font-reset-reference']){const reference=JSON.parse(await readFile(resolve(options['font-reset-reference']),'utf8')),delta=chrome.map((value,index)=>Object.fromEntries(['x','y','width','height'].map(key=>[key,(value.rect[key]-(['x','y'].includes(key)?chrome[2].rect[key]:0))-(reference[index].rect[key]-(['x','y'].includes(key)?reference[2].rect[key]:0))])));await writeFile(join(output,'font-reset-comparison.json'),JSON.stringify({delta,absolute:{x:chrome[0].rect.x-reference[0].rect.x,y:chrome[0].rect.y-reference[0].rect.y},wholeVisualQualified:false},null,2)+'\n');assert.ok(delta.every(row=>Object.values(row).every(value=>Math.abs(value)<=1)),JSON.stringify(delta))}await reset.click();await writeFile(join(output,'font-reset-actual-family.json'),JSON.stringify({family:await node.evaluate(element=>getComputedStyle(element).fontFamily)},null,2)+'\n');await page.waitForFunction(expected=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontFamily.includes(expected),editorCase==='reset-parent'?'Georgia':'Times New Roman');assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,undefined);assert.equal(document.pages['page-1'].nodes['page-1-heading'].css?.['font-family'],undefined);if(editorCase==='reset-parent')await page.waitForFunction(()=>document.querySelector('[aria-label="字体"]')?.textContent.includes('乔治亚体'))}
-      else{await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.fill('贝巴斯');await search.press('ArrowDown');await search.press('Enter');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontFamily.includes('Bebas Neue'));await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');const actual=document.pages['page-1'].nodes['page-1-heading'];await writeFile(join(output,`font-${editorCase}-actual.json`),JSON.stringify({style:actual.style,computed:await node.evaluate(element=>{const css=getComputedStyle(element);return{fontFamily:css.fontFamily,fontWeight:css.fontWeight,fontStyle:css.fontStyle}})},null,2)+'\n');assert.equal(actual.style.fontWeight,700);assert.equal(actual.style.fontStyle??'normal',editorCase==='italic'?'italic':'normal');await page.getByLabel('字重',{exact:true}).click();assert.equal(await page.locator('.native-font-variants .native-menu-popup button').count(),2);await page.keyboard.press('Escape')}
+      else{await trigger.click();const search=page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true});await search.fill('贝巴斯');await search.press('ArrowDown');await search.press('Enter');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontFamily.includes('Bebas Neue'));await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');const actual=document.pages['page-1'].nodes['page-1-heading'];await writeFile(join(output,`font-${editorCase}-actual.json`),JSON.stringify({style:actual.style,computed:await node.evaluate(element=>{const css=getComputedStyle(element);return{fontFamily:css.fontFamily,fontWeight:css.fontWeight,fontStyle:css.fontStyle}})},null,2)+'\n');assert.equal(actual.style.fontWeight,700);assert.equal(actual.style.fontStyle??'normal',editorCase==='italic'?'italic':'normal');await page.getByLabel('字重',{exact:true}).click();assert.equal(await page.locator('.native-font-variants .native-menu-popup button').count(),2);await page.keyboard.press('Escape')}
       await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');assert.deepEqual(document.pages['page-1'].nodes['page-1-heading'].richText,before.pages['page-1'].nodes['page-1-heading'].richText);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontSize,48);assert.equal(receipts.length,prior+1)
       await node.click();await page.keyboard.press('Control+z');await page.waitForFunction(()=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontFamily.includes('Arial'));await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');await page.keyboard.press('Control+Shift+z');await page.waitForFunction(expected=>getComputedStyle(document.querySelector('[data-node-id="page-1-heading"]')).fontFamily.includes(expected),editorCase==='reset-parent'?'Georgia':editorCase==='reset-default'?'Times New Roman':'Bebas Neue');await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');await page.reload();await ready(1);if(options['font-exports']==='true')await mkdir(join(output,editorCase),{recursive:true});const exported=options['font-exports']==='true'?await verifyTextPropertiesExports({page,browser,output:join(output,editorCase),getDocument:()=>document,errors,expectedFont:editorCase==='reset-parent'?'Georgia':editorCase==='reset-default'?'Times New Roman':'Bebas Neue'}):undefined;assert.deepEqual(errors,[]);return{case:editorCase,preservedWeightAndStyle:true,sharedHistoryAndReopen:true,exported,consoleOrPageErrors:errors}
     }
@@ -3407,10 +3441,10 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(options.checks==='font-popup-layout') {
       await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click()
       const trigger=page.getByRole('button',{name:'字体',exact:true});await trigger.click()
-      const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor()
+      const search=page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true});await search.waitFor()
       assert.equal(await search.evaluate(element=>document.activeElement===element),options.touch!=='true','细指针聚焦搜索，触摸打开避免自动唤起软键盘')
       const initialPopup=await page.locator('.native-font-popup').boundingBox(),anchor=await trigger.boundingBox();if(options['font-query'])await search.fill(options['font-query'])
-      const chrome=await search.evaluate(measureFontPopup);await writeFile(join(output,'font-popup-chrome.json'),JSON.stringify(chrome,null,2)+'\n')
+      const chrome=await search.evaluate(measureFontPopup);await writeFile(join(output,'font-popup-initial.json'),JSON.stringify({initialPopup,anchor,finalPopup:chrome.popup.rect},null,2)+'\n');await writeFile(join(output,'font-popup-chrome.json'),JSON.stringify(chrome,null,2)+'\n')
       await page.screenshot({path:join(output,'font-popup.png')})
       if(options['font-reference']){
         const reference=JSON.parse(await readFile(resolve(options['font-reference']),'utf8'))
@@ -3419,6 +3453,15 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         assert.ok(Object.values(delta).every(value=>Object.values(value).every(number=>Math.abs(number)<=1)),JSON.stringify(delta))
         for(const key of ['popup','search','searchBox'])for(const property of ['fontSize','lineHeight','borderRadius'])assert.equal(chrome[key][property],reference[key][property],`${key}.${property}`)
         for(const property of ['background','color'])assert.equal(chrome.popup[property],reference.popup[property],`popup.${property}`)
+        if(reference.groups){
+          const compare=(actual,expected)=>Object.fromEntries(['x','y','width','height'].map(axis=>[axis,(actual.rect[axis]-(['x','y'].includes(axis)?chrome.popup.rect[axis]:0))-(expected.rect[axis]-(['x','y'].includes(axis)?reference.popup.rect[axis]:0))]))
+          assert.equal(chrome.groups.length,reference.groups.length);assert.equal(chrome.options.length,reference.options.length);assert.equal(chrome.separators.length,reference.separators.length);assert.equal(chrome.empty.length,reference.empty?.length??0)
+          const rows=[...chrome.groups.map((group,index)=>({kind:'分组',delta:compare(group,reference.groups[index])})),...chrome.groups.map((group,index)=>({kind:'标题',delta:compare(group.caption,reference.groups[index].caption)})),...chrome.options.map((option,index)=>({kind:'字体行',delta:compare(option,reference.options[index])})),...chrome.separators.map((separator,index)=>({kind:'分隔线',delta:compare(separator,reference.separators[index])})),...chrome.empty.map((empty,index)=>({kind:'空项',delta:compare(empty,reference.empty[index])}))]
+          assert.ok(rows.every(row=>Object.values(row.delta).every(value=>Math.abs(value)<=1)),JSON.stringify(rows));for(const [index,group]of chrome.groups.entries())for(const property of ['fontSize','lineHeight','color'])assert.equal(group.caption.content[property],reference.groups[index].caption.content[property],`分组标题${index}.${property}`)
+          for(const [index,separator]of chrome.separators.entries())assert.equal(separator.background,reference.separators[index].background)
+          for(const [index,empty]of chrome.empty.entries())for(const property of ['fontSize','lineHeight','fontWeight','color','opacity'])assert.equal(empty[property],reference.empty[index][property],`空项${index}.${property}`)
+          await writeFile(join(output,'font-menu-comparison.json'),JSON.stringify({rows,localGeometryPassed:true,wholeVisualQualified:false},null,2)+'\n')
+        }
       }
       if(options['font-query']){if(initialPopup.y+initialPopup.height<=anchor.y)assert.ok(Math.abs(chrome.popup.rect.bottom-(initialPopup.y+initialPopup.height))<=1,'搜索导致弹窗变矮时应保持已打开方向');const before=JSON.stringify(document);await page.getByRole('button',{name:'清空字体搜索',exact:true}).click();assert.equal(await search.inputValue(),'');assert.equal(await search.evaluate(element=>document.activeElement===element),true);assert.equal(JSON.stringify(document),before,'清空搜索不能修改文档')}
       await search.press('Escape');assert.equal(await trigger.evaluate(element=>document.activeElement===element),true)
@@ -3435,12 +3478,12 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(Math.abs(fontGeometry.width-(kind==='design'?203:187))<=1,'字体控件需保持当前模式的测得槽宽')
       assert.equal(fontRequests.length,0,'unused font files must not load with the editor')
       await page.getByLabel('字重',{exact:true}).click();await page.screenshot({path:join(output,`${kind}-font-weight.png`)});await page.keyboard.press('Escape')
-      await trigger.click();const search=page.getByRole('combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true)
+      await trigger.click();const search=page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true});await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true)
       const fontPopupGeometry=await page.locator('.native-font-popup').boundingBox();await writeFile(join(output,`${kind}-font-popup-chrome.json`),JSON.stringify(await search.evaluate(measureFontPopup),null,2)+'\n');assert.ok(Math.abs(fontPopupGeometry.height-(kind==='design'?300:350))<=1,'字体弹窗高度需匹配对应模式的金标准')
       const searchGeometry=await search.boundingBox();assert.ok(Math.abs(searchGeometry.x-fontPopupGeometry.x-(kind==='design'?36:44))<=1&&Math.abs(searchGeometry.y-fontPopupGeometry.y-(kind==='design'?8:10))<=1&&Math.abs(searchGeometry.width-(kind==='design'?151:126))<=1&&Math.abs(searchGeometry.height-(kind==='design'?24:28))<=1,'字体搜索框需匹配对应模式的金标准')
       await page.screenshot({path:join(output,`${kind}-font-picker.png`)})
-      const fontOptions=page.locator('.native-font-popup').getByRole('option')
-      assert.equal(await fontOptions.count(),29)
+      const fontOptions=page.locator('.native-font-popup').getByRole(kind==='design'?'menuitemradio':'option')
+      assert.equal(await fontOptions.count(),kind==='design'?27:29)
       assert.ok((await fontOptions.allTextContents()).every(label=>!/[A-Za-z]/.test(label)))
       await trigger.click();assert.equal(await trigger.getAttribute('aria-expanded'),'false','clicking the font trigger again must close the popup')
       await trigger.click();await search.waitFor();assert.equal(await search.evaluate(e=>document.activeElement===e),true)
@@ -3494,7 +3537,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(popupBounds.x>=editorBounds.x&&popupBounds.x+popupBounds.width<=editorBounds.x+editorBounds.width&&popupBounds.y+popupBounds.height<=844,'the font popup must fit the narrow editor')
       await page.screenshot({path:join(output,`${kind}-font-narrow.png`)});await search.press('Escape')
       assert.deepEqual(errors,[])
-      return{kind:'isolated-font-picker-diagnostic',mode:kind,chineseChoices:29,searchAndKeyboardSelection:true,fontGeometry,fontPopupGeometry,searchGeometry,fontRequestsBeforeOpening:0,selectedFamily:'Merriweather',supportedFacesOnly:true,familyFaceFallbackAndSharedUndo:kind==='slides',familyFacePreservedAndSharedUndo:kind==='design',fontAssets:[...new Set(fontRequests)],savedAndReopened:true,emptySearchChinese:true,escapeRestoresFocus:true,narrowPopupBounds:popupBounds,offlineFontPacking:{loadedFaces,externalRequests:externalFontRequests.length,localFileOpening:false},chineseOnlyFallbackReady:true,scope:'actual React, self-hosted font loading and shared reducer; controlled HTTP fixture; packed HTML font loading is not file-URL opening',consoleOrPageErrors:errors}
+      return{kind:'isolated-font-picker-diagnostic',mode:kind,chineseChoices:kind==='design'?27:29,searchAndKeyboardSelection:true,fontGeometry,fontPopupGeometry,searchGeometry,fontRequestsBeforeOpening:0,selectedFamily:'Merriweather',supportedFacesOnly:true,familyFaceFallbackAndSharedUndo:kind==='slides',familyFacePreservedAndSharedUndo:kind==='design',fontAssets:[...new Set(fontRequests)],savedAndReopened:true,emptySearchChinese:true,escapeRestoresFocus:true,narrowPopupBounds:popupBounds,offlineFontPacking:{loadedFaces,externalRequests:externalFontRequests.length,localFileOpening:false},chineseOnlyFallbackReady:true,scope:'actual React, self-hosted font loading and shared reducer; controlled HTTP fixture; packed HTML font loading is not file-URL opening',consoleOrPageErrors:errors}
     }
     if(options.checks==='table-stability') {
       const table=page.locator('[data-node-id="stable-table"] table'),cell=table.locator('td').first()

@@ -1,3 +1,4 @@
+import {artifactFontFamilyCensus} from '../../../../shared/artifact-font-families.js'
 import {artifactPageIds} from '../../../../shared/artifact-canvas-pages.js'
 import type { ArtifactDocument } from '../../../../shared/artifact-document.js'
 import type { NativeDocumentSnapshot } from './native-document.js'
@@ -10,5 +11,5 @@ export function projectNativeSnapshot<T extends NativeDocumentSnapshot>(snapshot
   const loaded = new Set(ephemeral ? artifactPageIds(snapshot.document) : loadedIds)
   const pages: ArtifactDocument['pages'] = {}
   for (const [id, page] of Object.entries(snapshot.document.pages)) pages[id] = loaded.has(id) ? page : { ...page, nodeOrder: [], nodes: {} }
-  return { ...snapshot, ...(snapshot.document.kind==='design'?{typography:artifactTypographyCensus(snapshot.document)}:{}), previews: artifactPreviews(snapshot.document), document: { ...snapshot.document, pages }, loadedPageIds: [...loaded].filter(id => Boolean(pages[id])) }
+  return { ...snapshot, ...(snapshot.document.kind==='design'?{typography:artifactTypographyCensus(snapshot.document),fontFamilies:artifactFontFamilyCensus(snapshot.document)}:{}), previews: artifactPreviews(snapshot.document), document: { ...snapshot.document, pages }, loadedPageIds: [...loaded].filter(id => Boolean(pages[id])) }
 }

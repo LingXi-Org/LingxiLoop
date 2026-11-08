@@ -74,6 +74,18 @@ test('排版摘要覆盖未加载画板，角色持久化及共享历史不改�
  const redone=await apply(item.id,{operationId:'redo-typography-role',kind:'redo',targetOperationId:'change-typography-role',expectedHistoryVersion:undone.history.version})
  assert.equal(redone.document.pages['page-1'].nodes.title.typographyRole,'Display');assert.equal(redone.pageVersions.other,hash)
 })
+test('独立字体摘要随持久化和共享历史更新，未加载页体仍裁剪且旧快照不可变',async()=>{
+ const item=await artifact('design'),initial=await snapshot(item.id),other=createPage('font-other'),group=createNode('group','font-group'),text=createNode('text','font-text')
+ group.style={fontFamily:'Georgia'};text.style={fontFamily:'Arial'};text.parentId=group.id;text.text='字体摘要不包含正文';other.nodes={[group.id]:group,[text.id]:text};other.nodeOrder=[group.id,text.id]
+ const inserted=await apply(item.id,prepareBatch(initial.document,[{type:'page.insert',page:other}],'insert-font-page')),oldHash=inserted.pageVersions[other.id],untouched=inserted.pageVersions['page-1']
+ const read=async()=>projectNativeSnapshot(await snapshot(item.id),['page-1'])
+ const before=await read();assert.deepEqual(before.fontFamilies?.[other.id],{first:['Georgia','Arial'],display:['Georgia','Arial']});assert.deepEqual(before.document.pages[other.id].nodes,{})
+ const changed=await apply(item.id,prepareBatch(inserted.document,[{type:'node.patch',pageId:other.id,nodeId:group.id,patch:{style:{fontFamily:'Lato'}}}],'change-font-family'))
+ assert.deepEqual((await read()).fontFamilies?.[other.id],{first:['Lato','Arial'],display:['Lato','Arial']});assert.equal(changed.pageVersions['page-1'],untouched)
+ assert.equal((await readNativePage(db,item.id,other.id,oldHash))?.nodes[group.id].style.fontFamily,'Georgia')
+ const undone=await apply(item.id,{operationId:'undo-font-family',kind:'undo',targetOperationId:'change-font-family',expectedHistoryVersion:changed.history.version});assert.equal((await read()).fontFamilies?.[other.id].first[0],'Georgia')
+ await apply(item.id,{operationId:'redo-font-family',kind:'redo',targetOperationId:'change-font-family',expectedHistoryVersion:undone.history.version});const reopened=await read();assert.equal(reopened.fontFamilies?.[other.id].first[0],'Lato');assert.equal(reopened.pageVersions['page-1'],untouched);assert.deepEqual(reopened.document.pages[other.id].nodes,{})
+})
 async function withText() {
   const item = await artifact()
   const initial = await snapshot(item.id), node = createNode('text', 'title')

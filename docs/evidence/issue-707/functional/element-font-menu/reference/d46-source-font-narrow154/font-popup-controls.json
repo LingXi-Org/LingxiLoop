@@ -1,0 +1,97 @@
+[
+  {
+    "tag": "INPUT",
+    "role": null,
+    "label": "Search fonts",
+    "rect": {
+      "x": 148,
+      "y": 372,
+      "width": 190,
+      "height": 24,
+      "top": 372,
+      "right": 338,
+      "bottom": 396,
+      "left": 148
+    },
+    "padding": "0px",
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "html": null
+  },
+  {
+    "tag": "DIV",
+    "role": null,
+    "label": null,
+    "rect": {
+      "x": 120,
+      "y": 372,
+      "width": 226,
+      "height": 24,
+      "top": 372,
+      "right": 346,
+      "bottom": 396,
+      "left": 120
+    },
+    "padding": "0px 8px",
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "html": null
+  },
+  {
+    "tag": "DIV",
+    "role": null,
+    "label": null,
+    "rect": {
+      "x": 120,
+      "y": 372,
+      "width": 226,
+      "height": 24,
+      "top": 372,
+      "right": 346,
+      "bottom": 396,
+      "left": 120
+    },
+    "padding": "0px",
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "html": "<div class=\"m-1 mb-2\"><div data-cds=\"TextInput\" class=\"h-control ps-md rounded bg-fill-field shadow-field-ring data-[invalid]:shadow-field-invalid font-sans text-body font-normal text-primary transition duration-fast pe-md has-[[data-cds-end-slot]_[data-cds=Button]:not([data-cds-ghost])]:pe-[calc((var(--cds-h-control)-var(--cds-h-control-nested))/2)] inline-flex min-w-0 cursor-text items-center gap-[var(--cds-pad-sm,6px)] has-[:focus-visible]:shadow-focus data-[invalid]:has-[:focus-visible]:shadow-focus-danger has-[input:disabled]:opacity-disabled [&amp;:hover:not(:focus-visible):not(:has(:focus-visible)):not([data-invalid]):not([data-disabled])]:shadow-field-hover w-full\"><span class=\"flex shrink-0 items-center text-[color:var(--cds-text-stays-secondary,var(--cds-text-muted))]\"><span data-cds=\"Icon\" class=\"shrink-0 text-muted\" aria-hidden=\"true\" style=\"font-size: calc(0.875rem * var(--cds-rem-scale, 1)); font-weight: 628.6; display: inline-flex;\"></span></span><input placeholder=\"Search fonts\" aria-label=\"Search fonts\" autocomplete=\"off\" spellcheck=\"false\" data-kit=\"list-search\" class=\"cds-input cds-reset min-w-0 flex-1 h-full bg-transparent border-0 p-0 outline-none focus-visible:outline-hidden text-body font-normal text-primary focus-visible:shadow-none placeholder:text-muted disabled:opacity-100\" id=\"base-ui-_r_ic_\" value=\"\"></div></div>"
+  },
+  {
+    "tag": "DIV",
+    "role": null,
+    "label": null,
+    "rect": {
+      "x": 112,
+      "y": 364,
+      "width": 242,
+      "height": 40,
+      "top": 364,
+      "right": 354,
+      "bottom": 404,
+      "left": 112
+    },
+    "padding": "4px 4px 0px",
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "html": null
+  },
+  {
+    "tag": "DIV",
+    "role": null,
+    "label": null,
+    "rect": {
+      "x": 112,
+      "y": 364,
+      "width": 242,
+      "height": 300,
+      "top": 364,
+      "right": 354,
+      "bottom": 664,
+      "left": 112
+    },
+    "padding": "0px",
+    "fontSize": "13px",
+    "lineHeight": "19px",
+    "html": null
+  }
+]

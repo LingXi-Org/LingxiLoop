@@ -10228,6 +10228,46 @@
         "receipt": "functional/element-font-family.json",
         "scope": "原生受控HTTP夹具与固定发布包参考；不是全产品授权、全部字体状态、像素或性能验收。"
       }
+    },
+    {
+      "id": "D46-design",
+      "editor": "design",
+      "control": "字体菜单分组、26项目录与独立声明摘要",
+      "trigger": "文字→字体→此设计中/全部字体→搜索、键盘、继承、空项、自定义、局部加载与当前值",
+      "states": [
+        "默认",
+        "深色",
+        "触摸",
+        "窄容器",
+        "空搜索",
+        "继承",
+        "重复当前项",
+        "未知作者字体",
+        "未加载页",
+        "中文组词",
+        "键盘",
+        "只读",
+        "冲突"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "runtime": "functional/element-font-menu/reference/",
+        "sourceLocations": "functional/element-font-menu/d46-source-font-discovery.json"
+      },
+      "implementation": "ElementFontMenu.tsx、element-font-picker.ts、shared/artifact-font-families.ts、native-projection.ts、session.ts",
+      "screenshots": {
+        "reference": "visual/element-font-menu/reference/",
+        "native": "visual/element-font-menu/implementation/",
+        "matchedStateVerified": false
+      },
+      "result": "两版各9功能场景、限定局部几何、45单位及1真实PG服务集成通过；细指针方向首失败原因未证实并保留；全量字体/完整键盘/整图和性能尚未完成。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-font-menu.json",
+        "scope": "限定字体菜单及派生摘要，不是全产品授权或全部来源状态。"
+      }
     }
   ],
   "registeredReplacements": [
@@ -10286,6 +10326,10 @@
     {
       "area": "字体还原按钮与继承提示",
       "reason": "Unset Font显示还原字体，提示使用继承的字体；字体名称使用中文。作者字体CSS值原样保留，没有据此排除图标或几何。"
+    },
+    {
+      "area": "字体菜单的目录、分组和未知字体",
+      "reason": "此设计中/全部字体及26个名称全部中文；未知作者字体显示自定义字体序号以满足全部组件文案中文，作者声明原值保存，搜索可匹配原值。没有排除几何、图标或性能。"
     }
   ],
   "removedServiceEntrances": [

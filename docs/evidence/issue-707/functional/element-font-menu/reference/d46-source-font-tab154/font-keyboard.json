@@ -1,0 +1,87 @@
+[
+  {
+    "step": "open",
+    "active": {
+      "tag": "DIV",
+      "role": "menuitemradio",
+      "label": null,
+      "text": "Arial",
+      "group": "In this design",
+      "menu": null
+    }
+  },
+  {
+    "step": "end",
+    "active": {
+      "tag": "DIV",
+      "role": "menuitemradio",
+      "label": null,
+      "text": "Work Sans",
+      "group": "All fonts",
+      "menu": null
+    }
+  },
+  {
+    "step": "home",
+    "active": {
+      "tag": "DIV",
+      "role": "menuitemradio",
+      "label": null,
+      "text": "Arial",
+      "group": "In this design",
+      "menu": null
+    }
+  },
+  {
+    "step": "type",
+    "active": {
+      "tag": "INPUT",
+      "role": null,
+      "label": "Search fonts",
+      "text": "",
+      "value": "b",
+      "menu": null
+    }
+  },
+  {
+    "step": "tab",
+    "active": {
+      "tag": "DIV",
+      "role": "menuitemradio",
+      "label": null,
+      "text": "Arial",
+      "group": "In this design",
+      "menu": null
+    }
+  },
+  {
+    "step": "shift-tab",
+    "active": {
+      "tag": "BUTTON",
+      "role": null,
+      "label": "Font: Arial",
+      "text": "Arial",
+      "value": ""
+    }
+  },
+  {
+    "step": "tab-again",
+    "active": {
+      "tag": "BUTTON",
+      "role": null,
+      "label": "Unset Weight (use inherited)",
+      "text": "",
+      "value": ""
+    }
+  },
+  {
+    "step": "tab-out",
+    "active": {
+      "tag": "BUTTON",
+      "role": null,
+      "label": "Weight: Bold",
+      "text": "Bold",
+      "value": ""
+    }
+  }
+]

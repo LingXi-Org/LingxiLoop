@@ -1,0 +1,50 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "locations": [
+    {
+      "lookup": "family:\"Arial\"",
+      "offset": 2914233,
+      "unit": "UTF-16 code units"
+    },
+    {
+      "lookup": "\"isPlainFontFamilyName\"",
+      "offset": 2930827,
+      "unit": "UTF-16 code units"
+    },
+    {
+      "lookup": "\"collectDisplayFontFamilies\"",
+      "offset": 3057241,
+      "unit": "UTF-16 code units"
+    },
+    {
+      "lookup": "\"fontFamilyPickerOptions\"",
+      "offset": 4310072,
+      "unit": "UTF-16 code units"
+    },
+    {
+      "lookup": "pageCensus:Gn",
+      "offset": 4928351,
+      "unit": "UTF-16 code units"
+    },
+    {
+      "lookup": "Search fonts",
+      "offset": 4309790,
+      "unit": "UTF-16 code units"
+    }
+  ],
+  "contracts": [
+    "9个系统字体+17个Web字体=26，所有字体按family排序。",
+    "当前页first声明优先，然后全设计display声明，大小写去重；当前未知值可作为首个自定义选项。",
+    "字号摘要和字体声明相互独立，缺少字号的分组声明也参与字体列表。",
+    "本设计中/全部字体分组，目录中的已用字体在两组重复；来源ARIA同一当前字体两项均checked。",
+    "displayFontFamily跳过通用字体及emoji/symbol；合法显示名排除关键字与图标字体。",
+    "SourcePropertySelect onChange同value不写文档；继承状态value=null、placeholder为实际字体，不勾选项。"
+  ],
+  "runtimeEvidence": [
+    "font-popup-source-dark154/font-popup-aria.txt",
+    "font-popup-source-empty154/font-popup-aria.txt"
+  ],
+  "wholeVisualQualified": false
+}

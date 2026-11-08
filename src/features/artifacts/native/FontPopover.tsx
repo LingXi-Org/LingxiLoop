@@ -1,9 +1,12 @@
+import ElementFontMenu from './ElementFontMenu'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Combobox } from '@base-ui/react/combobox'
 import { EDITOR_FONTS, editorFontFamily, type EditorFont } from './editor-fonts'
 import { EditorIcon } from './EditorPrimitives'
 
-export default function FontPopover({ selected, element = false, autoFocus = true, onChange, onClose }: { selected?: EditorFont; element?: boolean; autoFocus?: boolean; onChange(font: EditorFont): void; onClose(restoreFocus?: boolean): void }) {
+interface Props{selected?:EditorFont;element?:boolean;autoFocus?:boolean;families?:readonly string[];currentFamily?:string;initialKey?:'ArrowDown'|'ArrowUp'|null;onChange(font:EditorFont):void;onClose(restoreFocus?:boolean):void}
+export default function FontPopover(props:Props){return props.element?<ElementFontMenu {...props}/>:<FontCombobox {...props}/>}
+function FontCombobox({ selected, element = false, autoFocus = true, onChange, onClose }:Props) {
   const search = useRef<HTMLInputElement>(null),[query,setQuery]=useState('')
   useLayoutEffect(() => { if (autoFocus && search.current?.closest('[popover]')?.matches(':popover-open')) search.current.focus({ preventScroll: true }) }, [autoFocus])
   return <Combobox.Root<EditorFont> inline open items={EDITOR_FONTS} value={selected ?? null} {...(element?{inputValue:query,onInputValueChange:setQuery}:{defaultInputValue:''})} autoHighlight

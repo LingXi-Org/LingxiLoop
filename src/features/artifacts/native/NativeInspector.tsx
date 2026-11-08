@@ -1,3 +1,4 @@
+import {documentFontFamilies,type FontFamilyCensus} from '../../../../shared/artifact-font-families'
 import {ArrowUpDown,MoveHorizontal} from 'lucide-react'
 import ElementTextProperties from './ElementTextProperties'
 import ElementTextStyle from './ElementTextStyle'
@@ -9,7 +10,7 @@ import ElementTextColor from './ElementTextColor'
 import ElementSizingProperties from './ElementSizingProperties'
 import ElementAlignmentControls from './ElementAlignmentControls'
 import ElementLinkField from './ElementLinkField'
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject, type ComponentProps } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject, type ComponentProps } from 'react'
 import type { ArtifactDocument, ArtifactNode, ArtifactPage } from '../../../../shared/artifact-document'
 import type { ArtifactOperation } from '../../../../shared/artifact-operations'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
@@ -39,6 +40,7 @@ interface Props {
   setInspectorOpen(open: boolean): void
   doc: ArtifactDocument
   typography?:TypographyCensus
+  fontFamilies?:FontFamilyCensus
   loadedPageIds:readonly string[]
   primary?: ArtifactNode
   current?: ArtifactPage
@@ -67,7 +69,7 @@ interface Props {
   selectedWithChildren(): ArtifactNode[]
 }
 
-export default function NativeInspector({measureArtboardHeight,panelWidth,setPanelWidth,outline,inspectorTab, setInspectorTab, setInspectorOpen, doc, primary, current, primaryPadding, kind, canvasContentId, writable, selected, setSelected, inspectorBase, fileInput, replaceImage, getBase, beginInspector, dispatch, inspectDispatch, patchNode, beginCrop, reorderLayer, ungroup, groupSelection, align, distribute, deleteSelection, pasteNodes, selectedWithChildren,typography,loadedPageIds,onNotice,commitCode,retainDraft,codeDrafts,onHistory}: Props) {
+export default function NativeInspector({measureArtboardHeight,panelWidth,setPanelWidth,outline,inspectorTab, setInspectorTab, setInspectorOpen, doc, primary, current, primaryPadding, kind, canvasContentId, writable, selected, setSelected, inspectorBase, fileInput, replaceImage, getBase, beginInspector, dispatch, inspectDispatch, patchNode, beginCrop, reorderLayer, ungroup, groupSelection, align, distribute, deleteSelection, pasteNodes, selectedWithChildren,typography,fontFamilies,loadedPageIds,onNotice,commitCode,retainDraft,codeDrafts,onHistory}: Props) {
   const aside=useRef<HTMLElement|null>(null),[sheet,setSheet]=useState(false)
   useLayoutEffect(()=>{const root=aside.current?.closest<HTMLElement>('[data-native-artifact-editor]');if(!root)return;const update=()=>{setSheet(root.clientWidth<(kind==='design'?600:768));aside.current?.style.setProperty('--native-inspector-root-height',`${root.clientHeight}px`)},observer=new ResizeObserver(update);observer.observe(root);update();return()=>observer.disconnect()},[kind])
   useEffect(()=>{const root=aside.current?.closest<HTMLElement>('[data-native-artifact-editor]');if(root&&root.clientWidth>=600&&inspectorTab==='outline')setInspectorTab('properties')},[sheet,inspectorTab,setInspectorTab])
@@ -78,6 +80,7 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
   const [renderedFont,setRenderedFont]=useState<{key:string;family:string}>()
   useLayoutEffect(()=>{if(!fontNodeKey||!current||!primary)return;const scope=aside.current?.closest('[data-native-artifact-editor]'),element=scope?.querySelector<HTMLElement>(`[data-page-id="${CSS.escape(current.id)}"] [data-node-id="${CSS.escape(primary.id)}"]`);if(!element)return;const family=getComputedStyle(element).fontFamily;setRenderedFont(previous=>previous?.key===fontNodeKey&&previous.family===family?previous:{key:fontNodeKey,family})},[doc,fontNodeKey,current?.id,primary?.id])
   const fontFamily=elementTextInspector&&renderedFont?.key===fontNodeKey?renderedFont.family:primary?artifactResolvedStyle(primary.style,doc).fontFamily:undefined
+  const usedFontFamilies=useMemo(()=>elementTextInspector&&current?documentFontFamilies(doc,current.id,fontFamilies,loadedPageIds):[],[doc,current?.id,fontFamilies,loadedPageIds,elementTextInspector])
   const tabs=[{id:'properties' as const,name:'属性'},...(kind==='design'&&sheet?[{id:'outline' as const,name:'图层'}]:[]),...(kind==='design'?[{id:'code' as const,name:'代码'}]:[]),{id:'theme' as const,name:'主题'}]
   const changeElementFont=(font:EditorFont|null)=>{
     const base=inspectorBase.current??getBase(),page=current&&base?.pages[current.id]
@@ -138,7 +141,7 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
           {kind==='design'&&current&&<ElementLinkField key={`${current.id}:${primary.id}`} node={primary} pageId={current.id} writable={writable} getBase={getBase} commit={commitCode} retain={retainDraft}/>}
           {(primary.type==='text'||primary.type==='note'||primary.type==='table')&&<ElementTextProperties key={`text:${current?.id}:${primary.id}`} node={primary} page={current} enabled={elementTextInspector} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice} alignment={kind==='design'&&current&&current.id!==canvasContentId?<ElementTextAlignment node={current.nodes[primary.id]??primary} page={current} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/>:<div className="native-property-segment"><span>对齐</span><div>{(['left','center','right'] as const).map(direction=><IconButton key={direction} icon={direction} label={({left:'文本左对齐',center:'文本居中',right:'文本右对齐'})[direction]} active={(primary.style.textAlign??'left')===direction} onClick={()=>patchNode({style:{textAlign:direction}})} />)}<button type="button" aria-label="文本两端对齐" aria-pressed={primary.style.textAlign==='justify'} onClick={()=>patchNode({style:{textAlign:'justify'}})}>☰</button></div></div>}>
             {elementTextInspector&&current?<ElementTextStyle key={`style:${current.id}:${selected.join('|')}`} doc={doc} node={primary} nodeIds={selected} page={current} census={typography} loadedPageIds={loadedPageIds} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/>:primary.type!=='table'&&<label className="native-field"><span>文本样式</span><select aria-label="文本样式" value={primary.richText?.content?.[0]?.type==='heading'?String(primary.richText.content[0].attrs?.level??1):'body'} onChange={e=>{const level=Number(e.target.value),heading=!!level,content=primary.richText?.content??[{type:'paragraph' as const,content:[{type:'text' as const,text:primary.text??''}]}];patchNode({richText:{type:'doc',content:content.map(block=>block.type==='paragraph'||block.type==='heading'?{...block,type:heading?'heading':'paragraph',attrs:{...block.attrs,...(heading?{level}: {})}}:block)},style:{fontSize:heading?({1:48,2:36,3:30,4:26,5:22,6:20} as Record<number,number>)[level]:24,fontWeight:heading?700:400}})}}><option value="body">正文</option>{[1,2,3,4,5,6].map(level=><option key={level} value={level}>标题 {level}</option>)}</select></label>}
-            <FontField element={elementTextInspector} disabled={!writable||elementTextInspector&&!!primary.locked} value={fontFamily} theme={elementTextInspector?undefined:primary.style.themeFont} onReset={elementTextInspector&&(primary.style.fontFamily!==undefined||primary.style.themeFont!==undefined||primary.css?.['font-family']!==undefined)?()=>changeElementFont(null):undefined} onBegin={()=>{inspectorBase.current=doc}} onChange={changeFont} />
+            <FontField families={usedFontFamilies} element={elementTextInspector} disabled={!writable||elementTextInspector&&!!primary.locked} value={fontFamily} theme={elementTextInspector?undefined:primary.style.themeFont} onReset={elementTextInspector&&(primary.style.fontFamily!==undefined||primary.style.themeFont!==undefined||primary.css?.['font-family']!==undefined)?()=>changeElementFont(null):undefined} onBegin={()=>{inspectorBase.current=doc}} onChange={changeFont} />
             <FontVariantField preserveCurrent={elementTextInspector} disabled={!writable||elementTextInspector&&!!primary.locked} family={fontFamily} weight={primary.style.fontWeight} style={primary.style.fontStyle} onBegin={()=>{inspectorBase.current=getBase()}} onChange={variant=>patchNode({style:{fontWeight:variant.weight,fontStyle:variant.style}})} />
             <Field label="字号" unit={elementTextInspector} type="number" min={1} max={1000} value={primary.style.fontSize??32} onChange={v=>patchNode({style:{fontSize:Math.max(1,Math.min(1000,Number(v)))}})} />
             <div className="native-property-pair"><span>间距</span>{elementTextInspector?<div className="native-text-spacing-inputs">{textSpacingFields}</div>:textSpacingFields}</div>
