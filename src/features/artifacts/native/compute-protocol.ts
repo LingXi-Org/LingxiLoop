@@ -1,3 +1,4 @@
+import type {PenGeometry} from '../../../../shared/artifact-pen'
 export interface Point { x: number; y: number }
 export interface Rect extends Point { width: number; height: number }
 export interface Bounds extends Rect { id: string }
@@ -21,8 +22,9 @@ export type ComputeTask =
   | { kind: 'validate-bounds'; elements: Bounds[] }
   | { kind: 'resolve-theme'; tokens: ThemeTokens }
   | { kind: 'math'; source: string; display: boolean }
+  | { kind: 'pen'; points:Point[]; tolerance:number }
 
 export type ComputeRequest = { id: number; revision: number; task: ComputeTask }
 export type ComputeMessage = ComputeRequest | { cancel: number }
-export type ComputeValue = null | string[] | Point | MathResult | BoundsIssue[] | ThemeResult
+export type ComputeValue = null | string[] | Point | MathResult | BoundsIssue[] | ThemeResult | PenGeometry
 export type ComputeResponse = { id: number; revision: number; value?: ComputeValue; error?: string }

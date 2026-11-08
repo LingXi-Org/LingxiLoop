@@ -20,3 +20,16 @@ test('case management survives restoration and authentication without leaking in
     else Reflect.deleteProperty(globalThis, 'window')
   }
 })
+
+test('private design page destinations survive login/restoration and clear on conversation navigation',()=>{
+  const original=Object.getOwnPropertyDescriptor(globalThis,'window')
+  let location=new URL('https://example.test/?project=course&view=conversations&conversation=room&design=artifact&canvasPage=page-2')
+  const history={state:null,replaceState:(_state:unknown,_unused:string,path:string)=>{location=new URL(path,location)}}
+  Object.defineProperty(globalThis,'window',{configurable:true,value:{get location(){return location},history}})
+  try{
+    assert.equal(safeAuthReturnPath(location.searchParams),'/?project=course&view=conversations&conversation=room&design=artifact&canvasPage=page-2')
+    writeWebDestination(readWebDestination(),'replace');assert.equal(location.searchParams.get('canvasPage'),'page-2')
+    writeWebDestination({projectId:'course',view:'conversations',conversationId:'other'},'replace')
+    assert.equal(location.searchParams.has('design'),false);assert.equal(location.searchParams.has('canvasPage'),false)
+  }finally{if(original)Object.defineProperty(globalThis,'window',original);else Reflect.deleteProperty(globalThis,'window')}
+})

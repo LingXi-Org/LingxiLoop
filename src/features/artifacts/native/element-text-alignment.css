@@ -1,0 +1,12 @@
+.native-editor .native-element-text-alignment{--native-text-align-track:rgba(11,11,11,.05);--native-text-align-thumb:#fff;--native-text-align-ring:rgba(11,11,11,.05);display:grid;grid-template-columns:76px minmax(0,1fr);align-items:center;gap:8px;min-height:32px;padding:1px 36px 1px 12px;margin:0 -12px 0 -16px;font-size:13px;line-height:19px}
+.native-editor .native-element-text-alignment>span{display:flex;align-items:center;color:var(--native-muted);min-width:0}
+.native-editor .native-element-text-alignment>span>.native-icon-button{width:20px;height:20px;min-height:20px;margin-left:4px;padding:0;opacity:0}
+.native-editor .native-element-text-alignment:hover>span>.native-icon-button,.native-editor .native-element-text-alignment:focus-within>span>.native-icon-button{opacity:1}
+.native-editor .native-element-text-alignment>[role=radiogroup]{position:relative;display:flex;align-items:stretch;min-width:0;height:24px;padding:1px;border-radius:6px;background:var(--native-text-align-track)}
+.native-editor .native-element-text-alignment [data-native-alignment-thumb]{position:absolute;top:1px;bottom:1px;width:calc((100% - 2px)/4);border-radius:5px;background:var(--native-text-align-thumb);box-shadow:0 0 0 1px var(--native-text-align-ring);pointer-events:none}
+.native-editor .native-element-text-alignment [role=radio]{position:relative;z-index:1;display:flex;flex:1;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0;border:0;border-radius:4px;background:transparent;color:var(--native-fg);cursor:default;outline:none}
+.native-editor .native-element-text-alignment [role=radio]:focus-visible{outline:1px solid var(--native-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--native-accent) 12%,transparent)}
+.native-editor .native-element-text-alignment [role=radio][data-disabled]{opacity:.4}
+.dark .native-editor .native-element-text-alignment,.native-editor[data-theme=dark] .native-element-text-alignment{--native-text-align-track:rgba(255,255,255,.05);--native-text-align-thumb:rgba(255,255,255,.1);--native-text-align-ring:rgba(255,255,255,.2)}
+@container(max-width:599px){.native-editor .native-element-text-alignment{grid-template-columns:92px minmax(0,1fr)}}
+@media(pointer:coarse){.native-editor .native-element-text-alignment{min-height:40px;grid-template-columns:calc(76px * 13 / 12) minmax(0,1fr)}.native-editor .native-element-text-alignment>[role=radiogroup]{height:40px}.native-editor .native-element-text-alignment [role=radio]{height:38px;min-width:38px}}

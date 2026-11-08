@@ -1,3 +1,4 @@
+import {copyDesignLinkParameters} from '../../shared/artifact-links'
 import type { ViewKey } from '@/types'
 
 export interface WebDestination {
@@ -43,6 +44,7 @@ export function writeWebDestination(destination: WebDestination, mode: 'push' | 
   if (destination.view === 'cases' && current.searchParams.has('company')) parameters.set('company', current.searchParams.get('company')!)
   if (destination.view === 'cases' && current.searchParams.get('caseView') === 'manage') parameters.set('caseView', 'manage')
   if (destination.view === 'slides' && current.searchParams.get('project') === destination.projectId && current.searchParams.has('deck')) parameters.set('deck', current.searchParams.get('deck')!)
+  copyDesignLinkParameters(current.searchParams,parameters)
   const path = destination.view === 'cases' ? `/cases${caseId ? `/${caseId}` : ''}?${parameters}` : `/?${parameters}`
   if (`${current.pathname}${current.search}${current.hash}` === path) return
   const state=destination.view==='forum' && current.searchParams.get('view')==='forum' && current.searchParams.get('project')===destination.projectId ? window.history.state : null
@@ -67,6 +69,7 @@ export function safeAuthReturnPath(parameters: URLSearchParams): string {
   if (destination.view === 'cases' && parameters.has('company')) next.set('company', parameters.get('company')!)
   if (destination.view === 'cases' && parameters.get('caseView') === 'manage') next.set('caseView', 'manage')
   if (destination.view === 'slides' && parameters.has('deck')) next.set('deck', parameters.get('deck')!)
+  copyDesignLinkParameters(parameters,next)
   if (destination.view === 'cases') return `${window.location.pathname.startsWith('/cases') ? window.location.pathname : '/cases'}?${next}`
   return `/?${next}`
 }

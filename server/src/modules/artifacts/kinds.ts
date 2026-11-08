@@ -14,11 +14,7 @@ export const BAOYU_DESIGN_ROOT = fileURLToPath(new URL('../../../../third_party/
 export interface ArtifactLayout {
   blobDir: string
   isFile(rel: string): boolean
-  maxFiles: number
-  maxPublishBytes: number
-  maxFileBytes: number
   maxBlobBytes: number
-  readOnlyMessage(path: string): string
 }
 
 export interface ArtifactKindDefinition {
@@ -97,11 +93,7 @@ export const ARTIFACT_KIND_DEFINITIONS: Record<ArtifactKind, ArtifactKindDefinit
       blobDir: 'assets',
       isFile: isDesignFile,
       /** The format's limits: at most 512 files; one save writes at most 16 MB. */
-      maxFiles: 512,
-      maxPublishBytes: 16 * MB,
-      maxFileBytes: 16 * MB,
       maxBlobBytes: 20 * MB,
-      readOnlyMessage: p => `${p}: files under assets/, hidden paths and path segments outside [A-Za-z0-9_][A-Za-z0-9_.-]* can't be written`,
     },
     /** Boards run inline scripts, compile JSX with Babel (eval) and load from blob:. */
     pageScriptSrc: () => "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:",
@@ -126,11 +118,7 @@ export const ARTIFACT_KIND_DEFINITIONS: Record<ArtifactKind, ArtifactKindDefinit
     layout: {
       blobDir: 'assets',
       isFile: isSlidesFile,
-      maxFiles: 512,
-      maxPublishBytes: 16 * MB,
-      maxFileBytes: 16 * MB,
       maxBlobBytes: 20 * MB,
-      readOnlyMessage: p => `${p}: only deck.json, slides/*.html and ds/** can be written`,
     },
     /**
      * The editor page's own files, plus index.html's inline scripts by hash. 'unsafe-eval': the PPTX export's WOFF2

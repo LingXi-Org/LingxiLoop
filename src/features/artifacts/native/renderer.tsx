@@ -1,10 +1,24 @@
-import { createElement, Fragment, lazy, memo, Suspense, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import {isFlowChild} from '../../../../shared/artifact-geometry'
+import {artifactTextHeading,artifactTextRootTag} from '../../../../shared/artifact-text-root'
+import {pageRadiusCss} from '../../../../shared/artifact-page-radius'
+import { canvasContentOwner } from '../../../../shared/artifact-canvas-pages'
+import { artifactShapeGeometry,artifactUsesBoxRectangle } from '../../../../shared/artifact-shapes'
+import { createElement, Fragment, lazy, memo, Suspense, useEffect, useLayoutEffect, useRef, useState, useId, type CSSProperties, type ReactNode } from 'react'
 import type { ArtifactAsset, ArtifactDocument, ArtifactNode, ArtifactPage, ArtifactRichText, ArtifactStyle } from '../../../../shared/artifact-document'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
 import { http } from '@/api/core/http'
-import { fetchArtifactAsset } from './assets'
+import { useArtifactAssetRead } from './asset-read-context'
 import type { NativeCompute } from './compute'
 import { useLocalDraft } from './draft-context'
+import { appearance, nodeTransform, paddingCss } from '../../../../shared/artifact-appearance'
+import { editorFontFamily } from './editor-fonts'
+import { SvgImage } from './SvgImage'
+import {expandVisibleNodes} from './visibility'
+import {isNaturalText} from './natural-layout'
+import {canvasTextMetrics} from '../../../../shared/artifact-canvas-typography'
+import { inheritedSvgFont, pageDefaultFontFamily } from './svg-presentation'
+import './editor-fonts.css'
+import {codeStyleProperties,codeAttributeProperties} from '../../../../shared/artifact-node-code'
 
 const RichTextEditor = lazy(() => import('./RichTextEditor'))
 let mathStyles: Promise<unknown> | undefined
@@ -12,7 +26,7 @@ export function richTextContent(value: ArtifactRichText): ReactNode {
   if (value.type === 'text') {
     let content: ReactNode = value.text ?? ''
     for (const mark of value.marks ?? []) {
-      if (mark.type === 'link') content = <a href={mark.attrs?.href} rel="noopener noreferrer" target={mark.attrs?.target}>{content}</a>
+      if (mark.type === 'link') content = <a style={{color:'inherit'}} href={mark.attrs?.href} rel="noopener noreferrer" target={mark.attrs?.target}>{content}</a>
       else content = createElement(({ bold: 'strong', italic: 'em', underline: 'u', strike: 's', code: 'code' } as const)[mark.type], null, content)
     }
     return content
@@ -23,38 +37,58 @@ export function richTextContent(value: ArtifactRichText): ReactNode {
   const tag = value.type === 'heading' ? `h${value.attrs?.level ?? 2}` : ({ paragraph: 'p', bulletList: 'ul', orderedList: 'ol', listItem: 'li', blockquote: 'blockquote' } as const)[value.type]
   return createElement(tag, { style: { textAlign: value.attrs?.textAlign }, ...(value.type === 'orderedList' ? { start: value.attrs?.start } : {}) }, content)
 }
-export function nativeStyle(source: ArtifactStyle, document: ArtifactDocument): CSSProperties {
+export function nativeStyle(source: ArtifactStyle, document: ArtifactDocument, boxRectangle = false): CSSProperties {
   const style = artifactResolvedStyle(source, document)
-  return { backgroundColor: style.backgroundColor ?? style.fill, color: style.color, fontFamily: style.fontFamily,
+  return { ...appearance(style), backgroundColor: boxRectangle&&style.gradient?'transparent':style.backgroundColor??style.fill??(boxRectangle?'#d6e6ff':undefined), color: style.color, fontFamily: editorFontFamily(style.fontFamily),
     fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight, fontStyle: style.fontStyle, textAlign: style.textAlign,
-    textDecoration: style.textDecoration, lineHeight: style.lineHeight ?? 1.25, padding: style.padding,
+    textDecorationLine: style.textDecoration, lineHeight: style.lineHeight ?? 1.25, padding:paddingCss(style),
     opacity: style.opacity, borderRadius: style.borderRadius,
-    ...((style.borderColor ?? style.stroke) ? { border: `${style.borderWidth ?? style.strokeWidth ?? 1}px solid ${style.borderColor ?? style.stroke}` } : {}) }
+    border:(style.borderColor ?? style.stroke)?`${style.borderWidth ?? style.strokeWidth ?? 1}px ${style.borderStyle ?? 'solid'} ${style.borderColor ?? style.stroke}`:undefined }
+}
+export function applyCodeStyle(element:HTMLElement|null,css:Record<string,string>){
+  if(!element)return
+  // Invalid replacements must remove the previous declaration, as a source edit does.
+  for(const [name,value]of Object.entries(css)){element.style.removeProperty(name);element.style.setProperty(name,value.replace(/\s*!important\s*$/i,''),/!important\s*$/i.test(value)?'important':'')}
+  // React skips equal ordinary values; clear priorities before its next style diff.
+  return()=>{for(const name of Object.keys(css))if(element.style.getPropertyPriority(name))element.style.setProperty(name,element.style.getPropertyValue(name),'')}
+}
+function AssetVideo({ asset, documentId, presenting, style }: { asset: ArtifactAsset; documentId: string; presenting?: boolean; style?: CSSProperties }) {
+  const [source, setSource] = useState<string | null>(null), [failed, setFailed] = useState(false)
+  const [attempt, setAttempt] = useState(0)
+  const readAsset = useArtifactAssetRead()
+  useEffect(() => {
+    const controller = new AbortController(); let url: string | undefined
+    setSource(null); setFailed(false)
+    void readAsset(asset, documentId, controller.signal).then(blob => { if (!controller.signal.aborted) { url = URL.createObjectURL(blob); setSource(url) } }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
+    return () => { controller.abort(); if (url) URL.revokeObjectURL(url) }
+  }, [asset.url, asset.sha256, documentId, attempt, readAsset])
+  return failed ? <button type="button" onClick={() => setAttempt(v => v + 1)}>重试视频</button> : source ? <video src={source} controls={presenting} preload="metadata" playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', ...style }} /> : <span aria-busy="true">加载视频…</span>
 }
 function AssetImage({ asset, artifactId, alt, style }: { asset: ArtifactAsset; artifactId: string; alt: string; style: CSSProperties }) {
   const [source, setSource] = useState<string | null>(null)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const readAsset = useArtifactAssetRead()
   useEffect(() => {
     const controller = new AbortController(); let objectUrl: string | undefined
     setSource(null); setFailed(false)
-    void fetchArtifactAsset(asset, artifactId, controller.signal).then(blob => {
+    void readAsset(asset, artifactId, controller.signal).then(blob => {
       if (controller.signal.aborted) return
       objectUrl = URL.createObjectURL(blob); setSource(objectUrl)
     }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
     return () => { controller.abort(); if (objectUrl) URL.revokeObjectURL(objectUrl) }
-  }, [asset.url, asset.sha256, artifactId, attempt])
+  }, [asset.url, asset.sha256, artifactId, attempt, readAsset])
   return failed ? <button type="button" onClick={() => setAttempt(value => value + 1)}>重试图片</button> : source ? <img src={source} alt={alt} draggable={false} decoding="async" style={style} /> : <span aria-busy="true" style={{ fontSize: 14 }}>加载图片…</span>
 }
-function IsolatedEmbed({ documentId, pageId, node, presenting }: { documentId: string; pageId: string; node: ArtifactNode; presenting?: boolean }) {
+function IsolatedEmbed({ documentId, pageId, node, presenting, pageVersion, revisionSeq }: { documentId: string; pageId: string; node: ArtifactNode; presenting?: boolean;pageVersion?:string;revisionSeq?:string }) {
   const [url, setUrl] = useState<string | null>(null), [failed, setFailed] = useState(false)
   useEffect(() => {
     if (!node.embed?.sourceHash) return
     const controller = new AbortController()
     setUrl(null); setFailed(false)
-    void http<{ url: string }>(`/artifacts/${encodeURIComponent(documentId)}/embeds/${encodeURIComponent(pageId)}/${encodeURIComponent(node.id)}/grant`, { method: 'POST', body: JSON.stringify({ sha256: node.embed.sourceHash }), signal: controller.signal }).then(grant => { if (!controller.signal.aborted) setUrl(grant.url) }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
+    void http<{ url: string }>(`/artifacts/${encodeURIComponent(documentId)}/embeds/${encodeURIComponent(pageId)}/${encodeURIComponent(node.id)}/grant`, { method: 'POST', body: JSON.stringify({ sha256: node.embed.sourceHash,...(pageVersion?{pageHash:pageVersion}:{}),...(revisionSeq!==undefined?{revisionSeq}:{}) }), signal: controller.signal }).then(grant => { if (!controller.signal.aborted) setUrl(grant.url) }).catch(() => { if (!controller.signal.aborted) setFailed(true) })
     return () => controller.abort()
-  }, [documentId, pageId, node.id, node.embed?.sourceHash, node.embed?.resourceVersion])
+  }, [documentId, pageId, node.id, node.embed?.sourceHash, node.embed?.resourceVersion,pageVersion,revisionSeq])
   return url ? <iframe title={node.text ?? '隔离内容'} src={url} sandbox="allow-scripts" referrerPolicy="no-referrer" className="native-embed" style={{ pointerEvents: presenting ? 'auto' : 'none' }} /> : <div className="native-embed-wait">{failed ? '隔离内容暂时无法载入' : '正在载入隔离内容'}</div>
 }
 function MathContent({ source, revision, compute }: { source: string; revision: number; compute: NativeCompute }) {
@@ -74,10 +108,12 @@ function MathContent({ source, revision, compute }: { source: string; revision: 
   return <span className="native-math" data-formula-ready="true" dangerouslySetInnerHTML={{ __html: result.html }} />
 }
 export interface PageRenderProps {
+  measureOnly?:boolean
   document: ArtifactDocument
   page: ArtifactPage
   compute: NativeCompute
   editingId?: string | null
+  vectorEditingId?:string
   onTextChange?(nodeId: string, value: ArtifactRichText, text: string): void
   onFinishText?(): void
   onCellChange?(nodeId: string, row: number, column: number, text: string): void
@@ -85,8 +121,12 @@ export interface PageRenderProps {
   onFlowSize?(pageId: string, height: number): void
   visibleNodeIds?: ReadonlySet<string>
   contentBottom?: number
+  canvasOnly?: boolean
+  pageVersion?:string
+  revisionSeq?:string
+  cropEditingId?: string | null
 }
-function TableCell({ value, editing, onCommit }: { value: string; editing: boolean; onCommit(value: string): void }) {
+function TableCell({ value, editing, header, label, row, column, onCommit }: { value: string; editing: boolean; header: boolean; label: string; row: number; column: number; onCommit(value: string): void }) {
   const root = useRef<HTMLTableCellElement>(null)
   const [rendered, setRendered] = useState(value)
   const focused = useRef(false), dirty = useRef(false), composing = useRef(false), flushAfterComposition = useRef(false)
@@ -102,37 +142,51 @@ function TableCell({ value, editing, onCommit }: { value: string; editing: boole
     if (!focused.current) { baseline.current = value; draft.current = value; setRendered(value); if (root.current) root.current.textContent = value; dirty.current = false; markDirty(false) }
   }, [value, markDirty])
   const input = () => { draft.current = root.current?.textContent ?? ''; dirty.current = draft.current !== baseline.current; markDirty(dirty.current || composing.current) }
-  return <td ref={root} contentEditable={editing} suppressContentEditableWarning onFocus={() => { focused.current = true }} onInput={input}
+  // Keep the editing host when a collaborator changes the header role.
+  return <td ref={root} style={{gridRow:row+1,gridColumn:column+1}} role={header?'columnheader':'cell'} aria-label={label} contentEditable={editing} suppressContentEditableWarning onFocus={() => { focused.current = true }} onInput={input}
     onCompositionStart={() => { composing.current = true; markDirty(true) }} onCompositionEnd={() => { composing.current = false; input(); if (flushAfterComposition.current) { flushAfterComposition.current = false; queueMicrotask(save) } }}
     onPaste={event => { event.preventDefault(); window.document.execCommand('insertText', false, event.clipboardData.getData('text/plain')) }}
     onPointerDown={event => { if (editing) event.stopPropagation() }} onBlur={() => { focused.current = false; save(); if (!composing.current) { setRendered(latest.current.value); if (root.current) root.current.textContent = latest.current.value } }}>{rendered}</td>
 }
-function NodeContent({ node, document, page, compute, editingId, onTextChange, onFinishText, onCellChange, presenting }: PageRenderProps & { node: ArtifactNode }) {
-  node = { ...node, style: artifactResolvedStyle(node.style, document) }
+/** Flow groups are atomic layout units, matching ordinary visibility expansion.
+ * Non-text content stays unloaded; direct notes are measured eight at a time. */
+export function NaturalNoteMeasurements({page,nodes,document,compute}:{page:ArtifactPage;nodes:ArtifactNode[];document:ArtifactDocument;compute:NativeCompute}){
+  const visibleNodeIds=expandVisibleNodes(page,nodes.map(node=>node.id))
+  return <div className="native-free-canvas-shell native-natural-measurements" data-natural-measure-page={page.id} aria-hidden="true" inert><PageContent page={page} document={document} compute={compute} visibleNodeIds={visibleNodeIds} measureOnly /></div>
+}
+function NodeContent({ node, document, page, compute, pageVersion, revisionSeq, editingId, cropEditingId, onTextChange, onFinishText, onCellChange, presenting,headingRoot=false,headingId }: PageRenderProps & { node: ArtifactNode;headingRoot?:boolean;headingId?:string }) {
+  node = { ...node, ...(cropEditingId===node.id ? {crop:undefined} : {}), style: artifactResolvedStyle(node.style, document) }
+  const gradient = node.style.gradient
+  const fill = gradient ? `url(#native-gradient-${node.id})` : node.style.fill ?? '#d6e6ff'
   switch (node.type) {
-    case 'text': return editingId === node.id && onTextChange ? <Suspense fallback={<span>{node.text}</span>}><RichTextEditor value={node.richText} text={node.text ?? ''} onChange={(value, text) => onTextChange(node.id, value, text)} onFinish={() => onFinishText?.()} /></Suspense> : <div className="native-text-content">{node.richText ? richTextContent(node.richText) : node.text}</div>
+    case 'note':
+    case 'text': return editingId === node.id && onTextChange ? <Suspense fallback={<span>{node.text}</span>}><RichTextEditor value={node.richText} text={node.text ?? ''} onChange={(value, text) => onTextChange(node.id, value, text)} onFinish={() => onFinishText?.()} /></Suspense> : headingRoot ? <span id={headingId} className="native-text-content" style={{display:'contents'}}>{richTextContent({type:'doc',content:artifactTextHeading(node)?.content})}</span> : <div className="native-text-content">{node.richText ? richTextContent(node.richText) : node.text}</div>
     case 'math': return <MathContent source={node.source ?? ''} revision={document.seq} compute={compute} />
+    case 'video': {
+      const asset = node.assetId ? document.assets[node.assetId] : undefined
+      const crop=node.crop??{x:0,y:0,width:1,height:1}
+      return asset ? <div className="native-image-crop"><AssetVideo asset={asset} documentId={document.id} presenting={presenting} style={{width:`${100/Math.max(.01,crop.width)}%`,height:`${100/Math.max(.01,crop.height)}%`,maxWidth:'none',transform:`translate(${-crop.x*100}%,${-crop.y*100}%)`}} /></div> : null
+    }
     case 'image': {
       const asset = node.assetId ? document.assets[node.assetId] : undefined
       const crop = node.crop ?? { x: 0, y: 0, width: 1, height: 1 }
       return asset ? <div className="native-image-crop"><AssetImage asset={asset} artifactId={document.id} alt={node.text ?? ''} style={{ width: `${100 / Math.max(.01, crop.width)}%`, height: `${100 / Math.max(.01, crop.height)}%`, maxWidth: 'none', transform: `translate(${-crop.x * 100}%,${-crop.y * 100}%)`, objectFit: 'cover' }} /></div> : <span role="img" aria-label="图片资源缺失">图片资源缺失</span>
     }
-    case 'svg': return <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(node.svg ?? '')}`} alt={node.text ?? '图形'} draggable={false} className="native-svg-image" />
-    case 'shape': return <svg viewBox={`0 0 ${node.width} ${node.height}`} width="100%" height="100%" aria-label="形状" style={{ overflow: 'visible' }}>
-      {node.shape === 'ellipse' ? <ellipse cx={node.width / 2} cy={node.height / 2} rx={node.width / 2 - 2} ry={node.height / 2 - 2} fill={node.style.fill ?? '#d6e6ff'} stroke={node.style.stroke} strokeWidth={node.style.strokeWidth} />
-        : node.shape === 'triangle' ? <polygon points={`${node.width / 2},0 ${node.width},${node.height} 0,${node.height}`} fill={node.style.fill ?? '#d6e6ff'} stroke={node.style.stroke} strokeWidth={node.style.strokeWidth} />
-        : node.shape === 'diamond' ? <polygon points={`${node.width / 2},0 ${node.width},${node.height / 2} ${node.width / 2},${node.height} 0,${node.height / 2}`} fill={node.style.fill ?? '#d6e6ff'} stroke={node.style.stroke} strokeWidth={node.style.strokeWidth} />
-        : node.shape === 'arrow' ? <polygon points={`0,${node.height * .3} ${node.width * .65},${node.height * .3} ${node.width * .65},0 ${node.width},${node.height / 2} ${node.width * .65},${node.height} ${node.width * .65},${node.height * .7} 0,${node.height * .7}`} fill={node.style.fill ?? '#d6e6ff'} stroke={node.style.stroke} strokeWidth={node.style.strokeWidth} />
-        : <rect x="1" y="1" width={Math.max(0, node.width - 2)} height={Math.max(0, node.height - 2)} rx={node.style.borderRadius ?? 0} fill={node.style.fill ?? '#d6e6ff'} stroke={node.style.stroke} strokeWidth={node.style.strokeWidth} />}
+    case 'svg': return <SvgImage source={node.svg??''} alt={node.text??'图形'} fontFamily={inheritedSvgFont(node,page,document)} />
+    case 'shape': return artifactUsesBoxRectangle(node)?null:<svg viewBox={`0 0 ${node.width} ${node.height}`} width="100%" height="100%" aria-label="形状" style={{ overflow: 'visible' }}>
+      {gradient && <defs>{gradient.type === 'radial' ? <radialGradient id={`native-gradient-${node.id}`}>{gradient.stops.map((stop,index) => <stop key={index} offset={stop.offset} stopColor={stop.color} />)}</radialGradient> : <linearGradient id={`native-gradient-${node.id}`} x1="0%" y1="0%" x2="100%" y2="0%" gradientTransform={`rotate(${gradient.angle-90} .5 .5)`}>{gradient.stops.map((stop,index) => <stop key={index} offset={stop.offset} stopColor={stop.color} />)}</linearGradient>}</defs>}
+      {(() => { const {tag: Shape,attributes}=artifactShapeGeometry(node.shape,node.width,node.height,node.style.borderRadius);return <Shape {...attributes} fill={fill} stroke={node.style.stroke} strokeWidth={node.style.strokeWidth} /> })()}
     </svg>
-    case 'line': return <svg width="100%" height="100%" viewBox={`0 0 ${node.width} ${node.height}`} style={{ overflow: 'visible' }}><defs><marker id={`arrow-${node.id}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill={node.style.stroke ?? '#333'} /></marker></defs><polyline points={(node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ')} stroke={node.style.stroke ?? '#333'} strokeWidth={node.style.strokeWidth ?? 3} fill="none" markerEnd={`url(#arrow-${node.id})`} /></svg>
-    case 'table': return <table className="native-table"><tbody>{node.cells?.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, colIndex) => <TableCell key={colIndex} value={cell} editing={editingId === node.id && !!onCellChange} onCommit={text => onCellChange?.(node.id, rowIndex, colIndex, text)} />)}</tr>)}</tbody></table>
-    case 'embed': return node.embed?.sourceHash ? <IsolatedEmbed documentId={document.id} pageId={page.id} node={node} presenting={presenting} /> : <div className="native-embed-wait">隔离内容等待保存</div>
+    case 'drawing':
+    case 'line': return node.path?<svg width="100%" height="100%" viewBox={`0 0 ${node.path.width} ${node.path.height}`} preserveAspectRatio="none" style={{overflow:'visible'}}><path d={node.path.d} fill="none" stroke={node.style.stroke??'#8a8378'} strokeWidth={node.style.strokeWidth??2} strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />{canvasContentOwner(document,page.id)&&<path data-native-path-hit d={node.path.d} fill="none" stroke="transparent" strokeWidth="calc(16px * var(--native-inv-scale,1))" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" style={{pointerEvents:'stroke'}} />}</svg>:<svg width="100%" height="100%" viewBox={`0 0 ${node.width} ${node.height}`} style={{ overflow: 'visible' }}><defs><marker id={`arrow-${node.id}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill={node.style.stroke ?? '#333'} /></marker></defs><polyline points={(node.points ?? [{ x: 0, y: node.height / 2 }, { x: node.width, y: node.height / 2 }]).map(point => `${point.x},${point.y}`).join(' ')} stroke={node.style.stroke ?? '#333'} strokeWidth={node.style.strokeWidth ?? 3} fill="none" markerEnd={node.lineEnd === 'none' || node.type === 'drawing' ? undefined : `url(#arrow-${node.id})`} markerStart={node.lineStart === 'arrow' ? `url(#arrow-${node.id})` : undefined} /></svg>
+    case 'table': return <table className="native-table" style={{gridTemplateColumns:`repeat(${Math.max(1,...(node.cells??[]).map(row=>row.length))},minmax(0,1fr))`}}><tbody>{node.cells?.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, colIndex) => <TableCell key={colIndex} value={cell} row={rowIndex} column={colIndex} header={!!node.tableHeader&&rowIndex===0} label={`第 ${rowIndex+1} 行第 ${colIndex+1} 列`} editing={editingId === node.id && !!onCellChange} onCommit={text => onCellChange?.(node.id, rowIndex, colIndex, text)} />)}</tr>)}</tbody></table>
+    case 'embed': return node.embed?.sourceHash ? <IsolatedEmbed pageVersion={pageVersion} revisionSeq={revisionSeq} documentId={document.id} pageId={page.id} node={node} presenting={presenting} /> : <div className="native-embed-wait">隔离内容等待保存</div>
     case 'group': return null
   }
 }
 export const PageContent = memo(function PageContent(props: PageRenderProps) {
   const { page, document } = props
+  const headingPrefix=useId()
   const root = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     if (page.sizing !== 'flow' || !root.current || !props.onFlowSize) return
@@ -156,10 +210,12 @@ export const PageContent = memo(function PageContent(props: PageRenderProps) {
     measure()
     return () => { observer.disconnect(); clearTimeout(timer) }
   }, [page, props.onFlowSize, props.visibleNodeIds, props.contentBottom])
+  const independent=Boolean(canvasContentOwner(document,page.id))
   const children = new Map<string | null, ArtifactNode[]>()
-  for (const id of page.nodeOrder) { const node = page.nodes[id]; if (!node || node.hidden || (props.visibleNodeIds && !props.visibleNodeIds.has(id))) continue; const group = children.get(node.parentId) ?? []; group.push(node); children.set(node.parentId, group) }
-  const render = (node: ArtifactNode, flow: boolean): ReactNode => <div key={node.id} className={`native-node native-node-${node.type}`} data-node-id={node.id} data-node-type={node.type} style={{ ...nativeStyle(node.style, document), position: flow ? 'relative' : 'absolute', left: flow ? undefined : node.x, top: flow ? undefined : node.y, width: node.width, height: page.sizing === 'flow' && node.type === 'group' && node.layout?.mode !== 'absolute' ? 'auto' : node.height, minHeight: page.sizing === 'flow' && node.type === 'group' ? node.height : undefined, transform: node.rotation ? `rotate(${node.rotation}deg)` : undefined, transformOrigin: 'center', boxSizing: 'border-box', ...(node.type === 'group' && node.layout?.mode !== 'absolute' ? { display: node.layout?.mode, flexDirection: node.layout?.direction, gap: node.layout?.gap, alignItems: node.layout?.align, justifyContent: node.layout?.justify, gridTemplateColumns: node.layout?.mode === 'grid' ? `repeat(${node.layout.columns ?? 1},minmax(0,1fr))` : undefined } : {}), ...(node.type === 'shape' || node.type === 'line' ? { backgroundColor: undefined, border: undefined } : {}) }}>
-    <NodeContent {...props} node={node} />{children.get(node.id)?.map(child => render(child, node.layout?.mode === 'flex' || node.layout?.mode === 'grid'))}
-  </div>
-  return <div ref={root} className="native-page-content" data-content-layer style={{ width: page.width, height: page.height, background: artifactPageBackground(page, document) }}>{children.get(null)?.map(node => render(node, false))}</div>
+  for (const id of page.nodeOrder) { const node = page.nodes[id]; if (!node || node.hidden || (!independent && node.parentId === null && (node.scope === 'canvas') !== !!props.canvasOnly) || (props.visibleNodeIds && !props.visibleNodeIds.has(id))) continue; const group = children.get(node.parentId) ?? []; group.push(node); children.set(node.parentId, group) }
+  const render = (node: ArtifactNode, flow: boolean): ReactNode => {const authored=document.pages[page.id]?.nodes[node.id]??node,href=node.attributes?.href,heading=artifactTextHeading(node),NodeTag=props.editingId===node.id?'div':artifactTextRootTag(node),headingId=heading&&href&&props.editingId!==node.id&&!node.attributes?.['aria-label']&&!node.attributes?.['aria-labelledby']?`${headingPrefix}-${encodeURIComponent(node.id)}`:undefined;return <NodeTag {...codeAttributeProperties(href?Object.fromEntries(Object.entries(node.attributes??{}).filter(([name])=>name!=='href'&&name!=='target')):node.attributes)} aria-labelledby={node.attributes?.['aria-labelledby']??headingId} key={node.id} data-native-whole-link={href?true:undefined} data-native-link-active={href&&props.presenting?true:undefined} onClick={event=>{if(!props.presenting&&(event.target as Element).closest('a[href]'))event.preventDefault()}} ref={node.css?(element:HTMLElement|null)=>applyCodeStyle(element,node.css!):undefined} className={`native-node native-node-${node.type}`} data-node-id={props.measureOnly?undefined:node.id} data-node-type={props.measureOnly?undefined:node.type} data-native-heading={heading?true:undefined} data-native-layout-node={props.measureOnly?node.id:undefined} data-native-canvas-title={independent&&node.type==='text'&&node.textSizing==='content'?true:undefined} data-native-measure-node={props.measureOnly&&(isNaturalText(node)||isFlowChild(page,node))?node.id:undefined} data-native-natural-height={!props.measureOnly&&independent&&(isNaturalText(node)||isFlowChild(page,node))?true:undefined} style={{ ...nativeStyle(node.style,document,artifactUsesBoxRectangle(node)), ...(heading?{margin:0,...(props.editingId===node.id?{fontWeight:node.style.fontWeight??700}:{}),textAlign:heading.attrs?.textAlign as CSSProperties['textAlign']??node.style.textAlign}:{}), visibility:props.vectorEditingId===node.id?'hidden':undefined, pointerEvents:independent&&node.path?'none':undefined, position: flow ? 'relative' : 'absolute', left: flow ? undefined : authored.x, top: flow ? undefined : authored.y, width: authored.textSizing==='content'?'max-content':authored.width, maxWidth:authored.textSizing==='content'?authored.width:undefined, height: independent&&isNaturalText(node)?'auto':page.sizing === 'flow' && node.type === 'group' && node.layout?.mode !== 'absolute' ? 'auto' : authored.height, minHeight: independent&&isNaturalText(node)?(node.style.paddingX!==undefined?canvasTextMetrics(node.style.fontSize??14).minHeight:40):page.sizing === 'flow' && node.type === 'group' ? authored.height : undefined, ...(independent&&node.type==='note'?{padding:paddingCss(node.style,{x:12,y:10})}:{}), transform: nodeTransform(node), transformOrigin: 'center', boxSizing: 'border-box', ...(node.type === 'group' && node.layout?.mode !== 'absolute' ? { display: node.layout?.mode, flexDirection: node.layout?.direction, gap: node.layout?.gap, alignItems: node.layout?.align, justifyContent: node.layout?.justify, gridTemplateColumns: node.layout?.mode === 'grid' ? `repeat(${node.layout.columns ?? 1},minmax(0,1fr))` : undefined } : {}), ...(node.type === 'shape'&&!artifactUsesBoxRectangle(node) || node.type === 'line' || node.type === 'drawing' ? { backgroundColor: undefined, backgroundImage: undefined, border: undefined } : {}), ...codeStyleProperties(node.css) }}>
+    {href&&<a className="native-element-link-hit" href={href} target={node.attributes?.target} rel="noopener noreferrer" aria-label="打开元素链接" tabIndex={props.presenting?0:-1} />}
+    {!props.measureOnly||['note','text'].includes(node.type)?<NodeContent {...props} node={authored} headingRoot={!!heading} headingId={headingId} />:['shape','line','drawing'].includes(node.type)?<svg width="100%" height="100%" viewBox={`0 0 ${node.width} ${node.height}`} />:null}{children.get(node.id)?.map(child => render(child, node.layout?.mode === 'flex' || node.layout?.mode === 'grid'))}
+  </NodeTag>}
+  return <div ref={root} className={`native-page-content ${props.canvasOnly ? 'native-canvas-content' : ''}`} data-content-layer style={{ fontFamily:props.canvasOnly?undefined:pageDefaultFontFamily(document,page.id),width: page.width, height: page.height, background: props.canvasOnly ? 'transparent' : artifactPageBackground(page, document),borderRadius:props.canvasOnly?undefined:pageRadiusCss(page.radius) }}>{children.get(null)?.map(node => render(node, false))}</div>
 })

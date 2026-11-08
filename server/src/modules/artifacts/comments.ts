@@ -42,7 +42,7 @@ export function readNewThread(body: unknown): NewThread | null {
   if (body.send !== undefined && typeof body.send !== 'boolean') return null
   return {
     anchor: body.anchor,
-    label: body.label.trim() || 'Comment',
+    label: body.label.trim() || '评论',
     ...body.detail ? { detail: body.detail as string } : {},
     ...body.area ? { area: true as const } : {},
     ...body.section ? { section: body.section as string } : {},

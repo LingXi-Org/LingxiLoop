@@ -16,6 +16,6 @@ export async function fetchArtifactAsset(asset: ArtifactAsset, artifactId: strin
   if (!response.ok) throw new Error(`资源加载失败 (${response.status})`)
   const type = requireAssetContentType(response.headers.get('content-type'))
   const blob = await response.blob()
-  if (blob.size > 20 * 1024 * 1024) throw new Error('资源超过 20 MB。')
+  if (blob.size > 20 * 1024 * 1024) throw new Error('资源超过 20 兆字节。')
   return blob.type === type ? blob : new Blob([blob], { type })
 }

@@ -1,9 +1,13 @@
+import {normalizePageRadius} from './artifact-page-radius.js'
+import {isSafeArtifactLink} from './artifact-links.js'
 import { Parser } from 'htmlparser2'
 import {
   createDocument, createNode, createPage, isSafeArtifactSvg, validateArtifactDocument,
   type ArtifactDocument, type ArtifactNode, type ArtifactRichText, type ArtifactStyle,
 } from './artifact-document'
 import { projectArtifactThemes } from './artifact-themes'
+import { importCanvasAnnotations } from './artifact-canvas-import'
+import {inferTypographyRole} from './artifact-typography.js'
 
 /** Compatibility is a data conversion boundary. This module never evaluates imported source. */
 export interface LegacyArtifactInput {
@@ -99,8 +103,8 @@ function richInline(node: HtmlNode, marks: NonNullable<ArtifactRichText['marks']
   const tag = node.tag.toLowerCase()
   if (tag === 'br') return [{ type: 'hardBreak' }]
   const mapped = ({ b: 'bold', strong: 'bold', i: 'italic', em: 'italic', u: 'underline', s: 'strike', del: 'strike', code: 'code' } as const)[tag as 'b']
-  const next = mapped ? [...marks, { type: mapped }] : marks
-  if (tag === 'a' && /^(https?:\/\/|mailto:|#)/i.test(node.attrs.href ?? '') && !/[\u0000-\u0020<>]/.test(node.attrs.href!)) next.push({ type: 'link', attrs: { href: node.attrs.href! } })
+  const next = mapped ? [...marks, { type: mapped }] : [...marks]
+  if (tag === 'a' && isSafeArtifactLink(node.attrs.href??'')) next.push({ type: 'link', attrs: { href: node.attrs.href!,...(node.attrs.target==='_blank'||node.attrs.target==='_self'?{target:node.attrs.target}:{}) } })
   return node.children.flatMap(child => richInline(child, next))
 }
 function richBlock(node: HtmlElement): ArtifactRichText {
@@ -140,6 +144,12 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       }
     } catch { warnings.push(`${path}：无法解析主题，原始文件已保留。`) }
   }
+  if (input.kind === 'design' && Array.isArray(index.pages) && index.pages.length) {
+    document.canvasPages = index.pages.map((value, ordinal) => {
+      const source = object(value)
+      return {id:safeId(String(source.id ?? ''), `canvas_page_${ordinal}`),name:typeof source.name==='string'?source.name:`页面 ${ordinal+1}`}
+    })
+  }
   const boards = object(index.boards)
   const order = Array.isArray(index.order) ? index.order.filter((item): item is string => typeof item === 'string') : Object.keys(boards)
   for (const [ordinal, oldId] of order.entries()) {
@@ -153,10 +163,14 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
     if (input.kind === 'slides') { page.width = 1920; page.height = 1080 }
     else {
       const board = object(boards[oldId])
+      if (document.canvasPages) page.canvasPageId = document.canvasPages.find(sheet=>sheet.id===safeId(String(board.page??''), ''))?.id ?? document.canvasPages[0]!.id
       page.x = finite(board.x, (ordinal % 4) * 1360); page.y = finite(board.y, Math.floor(ordinal / 4) * 800)
       page.width = dimension(board.w ?? board.width, 1280); page.height = dimension(board.h ?? board.height, 720)
+      const radius=normalizePageRadius(board.radius);if(radius!==undefined)page.radius=radius
       if (typeof board.title === 'string') page.title = board.title
-      if (board.print === 'flow' || board.print === 'fixed') page.sizing = board.print
+      if (typeof board.is_interactive === 'boolean') page.interactive = board.is_interactive
+      if (typeof board.frameless === 'boolean') page.frameless = board.frameless
+      if (board.print === 'flow' || board.print === 'fixed') page.print = board.print
       if (board.paper === 'a4') page.paper = 'A4'
       else if (board.paper === 'letter') page.paper = 'Letter'
     }
@@ -166,7 +180,7 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
     const background = rootCss['background-color'] ?? rootCss.background
     if (background && !/[<>;\\]|url\s*\(|expression\s*\(/i.test(background)) page.background = background
     page.notes = descendants(tree, 'aside', true).map(textContent).join('\n') || String(object(index.notes)[oldId] ?? '')
-    page.transition = ['fade', 'slide'].includes(section.attrs['data-transition'] ?? '') ? section.attrs['data-transition'] as 'fade' | 'slide' : 'none'
+    page.transition = ['fade', 'push', 'magic', 'slide'].includes(section.attrs['data-transition'] ?? '') ? section.attrs['data-transition'] as 'fade' | 'push' | 'magic' | 'slide' : 'none'
     page.skip = section.attrs['data-skip'] === 'true'
     document.pages[id] = page; document.pageOrder.push(id)
     let serial = 0
@@ -196,7 +210,8 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
       const x = pixels(css.left, box.width, 0), y = css.bottom ? box.height - pixels(css.bottom, box.height, 0) - height : pixels(css.top, box.height, cursor)
       const style = nodeStyle(css)
       const rotation = Number(/rotate\(([-\d.]+)deg\)/.exec(css.transform ?? '')?.[1] ?? 0)
-      const common = { x: absolute ? box.x + x : x, y: absolute ? box.y + y : y, width, height, rotation, parentId: absolute ? null : parentId, style }
+      const typographyRole=inferTypographyRole(tag,source.attrs.class??'',source.attrs.role==='button')
+      const common = { x: absolute ? box.x + x : x, y: absolute ? box.y + y : y, width, height, rotation, parentId: absolute ? null : parentId, style,...(typographyRole?{typographyRole}:{}) }
       if (tag === 'iframe' && source.attrs.srcdoc !== undefined && !Object.keys(source.attrs).some(key => /^on/i.test(key))) {
         embed(source.attrs.srcdoc, common.x, common.y, width, height, common.parentId); return absolute ? 0 : height
       }
@@ -224,8 +239,10 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
         return absolute ? 0 : height
       }
       if (tag === 'table') {
-        const cells = descendants(source, 'tr').map(row => row.children.filter(element).filter(cell => cell.tag === 'td' || cell.tag === 'th').map(textContent))
-        add({ ...createNode('table', nodeId(source.attrs.id)), ...common, height: pixels(css.height, box.height, cells.length * fontSize * 1.8), cells })
+        const tableRows = descendants(source, 'tr')
+        const cells = tableRows.map(row => row.children.filter(element).filter(cell => cell.tag === 'td' || cell.tag === 'th').map(textContent))
+        const tableHeader = tableRows[0]?.children.some(cell => element(cell) && cell.tag === 'th') ?? false
+        add({ ...createNode('table', nodeId(source.attrs.id)), ...common, height: pixels(css.height, box.height, cells.length * fontSize * 1.8), cells, ...(tableHeader ? { tableHeader: true } : {}) })
         return absolute ? 0 : cells.length * fontSize * 1.8
       }
       if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'blockquote', 'pre'].includes(tag) || source.children.every(child => !element(child) || ['span', 'b', 'strong', 'em', 'i', 'u', 's', 'a', 'br', 'code'].includes(child.tag.toLowerCase()))) {
@@ -264,5 +281,6 @@ export function convertLegacyArtifact(input: LegacyArtifactInput): LegacyArtifac
     // The imported root remains a declarative container. DOM flex/grid performs final text layout.
     convert(section, null, { x: 0, y: 0, width: page.width, height: page.height }, 0)
   }
+  importCanvasAnnotations(document,index.notes,warnings)
   return { document: validateArtifactDocument(document), originals, warnings: [...new Set(warnings)] }
 }

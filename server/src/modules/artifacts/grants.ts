@@ -2,10 +2,8 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { env } from '../../env.js'
 import type { ArtifactKind } from './kinds.js'
 
-// Upstream serves the editor at /<kind>/<random grant>/ on loopback. Here the grant
-// is a signed, short-lived capability bound to one user, artifact and access mode,
-// because the editor uses an isolated iframe without the application session cookie.
-// It outlives an editing session; every request still re-checks current access.
+// Short-lived signed capabilities let opaque content load its own resources.
+// The content router accepts reads only and re-checks current tenant access.
 export const GRANT_TTL_MS = 12 * 60 * 60_000
 
 export interface EditorGrant {

@@ -1,3 +1,5 @@
+import {createCanvasContents} from './artifact-canvas-pages.js'
+import {applyOperations,prepareBatch} from './artifact-operations.js'
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { checkArtifactDocument } from './artifact-check.js'
@@ -69,4 +71,15 @@ test('group cycles, missing payloads and unindexed nodes are reported with ident
   assert.ok(report.issues.some(issue => issue.code === 'missing_formula' && issue.nodeId === 'formula'))
   assert.ok(report.issues.some(issue => issue.code === 'node_order' && issue.pageId === 'board'))
   assert.deepEqual(report.checkedPageIds, [])
+})
+
+
+test('free canvas content is checked independently without being counted as a board',()=>{
+  const original=fixture(),note={...createNode('note','free'),text:'独立说明',y:-300}
+  const doc=applyOperations(original,prepareBatch(original,[...createCanvasContents(original,'canvas-page-1','contents'),{type:'node.insert',pageId:'contents',node:note}])).document
+  const report=checkArtifactDocument(doc,['project/pages/contents.json'])
+  assert.equal(report.problems,0)
+  assert.equal(report.boardCount,1)
+  assert.deepEqual(report.checkedPageIds,['contents'])
+  assert.deepEqual(report.checkedBoardPaths,[])
 })

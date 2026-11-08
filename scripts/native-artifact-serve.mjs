@@ -7,6 +7,7 @@
  *   --out=/workspace/scratch/native-artifact-baseline.json
  */
 import assert from 'node:assert/strict'
+import {serviceFailure,transportFailure}from'./native-artifact-failure.mjs'
 import { createServer as createHttpsServer } from 'node:https'
 import { request as httpRequest } from 'node:http'
 import { connect } from 'node:net'
@@ -16,22 +17,31 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { resolve, dirname } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { Readable } from 'node:stream'
+import { pipeline } from 'node:stream/promises'
 import { createHash } from 'node:crypto'
 import { createFixture } from './native-artifact-fixture.mjs'
-import { ensureNativeArtifactBucket, nativeArtifactStorageConfiguration, nativeFixtureAsset } from './native-artifact-storage.mjs'
+import { ensureNativeArtifactBucket, nativeArtifactStorageConfiguration, nativeArtifactRuntimeConfiguration, nativeFixtureAsset } from './native-artifact-storage.mjs'
 
 const args = Object.fromEntries(process.argv.slice(2).map(arg => arg.replace(/^--/, '').split('=')))
 const root = resolve(args.root ?? '.'), output = resolve(args.out ?? '/tmp/native-artifact-arm.json')
 const port = Number(args.port ?? 24411), apiPort = Number(args['api-port'] ?? 24811)
 assert.ok([24411, 24412].includes(port) && apiPort === port + 400, 'only dedicated local acceptance ports are allowed')
 let phase = 'database-connect'
+const transportFailures=[]
+const reportTransport=(stage,error)=>{
+  const failure=transportFailure(error,stage,new Error())
+  const prior=transportFailures.find(row=>row.stage===failure.stage&&row.code===failure.code)
+  if(prior)prior.count++
+  else transportFailures.push({...failure,count:1})
+  servicePhase(phase)
+}
 const servicePhase = next => {
   phase = next
-  if (args.status) writeFileSync(resolve(args.status), JSON.stringify({ phase }) + '\n', { mode: 0o600 })
+  if (args.status) writeFileSync(resolve(args.status), JSON.stringify({ phase,transportFailures }) + '\n', { mode: 0o600 })
 }
 process.on('uncaughtExceptionMonitor', error => {
-  const codes = new Set(['ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND', 'ERR_ASSERTION', 'ECONNREFUSED', 'ETIMEDOUT', 'ENOENT'])
-  if (args.status) writeFileSync(resolve(args.status), JSON.stringify({ phase, failed: true, code: codes.has(error?.code) ? error.code : 'SERVICE_FAILED' }) + '\n', { mode: 0o600 })
+  const codes = new Set(['ERR_MODULE_NOT_FOUND', 'MODULE_NOT_FOUND', 'ERR_ASSERTION', 'ECONNREFUSED', 'ECONNRESET', 'EPIPE', 'ERR_STREAM_PREMATURE_CLOSE', 'ETIMEDOUT', 'ENOENT'])
+  if (args.status) writeFileSync(resolve(args.status), JSON.stringify({ phase, transportFailures, failed: true, code: codes.has(error?.code) ? error.code : 'SERVICE_FAILED',fault:serviceFailure(error) }) + '\n', { mode: 0o600 })
 })
 servicePhase('database-connect')
 const target = new URL(process.env.DATABASE_URL ?? 'postgres://invalid/invalid')
@@ -57,9 +67,10 @@ Object.assign(process.env, {
   LINGXILOOP_GATEWAY_HMAC_SECRET: 'native-artifact-local-test-only',
   LINGXILOOP_INVITE_BASE_URL: origin, LINGXILOOP_PUBLIC_ORIGIN: origin, LINGXILOOP_ARTIFACT_EDITOR_BASE: editorBase,
   ...storageConfiguration,
+  ...nativeArtifactRuntimeConfiguration(process.env,origin),
 })
 if (args.format === 'native') {
-  await ensureNativeArtifactBucket(storageConfiguration)
+  await ensureNativeArtifactBucket(storageConfiguration,origin)
   servicePhase('object-storage-ready')
 }
 const load = path => import(pathToFileURL(resolve(root, path)).href)
@@ -168,16 +179,19 @@ const spki = createHash('sha256').update(der).digest('base64')
 const { isolatedEditor } = await load('shared/artifact-editor-origin.ts')
 // Raw HTTP transport preserves encoded bytes; Node fetch would auto-decompress.
 const rawFetch = request => new Promise((resolveResponse, reject) => {
-  const upstream = httpRequest(request.url, { method: request.method, headers: Object.fromEntries(request.headers) }, response => {
+  const upstream = httpRequest(request.url, { method: request.method, headers: Object.fromEntries(request.headers),signal:request.signal }, response => {
     const headers = new Headers()
     for (const [key, value] of Object.entries(response.headers)) if (value !== undefined) headers.set(key, Array.isArray(value) ? value.join(', ') : value)
     resolveResponse(new Response([204, 304].includes(response.statusCode) || request.method === 'HEAD' ? null : Readable.toWeb(response), { status: response.statusCode, headers }))
   })
   upstream.on('error', reject)
-  if (request.body) Readable.fromWeb(request.body).pipe(upstream)
+  if (request.body) void pipeline(Readable.fromWeb(request.body),upstream).catch(error=>{reportTransport('upload',error);reject(error)})
   else upstream.end()
 })
 const server = createHttpsServer({ key: await readFile(resolve(tls, 'key.pem')), cert }, async (request, response) => {
+  const controller=new AbortController()
+  request.once('aborted',()=>controller.abort())
+  response.once('close',()=>{if(!response.writableFinished)controller.abort()})
   try {
     const url = new URL(request.url, `https://${request.headers.host}`)
     if (url.hostname === 'localhost' && images.has(url.pathname)) {
@@ -187,16 +201,20 @@ const server = createHttpsServer({ key: await readFile(resolve(tls, 'key.pem')),
     const headers = new Headers()
     for (const [name, value] of Object.entries(request.headers)) if (value !== undefined) headers.set(name, Array.isArray(value) ? value.join(', ') : value)
     const incoming = new Request(url, { method: request.method, headers, ...(!['GET', 'HEAD'].includes(request.method) ? { body: Readable.toWeb(request), duplex: 'half' } : {}) })
-    let result = await isolatedEditor(incoming, editorBase, backend, rawFetch)
+    let result = await isolatedEditor(incoming, editorBase, backend,forwarded=>rawFetch(new Request(forwarded,{signal:controller.signal})))
     if (!result) {
       const upstream = new URL(url.pathname + url.search, url.pathname.startsWith('/api/') ? gateway.url : backend)
       headers.delete('host')
-      result = await rawFetch(new Request(upstream, { method: incoming.method, headers, ...(incoming.body ? { body: incoming.body, duplex: 'half' } : {}) }))
+      result = await rawFetch(new Request(upstream, { method: incoming.method, headers, signal:controller.signal, ...(incoming.body ? { body: incoming.body, duplex: 'half' } : {}) }))
     }
     response.writeHead(result.status, Object.fromEntries(result.headers))
-    if (result.body) Readable.fromWeb(result.body).pipe(response)
+    if (result.body) await pipeline(Readable.fromWeb(result.body),response)
     else response.end()
-  } catch (error) { response.writeHead(500, { 'content-type': 'text/plain' }); response.end('Local benchmark transport failed'); console.error(error.message) }
+  } catch (error) {
+    reportTransport(response.headersSent?'response':'request',error)
+    if(response.headersSent||response.destroyed)response.destroy()
+    else{response.writeHead(500,{'content-type':'text/plain'});response.end('本地验收代理传输失败')}
+  }
 })
 server.on('upgrade', (request, socket, head) => {
   const destinationPort = request.url.startsWith('/native-im') ? 25200 : apiPort
@@ -206,7 +224,10 @@ server.on('upgrade', (request, socket, head) => {
     if (head.length) target.write(head)
     socket.pipe(target).pipe(socket)
   })
-  target.on('error', () => socket.destroy())
+  const close=()=>{target.destroy();socket.destroy()}
+  target.on('error',error=>{reportTransport('upgrade',error);close()})
+  socket.on('error',error=>{reportTransport('upgrade',error);close()})
+  target.on('close',close);socket.on('close',close)
 })
 await new Promise(resolveReady => server.listen(port, '127.0.0.1', resolveReady))
 const cookies = gateway.cookie.split('; ').map(value => { const index = value.indexOf('='); return { name: value.slice(0, index), value: value.slice(index + 1) } })

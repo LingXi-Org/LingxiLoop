@@ -43,11 +43,6 @@ export interface ArtifactWorkspacesApplicationContext {
   publishArtifact: PublishArtifact
 }
 
-/** Publish the new artifact's index and static resources together; never used on open. */
-async function writeInitialIndex(db: Queryable, artifact: ArtifactRow, actorId: string) {
-  await initializeNativeArtifact(db, artifact, actorId)
-}
-
 export function createArtifactWorkspacesApplication(context: ArtifactWorkspacesApplicationContext) {
   const { db, transaction, execution, resolveArtifactRead, toReport, publishArtifact } = context
 
@@ -124,7 +119,7 @@ export function createArtifactWorkspacesApplication(context: ArtifactWorkspacesA
       if (!row) return null
       if (row.created) {
         const artifact = (await transactionDb.query<ArtifactRow>('SELECT * FROM artifacts WHERE id=$1', [row.id])).rows[0]
-        await writeInitialIndex(transactionDb, artifact, actorId)
+        await initializeNativeArtifact(transactionDb, artifact, actorId)
       }
       return row
     })
@@ -146,7 +141,7 @@ export function createArtifactWorkspacesApplication(context: ArtifactWorkspacesA
       if (existing.rows[0]) return
       const artifact = await insertArtifact(transactionDb, { id, companyId: input.companyId, projectId: input.projectId,
         conversationId: input.conversationId, kind: 'slides', title: input.title.trim().slice(0, 200), actorId: input.actorId, origin: input.origin })
-      await writeInitialIndex(transactionDb, artifact, input.actorId)
+      await initializeNativeArtifact(transactionDb, artifact, input.actorId)
     })
     await publishArtifact(input.companyId, { kind: 'artifact.created', artifactId: id, artifactKind: 'slides' })
     return getArtifactSnapshot(input.companyId, id)
@@ -168,7 +163,7 @@ export function createArtifactWorkspacesApplication(context: ArtifactWorkspacesA
       const artifact = await startAgentWorkspace(transactionDb, {
         artifactId: input.artifactId,
         companyId: input.companyId,
-        title: input.title.trim().slice(0, 200) || 'Agent workspace',
+        title: input.title.trim().slice(0, 200) || '智能体工作区',
         conversationId: input.conversationId,
         triggerClientMsgNo: input.triggerClientMsgNo,
         goal: input.goal.trim(),

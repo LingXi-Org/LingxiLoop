@@ -1,4 +1,9 @@
+import {isSafeArtifactLink} from './artifact-links.js'
 import { z } from 'zod'
+import { canvasPages, canvasPageOf, artifactPageIds, MAX_CANVAS_PAGES } from './artifact-canvas-pages.js'
+import {isArtifactPenPath} from './artifact-path.js'
+import {isNativeCodeAttribute,isNativeCodeStyle} from './artifact-node-code.js'
+import {typographyRoleOrder} from './artifact-typography-roles.js'
 
 /** Native documents contain data only. Executable source belongs to an isolated embed. */
 export const ARTIFACT_DOCUMENT_SCHEMA_VERSION = 1 as const
@@ -13,15 +18,20 @@ export const artifactStyleSchema = z.object({
   fill: color.optional(), color: color.optional(), stroke: color.optional(), strokeWidth: positive.optional(),
   backgroundColor: color.optional(), borderColor: color.optional(), borderWidth: positive.optional(),
   opacity: z.number().min(0).max(1).optional(), borderRadius: positive.optional(),
+  gradient: z.object({ type: z.enum(['linear', 'radial']), angle: finite, stops: z.array(z.object({ color, offset: z.number().min(0).max(1) }).strict()).min(2).max(32) }).strict().optional(),
+  shadow: z.object({ x: finite, y: finite, blur: positive, spread: finite, color }).strict().optional(),
+  borderStyle: z.enum(['solid', 'dashed', 'dotted', 'double', 'none']).optional(),
+  letterSpacing: finite.optional(), verticalAlign: z.enum(['top', 'middle', 'bottom']).optional(),
   fontFamily: z.string().max(200).refine(value => !/[<>;{}]/.test(value)).optional(),
   fontSize: z.number().min(1).max(1000).optional(), fontWeight: z.number().int().min(100).max(1000).optional(),
   fontStyle: z.enum(['normal', 'italic']).optional(), textAlign: z.enum(['left', 'center', 'right', 'justify']).optional(),
   textDecoration: z.enum(['none', 'underline', 'line-through']).optional(), lineHeight: z.number().min(0.5).max(10).optional(),
-  padding: positive.optional(), themeColor: z.string().max(128).optional(), themeFont: z.string().max(128).optional(), themeFill: z.string().max(128).optional(),
+  themeColorFallback: color.optional(), themeFontFallback: z.string().max(200).refine(value => !/[<>;{}]/.test(value)).optional(),
+  padding: positive.optional(), paddingX: positive.optional(), paddingY: positive.optional(), themeColor: z.string().max(128).optional(), themeFont: z.string().max(128).optional(), themeFill: z.string().max(128).optional(),
 }).strict()
 export type ArtifactStyle = z.infer<typeof artifactStyleSchema>
 
-const safeLink = (value: string) => /^(https?:\/\/|mailto:|#)/i.test(value) && !/[\u0000-\u0020<>]/.test(value)
+const safeLink = isSafeArtifactLink
 export interface ArtifactRichText {
   type: 'doc' | 'paragraph' | 'heading' | 'text' | 'bulletList' | 'orderedList' | 'listItem' | 'hardBreak' | 'blockquote'
   text?: string
@@ -101,18 +111,28 @@ export function isSafeArtifactSvg(value: string): boolean {
   return roots === 1 && stack.length === 0
 }
 
-export const artifactNodeTypes = ['text', 'image', 'shape', 'line', 'table', 'svg', 'math', 'group', 'embed'] as const
+export const artifactNodeTypes = ['text', 'image', 'shape', 'line', 'table', 'svg', 'math', 'group', 'embed', 'note', 'drawing', 'video'] as const
 export const artifactNodeSchema = z.object({
   id: artifactIdSchema,
+  motionId: artifactIdSchema.optional(),
   type: z.enum(artifactNodeTypes),
   x: finite, y: finite, width: positive, height: positive, rotation: finite,
+  implicitWidth:z.boolean().optional(),implicitHeight:z.boolean().optional(),
   parentId: artifactIdSchema.nullable(),
+  name: z.string().max(1000).optional(), scope: z.enum(['artboard', 'canvas']).optional(),
+  flipX: z.boolean().optional(), flipY: z.boolean().optional(),
+  lineStart: z.enum(['none', 'arrow', 'circle']).optional(), lineEnd: z.enum(['none', 'arrow', 'circle']).optional(),
   style: artifactStyleSchema,
-  text: z.string().max(100_000).optional(), richText: artifactRichTextSchema.optional(), source: z.string().max(100_000).optional(),
+  css: z.record(z.string(),z.string()).refine(value=>Object.keys(value).length<=200&&Object.entries(value).every(([name,item])=>isNativeCodeStyle(name,item)),'样式声明格式无效或含有活动内容').optional(),
+  attributes: z.record(z.string(),z.string()).refine(value=>Object.keys(value).length<=100&&Object.entries(value).every(([name,item])=>isNativeCodeAttribute(name,item)),'属性格式无效或需要隔离预览').optional(),
+  text: z.string().max(100_000).optional(), textSizing: z.enum(['content']).optional(), typographyRole:z.enum(typographyRoleOrder).optional(), richText: artifactRichTextSchema.optional(), source: z.string().max(100_000).optional(),
   assetId: artifactIdSchema.optional(),
+  posterAssetId: artifactIdSchema.optional(),
   crop: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1), width: z.number().min(0).max(1), height: z.number().min(0).max(1) }).strict().optional(),
-  shape: z.enum(['rect', 'ellipse', 'triangle', 'diamond', 'arrow']).optional(),
+  shape: z.enum(['rect', 'ellipse', 'triangle', 'diamond', 'arrow', 'arrow-right', 'arrow-left', 'arrow-up', 'arrow-down']).optional(),
   points: z.array(z.object({ x: finite, y: finite }).strict()).max(10_000).optional(),
+  path: z.object({d:z.string().max(24000).refine(isArtifactPenPath,'绘图路径格式无效'),width:z.number().finite().min(2).max(8000),height:z.number().finite().min(2).max(8000)}).strict().optional(),
+  tableHeader: z.boolean().optional(),
   cells: z.array(z.array(z.string().max(10_000)).max(100)).max(100).optional(),
   svg: z.string().refine(isSafeArtifactSvg, 'unsupported or unsafe SVG').optional(),
   embed: z.object({ source: z.string().max(4_000_000), format: z.enum(['html', 'jsx']), sourceHash: z.string().regex(/^[a-f0-9]{64}$/).optional(), resourceVersion: z.string().regex(/^local-[a-f0-9]{16}$/).optional(), originalPath: z.string().max(512).optional(), previewAssetId: artifactIdSchema.optional() }).strict().optional(),
@@ -123,11 +143,20 @@ export const artifactNodeSchema = z.object({
 export type ArtifactNode = z.infer<typeof artifactNodeSchema>
 export type ArtifactNodeType = ArtifactNode['type']
 
+const pageCornerRadius = z.number().finite().min(0).max(4000)
+export const artifactPageRadiusSchema = z.union([pageCornerRadius,z.array(pageCornerRadius).length(4)])
+
 export const artifactPageSchema = z.object({
   id: artifactIdSchema, title: z.string().max(1000),
-  x: finite, y: finite, width: positive.positive(), height: positive.positive(),
-  sizing: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
-  background: color, themeBackground: z.string().max(128).optional(), notes: z.string().max(100_000), skip: z.boolean(), transition: z.enum(['none', 'fade', 'slide']),
+  x: finite, y: finite, width: positive, height: positive,
+  radius:artifactPageRadiusSchema.optional(),
+  sizing: z.enum(['fixed', 'flow']).optional(), print: z.enum(['fixed', 'flow']).optional(), paper: z.enum(['A4', 'Letter', 'custom']).optional(),
+  section: z.string().max(200).optional(),
+  interactive: z.boolean().optional(), frameless: z.boolean().optional(),
+  canvasPageId: artifactIdSchema.optional(),
+  guides: z.array(z.object({ axis: z.enum(['x', 'y']), position: finite }).strict()).max(100).optional(),
+  layoutGuides: z.array(z.object({ kind: z.enum(['columns', 'rows', 'grid']), count: z.number().int().min(1).max(1000), size: positive, gutter: positive, margin: positive, color, hidden: z.boolean().optional() }).strict()).max(6).optional(),
+  background: color, themeBackground: z.string().max(128).optional(), notes: z.string().max(100_000), skip: z.boolean(), transition: z.enum(['none', 'fade', 'push', 'magic', 'slide']),
   nodeOrder: z.array(artifactIdSchema).max(10_000), nodes: z.record(artifactIdSchema, artifactNodeSchema),
 }).strict()
 export type ArtifactPage = z.infer<typeof artifactPageSchema>
@@ -155,11 +184,15 @@ export const artifactAssetSchema = z.object({
 }).strict()
 export type ArtifactAsset = z.infer<typeof artifactAssetSchema>
 
+export const artifactCanvasPageSchema = z.object({id:artifactIdSchema,name:z.string().min(1).max(1000).refine(name=>Boolean(name.trim())),contentId:artifactIdSchema.optional()}).strict()
+export type ArtifactCanvasPage = z.infer<typeof artifactCanvasPageSchema>
+
 export const artifactDocumentSchema = z.object({
   schemaVersion: z.literal(ARTIFACT_DOCUMENT_SCHEMA_VERSION),
   id: artifactIdSchema, kind: z.enum(['design', 'slides']), title: z.string().max(1000), seq: version,
   themeId: artifactIdSchema.nullable(), themes: z.record(artifactIdSchema, artifactThemeSchema), assets: z.record(artifactIdSchema, artifactAssetSchema),
   pageOrder: z.array(artifactIdSchema).max(1000), pages: z.record(artifactIdSchema, artifactPageSchema),
+  canvasPages: z.array(artifactCanvasPageSchema).min(1).max(MAX_CANVAS_PAGES).optional(),
   versions: z.record(safeKey, version),
 }).strict()
 export type ArtifactDocument = z.infer<typeof artifactDocumentSchema>
@@ -176,11 +209,27 @@ export function createNode(type: ArtifactNodeType, id: string): ArtifactNode {
     ...(type === 'text' ? { text: '文本' } : type === 'math' ? { source: 'E=mc^2' } : type === 'shape' ? { shape: 'rect' as const } : type === 'table' ? { cells: [['', ''], ['', '']] } : {}) }
 }
 
+/** Canvas membership is a document-wide metadata relation, even when page bodies are unchanged. */
+export function validateArtifactCanvasPages(document: Pick<ArtifactDocument,'kind'|'canvasPages'|'pages'|'pageOrder'>): void {
+  const canvas = canvasPages(document), ids = new Set(canvas.map(page=>page.id))
+  if (ids.size !== canvas.length) throw new Error('画布页面标识重复。')
+  if (document.kind !== 'design' && (document.canvasPages || Object.values(document.pages).some(page=>page.canvasPageId))) throw new Error('画布页面只适用于设计稿件。')
+  if (document.kind === 'design' && Object.values(document.pages).some(page=>!ids.has(canvasPageOf(page)))) throw new Error('画板所属页面不存在。')
+  const contents=canvas.flatMap(page=>page.contentId?[page.contentId]:[])
+  const all=artifactPageIds(document)
+  if(new Set(all).size!==all.length||all.length!==Object.keys(document.pages).length||all.some(id=>!Object.hasOwn(document.pages,id)))throw new Error('画板与画布内容索引不一致。')
+  if(document.pageOrder.some(id=>document.pages[id]&&(document.pages[id]!.width<=0||document.pages[id]!.height<=0)))throw new Error('画板尺寸必须大于零。')
+  if(new Set(contents).size!==contents.length||contents.some(id=>document.pageOrder.includes(id)))throw new Error('画布内容不能共用或列入画板顺序。')
+  for(const sheet of canvas)if(sheet.contentId&&(!document.pages[sheet.contentId]||canvasPageOf(document.pages[sheet.contentId]!)!==sheet.id))throw new Error('画布内容归属无效。')
+  for(const sheet of canvas)if(sheet.contentId){const page=document.pages[sheet.contentId]!;if(page.x!==0||page.y!==0||page.width!==0||page.height!==0)throw new Error('独立画布内容不能具有画板边界。')}
+}
+
 /** Referential validation also applies after a batch, allowing create+link in one transaction. */
 export function validateArtifactDocument(input: unknown): ArtifactDocument {
   const document = artifactDocumentSchema.parse(input)
   const sameIds = (order: string[], entries: Record<string, unknown>) => order.length === new Set(order).size && order.length === Object.keys(entries).length && order.every(id => Object.hasOwn(entries, id))
-  if (!sameIds(document.pageOrder, document.pages)) throw new Error('page order must include every page exactly once')
+  validateArtifactCanvasPages(document)
+  if (!sameIds(artifactPageIds(document), document.pages)) throw new Error('page order must include every page exactly once')
   if (document.themeId !== null && !Object.hasOwn(document.themes, document.themeId)) throw new Error('unknown theme')
   for (const [id, theme] of Object.entries(document.themes)) if (id !== theme.id) throw new Error('theme id mismatch')
   for (const [id, asset] of Object.entries(document.assets)) if (id !== asset.id) throw new Error('asset id mismatch')
@@ -189,6 +238,7 @@ export function validateArtifactDocument(input: unknown): ArtifactDocument {
     for (const [nodeId, node] of Object.entries(page.nodes)) {
       if (nodeId !== node.id) throw new Error('node id mismatch')
       if (node.assetId && !Object.hasOwn(document.assets, node.assetId)) throw new Error('unknown asset')
+      if (node.posterAssetId && !Object.hasOwn(document.assets, node.posterAssetId)) throw new Error('unknown poster asset')
       if (node.embed?.previewAssetId && !Object.hasOwn(document.assets, node.embed.previewAssetId)) throw new Error('unknown preview asset')
       const ancestors = new Set([node.id])
       let parentId = node.parentId

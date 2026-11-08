@@ -288,7 +288,7 @@ export const DESIGN_INCOMPLETE_NOTICE = '画板尚未完成，以下先提供文
 function designCompletionIssue(context: TurnContext): string | undefined {
   const steps = (context.executionSteps ?? []).filter(step => step.requestVersion === context.snapshotVersion?.requestVersion)
   let write = -1
-  for (const [index, step] of steps.entries()) if (['design__apply_ops', 'design__write_files', 'design__edit_file'].includes(step.kind)) write = index
+  for (const [index, step] of steps.entries()) if (step.kind === 'design__apply_ops') write = index
   if (explanationPlan(context) === 'canvas' && write < 0) return 'The recorded response decision requires an actual saved and checked explanatory Design artboard. No content write has completed. Finish the canvas, or report the actual limitation as partial; a text explanation or a plan alone cannot satisfy that decision.'
   if (write >= 0) {
     let saved = false

@@ -2,7 +2,7 @@
 import { mkdtemp, mkdir, writeFile, readFile, rm, cp } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { createServer } from 'node:http'
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { tmpdir } from 'node:os'
 import { dirname, extname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -13,6 +13,30 @@ const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const output = resolve(process.argv[2] ?? '/workspace/scratch/native-export-acceptance')
 const temporary = await mkdtemp(join(tmpdir(), 'lingxi-export-'))
 const fixture = createFixture(process.env.NATIVE_EXPORT_KIND ?? 'slides')
+if(process.env.NATIVE_EXPORT_TABLE==='1'||process.env.NATIVE_EXPORT_FONT||process.env.NATIVE_EXPORT_SVG_FONT==='1') {
+  const {createTableNode}=await import('../shared/artifact-tables.ts')
+  const {createNode}=await import('../shared/artifact-document.ts')
+  const {applyOperations,prepareBatch}=await import('../shared/artifact-operations.ts')
+  const {EDITOR_FONTS}=await import('../src/features/artifacts/native/editor-fonts.ts')
+  const family=process.env.NATIVE_EXPORT_FONT
+  if(family&&!EDITOR_FONTS.some(font=>font.family===family))throw Error('未知的导出验收字体')
+  const page=fixture.document.pages[fixture.document.pageOrder[0]],operations=[]
+  if(family)for(const node of Object.values(page.nodes))if(['text','note','table'].includes(node.type))operations.push({type:'node.patch',pageId:page.id,nodeId:node.id,patch:{style:{fontFamily:family,fontWeight:700,fontStyle:'italic'}}})
+  if(process.env.NATIVE_EXPORT_TABLE==='1') {
+    const node=createTableNode('export-table',page)
+    if(family)node.style={...node.style,fontFamily:family,fontWeight:700,fontStyle:'italic'}
+    operations.push({type:'node.insert',pageId:page.id,node})
+  }
+  if(process.env.NATIVE_EXPORT_SVG_FONT==='1') {
+    const node={...createNode('svg','export-svg-font'),x:1100,y:700,width:600,height:150,svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 150"><text x="16" y="100" font-family="${family??'Merriweather'}" font-size="80" font-weight="700">Hello</text></svg>`}
+    operations.push({type:'node.insert',pageId:page.id,node})
+  }
+  fixture.document=applyOperations(fixture.document,prepareBatch(fixture.document,operations,'export-variant-fixture')).document
+  const baseNativeSha256=fixture.manifest.nativeSha256
+  fixture.manifest.nativeSha256=createHash('sha256').update(JSON.stringify(fixture.document)).digest('hex')
+  fixture.manifest.exportVariant={name:'字体与标题行表格',table:process.env.NATIVE_EXPORT_TABLE==='1',svgFont:process.env.NATIVE_EXPORT_SVG_FONT==='1',fontFamily:family??null,baseNativeSha256,documentSha256:fixture.manifest.nativeSha256}
+}
+
 await mkdir(output, { recursive: true })
 await mkdir(join(temporary, 'public/native-artifact-fixture'), { recursive: true })
 await cp(join(repository, 'public/fonts'), join(temporary, 'public/fonts'), { recursive: true })
@@ -117,8 +141,29 @@ try {
   const imageSources = [...offlineHtml.matchAll(/<img[^>]*src="([^"]*)"/g)].map(match => match[1])
   if (imageSources.length !== 50 + fixture.manifest.isolatedBlocks.length || imageSources.some(source => !source.startsWith('data:image/'))) throw Error('HTML images are not self-contained')
   if (offlineEmbed.includes('support.js') || offlineEmbed.includes('{{title}}') || offlineEmbed.includes('<iframe') || !offlineEmbed.includes('data:image/png;base64,')) throw Error('isolated preview was not packaged offline')
+  let fontExport
+  if(process.env.NATIVE_EXPORT_FONT) {
+    const check=spawnSync('python3',['-c',`
+import json,sys,zipfile,xml.etree.ElementTree as E
+n={'a':'http://schemas.openxmlformats.org/drawingml/2006/main'}
+with zipfile.ZipFile(sys.argv[1]) as z:
+    page=E.fromstring(z.read('ppt/slides/slide1.xml'))
+    tables=page.findall('.//a:tbl',n)
+    table_runs=[run for table in tables for run in table.findall('.//a:r',n) if (run.find('a:t',n).text or '').strip()]
+    assert table_runs
+    for run in table_runs:
+        face=run.find('a:rPr',n)
+        assert face is not None and face.attrib.get('i')=='1'
+        assert face.find('a:latin',n).attrib.get('typeface')==sys.argv[2]
+    named=[face for face in page.findall('.//a:latin',n) if face.attrib.get('typeface')==sys.argv[2]]
+    assert len(named)>len(table_runs)
+    print(json.dumps({'family':sys.argv[2],'namedTextRuns':len(named),'editableTables':len(tables),'italicTableRuns':len(table_runs)}))
+`,join(output,'fifty-pages.pptx'),process.env.NATIVE_EXPORT_FONT],{encoding:'utf8'})
+    if(check.status!==0)throw Error('演示文稿的可编辑表格未保留字体与斜体')
+    fontExport=JSON.parse(check.stdout)
+  }
   const artifacts = await Promise.all(['html', 'pdf', 'pptx'].map(async format => { const bytes = await readFile(join(output, `fifty-pages.${format}`)); return { format, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex') } }))
-  const report = { browser: browser.Browser, fixture: fixture.manifest, results, artifacts, cancellation: cancelled.result.value, independentPptx: rendered.result.value, offlineHtml:{packaging:'self-contained image/font data URLs',pages:50,images:imageSources.length,formulas:(offlineHtml.match(/class="katex"/g)??[]).length,fileOpening:'BLOCKED: managed Chromium file URL policy; not verified'}, offlineEmbed:{...embedResult.result.value,packaged:true,fileOpening:'BLOCKED: managed Chromium file URL policy; not verified',previewSha256:createHash('sha256').update(embedPreview).digest('hex')}, errors, browserLogs, requests: [...new Set(requests)] }
+  const report = { browser: browser.Browser, fixture: fixture.manifest, results, artifacts, cancellation: cancelled.result.value, independentPptx: rendered.result.value, fontExport, offlineHtml:{packaging:'self-contained image/font data URLs',pages:50,images:imageSources.length,formulas:(offlineHtml.match(/class="katex"/g)??[]).length,fileOpening:'BLOCKED: managed Chromium file URL policy; not verified'}, offlineEmbed:{...embedResult.result.value,packaged:true,fileOpening:'BLOCKED: managed Chromium file URL policy; not verified',previewSha256:createHash('sha256').update(embedPreview).digest('hex')}, errors, browserLogs, requests: [...new Set(requests)] }
   await writeFile(join(output, 'report.json'), JSON.stringify(report, null, 2))
   console.log(`Evidence: ${output}`)
 } finally {

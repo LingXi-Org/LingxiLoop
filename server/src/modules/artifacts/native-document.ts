@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { Worker } from 'node:worker_threads'
 import { z } from 'zod'
 import { type ArtifactDocument, type ArtifactPage, artifactPageSchema, createDocument, createPage, validateArtifactDocument } from '../../../../shared/artifact-document.js'
+import { artifactPageIds } from '../../../../shared/artifact-canvas-pages.js'
 import { type ArtifactOperation, type ArtifactOperationBatch, applyOperations, prepareBatch } from '../../../../shared/artifact-operations.js'
 import { projectArtifactThemes } from '../../../../shared/artifact-themes.js'
 import type { Queryable } from '../../db/queryable.js'
@@ -72,7 +73,7 @@ export async function readNativeDocument(db: Queryable, artifactId: string): Pro
   const { pageFiles, ...metadata } = manifest
   const contents = await versionContents(db, artifactId, Object.values(pageFiles))
   const pages: Record<string, ArtifactPage> = {}
-  for (const pageId of manifest.pageOrder) {
+  for (const pageId of artifactPageIds(manifest)) {
     const bytes = contents.get(pageFiles[pageId])
     if (!bytes) throw new NativeDocumentError(500, 'missing_page', `Saved page ${pageId} is unavailable`)
     pages[pageId] = artifactPageSchema.parse(JSON.parse(bytes.toString('utf8')))
@@ -198,7 +199,7 @@ export async function initializeNativeArtifact(db: Queryable, artifact: Artifact
   const document = initialDocument(artifact)
   document.seq = Number(artifact.seq ?? 0) + 1
   await db.query('INSERT INTO artifact_document_state(artifact_id,revision) VALUES($1,$2)', [artifact.id, document.seq])
-  await persistDocument(db, document, actorId, null, document.pageOrder)
+  await persistDocument(db, document, actorId, null, artifactPageIds(document))
   return (await readNativeDocument(db, artifact.id))!
 }
 
@@ -235,7 +236,7 @@ function convertInWorker(source: Pick<SourceSnapshot, 'artifact' | 'files'>): Pr
     worker.once('message', (result: { result?: Conversion; error?: string }) => {
       clearTimeout(timeout)
       if (result.result) resolve(result.result)
-      else reject(new NativeDocumentError(422, 'conversion_failed', result.error ?? 'Cannot convert this document. The original files are unchanged.'))
+      else reject(new NativeDocumentError(422, 'conversion_failed', result.error ?? '无法转换此稿件，原始文件未更改。'))
       void worker.terminate()
     })
     worker.once('error', error => { clearTimeout(timeout); reject(error) })
@@ -256,7 +257,7 @@ export async function ensureNativeDocument(context: { db: Queryable; transaction
   const converted = await convertInWorker(source)
   const document = validateArtifactDocument(converted.document)
   if (Buffer.byteLength(JSON.stringify(document)) > MAX_DOCUMENT_BYTES) throw new NativeDocumentError(413, 'too_large', 'Converted document exceeds the supported size. Its original files are unchanged.')
-  stampEmbeddedSources(document, document.pageOrder)
+  stampEmbeddedSources(document, artifactPageIds(document))
   stampLegacyResources(document, source.version)
   const original = { version: source.version, files: source.listing, warnings: converted.warnings, blobs: source.blobs }
   if (!input.write || !nativeWritesEnabled()) return { document, history: { version: 0, undo: null, redo: null }, pageVersions: {}, original }
@@ -269,8 +270,8 @@ export async function ensureNativeDocument(context: { db: Queryable; transaction
       WHERE artifact_id=$1 ON CONFLICT(artifact_id,sha256) DO NOTHING`, [input.artifactId])
     document.seq = Number(artifact.seq) + 1
     await db.query('INSERT INTO artifact_document_state(artifact_id,revision,original_manifest) VALUES($1,$2,$3::jsonb)', [input.artifactId, document.seq, JSON.stringify(original)])
-    await persistDocument(db, document, input.actorId, null, document.pageOrder)
-    const receipt: StoredOperationReceipt = { operationId: `convert-${source.version}`, seq: document.seq, kind: 'convert', actorId: input.actorId, actorKind: 'user', operations: [], changedPageIds: document.pageOrder, changedKeys: [], history: { version: 0, undo: null, redo: null } }
+    await persistDocument(db, document, input.actorId, null, artifactPageIds(document))
+    const receipt: StoredOperationReceipt = { operationId: `convert-${source.version}`, seq: document.seq, kind: 'convert', actorId: input.actorId, actorKind: 'user', operations: [], changedPageIds: artifactPageIds(document), changedKeys: [], history: { version: 0, undo: null, redo: null } }
     await saveOperation(db, input.artifactId, receipt, requestHash({ sourceVersion: source.version }), [], null)
     return (await readNativeDocument(db, input.artifactId))!
   })
@@ -421,12 +422,10 @@ export async function nativeSourceArchive(db: Queryable, artifactId: string) {
   return { artifactId, files: Object.fromEntries(rows.map(row => [row.path, { sha256: row.sha256, contentType: row.content_type, base64: row.body.toString('base64') }])), originals, assets }
 }
 
-/** A retained file checkpoint is restored through native operations; original source manifests never change. */
-export async function restoreNativeRevision(db: Queryable, input: { artifactId: string; companyId: string; actorId: string; seq: string; version: string }) {
-  const artifact = await scopedArtifact(db, input.artifactId, input.companyId, true)
-  if ((await listing(db, input.artifactId)).ver !== input.version) throw new NativeDocumentError(409, 'version_conflict', 'The document changed. Refresh its revision before restoring.')
-  const current = await readNativeDocument(db, input.artifactId)
-  if (!current) throw new NativeDocumentError(409, 'native_document_required', 'Open this document before restoring history.')
+/** Read immutable checkpoint bytes without adopting them as the current document. */
+export async function readNativeRevision(db: Queryable, input: {artifactId:string;companyId:string;seq:string}):Promise<NativeDocumentSnapshot> {
+  const artifact=await scopedArtifact(db,input.artifactId,input.companyId)
+  let pageVersions:Record<string,string>={}
   const checkpoint = (await db.query<{ files: Record<string, ListedFile>; version: string }>('SELECT files,version FROM artifact_revisions WHERE artifact_id=$1 AND seq=$2', [input.artifactId, input.seq])).rows[0]
   if (!checkpoint) throw new NativeDocumentError(404, 'revision_not_found', 'Revision not found')
   const contents = await versionContents(db, input.artifactId, Object.values(checkpoint.files).map(file => file.sha256))
@@ -435,6 +434,7 @@ export async function restoreNativeRevision(db: Queryable, input: { artifactId: 
     const bytes = contents.get(checkpoint.files[NATIVE_DOCUMENT_PATH].sha256)
     if (!bytes) throw new NativeDocumentError(500, 'missing_revision', 'Revision content missing')
     const { pageFiles, ...metadata } = JSON.parse(bytes.toString('utf8')) as Manifest
+    pageVersions=pageFiles
     const pages: Record<string, ArtifactPage> = {}
     for (const [id, hash] of Object.entries(pageFiles)) {
       const page = contents.get(hash)
@@ -451,15 +451,26 @@ export async function restoreNativeRevision(db: Queryable, input: { artifactId: 
     }
     restored = (await convertInWorker({ artifact, files })).document
     stampLegacyResources(restored, checkpoint.version)
+    stampEmbeddedSources(restored,artifactPageIds(restored))
   }
+  return {document:restored,pageVersions,history:{version:0,undo:null,redo:null}}
+}
+
+/** A retained file checkpoint is restored through native operations; original source manifests never change. */
+export async function restoreNativeRevision(db: Queryable, input: { artifactId: string; companyId: string; actorId: string; seq: string; version: string }) {
+  await scopedArtifact(db, input.artifactId, input.companyId, true)
+  if ((await listing(db, input.artifactId)).ver !== input.version) throw new NativeDocumentError(409, 'version_conflict', 'The document changed. Refresh its revision before restoring.')
+  const current = await readNativeDocument(db, input.artifactId)
+  if (!current) throw new NativeDocumentError(409, 'native_document_required', 'Open this document before restoring history.')
+  const {document:restored}=await readNativeRevision(db,input)
   const operations: ArtifactOperation[] = []
   // Delete pages before replacing their resources; validation runs on the complete transaction.
-  for (const pageId of current.document.pageOrder) operations.push({ type: 'page.delete', pageId } as ArtifactOperation)
+  for (const pageId of artifactPageIds(current.document)) operations.push({ type: 'page.delete', pageId } as ArtifactOperation)
   for (const id of Object.keys(current.document.assets)) operations.push({ type: 'asset.delete', assetId: id } as ArtifactOperation)
   for (const id of Object.keys(current.document.themes)) operations.push({ type: 'theme.delete', themeId: id } as ArtifactOperation)
   for (const asset of Object.values(restored.assets)) operations.push({ type: 'asset.set', asset } as ArtifactOperation)
   for (const theme of Object.values(restored.themes)) operations.push({ type: 'theme.set', theme } as ArtifactOperation)
-  operations.push({ type: 'document.patch', patch: { title: restored.title, themeId: restored.themeId } } as ArtifactOperation)
-  for (const pageId of restored.pageOrder) operations.push({ type: 'page.insert', page: restored.pages[pageId] } as ArtifactOperation)
+  operations.push({ type: 'document.patch', patch: { title: restored.title, themeId: restored.themeId, ...(restored.canvasPages ? {canvasPages:restored.canvasPages} : {}) }, ...(!restored.canvasPages ? {unset:['canvasPages'] as const} : {}) } as ArtifactOperation)
+  for (const pageId of artifactPageIds(restored)) operations.push({ type: 'page.insert', page: restored.pages[pageId] } as ArtifactOperation)
   return submitNativeOperations(db, { ...input, actorKind: 'user', kind: 'restore', request: prepareBatch(current.document, operations, `restore-${randomUUID()}`) })
 }

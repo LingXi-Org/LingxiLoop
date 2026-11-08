@@ -18,6 +18,6 @@ export function artifactAssetRequest(urlValue: string, artifactId: string, locat
 }
 export function requireAssetContentType(contentType: string | null) {
   const type = (contentType ?? '').split(';')[0].trim().toLowerCase()
-  if (!/^image\/(png|jpeg|webp|gif|avif|svg\+xml)$/.test(type) && !/^font\/(woff2?|ttf|otf)$/.test(type)) throw new Error('资源响应不是支持的图片或字体。')
+  if (!/^image\/(png|jpeg|webp|gif|avif|svg\+xml)$/.test(type) && !/^font\/(woff2?|ttf|otf)$/.test(type) && !/^video\/(mp4|webm|ogg)$/.test(type)) throw new Error('资源响应不是支持的图片、视频或字体。')
   return type
 }

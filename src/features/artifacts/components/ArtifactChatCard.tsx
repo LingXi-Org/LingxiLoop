@@ -22,8 +22,8 @@ export function ArtifactChatCard({ artifactId, kind, title, description }: { art
     meta={description ? `${label} · ${description}` : label}
     icon={kind === 'slides' ? <PresentationIcon /> : <PanelsTopLeftIcon />}
     onOpen={() => openArtifact(kind, artifactId, title)}
-    onPointerEnter={() => prefetchEditor(kind, artifactId)}
-    onFocus={() => prefetchEditor(kind, artifactId)}
+    onPointerEnter={() => prefetchEditor()}
+    onFocus={() => prefetchEditor()}
     openLabel={`打开${label}`}
     opened={opened}
     data-artifact-open-trigger={artifactId}

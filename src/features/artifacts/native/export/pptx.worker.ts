@@ -22,5 +22,5 @@ scope.onmessage = async event => {
     }
     const bytes = await deck.write({ outputType: 'arraybuffer', compression: true }) as ArrayBuffer
     scope.postMessage({ bytes }, [bytes])
-  } catch (error) { scope.postMessage({ error: error instanceof Error ? error.message : 'PPTX export failed' }) }
+  } catch (error) { scope.postMessage({ error: error instanceof Error ? error.message : '演示文稿导出失败。' }) }
 }

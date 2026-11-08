@@ -142,12 +142,6 @@ export const agentArtifactSchemas = {
   apply_ops: artifactOperationBatchSchema.extend({ ...target, sourceVersion: z.string().min(1).max(200).optional() }).strict(),
   create: z.object({ title: titleSchema }).strict(),
   read_file: z.object({ ...target, path: projectPathSchema }).strict(),
-  write_files: z.object({ ...target, files: z.record(projectPathSchema, z.union([
-    z.object({ content: z.string().max(4 * 1024 * 1024), ifMatch: z.string().regex(/^[0-9a-f]{64}$/).nullable().optional() }).strict(),
-    z.object({ delete: z.literal(true), ifMatch: z.string().regex(/^[0-9a-f]{64}$/).optional() }).strict(),
-  ])).refine(files => Object.keys(files).length >= 1 && Object.keys(files).length <= 32, 'write 1 to 32 files') }).strict(),
-  edit_file: z.object({ ...target, path: projectPathSchema, oldString: z.string().min(1).max(256 * 1024),
-    newString: z.string().max(256 * 1024), replaceAll: z.boolean().optional() }).strict(),
   import_asset: z.object({ ...target, attachmentId: z.string().min(1).max(2000) }).strict(),
   check: z.object({ ...target }).strict(),
   read_reference: z.object({ page: z.string().regex(/^[a-z0-9-]+\.(md|json)$/) }).strict(),

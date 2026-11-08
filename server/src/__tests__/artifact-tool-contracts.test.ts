@@ -12,6 +12,23 @@ const control = async () => { throw new Error('schema tests must not access runt
 const design = createArtifactTools('design', control), slides = createArtifactTools('slides', control)
 const report = { finding: 'Observed finding', evidenceRefs: [{ kind: 'file', id: 'project/pages/main.json' }], confidence: 0.8 }
 
+test('native operation schemas retain self-contained references and admit the same bounded pen data',()=>{
+  const document=createDocument('design','canvas'),page=createPage('p');document.pages.p=page;document.pageOrder=['p']
+  const node={...createNode('drawing','pen'),path:{d:'M0 0 C10 0 20 30 40 30',width:40,height:30}}
+  const batch=prepareBatch(document,[{type:'node.insert',pageId:'p',node}],'pen-edit')
+  for(const tools of [design,slides]){
+    const tool=tools.find(tool=>tool.action.endsWith('.apply_ops'))!,parameters=tool.parameters as Record<string,unknown>,references:string[]=[]
+    let pathDefinitions=0
+    const walk=(value:unknown)=>{if(!value||typeof value!=='object')return;const properties=Reflect.get(value,'properties');if(properties&&typeof properties==='object'&&Object.hasOwn(properties,'d')&&Object.hasOwn(properties,'width')&&Object.hasOwn(properties,'height'))pathDefinitions++;for(const[key,item]of Object.entries(value)){if(key==='$ref'&&typeof item==='string')references.push(item);else walk(item)}}
+    walk(parameters);assert.ok(references.length>0,'the repeated node schema must not expand separately for every operation')
+    assert.equal(pathDefinitions,1,'insert, replace, patch and page operations share the bounded path definition')
+    for(const reference of references){assert.ok(reference.startsWith('#/'));let target:unknown=parameters;for(const key of reference.slice(2).split('/'))target=target&&typeof target==='object'?Reflect.get(target,key.replace(/~1/g,'/').replace(/~0/g,'~')):undefined;assert.ok(target&&typeof target==='object',`unresolved local reference: ${reference}`)}
+    assert.deepEqual(tool.parse(batch),batch)
+    assert.throws(()=>tool.parse({...batch,operations:[{type:'node.insert',pageId:'p',node:{...node,path:{...node.path,d:'M0 0 L-1 2'}}}]}))
+    assert.throws(()=>tool.parse({...batch,companyId:'other'}))
+  }
+})
+
 test('Slides retains common native tools and adds deck creation and real design-system tools', () => {
   const methods = (tools: typeof design) => tools.map(tool => tool.action.split('.')[1])
   assert.deepEqual(methods(slides).filter(method => !['create', 'design_systems', 'install_design_system'].includes(method)), methods(design).filter(method => !['ensure','plan_explanation'].includes(method)))
@@ -111,4 +128,35 @@ test('native artifact tools declare a new organization runtime harness and use t
   assert.match(deploy, /if \(nativeHarness && stacks\.includes\('app-a'\)\)/)
   assert.match(deploy, /await convergeHarnessCutover\(/)
   assert.match(deploy, /barrier: \(\) => harnessTargetEntry\(ssh, images, 'barrier'\)/)
+})
+
+
+test('原生Agent工具接受四角圆角并拒绝错误长度和越界值',()=>{
+  const document=createDocument('design','radius-tool'),page=createPage('p');document.pages.p=page;document.pageOrder=['p']
+  const batch=prepareBatch(document,[{type:'page.patch',pageId:'p',patch:{radius:[10,20,30,40]}}],'radius-tool')
+  for(const tools of [design,slides]){
+    const tool=tools.find(tool=>tool.action.endsWith('.apply_ops'))!
+    assert.deepEqual(tool.parse(batch),batch)
+    for(const radius of [[1,2,3],[1,2,3,4,5],[1,2,-1,4],[1,2,4001,4]])assert.throws(()=>tool.parse({...batch,operations:[{type:'page.patch',pageId:'p',patch:{radius}}]}))
+  }
+})
+
+test('原生Agent工具承载独立打印模式且拒绝未知模式',()=>{
+  const document=createDocument('design','print-tool'),page=createPage('p');document.pages.p=page;document.pageOrder=['p']
+  const batch=prepareBatch(document,[{type:'page.patch',pageId:'p',patch:{print:'flow',sizing:'fixed',paper:'A4'}}],'print-tool')
+  for(const tools of [design,slides]){
+    const tool=tools.find(tool=>tool.action.endsWith('.apply_ops'))!
+    assert.deepEqual(tool.parse(batch),batch)
+    assert.throws(()=>tool.parse({...batch,operations:[{type:'page.patch',pageId:'p',patch:{print:'unknown'}}]}))
+  }
+})
+
+// 只有版本化操作可写稿件，旧整文件写入不再作为可调用工具暴露。
+test('原生稿件只注册操作写入接口', () => {
+  for (const kind of ['design', 'slides'] as const) {
+    const tools = createArtifactTools(kind, control)
+    assert.ok(tools.some(tool => tool.action === `${kind}.apply_ops`))
+    for (const method of ['write_files', 'edit_file'])
+      assert.equal(tools.some(tool => tool.action === `${kind}.${method}`), false)
+  }
 })

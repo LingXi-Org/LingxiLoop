@@ -145,27 +145,19 @@ export function explanationPlanningAvailable(context: TurnContext): boolean {
 export function authoredDesignPaths(context:TurnContext):string[] {
   const paths = new Set<string>()
   for (const step of context.executionSteps ?? []) {
-    if (step.requestVersion !== context.snapshotVersion?.requestVersion || !['design__apply_ops','design__write_files','design__edit_file'].includes(step.kind)) continue
+    if (step.requestVersion !== context.snapshotVersion?.requestVersion || step.kind !== 'design__apply_ops') continue
     try {
       const output = JSON.parse(step.output ?? '{}'), args = JSON.parse(String(step.input.arguments))
       if (!output.receipts?.some((receipt:{action?:string;result?:{ok?:boolean;approval?:unknown;directive?:unknown;executionState?:string}}) =>
         receipt.action === step.kind.replace('__','.') && receipt.result?.ok === true && receipt.result.approval === undefined
         && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown')) continue
-      if (step.kind === 'design__apply_ops') {
-        for (const operation of args.operations ?? []) {
-          const pageId = operation.type === 'page.insert' ? operation.page?.id : operation.pageId
-          if (typeof pageId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(pageId)) continue
-          const path = `project/pages/${pageId}.json`
-          if (operation.type === 'page.delete') paths.delete(path)
-          else if (operation.type === 'page.insert' && operation.page?.nodeOrder?.length
-            || ['node.insert','node.patch','node.replace'].includes(operation.type)) paths.add(path)
-        }
-      } else if (step.kind === 'design__edit_file') {
-        if (typeof args.path === 'string' && /^project\/.+\.dc\.html$/.test(args.path) && typeof args.newString === 'string' && args.newString.trim()) paths.add(args.path)
-      } else if (args.files && typeof args.files === 'object') for (const [path,entry] of Object.entries(args.files)) {
-        if (!/^project\/.+\.dc\.html$/.test(path) || !entry || typeof entry !== 'object') continue
-        if ('delete' in entry && entry.delete === true || 'content' in entry && (typeof entry.content !== 'string' || !entry.content.trim())) paths.delete(path)
-        else if ('content' in entry && typeof entry.content === 'string') paths.add(path)
+      for (const operation of args.operations ?? []) {
+        const pageId = operation.type === 'page.insert' ? operation.page?.id : operation.pageId
+        if (typeof pageId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(pageId)) continue
+        const path = `project/pages/${pageId}.json`
+        if (operation.type === 'page.delete') paths.delete(path)
+        else if (operation.type === 'page.insert' && operation.page?.nodeOrder?.length
+          || ['node.insert','node.patch','node.replace'].includes(operation.type)) paths.add(path)
       }
     } catch { /* Failed or unknown effects never establish authored content. */ }
   }
@@ -220,7 +212,7 @@ export function nextExplanationStep(context: TurnContext): {action:string;args?:
       action: 'design.read_page', args: { pageId: firstPage, ...(observation.pageVersions?.[firstPage] ? { version: observation.pageVersions[firstPage], atSeq: observation.document.seq } : observation.sourceVersion ? { sourceVersion: observation.sourceVersion } : {}) },
     }
   }
-  const writes = steps.filter(step => ['design__apply_ops','design__write_files','design__edit_file'].includes(step.kind))
+  const writes = steps.filter(step => step.kind === 'design__apply_ops')
   if (!writes.length) return {action:'design.apply_ops'}
   const last = writes.at(-1)!, action = last.kind.replace('__','.')
   if (!confirmed(last,action)) return undefined

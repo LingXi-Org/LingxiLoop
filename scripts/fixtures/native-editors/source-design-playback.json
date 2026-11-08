@@ -1,0 +1,1050 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceFile": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "functionLocation": {
+    "start": 5393614,
+    "end": 5393979,
+    "offsetUnit": "UTF-16 code units"
+  },
+  "behavior": "播放先显示分组画板菜单，选择静态画板进入全窗口预览；不直接进入幻灯片放映。",
+  "cases": [
+    {
+      "name": "旧画板默认静态",
+      "pages": [
+        {
+          "id": "旧画板",
+          "x": 0,
+          "y": 0,
+          "w": 100,
+          "h": 100
+        }
+      ],
+      "expected": {
+        "prototypes": [],
+        "others": [
+          "旧画板"
+        ]
+      }
+    },
+    {
+      "name": "分组和阅读顺序",
+      "pages": [
+        {
+          "id": "下方原型",
+          "x": 0,
+          "y": 60,
+          "w": 100,
+          "h": 100,
+          "is_interactive": true
+        },
+        {
+          "id": "首行右侧",
+          "x": 100,
+          "y": 0,
+          "w": 100,
+          "h": 100
+        },
+        {
+          "id": "首行左侧",
+          "x": 0,
+          "y": 40,
+          "w": 100,
+          "h": 100
+        },
+        {
+          "id": "首行原型",
+          "x": -100,
+          "y": 20,
+          "w": 100,
+          "h": 100,
+          "is_interactive": true
+        },
+        {
+          "id": "无框画板",
+          "x": 0,
+          "y": -200,
+          "w": 100,
+          "h": 100,
+          "frameless": true,
+          "is_interactive": true
+        }
+      ],
+      "expected": {
+        "prototypes": [
+          "首行原型",
+          "下方原型"
+        ],
+        "others": [
+          "首行左侧",
+          "首行右侧"
+        ]
+      }
+    },
+    {
+      "name": "首行中点临界",
+      "pages": [
+        {
+          "id": "新行",
+          "x": -10,
+          "y": 50,
+          "w": 100,
+          "h": 100
+        },
+        {
+          "id": "首行",
+          "x": 100,
+          "y": 0,
+          "w": 100,
+          "h": 100
+        },
+        {
+          "id": "同一行",
+          "x": 0,
+          "y": 49,
+          "w": 100,
+          "h": 100
+        }
+      ],
+      "expected": {
+        "prototypes": [],
+        "others": [
+          "同一行",
+          "首行",
+          "新行"
+        ]
+      }
+    }
+  ],
+  "runtime": [
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "light",
+      "snapshot": {
+        "rect": {
+          "x": 1682,
+          "y": 47,
+          "width": 128,
+          "height": 103,
+          "top": 47,
+          "right": 1810,
+          "bottom": 150,
+          "left": 1682
+        },
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "19px",
+        "color": "rgba(0, 0, 0, 0.9)",
+        "padding": "0px",
+        "radius": "10px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 0px inset, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.12) 0px 8px 24px 0px, rgba(0, 0, 0, 0.08) 0px 2px 6px 0px",
+        "background": "rgb(255, 255, 255)",
+        "heading": {
+          "rect": {
+            "x": 1686,
+            "y": 51,
+            "width": 120,
+            "height": 23,
+            "top": 51,
+            "right": 1806,
+            "bottom": 74,
+            "left": 1686
+          },
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "15px",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "padding": "4px 8px",
+          "radius": "0px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        "items": [
+          {
+            "label": "Page 1",
+            "rect": {
+              "x": 1686,
+              "y": 74,
+              "width": 120,
+              "height": 24,
+              "top": 74,
+              "right": 1806,
+              "bottom": 98,
+              "left": 1686
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 2",
+            "rect": {
+              "x": 1686,
+              "y": 98,
+              "width": 120,
+              "height": 24,
+              "top": 98,
+              "right": 1806,
+              "bottom": 122,
+              "left": 1686
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 3",
+            "rect": {
+              "x": 1686,
+              "y": 122,
+              "width": 120,
+              "height": 24,
+              "top": 122,
+              "right": 1806,
+              "bottom": 146,
+              "left": 1686
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ]
+      },
+      "staticSelectionOpensBoardPreview": true
+    },
+    {
+      "width": 1920,
+      "height": 1200,
+      "theme": "dark",
+      "snapshot": {
+        "rect": {
+          "x": 1682,
+          "y": 47,
+          "width": 128,
+          "height": 104,
+          "top": 47,
+          "right": 1810,
+          "bottom": 151,
+          "left": 1682
+        },
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "19px",
+        "color": "rgba(255, 255, 255, 0.93)",
+        "padding": "0px",
+        "radius": "10px",
+        "border": "0px solid rgba(255, 255, 255, 0.04)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 0px 0px 0px, rgba(0, 0, 0, 0.32) 0px 8px 24px 0px, rgba(0, 0, 0, 0.2) 0px 2px 6px 0px",
+        "background": "rgb(48, 48, 48)",
+        "heading": {
+          "rect": {
+            "x": 1686,
+            "y": 51,
+            "width": 120,
+            "height": 23,
+            "top": 51,
+            "right": 1806,
+            "bottom": 74,
+            "left": 1686
+          },
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "15px",
+          "color": "rgba(255, 255, 255, 0.57)",
+          "padding": "4px 8px",
+          "radius": "0px",
+          "border": "0px solid rgba(255, 255, 255, 0.04)",
+          "shadow": "none",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        "items": [
+          {
+            "label": "Page 1",
+            "rect": {
+              "x": 1686,
+              "y": 74,
+              "width": 120,
+              "height": 24,
+              "top": 74,
+              "right": 1806,
+              "bottom": 98,
+              "left": 1686
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 2",
+            "rect": {
+              "x": 1686,
+              "y": 98,
+              "width": 120,
+              "height": 24,
+              "top": 98,
+              "right": 1806,
+              "bottom": 122,
+              "left": 1686
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 3",
+            "rect": {
+              "x": 1686,
+              "y": 122,
+              "width": 120,
+              "height": 24,
+              "top": 122,
+              "right": 1806,
+              "bottom": 146,
+              "left": 1686
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ]
+      },
+      "staticSelectionOpensBoardPreview": true
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "light",
+      "snapshot": {
+        "rect": {
+          "x": 1202,
+          "y": 47,
+          "width": 128,
+          "height": 103,
+          "top": 47,
+          "right": 1330,
+          "bottom": 150,
+          "left": 1202
+        },
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "19px",
+        "color": "rgba(0, 0, 0, 0.9)",
+        "padding": "0px",
+        "radius": "10px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 0px inset, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.12) 0px 8px 24px 0px, rgba(0, 0, 0, 0.08) 0px 2px 6px 0px",
+        "background": "rgb(255, 255, 255)",
+        "heading": {
+          "rect": {
+            "x": 1206,
+            "y": 51,
+            "width": 120,
+            "height": 23,
+            "top": 51,
+            "right": 1326,
+            "bottom": 74,
+            "left": 1206
+          },
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "15px",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "padding": "4px 8px",
+          "radius": "0px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        "items": [
+          {
+            "label": "Page 1",
+            "rect": {
+              "x": 1206,
+              "y": 74,
+              "width": 120,
+              "height": 24,
+              "top": 74,
+              "right": 1326,
+              "bottom": 98,
+              "left": 1206
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 2",
+            "rect": {
+              "x": 1206,
+              "y": 98,
+              "width": 120,
+              "height": 24,
+              "top": 98,
+              "right": 1326,
+              "bottom": 122,
+              "left": 1206
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 3",
+            "rect": {
+              "x": 1206,
+              "y": 122,
+              "width": 120,
+              "height": 24,
+              "top": 122,
+              "right": 1326,
+              "bottom": 146,
+              "left": 1206
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ]
+      },
+      "staticSelectionOpensBoardPreview": true
+    },
+    {
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark",
+      "snapshot": {
+        "rect": {
+          "x": 1202,
+          "y": 47,
+          "width": 128,
+          "height": 104,
+          "top": 47,
+          "right": 1330,
+          "bottom": 151,
+          "left": 1202
+        },
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "19px",
+        "color": "rgba(255, 255, 255, 0.93)",
+        "padding": "0px",
+        "radius": "10px",
+        "border": "0px solid rgba(255, 255, 255, 0.04)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 0px 0px 0px, rgba(0, 0, 0, 0.32) 0px 8px 24px 0px, rgba(0, 0, 0, 0.2) 0px 2px 6px 0px",
+        "background": "rgb(48, 48, 48)",
+        "heading": {
+          "rect": {
+            "x": 1206,
+            "y": 51,
+            "width": 120,
+            "height": 23,
+            "top": 51,
+            "right": 1326,
+            "bottom": 74,
+            "left": 1206
+          },
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "15px",
+          "color": "rgba(255, 255, 255, 0.57)",
+          "padding": "4px 8px",
+          "radius": "0px",
+          "border": "0px solid rgba(255, 255, 255, 0.04)",
+          "shadow": "none",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        "items": [
+          {
+            "label": "Page 1",
+            "rect": {
+              "x": 1206,
+              "y": 74,
+              "width": 120,
+              "height": 24,
+              "top": 74,
+              "right": 1326,
+              "bottom": 98,
+              "left": 1206
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 2",
+            "rect": {
+              "x": 1206,
+              "y": 98,
+              "width": 120,
+              "height": 24,
+              "top": 98,
+              "right": 1326,
+              "bottom": 122,
+              "left": 1206
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 3",
+            "rect": {
+              "x": 1206,
+              "y": 122,
+              "width": 120,
+              "height": 24,
+              "top": 122,
+              "right": 1326,
+              "bottom": 146,
+              "left": 1206
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ]
+      },
+      "staticSelectionOpensBoardPreview": true
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "snapshot": {
+        "rect": {
+          "x": 530,
+          "y": 47,
+          "width": 128,
+          "height": 103,
+          "top": 47,
+          "right": 658,
+          "bottom": 150,
+          "left": 530
+        },
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "19px",
+        "color": "rgba(0, 0, 0, 0.9)",
+        "padding": "0px",
+        "radius": "10px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 0px inset, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.12) 0px 8px 24px 0px, rgba(0, 0, 0, 0.08) 0px 2px 6px 0px",
+        "background": "rgb(255, 255, 255)",
+        "heading": {
+          "rect": {
+            "x": 534,
+            "y": 51,
+            "width": 120,
+            "height": 23,
+            "top": 51,
+            "right": 654,
+            "bottom": 74,
+            "left": 534
+          },
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "15px",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "padding": "4px 8px",
+          "radius": "0px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        "items": [
+          {
+            "label": "Page 1",
+            "rect": {
+              "x": 534,
+              "y": 74,
+              "width": 120,
+              "height": 24,
+              "top": 74,
+              "right": 654,
+              "bottom": 98,
+              "left": 534
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 2",
+            "rect": {
+              "x": 534,
+              "y": 98,
+              "width": 120,
+              "height": 24,
+              "top": 98,
+              "right": 654,
+              "bottom": 122,
+              "left": 534
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 3",
+            "rect": {
+              "x": 534,
+              "y": 122,
+              "width": 120,
+              "height": 24,
+              "top": 122,
+              "right": 654,
+              "bottom": 146,
+              "left": 534
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ]
+      },
+      "staticSelectionOpensBoardPreview": true
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "snapshot": {
+        "rect": {
+          "x": 530,
+          "y": 47,
+          "width": 128,
+          "height": 104,
+          "top": 47,
+          "right": 658,
+          "bottom": 151,
+          "left": 530
+        },
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "19px",
+        "color": "rgba(255, 255, 255, 0.93)",
+        "padding": "0px",
+        "radius": "10px",
+        "border": "0px solid rgba(255, 255, 255, 0.04)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 0px 0px 0px, rgba(0, 0, 0, 0.32) 0px 8px 24px 0px, rgba(0, 0, 0, 0.2) 0px 2px 6px 0px",
+        "background": "rgb(48, 48, 48)",
+        "heading": {
+          "rect": {
+            "x": 534,
+            "y": 51,
+            "width": 120,
+            "height": 23,
+            "top": 51,
+            "right": 654,
+            "bottom": 74,
+            "left": 534
+          },
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "15px",
+          "color": "rgba(255, 255, 255, 0.57)",
+          "padding": "4px 8px",
+          "radius": "0px",
+          "border": "0px solid rgba(255, 255, 255, 0.04)",
+          "shadow": "none",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        "items": [
+          {
+            "label": "Page 1",
+            "rect": {
+              "x": 534,
+              "y": 74,
+              "width": 120,
+              "height": 24,
+              "top": 74,
+              "right": 654,
+              "bottom": 98,
+              "left": 534
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 2",
+            "rect": {
+              "x": 534,
+              "y": 98,
+              "width": 120,
+              "height": 24,
+              "top": 98,
+              "right": 654,
+              "bottom": 122,
+              "left": 534
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 3",
+            "rect": {
+              "x": 534,
+              "y": 122,
+              "width": 120,
+              "height": 24,
+              "top": 122,
+              "right": 654,
+              "bottom": 146,
+              "left": 534
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ]
+      },
+      "staticSelectionOpensBoardPreview": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "snapshot": {
+        "rect": {
+          "x": 156,
+          "y": 47,
+          "width": 128,
+          "height": 103,
+          "top": 47,
+          "right": 284,
+          "bottom": 150,
+          "left": 156
+        },
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "19px",
+        "color": "rgba(0, 0, 0, 0.9)",
+        "padding": "0px",
+        "radius": "10px",
+        "border": "0px solid rgba(0, 0, 0, 0.08)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 0px inset, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px, rgba(0, 0, 0, 0.12) 0px 8px 24px 0px, rgba(0, 0, 0, 0.08) 0px 2px 6px 0px",
+        "background": "rgb(255, 255, 255)",
+        "heading": {
+          "rect": {
+            "x": 160,
+            "y": 51,
+            "width": 120,
+            "height": 23,
+            "top": 51,
+            "right": 280,
+            "bottom": 74,
+            "left": 160
+          },
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "15px",
+          "color": "rgba(0, 0, 0, 0.6)",
+          "padding": "4px 8px",
+          "radius": "0px",
+          "border": "0px solid rgba(0, 0, 0, 0.08)",
+          "shadow": "none",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        "items": [
+          {
+            "label": "Page 1",
+            "rect": {
+              "x": 160,
+              "y": 74,
+              "width": 120,
+              "height": 24,
+              "top": 74,
+              "right": 280,
+              "bottom": 98,
+              "left": 160
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 2",
+            "rect": {
+              "x": 160,
+              "y": 98,
+              "width": 120,
+              "height": 24,
+              "top": 98,
+              "right": 280,
+              "bottom": 122,
+              "left": 160
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 3",
+            "rect": {
+              "x": 160,
+              "y": 122,
+              "width": 120,
+              "height": 24,
+              "top": 122,
+              "right": 280,
+              "bottom": 146,
+              "left": 160
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(0, 0, 0, 0.9)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(0, 0, 0, 0.08)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ]
+      },
+      "staticSelectionOpensBoardPreview": true
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "snapshot": {
+        "rect": {
+          "x": 156,
+          "y": 47,
+          "width": 128,
+          "height": 104,
+          "top": 47,
+          "right": 284,
+          "bottom": 151,
+          "left": 156
+        },
+        "fontSize": "13px",
+        "fontWeight": "400",
+        "lineHeight": "19px",
+        "color": "rgba(255, 255, 255, 0.93)",
+        "padding": "0px",
+        "radius": "10px",
+        "border": "0px solid rgba(255, 255, 255, 0.04)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(255, 255, 255, 0.04) 0px 0px 0px 1px inset, rgba(255, 255, 255, 0.04) 0px 0px 0px 0px, rgba(0, 0, 0, 0.32) 0px 8px 24px 0px, rgba(0, 0, 0, 0.2) 0px 2px 6px 0px",
+        "background": "rgb(48, 48, 48)",
+        "heading": {
+          "rect": {
+            "x": 160,
+            "y": 51,
+            "width": 120,
+            "height": 23,
+            "top": 51,
+            "right": 280,
+            "bottom": 74,
+            "left": 160
+          },
+          "fontSize": "12px",
+          "fontWeight": "500",
+          "lineHeight": "15px",
+          "color": "rgba(255, 255, 255, 0.57)",
+          "padding": "4px 8px",
+          "radius": "0px",
+          "border": "0px solid rgba(255, 255, 255, 0.04)",
+          "shadow": "none",
+          "background": "rgba(0, 0, 0, 0)"
+        },
+        "items": [
+          {
+            "label": "Page 1",
+            "rect": {
+              "x": 160,
+              "y": 74,
+              "width": 120,
+              "height": 24,
+              "top": 74,
+              "right": 280,
+              "bottom": 98,
+              "left": 160
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 2",
+            "rect": {
+              "x": 160,
+              "y": 98,
+              "width": 120,
+              "height": 24,
+              "top": 98,
+              "right": 280,
+              "bottom": 122,
+              "left": 160
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          },
+          {
+            "label": "Page 3",
+            "rect": {
+              "x": 160,
+              "y": 122,
+              "width": 120,
+              "height": 24,
+              "top": 122,
+              "right": 280,
+              "bottom": 146,
+              "left": 160
+            },
+            "fontSize": "13px",
+            "fontWeight": "435",
+            "lineHeight": "19px",
+            "color": "rgba(255, 255, 255, 0.93)",
+            "padding": "2.5px 8px",
+            "radius": "6px",
+            "border": "0px solid rgba(255, 255, 255, 0.04)",
+            "shadow": "none",
+            "background": "rgba(0, 0, 0, 0)"
+          }
+        ]
+      },
+      "staticSelectionOpensBoardPreview": true
+    }
+  ],
+  "qualified": false
+}

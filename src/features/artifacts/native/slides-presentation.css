@@ -1,0 +1,171 @@
+.native-slides-presentation {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  color: #fff;
+  z-index: 100;
+  outline: none !important;
+}
+.native-slides-presentation-stage {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  position: relative;
+}
+.native-slides-presentation-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  flex: none;
+  overflow: hidden;
+}
+.native-slides-presentation-scale {
+  transform-origin: top left;
+  position: relative;
+}
+.native-slides-presentation-current,
+.native-slides-presentation-outgoing {
+  position: absolute;
+  inset: 0;
+}
+.native-slides-presentation-outgoing {
+  pointer-events: none;
+}
+.native-slides-presentation[data-transition="magic"]
+  .native-slides-presentation-outgoing
+  > .native-page-content {
+  background: transparent !important;
+}
+.native-slides-presentation-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.native-slides-presentation-current {
+  isolation: isolate;
+}
+.native-slides-presentation-current > .native-page-content {
+  z-index: 1;
+}
+.native-presentation-notes {
+  padding: 16px 24px;
+  max-height: 30%;
+  overflow: auto;
+  background: #191919;
+  color: #fff;
+  white-space: pre-wrap;
+  font:
+    16px / 1.5 system-ui,
+    sans-serif;
+}
+.native-presentation-loading {
+  position: absolute;
+  bottom: 72px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #222c;
+}
+.native-editor .native-slides-presentation .native-present-controls {
+  position: absolute;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 40px;
+  width: max-content;
+  padding: 8px;
+  border: 0;
+  border-radius: 9999px;
+  background: rgb(0 0 0 / 85%);
+  color: #fff;
+  font: 12px / 16px ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC", "PingFang TC", "Hiragino Sans", sans-serif;
+  user-select: none;
+  opacity: 1;
+  transition: opacity 300ms;
+  box-shadow: 0 10px 15px -3px #0000001a, 0 4px 6px -4px #0000001a;
+}
+.native-editor .native-slides-presentation .native-present-controls[data-controls-visible="false"] {
+  opacity: 0;
+  pointer-events: none;
+}
+.native-editor .native-slides-presentation .native-present-controls button {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #ffffffed;
+  opacity: 1;
+}
+.native-editor .native-slides-presentation .native-present-controls button:hover:not(:disabled) { background: rgb(255 255 255 / 7.5%); }
+.native-editor .native-slides-presentation .native-present-controls button[aria-pressed="true"] { background: rgb(37 125 224 / 12%); color: #6aabf1; }
+.native-editor .native-slides-presentation .native-present-controls button[aria-disabled="true"],
+.native-editor .native-slides-presentation .native-present-controls button:disabled { opacity: .5; }
+.native-present-position { min-width: 48px; padding: 0 4px; text-align: center; white-space: nowrap; font-variant-numeric: tabular-nums; box-sizing: border-box; }
+.native-present-position > span { color: #ffffff80; }
+.native-present-divider { width: 1px; height: 14px; margin: 0 4px; background: #ffffff33; }
+@media (pointer: coarse) {
+  .native-editor .native-slides-presentation .native-present-controls { height: 48px; gap: 2px; font-size: 13px; line-height: 19px; }
+  .native-editor .native-slides-presentation .native-present-controls button { width: 32px; height: 32px; min-width: 32px; min-height: 32px; }
+  .native-present-position { min-width: 60px; }
+}
+.native-slides-presentation :focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .native-slides-presentation * {
+    animation: none !important;
+    transition-duration: 0ms !important;
+  }
+}
+.native-slides-presentation[data-transition="magic"]
+  .native-slides-presentation-current
+  > .native-page-content {
+  background: transparent !important;
+}
+.native-presentation-error {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #ffffff30;
+  border-radius: 10px;
+  background: #252525;
+  color: #fff;
+  z-index: 1;
+}
+.native-presentation-error > button {
+  background: #333;
+  color: #fff;
+  flex: none;
+}
+
+.native-slides-presentation-outgoing-frame {
+  z-index: 2;
+  pointer-events: none;
+}
+
+.native-editor .native-slides-presentation .native-present-controls button { position: relative; overflow: visible; }
+.native-editor .native-slides-presentation .native-present-controls button:focus-visible { outline: 2px none transparent; outline-offset: 2px; box-shadow: inset 0 0 0 1px #0b0b0b, 0 0 0 1px #257de0, 0 0 6px 1px rgb(23 87 172 / 60%); }
+.native-present-tooltip { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); box-sizing: border-box; width: max-content; max-width: min(240px, calc(100vw - 24px)); padding: 3px 8px; border-radius: 6px; background: #303030; color: #ffffffed; box-shadow: inset 0 0 0 1px #ffffff0a, 0 1px 2px rgb(11 11 11 / 6%), 0 2px 8px #0000003d; font: 13px / 18px ui-sans-serif, system-ui, sans-serif; white-space: normal; visibility: hidden; opacity: 0; pointer-events: none; transition: opacity 120ms, visibility 120ms; }
+.native-present-controls button:hover > .native-present-tooltip { visibility: visible; opacity: 1; transition-delay: 300ms; }
+.native-present-controls button:focus-visible > .native-present-tooltip { visibility: visible; opacity: 1; transition-delay: 0ms; }

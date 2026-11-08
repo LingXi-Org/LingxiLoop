@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useApp } from '@/stores/app'
 import { ToggleGroupLite } from '@/components/shell/ToggleGroupLite'
 import type { ArtifactSummary } from '@/features/artifacts/contracts'
-import { prefetchEditor, warmEditorWhenIdle } from '@/features/artifacts/editor-preload'
+import { prefetchEditor } from '@/features/artifacts/editor-preload'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { formatDeckUpdated, useSlides } from './store'
 
@@ -28,7 +28,7 @@ const prefetchDeck = (target: EventTarget) => {
   const trigger = (target as Element).closest?.('[data-artifact-open-trigger]')
   if (!trigger) return
   void loadSlidesWorkspace().then(module => module.preloadSlidesAssistant?.()).catch(() => {})
-  prefetchEditor('slides', trigger.getAttribute('data-artifact-open-trigger') || undefined)
+  prefetchEditor()
 }
 
 type Layout = 'grid' | 'list'
@@ -69,7 +69,6 @@ export function SlidesPage({ projectId, active = true }: { projectId: string; ac
     void useSlides.getState().load(projectId, controller.signal)
     return () => controller.abort()
   }, [projectId])
-  useEffect(() => warmEditorWhenIdle('slides'), [])
   useEffect(() => ws.on((event) => {
     if (event.type === 'artifact.changed' && event.artifactKind === 'slides' && event.kind !== 'files.changed') void useSlides.getState().load(projectId)
   }), [projectId])

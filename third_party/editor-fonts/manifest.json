@@ -1,0 +1,1298 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "catalogSource": "skills/claude-slides/scripts/editor/assets/index-kN-1njux.js",
+  "fonts": [
+    {
+      "family": "Bebas Neue",
+      "package": "@fontsource/bebas-neue",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource/bebas-neue/-/bebas-neue-5.3.0.tgz",
+      "integrity": "sha512-nCxMEb9Bg9sjNWm9TIOsvHKDMLRUfEZPWpLgYu6m9KavZZVSA/WoHzI5wROwqA+eNwEi/PNBAcB5Co7HA3S0Cw==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/bebas-neue-OFL.txt",
+      "licenseSha256": "66c436339f7490c1a99e4f6a7b8aef5c176676edfd071a31638e7d54c1b0aeda",
+      "upstreamFontVersion": "v16",
+      "assets": {
+        "bebas-neue-latin-ext-400-normal-16c95ce45a29.woff2": {
+          "sourcePath": "files/bebas-neue-latin-ext-400-normal.woff2",
+          "sha256": "16c95ce45a2922f52551d38d565d14c92cf257b8f219c89613407d81fdd21a39",
+          "bytes": 8928
+        },
+        "bebas-neue-latin-400-normal-a7c90c89240c.woff2": {
+          "sourcePath": "files/bebas-neue-latin-400-normal.woff2",
+          "sha256": "a7c90c89240c134f7fdd33d40c000ec90b79d675ea53e8cc5a6d423c073de412",
+          "bytes": 13768
+        }
+      }
+    },
+    {
+      "family": "Caveat",
+      "package": "@fontsource-variable/caveat",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/caveat/-/caveat-5.3.0.tgz",
+      "integrity": "sha512-Q3mjghoYIlXgwqBPJKZ4q6f3zu921Gq7UU76r9Z+NAmhapHfX130GIFpOCYf8vt2SIcgCi9RHDT7anfJKg/kiA==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/caveat-OFL.txt",
+      "licenseSha256": "163a2b400e16916ad3196296c946c526d0efce6baf22a2164269ffc62fb9f671",
+      "upstreamFontVersion": "v23",
+      "assets": {
+        "caveat-cyrillic-ext-wght-normal-4956ec7b1979.woff2": {
+          "sourcePath": "files/caveat-cyrillic-ext-wght-normal.woff2",
+          "sha256": "4956ec7b19798cb8418f2e44349e90c0ab7310594350c4b9c2998dc092122d5a",
+          "bytes": 42856
+        },
+        "caveat-cyrillic-wght-normal-6276a2f5a555.woff2": {
+          "sourcePath": "files/caveat-cyrillic-wght-normal.woff2",
+          "sha256": "6276a2f5a5554c16b422f00f114773a8d4013a81df18a338f7c216d80103c9af",
+          "bytes": 77216
+        },
+        "caveat-latin-ext-wght-normal-f626b95c1efa.woff2": {
+          "sourcePath": "files/caveat-latin-ext-wght-normal.woff2",
+          "sha256": "f626b95c1efa95cf6b7c9b043d3bbe8862b6abbe5f55a082102f33f7de2fd4f9",
+          "bytes": 29472
+        },
+        "caveat-latin-wght-normal-891951df5e8b.woff2": {
+          "sourcePath": "files/caveat-latin-wght-normal.woff2",
+          "sha256": "891951df5e8b5b0f0bc760d31375405e795c666b5add70437de12d4a6482b33f",
+          "bytes": 74932
+        }
+      }
+    },
+    {
+      "family": "DM Sans",
+      "package": "@fontsource-variable/dm-sans",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/dm-sans/-/dm-sans-5.3.0.tgz",
+      "integrity": "sha512-BpUG5bqePiDFMBM4ZtLSlPdAIOM990uB1dlXzIf4aw21yQR7BmykedLXXXMqGWsR18aMLOsbWccwJNh3ztTQaA==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/dm-sans-OFL.txt",
+      "licenseSha256": "6fbd040a29c2037a765dfb9f2561e9965b5c95c6dcb5dce516089d63d5f17af7",
+      "upstreamFontVersion": "v17",
+      "assets": {
+        "dm-sans-latin-ext-wght-normal-a5d38fe99f93.woff2": {
+          "sourcePath": "files/dm-sans-latin-ext-wght-normal.woff2",
+          "sha256": "a5d38fe99f930275684999b462c7123faa063d9e44e73b4b241723d884aa0f49",
+          "bytes": 18228
+        },
+        "dm-sans-latin-wght-normal-9fea608a947e.woff2": {
+          "sourcePath": "files/dm-sans-latin-wght-normal.woff2",
+          "sha256": "9fea608a947e67020c33cad9a6fe3d60c54119dfb8cff87768a8117a15ed7543",
+          "bytes": 36932
+        },
+        "dm-sans-latin-ext-wght-italic-6e646d202280.woff2": {
+          "sourcePath": "files/dm-sans-latin-ext-wght-italic.woff2",
+          "sha256": "6e646d2022808fb4532e77d38a9348e4dcf832796be2acc43a79052b60900db2",
+          "bytes": 20808
+        },
+        "dm-sans-latin-wght-italic-f1a235db5bcb.woff2": {
+          "sourcePath": "files/dm-sans-latin-wght-italic.woff2",
+          "sha256": "f1a235db5bcb8730707844188d35201ecdf63e56c5dcce97bab24a9c7066091d",
+          "bytes": 39712
+        }
+      }
+    },
+    {
+      "family": "Inter",
+      "package": "@fontsource-variable/inter",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/inter/-/inter-5.3.0.tgz",
+      "integrity": "sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/inter-OFL.txt",
+      "licenseSha256": "3b0a5fca3d17942cde889069889dedbbbd075e9b599968c82a95f4d944e9b345",
+      "upstreamFontVersion": "v20",
+      "assets": {
+        "inter-cyrillic-ext-wght-normal-ca157063339a.woff2": {
+          "sourcePath": "files/inter-cyrillic-ext-wght-normal.woff2",
+          "sha256": "ca157063339ac4ad418f214f3abfed119b0798ab4d377386ce5c9e5a7a435ebd",
+          "bytes": 25960
+        },
+        "inter-cyrillic-wght-normal-71d5ee93cc1e.woff2": {
+          "sourcePath": "files/inter-cyrillic-wght-normal.woff2",
+          "sha256": "71d5ee93cc1e9f1d520a3a8b66456de18c7879d8df09d57fcd2eaff75fef0075",
+          "bytes": 18748
+        },
+        "inter-greek-ext-wght-normal-6e9e020a25f9.woff2": {
+          "sourcePath": "files/inter-greek-ext-wght-normal.woff2",
+          "sha256": "6e9e020a25f9b56d418f2c085b1d3c09725a4da23fe693a5b463064606732190",
+          "bytes": 11232
+        },
+        "inter-greek-wght-normal-1be3448e292f.woff2": {
+          "sourcePath": "files/inter-greek-wght-normal.woff2",
+          "sha256": "1be3448e292fbf05ffe176fe1e43f135013d50b1e7d324ad1a558f623d3bb6f6",
+          "bytes": 18996
+        },
+        "inter-vietnamese-wght-normal-5c66f9e07e90.woff2": {
+          "sourcePath": "files/inter-vietnamese-wght-normal.woff2",
+          "sha256": "5c66f9e07e90c6d4ac4922cc68d60de26c17b1858e677fb5e603fce3952b3ff2",
+          "bytes": 10252
+        },
+        "inter-latin-ext-wght-normal-34b9c504cab7.woff2": {
+          "sourcePath": "files/inter-latin-ext-wght-normal.woff2",
+          "sha256": "34b9c504cab7a73e37b746343a449132e56cf7b5481af2cb81dc74dcff25c956",
+          "bytes": 85068
+        },
+        "inter-latin-wght-normal-3100e775e861.woff2": {
+          "sourcePath": "files/inter-latin-wght-normal.woff2",
+          "sha256": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
+          "bytes": 48256
+        },
+        "inter-cyrillic-ext-wght-italic-39689184132e.woff2": {
+          "sourcePath": "files/inter-cyrillic-ext-wght-italic.woff2",
+          "sha256": "39689184132e9fba8fb1066f429125d14445352a566f47f4edcae7c3c90e486d",
+          "bytes": 27380
+        },
+        "inter-cyrillic-wght-italic-47d42151dff6.woff2": {
+          "sourcePath": "files/inter-cyrillic-wght-italic.woff2",
+          "sha256": "47d42151dff6d13f1c2b9a1f278290f625593c1f01c89612ee4ae7f063167f7a",
+          "bytes": 19980
+        },
+        "inter-greek-ext-wght-italic-787fc783f35c.woff2": {
+          "sourcePath": "files/inter-greek-ext-wght-italic.woff2",
+          "sha256": "787fc783f35c913334445a7c4502bb272f94a8328426578776eac5e4ebd03ba1",
+          "bytes": 12096
+        },
+        "inter-greek-wght-italic-29e273a42cac.woff2": {
+          "sourcePath": "files/inter-greek-wght-italic.woff2",
+          "sha256": "29e273a42cac8240f37fbdd94c684f8a255e61c8076942d9b8f18a0e2c014991",
+          "bytes": 20484
+        },
+        "inter-vietnamese-wght-italic-1991ed5832eb.woff2": {
+          "sourcePath": "files/inter-vietnamese-wght-italic.woff2",
+          "sha256": "1991ed5832eb07f7523f22a843ca9a8aa83c51c8e87062ce77794855d2f5dee8",
+          "bytes": 10596
+        },
+        "inter-latin-ext-wght-italic-71254244ccb1.woff2": {
+          "sourcePath": "files/inter-latin-ext-wght-italic.woff2",
+          "sha256": "71254244ccb1ec21e14db3480fef6f6826d1136dc4aca1c7d3ca7ce31294fcce",
+          "bytes": 91900
+        },
+        "inter-latin-wght-italic-7291b5970da2.woff2": {
+          "sourcePath": "files/inter-latin-wght-italic.woff2",
+          "sha256": "7291b5970da2237441273c03b424a504b70b18f09791473fab99687dcc314720",
+          "bytes": 51832
+        }
+      }
+    },
+    {
+      "family": "Lato",
+      "package": "@fontsource/lato",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource/lato/-/lato-5.3.0.tgz",
+      "integrity": "sha512-0WhF/4rhrw+ErIyneKvhHn2YAl+xf8GDtllgOgOzDmeaSlLQtjpChXaQOpWhG2BchQW0WJy2zLV12Hdg0ndOMw==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/lato-OFL.txt",
+      "licenseSha256": "9648253641ec1d1f8ba2fbe8997909f7bfc48cc38537946f6272321788465b84",
+      "upstreamFontVersion": "v25",
+      "assets": {
+        "lato-latin-ext-100-normal-866f6fd41240.woff2": {
+          "sourcePath": "files/lato-latin-ext-100-normal.woff2",
+          "sha256": "866f6fd412405fd5308ed8adde4469cab689ec44056fe719e27e5923021a57ff",
+          "bytes": 5448
+        },
+        "lato-latin-100-normal-a79b4c65b454.woff2": {
+          "sourcePath": "files/lato-latin-100-normal.woff2",
+          "sha256": "a79b4c65b454a795ff3868156f54be09ac8360b9fd3ba21431b5c48fd9b66afa",
+          "bytes": 21508
+        },
+        "lato-latin-ext-100-italic-f1eb249dd0bb.woff2": {
+          "sourcePath": "files/lato-latin-ext-100-italic.woff2",
+          "sha256": "f1eb249dd0bb72847fde168605c8d741b0f1d5507f9729f1fbded1e76d1bd022",
+          "bytes": 4372
+        },
+        "lato-latin-100-italic-b19efe906c9b.woff2": {
+          "sourcePath": "files/lato-latin-100-italic.woff2",
+          "sha256": "b19efe906c9b0345db45525ed83c76031644e39329a36d39badf5275bce363c2",
+          "bytes": 17072
+        },
+        "lato-latin-ext-300-normal-5627143aaeb4.woff2": {
+          "sourcePath": "files/lato-latin-ext-300-normal.woff2",
+          "sha256": "5627143aaeb49ba46b4614d4fefb967ad8d163fb0743a2fa9c7e53930e559062",
+          "bytes": 5820
+        },
+        "lato-latin-300-normal-115f6a626ca1.woff2": {
+          "sourcePath": "files/lato-latin-300-normal.woff2",
+          "sha256": "115f6a626ca115d4ad5581b59275327e0e860b30330a52b0f785561332dd2429",
+          "bytes": 23236
+        },
+        "lato-latin-ext-300-italic-43637f0d04e9.woff2": {
+          "sourcePath": "files/lato-latin-ext-300-italic.woff2",
+          "sha256": "43637f0d04e91f514540cf00da1010be1f56199f89368cd0cb31b6da813cafb0",
+          "bytes": 4412
+        },
+        "lato-latin-300-italic-a961366b4346.woff2": {
+          "sourcePath": "files/lato-latin-300-italic.woff2",
+          "sha256": "a961366b4346f6078cc2f164d2c019f63b37e2693f6fc93a995048a98b25c083",
+          "bytes": 17728
+        },
+        "lato-latin-ext-400-normal-8b9fc9737043.woff2": {
+          "sourcePath": "files/lato-latin-ext-400-normal.woff2",
+          "sha256": "8b9fc9737043f88c1a9a7195c27a239bd329cc33d928ffb67736c61ae7a1dbbd",
+          "bytes": 5612
+        },
+        "lato-latin-400-normal-918b7dc3e2e2.woff2": {
+          "sourcePath": "files/lato-latin-400-normal.woff2",
+          "sha256": "918b7dc3e2e2d015c16ce08b57bcb64d2253bafc1707658f361e72865498e537",
+          "bytes": 23580
+        },
+        "lato-latin-ext-400-italic-077a69d5b698.woff2": {
+          "sourcePath": "files/lato-latin-ext-400-italic.woff2",
+          "sha256": "077a69d5b698467f49de34980815c848fecb40e35f4b3969b42a703b8b916953",
+          "bytes": 5776
+        },
+        "lato-latin-400-italic-bca1d88ada54.woff2": {
+          "sourcePath": "files/lato-latin-400-italic.woff2",
+          "sha256": "bca1d88ada544d9c80872d4da27133fab6d347361fa26e932b47ec9559088fd0",
+          "bytes": 24408
+        },
+        "lato-latin-ext-700-normal-3a5797f440bc.woff2": {
+          "sourcePath": "files/lato-latin-ext-700-normal.woff2",
+          "sha256": "3a5797f440bc67b59830cad81e59a71011e35cb45ed7f747b61a69b0a9b0d6ae",
+          "bytes": 5552
+        },
+        "lato-latin-700-normal-c447dd7677b4.woff2": {
+          "sourcePath": "files/lato-latin-700-normal.woff2",
+          "sha256": "c447dd7677b419db7b21dbdfc6277c7816a913ffda76fd2e52702df538de0e49",
+          "bytes": 23040
+        },
+        "lato-latin-ext-700-italic-72373c5fe499.woff2": {
+          "sourcePath": "files/lato-latin-ext-700-italic.woff2",
+          "sha256": "72373c5fe499b7b978e186b6550ee6c4a8dc0c9b77fb46a4d76a572c1986466e",
+          "bytes": 5792
+        },
+        "lato-latin-700-italic-6c84348296eb.woff2": {
+          "sourcePath": "files/lato-latin-700-italic.woff2",
+          "sha256": "6c84348296ebe2e2a0830c3962eb02156419d9bc76371c2eadaf7329d827d550",
+          "bytes": 24448
+        },
+        "lato-latin-ext-900-normal-e266d64fae09.woff2": {
+          "sourcePath": "files/lato-latin-ext-900-normal.woff2",
+          "sha256": "e266d64fae0958748c289b2288e29991b4b8386eb4935517c4544a2478cfb703",
+          "bytes": 5640
+        },
+        "lato-latin-900-normal-08664859baab.woff2": {
+          "sourcePath": "files/lato-latin-900-normal.woff2",
+          "sha256": "08664859baab5ed98f0bf818ed77e38464ff1826dc6406d5ecbd651409afbd92",
+          "bytes": 22504
+        },
+        "lato-latin-ext-900-italic-f9741d4c57a3.woff2": {
+          "sourcePath": "files/lato-latin-ext-900-italic.woff2",
+          "sha256": "f9741d4c57a3bae60dbfe04238e74385f639ab38df136d96731127a48f7f3eee",
+          "bytes": 5756
+        },
+        "lato-latin-900-italic-d32335c2c5fd.woff2": {
+          "sourcePath": "files/lato-latin-900-italic.woff2",
+          "sha256": "d32335c2c5fd5de9ee5f3d3b1fe4d9dde14aad16eda570a35018b0ff1dc093d2",
+          "bytes": 23736
+        }
+      }
+    },
+    {
+      "family": "Lora",
+      "package": "@fontsource-variable/lora",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/lora/-/lora-5.3.0.tgz",
+      "integrity": "sha512-2ph8KiZ8Bn141hWuC3ErtpJ+Ui8p2MJQn8TJNRSRmLmnCIOCtHfiBM9R7WLRPeUG/q6hXyHOxWQ8DvRSX+ixvQ==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/lora-OFL.txt",
+      "licenseSha256": "948aed765160f7b974105606c21994715a171f89fca48e57bf1e0a23aca0bef1",
+      "upstreamFontVersion": "v37",
+      "assets": {
+        "lora-cyrillic-ext-wght-normal-0e523e4bc3c6.woff2": {
+          "sourcePath": "files/lora-cyrillic-ext-wght-normal.woff2",
+          "sha256": "0e523e4bc3c6308f002a3208ea2990cb4f64282d4fbb67c12f5726d13b66eef6",
+          "bytes": 23636
+        },
+        "lora-cyrillic-wght-normal-c57d9ca3bd42.woff2": {
+          "sourcePath": "files/lora-cyrillic-wght-normal.woff2",
+          "sha256": "c57d9ca3bd42e6bc093badc7744dd2059a78f66a3a4dc6ca40574480c870f553",
+          "bytes": 21232
+        },
+        "lora-math-wght-normal-a8c4cb778ab6.woff2": {
+          "sourcePath": "files/lora-math-wght-normal.woff2",
+          "sha256": "a8c4cb778ab6202d22bdea2ccc8d7e7caf802cfe0a7ce37df7b212f82341468f",
+          "bytes": 29240
+        },
+        "lora-symbols-wght-normal-2df52199eac5.woff2": {
+          "sourcePath": "files/lora-symbols-wght-normal.woff2",
+          "sha256": "2df52199eac56e2ec7a735e609bb151bdab79422c3e73948f4b6580c66bb5a50",
+          "bytes": 17248
+        },
+        "lora-vietnamese-wght-normal-98c22de85f6e.woff2": {
+          "sourcePath": "files/lora-vietnamese-wght-normal.woff2",
+          "sha256": "98c22de85f6e83bcd6ae1a443e12e256fbc8de7142bec4f76b059f8ff9c2797e",
+          "bytes": 8992
+        },
+        "lora-latin-ext-wght-normal-2a2d9c22c986.woff2": {
+          "sourcePath": "files/lora-latin-ext-wght-normal.woff2",
+          "sha256": "2a2d9c22c9863086a23f5013fede1428585321812b25f2662542c39d02967c5e",
+          "bytes": 20088
+        },
+        "lora-latin-wght-normal-ddb8c6603510.woff2": {
+          "sourcePath": "files/lora-latin-wght-normal.woff2",
+          "sha256": "ddb8c66035104e233fc024669183aad3738b6daa16deee2ebb1241bd0f98ace1",
+          "bytes": 37788
+        },
+        "lora-cyrillic-ext-wght-italic-b67b0f50d1d0.woff2": {
+          "sourcePath": "files/lora-cyrillic-ext-wght-italic.woff2",
+          "sha256": "b67b0f50d1d03fc36a1b3ded113de24a0ab71b838cc27e493d4f62cea00be99b",
+          "bytes": 27348
+        },
+        "lora-cyrillic-wght-italic-405b30a5bea8.woff2": {
+          "sourcePath": "files/lora-cyrillic-wght-italic.woff2",
+          "sha256": "405b30a5bea8b70446e08e40e5d70b7bf5262ef3c4a9e4f3e4672e079a01a4cd",
+          "bytes": 22972
+        },
+        "lora-math-wght-italic-49e796554ee2.woff2": {
+          "sourcePath": "files/lora-math-wght-italic.woff2",
+          "sha256": "49e796554ee2343f0d7a7f111d5dbc64fc5da47ad7168734e9a2d1f302ef3245",
+          "bytes": 31364
+        },
+        "lora-symbols-wght-italic-db2a8b067f0f.woff2": {
+          "sourcePath": "files/lora-symbols-wght-italic.woff2",
+          "sha256": "db2a8b067f0fd836ae1e5155575a1afdb93e7ebc07b4680c4c2438e69e37515f",
+          "bytes": 18892
+        },
+        "lora-vietnamese-wght-italic-3acfc1db6992.woff2": {
+          "sourcePath": "files/lora-vietnamese-wght-italic.woff2",
+          "sha256": "3acfc1db6992c092405884cf12763e512e21229cc040a1eea94549869006736a",
+          "bytes": 9344
+        },
+        "lora-latin-ext-wght-italic-45f989df83f3.woff2": {
+          "sourcePath": "files/lora-latin-ext-wght-italic.woff2",
+          "sha256": "45f989df83f3a9f40007d2ecdea98bff248c8767a1a0bbe60e94fb37b605ecee",
+          "bytes": 21128
+        },
+        "lora-latin-wght-italic-d824d807d4d8.woff2": {
+          "sourcePath": "files/lora-latin-wght-italic.woff2",
+          "sha256": "d824d807d4d832d12c87932d0b8ec1314dcfd502157a56dee6bb04cf8a3768ae",
+          "bytes": 40772
+        }
+      }
+    },
+    {
+      "family": "Manrope",
+      "package": "@fontsource-variable/manrope",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/manrope/-/manrope-5.3.0.tgz",
+      "integrity": "sha512-6D5dgokHsWDDMtmXHznKa0hK229NN+1a4BLPmUCLqcO1Pw5EEhWY5RFt0AcXnVRAljFFPfRtLkJePQj6LSsV6g==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/manrope-OFL.txt",
+      "licenseSha256": "d826ab6583b12c26807d8716a545bdbbb672df04f48608a364ba9efdbe501c30",
+      "upstreamFontVersion": "v20",
+      "assets": {
+        "manrope-cyrillic-ext-wght-normal-de37de877dc1.woff2": {
+          "sourcePath": "files/manrope-cyrillic-ext-wght-normal.woff2",
+          "sha256": "de37de877dc17e4577341fa68bb5cb526b53d54cb29721e674208546a3c7849d",
+          "bytes": 2552
+        },
+        "manrope-cyrillic-wght-normal-c268b459a932.woff2": {
+          "sourcePath": "files/manrope-cyrillic-wght-normal.woff2",
+          "sha256": "c268b459a9329e59fecf39a17618efd44c71735532048d60b12aab76a8c14914",
+          "bytes": 14500
+        },
+        "manrope-greek-wght-normal-2fb2e8cbfd52.woff2": {
+          "sourcePath": "files/manrope-greek-wght-normal.woff2",
+          "sha256": "2fb2e8cbfd52ae46179a8b6024eb162f1f9c6de3d22d6e3a30d8f395de7220be",
+          "bytes": 9444
+        },
+        "manrope-vietnamese-wght-normal-6bbb044ab420.woff2": {
+          "sourcePath": "files/manrope-vietnamese-wght-normal.woff2",
+          "sha256": "6bbb044ab420e07edb0a3042d2eb314b85e83a0182e945a15ab3b9092668dfd5",
+          "bytes": 8520
+        },
+        "manrope-latin-ext-wght-normal-3911b66d9f2e.woff2": {
+          "sourcePath": "files/manrope-latin-ext-wght-normal.woff2",
+          "sha256": "3911b66d9f2e005a4b989223405d0e5032619c668597ba467cc76a23c8fffcfb",
+          "bytes": 15120
+        },
+        "manrope-latin-wght-normal-a30ddcd34970.woff2": {
+          "sourcePath": "files/manrope-latin-wght-normal.woff2",
+          "sha256": "a30ddcd349703aff7464c34bef3fffdff405ee50c113440d7c8693c02d210972",
+          "bytes": 24836
+        }
+      }
+    },
+    {
+      "family": "Merriweather",
+      "package": "@fontsource-variable/merriweather",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/merriweather/-/merriweather-5.3.0.tgz",
+      "integrity": "sha512-wK7S4NtPXWUWll/sZCdub93pqSCnFkpKFbnoOE8fh+9Ut6JFjgkc9UlBxHJ0RVMkDpoWwGwMwYYTMvd3G9aAXA==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/merriweather-OFL.txt",
+      "licenseSha256": "aa677c3f7682d9c4f7aa48fae3f3b9d0f8d70ac6ab47b9bc20a9cc2879e15af0",
+      "upstreamFontVersion": "v33",
+      "assets": {
+        "merriweather-cyrillic-ext-wght-normal-d1dfcd660218.woff2": {
+          "sourcePath": "files/merriweather-cyrillic-ext-wght-normal.woff2",
+          "sha256": "d1dfcd6602180d56b9ffcf303019734aa6bd04ce1398bb3ac94c9213709ddfc0",
+          "bytes": 33596
+        },
+        "merriweather-cyrillic-wght-normal-03b67ec731db.woff2": {
+          "sourcePath": "files/merriweather-cyrillic-wght-normal.woff2",
+          "sha256": "03b67ec731db4d4dac223a5cb1c534559ebdb4497e7a76928df7f7de2dc8b4b1",
+          "bytes": 51808
+        },
+        "merriweather-vietnamese-wght-normal-f314b5c12e53.woff2": {
+          "sourcePath": "files/merriweather-vietnamese-wght-normal.woff2",
+          "sha256": "f314b5c12e53c5daca50a723a4d33826182f29bf7e3ebb6166b0b2864b01863f",
+          "bytes": 10956
+        },
+        "merriweather-latin-ext-wght-normal-8ca088099784.woff2": {
+          "sourcePath": "files/merriweather-latin-ext-wght-normal.woff2",
+          "sha256": "8ca0880997847953a13964d6769b6712c57aa2dc2f881f4e6e805719791daed8",
+          "bytes": 74960
+        },
+        "merriweather-latin-wght-normal-4fbe8dd9c23b.woff2": {
+          "sourcePath": "files/merriweather-latin-wght-normal.woff2",
+          "sha256": "4fbe8dd9c23b1fd62a988bb8a69b8e692d810f773d9ef6ebca2ba2760c7b11ee",
+          "bytes": 97548
+        },
+        "merriweather-cyrillic-ext-wght-italic-8d24c539f800.woff2": {
+          "sourcePath": "files/merriweather-cyrillic-ext-wght-italic.woff2",
+          "sha256": "8d24c539f8004d953e8f9fc079f2dc86dd32b13a023d36ad78de173c7df8a473",
+          "bytes": 38356
+        },
+        "merriweather-cyrillic-wght-italic-f39c78fb3a17.woff2": {
+          "sourcePath": "files/merriweather-cyrillic-wght-italic.woff2",
+          "sha256": "f39c78fb3a177a0d3007312f24953c8de8d8eaabd440baa278d282fc51a81e32",
+          "bytes": 54508
+        },
+        "merriweather-vietnamese-wght-italic-d682a4649993.woff2": {
+          "sourcePath": "files/merriweather-vietnamese-wght-italic.woff2",
+          "sha256": "d682a4649993ae5a9e00623eb95c17c29e909729e8a8b03705587b3f62e138b1",
+          "bytes": 12248
+        },
+        "merriweather-latin-ext-wght-italic-f11472cb2bef.woff2": {
+          "sourcePath": "files/merriweather-latin-ext-wght-italic.woff2",
+          "sha256": "f11472cb2bef38bdb05eb91911e9672e8e45dd80756cb87a7f316ac9ec910e1f",
+          "bytes": 78260
+        },
+        "merriweather-latin-wght-italic-caa1da88ecea.woff2": {
+          "sourcePath": "files/merriweather-latin-wght-italic.woff2",
+          "sha256": "caa1da88ecea68d5d4b79881792675c76e691f5141ae3fef85bd472920436053",
+          "bytes": 100572
+        }
+      }
+    },
+    {
+      "family": "Montserrat",
+      "package": "@fontsource-variable/montserrat",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/montserrat/-/montserrat-5.3.0.tgz",
+      "integrity": "sha512-7PaZoxaxrWLAyrhO46v65An9LhUhfkTExWLhfbywYZCnZEgg/W1rEHnlNmZKjNZ3nJTVYyicqxlJt10z/26yTA==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/montserrat-OFL.txt",
+      "licenseSha256": "f429f739351287574c0c3175a9222bb3e49c7cad3f568a04f2c08d74c107724e",
+      "upstreamFontVersion": "v31",
+      "assets": {
+        "montserrat-cyrillic-ext-wght-normal-0f7f5f2fbb4e.woff2": {
+          "sourcePath": "files/montserrat-cyrillic-ext-wght-normal.woff2",
+          "sha256": "0f7f5f2fbb4eae126790fe6f01659ab3ee0806e8038a941908e893020569f51a",
+          "bytes": 26368
+        },
+        "montserrat-cyrillic-wght-normal-a187b077090f.woff2": {
+          "sourcePath": "files/montserrat-cyrillic-wght-normal.woff2",
+          "sha256": "a187b077090fe8ae3fd2d7496aabbeae604819c718a282e0afc92df72b450766",
+          "bytes": 23828
+        },
+        "montserrat-vietnamese-wght-normal-26b2403f995e.woff2": {
+          "sourcePath": "files/montserrat-vietnamese-wght-normal.woff2",
+          "sha256": "26b2403f995ed65fb49037a6498c074d3ec3c36031a69fc368c4c2180e2c01fa",
+          "bytes": 12928
+        },
+        "montserrat-latin-ext-wght-normal-54d9a78b7ff6.woff2": {
+          "sourcePath": "files/montserrat-latin-ext-wght-normal.woff2",
+          "sha256": "54d9a78b7ff60b689ad9f3017ffac8547b5d871afec733f6c1c3ae36577ee504",
+          "bytes": 70688
+        },
+        "montserrat-latin-wght-normal-06b16db7a969.woff2": {
+          "sourcePath": "files/montserrat-latin-wght-normal.woff2",
+          "sha256": "06b16db7a969135d48d38c49183be7fb88d4452e2a3011957c7851941f4e4879",
+          "bytes": 37956
+        },
+        "montserrat-cyrillic-ext-wght-italic-eaf57cf096f4.woff2": {
+          "sourcePath": "files/montserrat-cyrillic-ext-wght-italic.woff2",
+          "sha256": "eaf57cf096f40598c99a9270dc232a0905833fc05aa38a7a93ad8801bde38960",
+          "bytes": 26944
+        },
+        "montserrat-cyrillic-wght-italic-f44e7241c210.woff2": {
+          "sourcePath": "files/montserrat-cyrillic-wght-italic.woff2",
+          "sha256": "f44e7241c210c6938410dadc5806bb33e8f526a28a0fdcf58c41b33bcc55321b",
+          "bytes": 24536
+        },
+        "montserrat-vietnamese-wght-italic-cfc214072c52.woff2": {
+          "sourcePath": "files/montserrat-vietnamese-wght-italic.woff2",
+          "sha256": "cfc214072c52df3721890638bf0dcd8a5a0e2c99653d59b4b766ab867da05b4c",
+          "bytes": 13900
+        },
+        "montserrat-latin-ext-wght-italic-9f7c3dc0c1fd.woff2": {
+          "sourcePath": "files/montserrat-latin-ext-wght-italic.woff2",
+          "sha256": "9f7c3dc0c1fdbc8b09d53d1beb4aca048a5aff376ac5423878e03e83e89a7fe8",
+          "bytes": 74892
+        },
+        "montserrat-latin-wght-italic-0eb22e3d769a.woff2": {
+          "sourcePath": "files/montserrat-latin-wght-italic.woff2",
+          "sha256": "0eb22e3d769a66a92dbd82e3aefa5740e5bc21afa4485f62f92b22656d49182a",
+          "bytes": 39632
+        }
+      }
+    },
+    {
+      "family": "Nunito",
+      "package": "@fontsource-variable/nunito",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/nunito/-/nunito-5.3.0.tgz",
+      "integrity": "sha512-tw0ch7evIDSwoeUy+0XzocYHfbRWLeCRPJy22KgbrLjDLAbNw/fErBiil10Ssrs3Sjr55zaZrr36a975j8cBkQ==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/nunito-OFL.txt",
+      "licenseSha256": "40991bfa02ac620aae16dc527f3c47765a25e43f270d4c301ee6ab663a8d9015",
+      "upstreamFontVersion": "v32",
+      "assets": {
+        "nunito-cyrillic-ext-wght-normal-88985ca614d5.woff2": {
+          "sourcePath": "files/nunito-cyrillic-ext-wght-normal.woff2",
+          "sha256": "88985ca614d50fbe06bf527b0d67703d01cab729d744e41c1b5b6bf67c3a08e5",
+          "bytes": 28928
+        },
+        "nunito-cyrillic-wght-normal-63b14e3ef096.woff2": {
+          "sourcePath": "files/nunito-cyrillic-wght-normal.woff2",
+          "sha256": "63b14e3ef0966785438b8947380dfbcad178cbd3c6a5ed2172672ca0d8b839ac",
+          "bytes": 20776
+        },
+        "nunito-vietnamese-wght-normal-61e5958cf3c7.woff2": {
+          "sourcePath": "files/nunito-vietnamese-wght-normal.woff2",
+          "sha256": "61e5958cf3c731423456b31739aa454317ea3bdcb205dd87090e94f632c3642b",
+          "bytes": 13096
+        },
+        "nunito-latin-ext-wght-normal-2c8d79286981.woff2": {
+          "sourcePath": "files/nunito-latin-ext-wght-normal.woff2",
+          "sha256": "2c8d792869818ecb253a46bc3c63c7013df7aac2f69291c3c85e5cdc94160960",
+          "bytes": 35588
+        },
+        "nunito-latin-wght-normal-ba344451eab2.woff2": {
+          "sourcePath": "files/nunito-latin-wght-normal.woff2",
+          "sha256": "ba344451eab25b217a165363b1982048a5e5830a0daf36577973955a04cac793",
+          "bytes": 39128
+        },
+        "nunito-cyrillic-ext-wght-italic-7bb33d04b499.woff2": {
+          "sourcePath": "files/nunito-cyrillic-ext-wght-italic.woff2",
+          "sha256": "7bb33d04b499eb6d160193f0f0785efe87242622dea82da94ecb22884fc86a74",
+          "bytes": 31512
+        },
+        "nunito-cyrillic-wght-italic-2c394b5d3bc6.woff2": {
+          "sourcePath": "files/nunito-cyrillic-wght-italic.woff2",
+          "sha256": "2c394b5d3bc6aa00dd6917458909e85191dcd675026459fdddde520bf5ee3bf7",
+          "bytes": 22896
+        },
+        "nunito-vietnamese-wght-italic-fb4c0da3e125.woff2": {
+          "sourcePath": "files/nunito-vietnamese-wght-italic.woff2",
+          "sha256": "fb4c0da3e125b17df2084372aada7b53b56d86116e0080183688261c7fb4ea5b",
+          "bytes": 14768
+        },
+        "nunito-latin-ext-wght-italic-1bb48a49c837.woff2": {
+          "sourcePath": "files/nunito-latin-ext-wght-italic.woff2",
+          "sha256": "1bb48a49c837d76a727223515b78eb2a14eaab783563be84b0718f338c56c846",
+          "bytes": 39072
+        },
+        "nunito-latin-wght-italic-6cfcc3786d5b.woff2": {
+          "sourcePath": "files/nunito-latin-wght-italic.woff2",
+          "sha256": "6cfcc3786d5ba3b5c3a41797f95272e57f4290ccbd283a4bfd0033a3d857e64c",
+          "bytes": 41760
+        }
+      }
+    },
+    {
+      "family": "Open Sans",
+      "package": "@fontsource-variable/open-sans",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/open-sans/-/open-sans-5.3.0.tgz",
+      "integrity": "sha512-VOfhZfLIOBVa6K/dTEu7scqQXYdGa4jBX8quFpQ0S6574B+W2EOBJf9PkqyVtMEI7WWIWNEbpvPc3vY1mN2mmQ==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/open-sans-OFL.txt",
+      "licenseSha256": "9e7f12fafee50a9b4f7b3004c0fa58990805620d9debb0daf7f75de0d3ad5548",
+      "upstreamFontVersion": "v44",
+      "assets": {
+        "open-sans-cyrillic-ext-wght-normal-95dd03b930ac.woff2": {
+          "sourcePath": "files/open-sans-cyrillic-ext-wght-normal.woff2",
+          "sha256": "95dd03b930aca04ab393f625101f7367e3abc83b3b09e6074de1fc081ba6fd1c",
+          "bytes": 49268
+        },
+        "open-sans-cyrillic-wght-normal-2809606237a6.woff2": {
+          "sourcePath": "files/open-sans-cyrillic-wght-normal.woff2",
+          "sha256": "2809606237a64bd9c1461e727f369ddfd77a350e4900fffe64e8bfe16a2b3454",
+          "bytes": 26588
+        },
+        "open-sans-greek-ext-wght-normal-197ef1e4874d.woff2": {
+          "sourcePath": "files/open-sans-greek-ext-wght-normal.woff2",
+          "sha256": "197ef1e4874d6f8f59bcb8f303029b7fd40aebd7a23aa96c1b649b3faea5d57c",
+          "bytes": 4504
+        },
+        "open-sans-greek-wght-normal-08ea4cf0a7c6.woff2": {
+          "sourcePath": "files/open-sans-greek-wght-normal.woff2",
+          "sha256": "08ea4cf0a7c61077656395aa7dc728a6d184ee4bdae03a1bc34c17ee97e8f31c",
+          "bytes": 21332
+        },
+        "open-sans-hebrew-wght-normal-7abb700b2804.woff2": {
+          "sourcePath": "files/open-sans-hebrew-wght-normal.woff2",
+          "sha256": "7abb700b280437b795e68b3a85a1dcbfdf04bb815555762033ade4f7894f2554",
+          "bytes": 16920
+        },
+        "open-sans-math-wght-normal-a093b888254a.woff2": {
+          "sourcePath": "files/open-sans-math-wght-normal.woff2",
+          "sha256": "a093b888254afd7deb8e37cccfd434e7d06ed47d22cfed9621631d80e1e81554",
+          "bytes": 51912
+        },
+        "open-sans-symbols-wght-normal-8f80f993e523.woff2": {
+          "sourcePath": "files/open-sans-symbols-wght-normal.woff2",
+          "sha256": "8f80f993e523f2e6c2d097552740fd26331658da23ffad31d26edcdd3aeec370",
+          "bytes": 26596
+        },
+        "open-sans-vietnamese-wght-normal-cc762462ea67.woff2": {
+          "sourcePath": "files/open-sans-vietnamese-wght-normal.woff2",
+          "sha256": "cc762462ea67b7815649ea3cc005699e3b95b3244b59eb2ce2d22e3ad33497c2",
+          "bytes": 16496
+        },
+        "open-sans-latin-ext-wght-normal-d5bab8e28732.woff2": {
+          "sourcePath": "files/open-sans-latin-ext-wght-normal.woff2",
+          "sha256": "d5bab8e28732fe3d10dcef4f77b9c248605bbb2a87d289a2539251ceafab536a",
+          "bytes": 35156
+        },
+        "open-sans-latin-wght-normal-d8e4fe0452aa.woff2": {
+          "sourcePath": "files/open-sans-latin-wght-normal.woff2",
+          "sha256": "d8e4fe0452aa2076429a9bb5d8757d00a994dd95986cf950e9a1a371b9a072a0",
+          "bytes": 48320
+        },
+        "open-sans-cyrillic-ext-wght-italic-f2d92a95ae36.woff2": {
+          "sourcePath": "files/open-sans-cyrillic-ext-wght-italic.woff2",
+          "sha256": "f2d92a95ae369af994faeba39e2f987974e7cb1f3f3a984e6538d535f1ff9e9b",
+          "bytes": 54944
+        },
+        "open-sans-cyrillic-wght-italic-9dbf8ed5c11e.woff2": {
+          "sourcePath": "files/open-sans-cyrillic-wght-italic.woff2",
+          "sha256": "9dbf8ed5c11ef7e7e80a08cb18d7f7e0e93eea2f77345ee8a73d6e08e122c36e",
+          "bytes": 32016
+        },
+        "open-sans-greek-ext-wght-italic-23db8c30fcaf.woff2": {
+          "sourcePath": "files/open-sans-greek-ext-wght-italic.woff2",
+          "sha256": "23db8c30fcaf25e39a14a799e776804c7fd541ff0663189db7bb652d15129a73",
+          "bytes": 4844
+        },
+        "open-sans-greek-wght-italic-90e5211e2fa0.woff2": {
+          "sourcePath": "files/open-sans-greek-wght-italic.woff2",
+          "sha256": "90e5211e2fa04327726f93c19dc01dffebc18d8def23931848be1213dc826ac3",
+          "bytes": 22920
+        },
+        "open-sans-hebrew-wght-italic-0d3c34da39df.woff2": {
+          "sourcePath": "files/open-sans-hebrew-wght-italic.woff2",
+          "sha256": "0d3c34da39df0aa6b82347b45364e9e95fcece8029b5d9e7325bcef4e56234f1",
+          "bytes": 17880
+        },
+        "open-sans-math-wght-italic-b011091d0c5f.woff2": {
+          "sourcePath": "files/open-sans-math-wght-italic.woff2",
+          "sha256": "b011091d0c5f7c3c5139a40f3120b157f6c4b587164ff66e66a2bccd58a5a91f",
+          "bytes": 56528
+        },
+        "open-sans-symbols-wght-italic-be7296389be2.woff2": {
+          "sourcePath": "files/open-sans-symbols-wght-italic.woff2",
+          "sha256": "be7296389be234abc22997275b6b7d056a0e6ff9d6e7dd63cfe7d3232aac9dac",
+          "bytes": 26368
+        },
+        "open-sans-vietnamese-wght-italic-7a79d808ca68.woff2": {
+          "sourcePath": "files/open-sans-vietnamese-wght-italic.woff2",
+          "sha256": "7a79d808ca680f3d672a68aa28098ad9ca9d4a93ae24a04b4b00c07f4ab67d40",
+          "bytes": 17212
+        },
+        "open-sans-latin-ext-wght-italic-a6fa0e8ac2a6.woff2": {
+          "sourcePath": "files/open-sans-latin-ext-wght-italic.woff2",
+          "sha256": "a6fa0e8ac2a665c121a19c2e2434fb286e3afdef7b9288739a73c7cb6849108c",
+          "bytes": 37752
+        },
+        "open-sans-latin-wght-italic-186836b74cea.woff2": {
+          "sourcePath": "files/open-sans-latin-wght-italic.woff2",
+          "sha256": "186836b74ceac07b2764c07c0379420e3014efb30fe918461c235e0ef6cbc4a2",
+          "bytes": 50216
+        }
+      }
+    },
+    {
+      "family": "Playfair Display",
+      "package": "@fontsource-variable/playfair-display",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/playfair-display/-/playfair-display-5.3.0.tgz",
+      "integrity": "sha512-IHdzTvE8eGIXHteZql7KXoqdc3Gfm+Zs1u4XlSC3MeplkwviT3sx/P6gI0tLwg/xIYLF4ZJYveZ5V+bl9cnDwA==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/playfair-display-OFL.txt",
+      "licenseSha256": "c052aafd2a71e90bcee6e69f475029d430a10d548c08ffcae350171f0e9668b1",
+      "upstreamFontVersion": "v40",
+      "assets": {
+        "playfair-display-cyrillic-wght-normal-c108681cba6a.woff2": {
+          "sourcePath": "files/playfair-display-cyrillic-wght-normal.woff2",
+          "sha256": "c108681cba6a9820bff52f4a1a4a1d9edf356b347bd79b7c61e916028e8a8b54",
+          "bytes": 21152
+        },
+        "playfair-display-vietnamese-wght-normal-ef6446229b59.woff2": {
+          "sourcePath": "files/playfair-display-vietnamese-wght-normal.woff2",
+          "sha256": "ef6446229b59773e671021650ef3882cf35806dae723ce047de87c0a6633039a",
+          "bytes": 9112
+        },
+        "playfair-display-latin-ext-wght-normal-42898ad49a6b.woff2": {
+          "sourcePath": "files/playfair-display-latin-ext-wght-normal.woff2",
+          "sha256": "42898ad49a6b23f32b109243e1df596edf831015ed685f429e4dafbb181d599d",
+          "bytes": 21140
+        },
+        "playfair-display-latin-wght-normal-e0c764a8e9e1.woff2": {
+          "sourcePath": "files/playfair-display-latin-wght-normal.woff2",
+          "sha256": "e0c764a8e9e1cce92163c55bac4b2ad6cd4cf8c696ce2289ab5c41565e65b7e2",
+          "bytes": 38404
+        },
+        "playfair-display-cyrillic-wght-italic-51b2dac69833.woff2": {
+          "sourcePath": "files/playfair-display-cyrillic-wght-italic.woff2",
+          "sha256": "51b2dac698333379dc3a3486393fba787d17f1dcbcb50f46582ca759d53c25fc",
+          "bytes": 23304
+        },
+        "playfair-display-vietnamese-wght-italic-6b8bfd228577.woff2": {
+          "sourcePath": "files/playfair-display-vietnamese-wght-italic.woff2",
+          "sha256": "6b8bfd228577635a5f45bee13c8dd4a900eba6aeb36af1680838aea3cbd7e412",
+          "bytes": 9568
+        },
+        "playfair-display-latin-ext-wght-italic-b9dff4aec6d8.woff2": {
+          "sourcePath": "files/playfair-display-latin-ext-wght-italic.woff2",
+          "sha256": "b9dff4aec6d8ef27af595330c808c455fcc3ff46881642aa6028ed4e27a96f89",
+          "bytes": 23380
+        },
+        "playfair-display-latin-wght-italic-54af24bd0f91.woff2": {
+          "sourcePath": "files/playfair-display-latin-wght-italic.woff2",
+          "sha256": "54af24bd0f911f0fd7399d5445ea2023ff501d6a69f2d728f1213072f977ab14",
+          "bytes": 38804
+        }
+      }
+    },
+    {
+      "family": "Poppins",
+      "package": "@fontsource/poppins",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource/poppins/-/poppins-5.3.0.tgz",
+      "integrity": "sha512-cms1nM7U6SN8epIV1WMVOV8VsA645aSm3wHfzIQnkk188U341ThbJGSl2Sv54V29gnDbT2arMPfLzvVIIVCceQ==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/poppins-OFL.txt",
+      "licenseSha256": "5c4a92c8f8ce0ab211f4c72889d82383c9644546115d9ba39a4f2d5b8f37014b",
+      "upstreamFontVersion": "v24",
+      "assets": {
+        "poppins-devanagari-100-normal-bcfe4f3bcbcb.woff2": {
+          "sourcePath": "files/poppins-devanagari-100-normal.woff2",
+          "sha256": "bcfe4f3bcbcb75416ddd66bbb9b9dd4a6d23be8f0c736fdfcae30f906c51bf59",
+          "bytes": 36136
+        },
+        "poppins-latin-ext-100-normal-b49bddf0704c.woff2": {
+          "sourcePath": "files/poppins-latin-ext-100-normal.woff2",
+          "sha256": "b49bddf0704c9a43e05aec3017a719e1f5739a45add8b88b1c9d726e90ea6900",
+          "bytes": 5364
+        },
+        "poppins-latin-100-normal-a9220f99b916.woff2": {
+          "sourcePath": "files/poppins-latin-100-normal.woff2",
+          "sha256": "a9220f99b916978e5d7934b73be5ab91444871ba52a89032e4dd90e42b0a96e1",
+          "bytes": 7484
+        },
+        "poppins-devanagari-100-italic-768bb706f020.woff2": {
+          "sourcePath": "files/poppins-devanagari-100-italic.woff2",
+          "sha256": "768bb706f020be8a0129f46aaade128155c6db6976e2c55ef3c73c8f7e43f2c1",
+          "bytes": 41984
+        },
+        "poppins-latin-ext-100-italic-541e2d0cd4e6.woff2": {
+          "sourcePath": "files/poppins-latin-ext-100-italic.woff2",
+          "sha256": "541e2d0cd4e67f7adec2779c88a4dfaecd86d65ec55b98fd0b3ab9a9d221ec75",
+          "bytes": 5720
+        },
+        "poppins-latin-100-italic-d80200523e72.woff2": {
+          "sourcePath": "files/poppins-latin-100-italic.woff2",
+          "sha256": "d80200523e723113f1802f7eb3258d5b922e6546d637d502f0fd2ea470201df5",
+          "bytes": 8404
+        },
+        "poppins-devanagari-200-normal-5fe2155ca3ae.woff2": {
+          "sourcePath": "files/poppins-devanagari-200-normal.woff2",
+          "sha256": "5fe2155ca3aeff8bd7f6da1ec94febdfd54d2f37ff2b3e7fdcdf7ed2e7ded718",
+          "bytes": 39192
+        },
+        "poppins-latin-ext-200-normal-385e10dd2917.woff2": {
+          "sourcePath": "files/poppins-latin-ext-200-normal.woff2",
+          "sha256": "385e10dd29173c677ef4c50e8348f823878a71a63af5b3f629431c5f2a9c7bac",
+          "bytes": 5508
+        },
+        "poppins-latin-200-normal-6f0c57259042.woff2": {
+          "sourcePath": "files/poppins-latin-200-normal.woff2",
+          "sha256": "6f0c572590421075878908e0b380c5a6d404f72aa7d6d125385943be658f8399",
+          "bytes": 7932
+        },
+        "poppins-devanagari-200-italic-bf63c4a9313e.woff2": {
+          "sourcePath": "files/poppins-devanagari-200-italic.woff2",
+          "sha256": "bf63c4a9313e32eca0872d52dfe1955a4f406a814df5d78c6b21c51c5b41b229",
+          "bytes": 45300
+        },
+        "poppins-latin-ext-200-italic-5dfaf84dcae2.woff2": {
+          "sourcePath": "files/poppins-latin-ext-200-italic.woff2",
+          "sha256": "5dfaf84dcae2a3083bc95295a87d8ec16b406bbf52abe5b894dbdf360a91f645",
+          "bytes": 5980
+        },
+        "poppins-latin-200-italic-28d28631a83d.woff2": {
+          "sourcePath": "files/poppins-latin-200-italic.woff2",
+          "sha256": "28d28631a83de4ed8567b99ae8f9d895c0cc8a083cb42ae9c2c152367d3acd29",
+          "bytes": 8720
+        },
+        "poppins-devanagari-300-normal-28e0850de1ca.woff2": {
+          "sourcePath": "files/poppins-devanagari-300-normal.woff2",
+          "sha256": "28e0850de1cae95b7e8694b4466db9a1cdfc8c1635f0bcb42bc05ce5de10678d",
+          "bytes": 39412
+        },
+        "poppins-latin-ext-300-normal-33ff412e5737.woff2": {
+          "sourcePath": "files/poppins-latin-ext-300-normal.woff2",
+          "sha256": "33ff412e573782b800c68bb81a6be6f987ad40c36b681aeeaf188e723a9fc46c",
+          "bytes": 5524
+        },
+        "poppins-latin-300-normal-78bc3aa78fae.woff2": {
+          "sourcePath": "files/poppins-latin-300-normal.woff2",
+          "sha256": "78bc3aa78faec288bbb3bf26c9a0fa4eb67b1e69da94a17233c5cab60525efdb",
+          "bytes": 7840
+        },
+        "poppins-devanagari-300-italic-1c7b2c6a98ee.woff2": {
+          "sourcePath": "files/poppins-devanagari-300-italic.woff2",
+          "sha256": "1c7b2c6a98eef64bc9b22499df05ba6b65e9d9e13d707c4b075750459d982703",
+          "bytes": 45772
+        },
+        "poppins-latin-ext-300-italic-f1f727141c22.woff2": {
+          "sourcePath": "files/poppins-latin-ext-300-italic.woff2",
+          "sha256": "f1f727141c2243e9c7792df5ed2dd6c441705bfbcf742257347f93683d8d61a3",
+          "bytes": 5956
+        },
+        "poppins-latin-300-italic-f0ae296f5c19.woff2": {
+          "sourcePath": "files/poppins-latin-300-italic.woff2",
+          "sha256": "f0ae296f5c19db047491f1311d621ff18960b34cfa9cb07b69932a02ec298366",
+          "bytes": 8712
+        },
+        "poppins-devanagari-400-normal-6b986471df60.woff2": {
+          "sourcePath": "files/poppins-devanagari-400-normal.woff2",
+          "sha256": "6b986471df6084ba6f89749100b2731200a722d3de0e00f48e1967f21eb2adc0",
+          "bytes": 39660
+        },
+        "poppins-latin-ext-400-normal-0b1fcab42c18.woff2": {
+          "sourcePath": "files/poppins-latin-ext-400-normal.woff2",
+          "sha256": "0b1fcab42c18b69bcfe9ce4799fcbff5af1621c53ffcfdc4723c6f5ec4ee3ffb",
+          "bytes": 5644
+        },
+        "poppins-latin-400-normal-7d93459d8658.woff2": {
+          "sourcePath": "files/poppins-latin-400-normal.woff2",
+          "sha256": "7d93459d86585bfcdbb7e0376056226adb25821ee54b96236fe2123e9560929f",
+          "bytes": 7884
+        },
+        "poppins-devanagari-400-italic-cde48c89e89f.woff2": {
+          "sourcePath": "files/poppins-devanagari-400-italic.woff2",
+          "sha256": "cde48c89e89f53ae2f2f91be15fa1577799d40a37510c5bfa3e93a5181633c02",
+          "bytes": 45968
+        },
+        "poppins-latin-ext-400-italic-1e91b430ebe5.woff2": {
+          "sourcePath": "files/poppins-latin-ext-400-italic.woff2",
+          "sha256": "1e91b430ebe5aa347934e70dcd76ca3c594e34d41d14ba3e2f1a7e1dcbc0cfc6",
+          "bytes": 5964
+        },
+        "poppins-latin-400-italic-50d0c1742d80.woff2": {
+          "sourcePath": "files/poppins-latin-400-italic.woff2",
+          "sha256": "50d0c1742d80ac71f4cde20e8c04d41a24806af342831f479938b527fbff0972",
+          "bytes": 8668
+        },
+        "poppins-devanagari-500-normal-f018c9ad67dc.woff2": {
+          "sourcePath": "files/poppins-devanagari-500-normal.woff2",
+          "sha256": "f018c9ad67dc6c2ca9743ba407d879a251e778bfb3f1cced9dd59a9214ea0350",
+          "bytes": 39084
+        },
+        "poppins-latin-ext-500-normal-af5fda16a191.woff2": {
+          "sourcePath": "files/poppins-latin-ext-500-normal.woff2",
+          "sha256": "af5fda16a19169e029a132374616728e1bf326d90bef5a552395c5053e21cd0f",
+          "bytes": 5484
+        },
+        "poppins-latin-500-normal-cd36de204aca.woff2": {
+          "sourcePath": "files/poppins-latin-500-normal.woff2",
+          "sha256": "cd36de204aca2d5fa263a731f7c20009b5e3d754ba1f1e03c33e93a48f3e7446",
+          "bytes": 7748
+        },
+        "poppins-devanagari-500-italic-c4f36ddfe165.woff2": {
+          "sourcePath": "files/poppins-devanagari-500-italic.woff2",
+          "sha256": "c4f36ddfe165e5c1b2de13cac6088cdc044dd47cca8d41884da2d0ea4c272381",
+          "bytes": 44976
+        },
+        "poppins-latin-ext-500-italic-248a4c140325.woff2": {
+          "sourcePath": "files/poppins-latin-ext-500-italic.woff2",
+          "sha256": "248a4c140325101536a69bff763665e7356390cbf0ce326b35bad968e42b5743",
+          "bytes": 5856
+        },
+        "poppins-latin-500-italic-1ddb074f9963.woff2": {
+          "sourcePath": "files/poppins-latin-500-italic.woff2",
+          "sha256": "1ddb074f9963be8f6275c42dbd54d18625da8f91c85803121094ec81649f488b",
+          "bytes": 8504
+        },
+        "poppins-devanagari-600-normal-58dba357cb1e.woff2": {
+          "sourcePath": "files/poppins-devanagari-600-normal.woff2",
+          "sha256": "58dba357cb1e89bf36e83f19227293f35d5d7de91215d0fcf394e705634837b5",
+          "bytes": 39292
+        },
+        "poppins-latin-ext-600-normal-bb1f2d582e7f.woff2": {
+          "sourcePath": "files/poppins-latin-ext-600-normal.woff2",
+          "sha256": "bb1f2d582e7fba586ab70c91ef062d3becaf78b887654953863521b73665d171",
+          "bytes": 5524
+        },
+        "poppins-latin-600-normal-f4e80d9dfd37.woff2": {
+          "sourcePath": "files/poppins-latin-600-normal.woff2",
+          "sha256": "f4e80d9dfd374d02989b87a27b5ed4cb78fbb177c27f1478e9a8b0afb7513149",
+          "bytes": 8000
+        },
+        "poppins-devanagari-600-italic-73b9ec8afb28.woff2": {
+          "sourcePath": "files/poppins-devanagari-600-italic.woff2",
+          "sha256": "73b9ec8afb28abd16c401fe196d328450127f13004099c2a9685b9e1baf52c47",
+          "bytes": 45596
+        },
+        "poppins-latin-ext-600-italic-10a9b6414cbe.woff2": {
+          "sourcePath": "files/poppins-latin-ext-600-italic.woff2",
+          "sha256": "10a9b6414cbebd6948c3a3a96838480b1ee019e0468033245ea1ddf1143bcda8",
+          "bytes": 6012
+        },
+        "poppins-latin-600-italic-3ad6c8bd3624.woff2": {
+          "sourcePath": "files/poppins-latin-600-italic.woff2",
+          "sha256": "3ad6c8bd3624555dd79177efe91f0aca20e7f28597fa6b49762c27f337500d8d",
+          "bytes": 8724
+        },
+        "poppins-devanagari-700-normal-de10eb6f1f45.woff2": {
+          "sourcePath": "files/poppins-devanagari-700-normal.woff2",
+          "sha256": "de10eb6f1f452594080f69e1e4925fc68f2d594b4837c70b6c8e6ac0e8384916",
+          "bytes": 39252
+        },
+        "poppins-latin-ext-700-normal-ccfd87f69ef0.woff2": {
+          "sourcePath": "files/poppins-latin-ext-700-normal.woff2",
+          "sha256": "ccfd87f69ef00d811da3d06488cec4e79ec99d289cfbcbe4be42031cecae775a",
+          "bytes": 5432
+        },
+        "poppins-latin-700-normal-9338e65fc077.woff2": {
+          "sourcePath": "files/poppins-latin-700-normal.woff2",
+          "sha256": "9338e65fc077355c7a87ae0d64cc101e23b9bf8ad78ae65f0f319c857311b526",
+          "bytes": 7816
+        },
+        "poppins-devanagari-700-italic-4a57a4098e8e.woff2": {
+          "sourcePath": "files/poppins-devanagari-700-italic.woff2",
+          "sha256": "4a57a4098e8ee918e9f91c1555d36302289e8f48c48be053404a9bcdf6909954",
+          "bytes": 45060
+        },
+        "poppins-latin-ext-700-italic-4c05ae2d20c3.woff2": {
+          "sourcePath": "files/poppins-latin-ext-700-italic.woff2",
+          "sha256": "4c05ae2d20c308c3b949b4578256e5438d0af62a7d32ac6dfcc63a230246adb0",
+          "bytes": 5860
+        },
+        "poppins-latin-700-italic-4b0864712c6e.woff2": {
+          "sourcePath": "files/poppins-latin-700-italic.woff2",
+          "sha256": "4b0864712c6e7ca75f8c003f7bc1a9270af33d6becd4119463771593274c48d2",
+          "bytes": 8596
+        },
+        "poppins-devanagari-800-normal-6c6bb57f25cc.woff2": {
+          "sourcePath": "files/poppins-devanagari-800-normal.woff2",
+          "sha256": "6c6bb57f25ccf0ee85539099e2df61e7c74be0aca55e658cb9a7ef0c54752828",
+          "bytes": 38940
+        },
+        "poppins-latin-ext-800-normal-a72eccfa6cfa.woff2": {
+          "sourcePath": "files/poppins-latin-ext-800-normal.woff2",
+          "sha256": "a72eccfa6cfa9c26b4004e98dbf8592ea0fb3704b2fc749e8bd60a996e2e5a7c",
+          "bytes": 5492
+        },
+        "poppins-latin-800-normal-60bf0aba6526.woff2": {
+          "sourcePath": "files/poppins-latin-800-normal.woff2",
+          "sha256": "60bf0aba6526436f3930c58c12047687fbb6bff4dd180cce4613458ed3439ea2",
+          "bytes": 7824
+        },
+        "poppins-devanagari-800-italic-ee520bab8435.woff2": {
+          "sourcePath": "files/poppins-devanagari-800-italic.woff2",
+          "sha256": "ee520bab8435c2448b0b44d236fb6136f70f94dc62a6b0d48e4e595a4eb444b7",
+          "bytes": 44692
+        },
+        "poppins-latin-ext-800-italic-fabc455f5521.woff2": {
+          "sourcePath": "files/poppins-latin-ext-800-italic.woff2",
+          "sha256": "fabc455f55219e7fd5c5f69adfc5b073868fa45b09dfcb24bfdf1060575f9df1",
+          "bytes": 5932
+        },
+        "poppins-latin-800-italic-494d66c1f510.woff2": {
+          "sourcePath": "files/poppins-latin-800-italic.woff2",
+          "sha256": "494d66c1f510af5609c852b228a4ad3e0f12ccf93126b5f437f8e4ac14def828",
+          "bytes": 8680
+        },
+        "poppins-devanagari-900-normal-7e5f8b8628f6.woff2": {
+          "sourcePath": "files/poppins-devanagari-900-normal.woff2",
+          "sha256": "7e5f8b8628f6e5a751c907900f98f2a7396ecd08a6b5f6766cf6b564f4aa436c",
+          "bytes": 38192
+        },
+        "poppins-latin-ext-900-normal-0270140e6150.woff2": {
+          "sourcePath": "files/poppins-latin-ext-900-normal.woff2",
+          "sha256": "0270140e6150b816366ba81ba043edb066089bea037a34516105d281722e772f",
+          "bytes": 5380
+        },
+        "poppins-latin-900-normal-17ea10196a49.woff2": {
+          "sourcePath": "files/poppins-latin-900-normal.woff2",
+          "sha256": "17ea10196a490a8d3b8da162c7d4af9c301c5229f70af90dad6fa33eb951d83f",
+          "bytes": 7632
+        },
+        "poppins-devanagari-900-italic-09cb5f54f410.woff2": {
+          "sourcePath": "files/poppins-devanagari-900-italic.woff2",
+          "sha256": "09cb5f54f4103cf103cd3d1838f78ef7c4582e3a8d584c5fe3428c75615d7f59",
+          "bytes": 41944
+        },
+        "poppins-latin-ext-900-italic-596b940732c1.woff2": {
+          "sourcePath": "files/poppins-latin-ext-900-italic.woff2",
+          "sha256": "596b940732c1bd30d2e58ea2ecc62035f6a3de5693d7801085483e1698206c21",
+          "bytes": 5812
+        },
+        "poppins-latin-900-italic-ed7924808878.woff2": {
+          "sourcePath": "files/poppins-latin-900-italic.woff2",
+          "sha256": "ed79248088783dd5be147808b6f904dc55122f18e80cc0780da3d3e6152ea1b1",
+          "bytes": 8488
+        }
+      }
+    },
+    {
+      "family": "Raleway",
+      "package": "@fontsource-variable/raleway",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/raleway/-/raleway-5.3.0.tgz",
+      "integrity": "sha512-aSV2k+V6Zz+od0dHpBOzkVxEzmgEdiXcxDfant39jLOx+T89dielQRrZylukwK3Fp+FY255gPqz67ruOfs1rqA==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/raleway-OFL.txt",
+      "licenseSha256": "7bda8fcb7cfe5a162bb615e16bf4f94c7ef78de6f82ee44d219bf24a013b7ba2",
+      "upstreamFontVersion": "v37",
+      "assets": {
+        "raleway-cyrillic-ext-wght-normal-36920a27f3f2.woff2": {
+          "sourcePath": "files/raleway-cyrillic-ext-wght-normal.woff2",
+          "sha256": "36920a27f3f245302f04e96a331d42b81dceda91b5229dfd757873bf12db4b05",
+          "bytes": 26988
+        },
+        "raleway-cyrillic-wght-normal-ac99ad1c437b.woff2": {
+          "sourcePath": "files/raleway-cyrillic-wght-normal.woff2",
+          "sha256": "ac99ad1c437b60ef445a7c13c958d4d574ef98050de2ccf182ba6ccdb3bfbdfd",
+          "bytes": 25864
+        },
+        "raleway-vietnamese-wght-normal-49d1df387116.woff2": {
+          "sourcePath": "files/raleway-vietnamese-wght-normal.woff2",
+          "sha256": "49d1df38711652b72cbb3ed91dfda0a981b88f75be4abb02eb6640f74f2a5bee",
+          "bytes": 11384
+        },
+        "raleway-latin-ext-wght-normal-2d603982caea.woff2": {
+          "sourcePath": "files/raleway-latin-ext-wght-normal.woff2",
+          "sha256": "2d603982caea60f15b741581c9e7bd88d1a7680fc52978137f9bc67c2dec61e0",
+          "bytes": 31480
+        },
+        "raleway-latin-wght-normal-b1bef1f03a77.woff2": {
+          "sourcePath": "files/raleway-latin-wght-normal.woff2",
+          "sha256": "b1bef1f03a77a36fc257c5525e32a1dd621bb6f935b743a419da7ed0b18dc8f5",
+          "bytes": 48264
+        },
+        "raleway-cyrillic-ext-wght-italic-89a1ae829083.woff2": {
+          "sourcePath": "files/raleway-cyrillic-ext-wght-italic.woff2",
+          "sha256": "89a1ae829083a7a7263c4bb4119395477139e3866409f6a7c7e7e309f228d5b1",
+          "bytes": 30484
+        },
+        "raleway-cyrillic-wght-italic-bad8fd12e2ce.woff2": {
+          "sourcePath": "files/raleway-cyrillic-wght-italic.woff2",
+          "sha256": "bad8fd12e2ce80c70302ec5901f1b6129fce0ebbaba757aa25bd72e51b0d1555",
+          "bytes": 26056
+        },
+        "raleway-vietnamese-wght-italic-80de52aeb6cc.woff2": {
+          "sourcePath": "files/raleway-vietnamese-wght-italic.woff2",
+          "sha256": "80de52aeb6cc399a3e6b111946607c9216891231bca467d08d6cfed18b1642dd",
+          "bytes": 11768
+        },
+        "raleway-latin-ext-wght-italic-263c505d5216.woff2": {
+          "sourcePath": "files/raleway-latin-ext-wght-italic.woff2",
+          "sha256": "263c505d5216c4431265e258c83785ba7c96d9d31ba2759f2e761c45de08e42d",
+          "bytes": 33476
+        },
+        "raleway-latin-wght-italic-8c08eb8b1fdd.woff2": {
+          "sourcePath": "files/raleway-latin-wght-italic.woff2",
+          "sha256": "8c08eb8b1fdd16dcdd6270e42a8b24fcf7ddc7e63d4363a55c174d110f90005f",
+          "bytes": 50244
+        }
+      }
+    },
+    {
+      "family": "Roboto",
+      "package": "@fontsource-variable/roboto",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/roboto/-/roboto-5.3.0.tgz",
+      "integrity": "sha512-BoaaZiQf8fgtxv07KXkTwx1bKz/EoqIlTXq2OOKKXINxp6qXWdnlChqV+hSaDANS49yyUASFl3OVBMMDTCIHFA==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/roboto-OFL.txt",
+      "licenseSha256": "84044c09058803d87a241bd28abb4ce30a433d7db9c27a04da3efad6a0ca539c",
+      "upstreamFontVersion": "v51",
+      "assets": {
+        "roboto-cyrillic-ext-wght-normal-01f94d674db5.woff2": {
+          "sourcePath": "files/roboto-cyrillic-ext-wght-normal.woff2",
+          "sha256": "01f94d674db55952c35898fa4da22c3e7065c3cc4dbbcc9cb7beb8b6b017fbc9",
+          "bytes": 36652
+        },
+        "roboto-cyrillic-wght-normal-481dd0c01e6b.woff2": {
+          "sourcePath": "files/roboto-cyrillic-wght-normal.woff2",
+          "sha256": "481dd0c01e6bbb129fd147eb5d8571016193cba141c4627ca60ceabdb5a46ea8",
+          "bytes": 23664
+        },
+        "roboto-greek-ext-wght-normal-ec7769b08981.woff2": {
+          "sourcePath": "files/roboto-greek-ext-wght-normal.woff2",
+          "sha256": "ec7769b089813996276482bbe7017adfffdd6c7543fd1f76244e2ffc1138ed86",
+          "bytes": 4348
+        },
+        "roboto-greek-wght-normal-97fbf7bd0b45.woff2": {
+          "sourcePath": "files/roboto-greek-wght-normal.woff2",
+          "sha256": "97fbf7bd0b4579e632392a4f483acdae73cbf59ad90c1e5d2c5ec4044c377fce",
+          "bytes": 17624
+        },
+        "roboto-math-wght-normal-7cb4281a0ccc.woff2": {
+          "sourcePath": "files/roboto-math-wght-normal.woff2",
+          "sha256": "7cb4281a0ccc84cc18617842c639fc66541cbef94a9dd245c754700210b4fcec",
+          "bytes": 41348
+        },
+        "roboto-symbols-wght-normal-2addf2d86d7a.woff2": {
+          "sourcePath": "files/roboto-symbols-wght-normal.woff2",
+          "sha256": "2addf2d86d7a5778653b36d551e97a39da52855f82fac7461cfc1bd86d460aed",
+          "bytes": 20556
+        },
+        "roboto-vietnamese-wght-normal-0b60bbe04e9c.woff2": {
+          "sourcePath": "files/roboto-vietnamese-wght-normal.woff2",
+          "sha256": "0b60bbe04e9c479444b31270a72179f53e400beee57b7dd176c08e5e2e716831",
+          "bytes": 14340
+        },
+        "roboto-latin-ext-wght-normal-cedb374b05a3.woff2": {
+          "sourcePath": "files/roboto-latin-ext-wght-normal.woff2",
+          "sha256": "cedb374b05a35034cf96db185db4eeb8f8ce49e1a56197673702ff11b5533d6e",
+          "bytes": 29392
+        },
+        "roboto-latin-wght-normal-1404ca348bd7.woff2": {
+          "sourcePath": "files/roboto-latin-wght-normal.woff2",
+          "sha256": "1404ca348bd75ef836f4dd8b6f2cc719458642d1237c368296b2fc652dca47dc",
+          "bytes": 43136
+        },
+        "roboto-cyrillic-ext-wght-italic-d8d0c88eea10.woff2": {
+          "sourcePath": "files/roboto-cyrillic-ext-wght-italic.woff2",
+          "sha256": "d8d0c88eea1036dc3e7322cd0a1a3eb6fc1dd86da24c7de690e70aac1bd62f05",
+          "bytes": 40480
+        },
+        "roboto-cyrillic-wght-italic-f2ab3c15c750.woff2": {
+          "sourcePath": "files/roboto-cyrillic-wght-italic.woff2",
+          "sha256": "f2ab3c15c750e03fb1bc8887786a9ef826d134c461f830877366399295861e55",
+          "bytes": 25464
+        },
+        "roboto-greek-ext-wght-italic-75697119399f.woff2": {
+          "sourcePath": "files/roboto-greek-ext-wght-italic.woff2",
+          "sha256": "75697119399fa9c3be54924e02b42ba6dc2a430b2984479cb5d8f291f09a44f3",
+          "bytes": 4452
+        },
+        "roboto-greek-wght-italic-abf79b1a281b.woff2": {
+          "sourcePath": "files/roboto-greek-wght-italic.woff2",
+          "sha256": "abf79b1a281be8135c1bde7bf807267b1507adbdbe3023d5f5a8781ab6655371",
+          "bytes": 18780
+        },
+        "roboto-math-wght-italic-1c6486a3a539.woff2": {
+          "sourcePath": "files/roboto-math-wght-italic.woff2",
+          "sha256": "1c6486a3a539bc8cfb0d9586787438282dfbe21b745fee24b12b376991286215",
+          "bytes": 45184
+        },
+        "roboto-symbols-wght-italic-3c9dec1a3e93.woff2": {
+          "sourcePath": "files/roboto-symbols-wght-italic.woff2",
+          "sha256": "3c9dec1a3e93c3effb3ec8805a71890dc81d0a0c3e64fd95f4d138d8e300aeff",
+          "bytes": 22440
+        },
+        "roboto-vietnamese-wght-italic-3e6b22d21716.woff2": {
+          "sourcePath": "files/roboto-vietnamese-wght-italic.woff2",
+          "sha256": "3e6b22d2171656f2f886c209e04c70555a6bdb4903c011811726830492cd6ba9",
+          "bytes": 15344
+        },
+        "roboto-latin-ext-wght-italic-7f21d061a9de.woff2": {
+          "sourcePath": "files/roboto-latin-ext-wght-italic.woff2",
+          "sha256": "7f21d061a9de1ea78a858938ff3b8e677869656b10bad470fc6039f8f3daf329",
+          "bytes": 31820
+        },
+        "roboto-latin-wght-italic-14f23757c6b4.woff2": {
+          "sourcePath": "files/roboto-latin-wght-italic.woff2",
+          "sha256": "14f23757c6b41b4b6c0b967ca3fa74ff47a868728158373461c4e6e4b6368f19",
+          "bytes": 47208
+        }
+      }
+    },
+    {
+      "family": "Space Grotesk",
+      "package": "@fontsource-variable/space-grotesk",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/space-grotesk/-/space-grotesk-5.3.0.tgz",
+      "integrity": "sha512-2IxmvfB08i9vnGB3Ym/AXvhRE+8XOjWMXIyDum03c+tPwH0FUoMNQfGpU8NXPxjbws0Vvss3AH0Zqt4oJBBAdw==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/space-grotesk-OFL.txt",
+      "licenseSha256": "18a4de52385f6b988782639d5d0cc1326e5a8c2de9a7f01d7b20d9aedcc60943",
+      "upstreamFontVersion": "v22",
+      "assets": {
+        "space-grotesk-vietnamese-wght-normal-8895e3d49825.woff2": {
+          "sourcePath": "files/space-grotesk-vietnamese-wght-normal.woff2",
+          "sha256": "8895e3d49825128bfa5238e4c96e9b432d7a3dadbe5c17c6081267398305dc71",
+          "bytes": 6712
+        },
+        "space-grotesk-latin-ext-wght-normal-952dddb45d2f.woff2": {
+          "sourcePath": "files/space-grotesk-latin-ext-wght-normal.woff2",
+          "sha256": "952dddb45d2f96f71cbf3b7f510b24379afc3c89ea02fcf89d377b45d62c0166",
+          "bytes": 18940
+        },
+        "space-grotesk-latin-wght-normal-0640890476fc.woff2": {
+          "sourcePath": "files/space-grotesk-latin-wght-normal.woff2",
+          "sha256": "0640890476fc1198ab4de571fb658de443c4d85b66466ec09534a8737ab1ce9d",
+          "bytes": 22288
+        }
+      }
+    },
+    {
+      "family": "Work Sans",
+      "package": "@fontsource-variable/work-sans",
+      "version": "5.3.0",
+      "tarball": "https://registry.npmjs.org/@fontsource-variable/work-sans/-/work-sans-5.3.0.tgz",
+      "integrity": "sha512-le8h/OIIuhm5Z7TdvuMw0yKg2gaCZUiMec8zaumsVVjzeJRBPEF0bQI/MkaZDHCVzZDvZoP/O2LiGOSfDLSbaw==",
+      "license": "OFL-1.1",
+      "licenseFile": "public/fonts/editors/work-sans-OFL.txt",
+      "licenseSha256": "e7c426573d51f3d2e5e92254878c862344ffa0b9272f79a880f9f99010f002c7",
+      "upstreamFontVersion": "v24",
+      "assets": {
+        "work-sans-vietnamese-wght-normal-b36b1cc30053.woff2": {
+          "sourcePath": "files/work-sans-vietnamese-wght-normal.woff2",
+          "sha256": "b36b1cc3005352fac514c5703c55bc87b431663db8fbe94e5159d366ac1216b5",
+          "bytes": 11800
+        },
+        "work-sans-latin-ext-wght-normal-2aa17fc7b072.woff2": {
+          "sourcePath": "files/work-sans-latin-ext-wght-normal.woff2",
+          "sha256": "2aa17fc7b072e46652e84bbe3dbba9ec57cdea320d89e8c951ed7cf3218c300b",
+          "bytes": 35716
+        },
+        "work-sans-latin-wght-normal-1dd49afc07fb.woff2": {
+          "sourcePath": "files/work-sans-latin-wght-normal.woff2",
+          "sha256": "1dd49afc07fb2231b2ff686cbf007725fb2742271bb1f28ebd98f22a0d817343",
+          "bytes": 50316
+        },
+        "work-sans-vietnamese-wght-italic-f5daeed0d686.woff2": {
+          "sourcePath": "files/work-sans-vietnamese-wght-italic.woff2",
+          "sha256": "f5daeed0d68652bfa2c3fc61484e86ef546c774ca56ea9124ff8de06fea67dc3",
+          "bytes": 11704
+        },
+        "work-sans-latin-ext-wght-italic-7ad4dd06ed78.woff2": {
+          "sourcePath": "files/work-sans-latin-ext-wght-italic.woff2",
+          "sha256": "7ad4dd06ed7836bad7fef7c5cb75a93229d549c8db9671aff1aa798dc1682a70",
+          "bytes": 32280
+        },
+        "work-sans-latin-wght-italic-73468c2b5cc7.woff2": {
+          "sourcePath": "files/work-sans-latin-wght-italic.woff2",
+          "sha256": "73468c2b5cc7c31456ee0c297ac87b2bfb7eb626bc79688dc3a320151fddcd2f",
+          "bytes": 48180
+        }
+      }
+    }
+  ],
+  "catalogOffset": {
+    "start": 2159150,
+    "unit": "UTF-16 code units"
+  },
+  "catalogSha256": "878eab1994de6c7896126cf1549cd46950b74c547bb45f7da5eddf9bef488caf",
+  "cssSha256": "e3aedbf71b848a09bb1468ed77f76d11249858cb3c56e988e0f94a0101235b2a"
+}

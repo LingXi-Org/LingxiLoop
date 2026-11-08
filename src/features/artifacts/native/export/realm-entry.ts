@@ -1,5 +1,6 @@
 import '../../../../styles/app-fonts.css'
 import '../../../../styles/fonts.css'
+import '../editor-fonts.css'
 import type { ArtifactDocument } from '../../../../../shared/artifact-document'
 import type { ArtifactExportFormat } from '../export-artifact'
 import { executeExport } from './execute'
@@ -24,12 +25,14 @@ window.addEventListener('message', event => {
       else pending.reject(new Error(data.error ?? '导出资源加载失败'))
       return
     }
-    if (data?.type !== 'start' || started || !['html', 'pdf', 'pptx'].includes(data.format)) return
+    if (started || data?.type !== 'svg-font-image' && (data?.type !== 'start' || !['html', 'pdf', 'pptx', 'png', 'jpeg', 'svg'].includes(data.format))) return
     started = true
     void (async () => {
       try {
-        const result = await executeExport(data.document as ArtifactDocument, {
+        const result = data.type==='svg-font-image'?await(await import('../svg-font-image')).svgFontImage(data.source,data.fontFamily,controller.signal):await executeExport(data.document as ArtifactDocument, {
           format: data.format as ArtifactExportFormat, signal: controller.signal,
+          pixelRatio: data.pixelRatio === 1 ? 1 : 2,
+          htmlArchive: data.htmlArchive === true,
           resolveAsset: asset => new Promise<Blob>((resolve, reject) => {
             controller.signal.throwIfAborted()
             const requestId = String(++serial); assets.set(requestId, { resolve, reject })

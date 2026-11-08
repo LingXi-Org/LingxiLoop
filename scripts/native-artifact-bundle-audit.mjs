@@ -6,13 +6,14 @@ import { existsSync, readFileSync } from 'node:fs'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { build } from 'vite'
+import {profileOpeningChunks,openingModuleRoles,assertNativeOpeningIsolation} from './native-artifact-bundle-profile.mjs'
 
 const output = resolve(process.argv[2] ?? '/tmp/lingxi-native-bundle-audit.json')
 const outDir = resolve(process.argv[3] ?? '/tmp/lingxi-native-production-dist')
 function sourceFingerprint() {
   const inputs = ['src', 'shared', 'public', 'third_party/assistant-ui/streaming-text', 'third_party/baoyu-design/host',
     'package.json', 'package-lock.json', 'index.html', 'artifact-export.html', 'vite.config.ts',
-    'tsconfig.json', 'tsconfig.node.json', 'postcss.config.js', 'tailwind.config.ts']
+    'tsconfig.json', 'tsconfig.node.json', 'postcss.config.js', 'tailwind.config.ts', 'scripts/native-artifact-shared-icons.ts']
   const files = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', ...inputs], { encoding: 'utf8' })
     .split('\0').filter(file => file && existsSync(file)).sort()
   const hash = createHash('sha256')
@@ -21,22 +22,26 @@ function sourceFingerprint() {
 }
 const inputSha256 = sourceFingerprint()
 let report
+const emitOpeningProfile=(value,openingIsolationPassed,sourceInputsUnchanged)=>new Promise((resolve,reject)=>process.stdout.write('NATIVE_ARTIFACT_BUNDLE_PROFILE '+JSON.stringify({commit:value.commit,sourceInputsSha256:value.sourceInputsSha256,uncommittedInputsPossible:value.uncommittedInputsPossible,openingIsolationPassed,buildCompleted:openingIsolationPassed,sourceInputsUnchanged,...(!openingIsolationPassed?{failureCode:'native_opening_isolation'}:{}),...value.openingProfile})+'\n',error=>error?reject(error):resolve()))
 await build({
   build: { outDir, emptyOutDir: true },
   plugins: [{
     name: 'native-artifact-dependency-audit',
     enforce: 'post',
-    generateBundle(_options, bundle) {
+    async generateBundle(_options, bundle) {
       const chunks = Object.values(bundle).filter(value => value.type === 'chunk')
+      const sharedIcons=chunks.find(chunk=>chunk.name==='artifact-shared-icons')
+      if(sharedIcons){
+        assert.equal(sharedIcons.moduleIds.length,7,'The measured shared icon chunk must own only seven leaf modules')
+        assert.ok(sharedIcons.moduleIds.every(id=>/\/node_modules\/lucide-react\/dist\/esm\/icons\/(bot|image|chevron-down|ellipsis|chevron-left|chevron-right|x)\.mjs$/.test(id.replaceAll('\\','/'))),'The shared icon chunk must not absorb React or other dependencies')
+      }
       const owns = (chunk, suffix) => chunk.moduleIds.some(id => id.replaceAll('\\', '/').endsWith(suffix))
-      const rootModules = ['/src/main.tsx', '/src/App.tsx', '/src/AuthedApp.tsx', '/src/desktop/DesktopApp.tsx',
-        '/src/desktop/ChatPane.tsx', '/src/features/artifacts/native/NativeEditor.tsx',
-        '/src/features/artifacts/native/RichTextEditor.tsx']
-      const roots = rootModules.map(module => {
-        const chunk = chunks.find(value => owns(value, module))
-        assert.ok(chunk, `Missing production root: ${module}`)
+      const rootChunks = Object.fromEntries(Object.entries(openingModuleRoles).map(([role,modules])=>[role,modules.map(module=>{
+        const chunk=chunks.find(value=>owns(value,module))
+        assert.ok(chunk,`Missing production root: ${module}`)
         return chunk.fileName
-      })
+      })]))
+      const roots=Object.values(rootChunks).flat()
       const reached = new Set()
       const visit = name => {
         if (reached.has(name)) return
@@ -65,10 +70,12 @@ await build({
         roots: [...new Set(roots)].sort(),
         staticChunks: [...reached].sort(),
         staticModuleCount: modules.length,
+        openingProfile:profileOpeningChunks(bundle,rootChunks.application,rootChunks.native,process.cwd()),
         forbiddenCompatibilityOrExportModules: forbidden,
         exportRealm: realm.fileName,
         exportHtmlPreloadsApplication: false,
       }
+      try{assertNativeOpeningIsolation(report.openingProfile)}catch(error){await emitOpeningProfile(report,false,sourceFingerprint()===inputSha256);throw error}
     },
   }],
 })
@@ -77,3 +84,4 @@ assert.equal(sourceFingerprint(), inputSha256, 'Build inputs changed during the 
 await mkdir(dirname(output), { recursive: true })
 await writeFile(output, `${JSON.stringify(report, null, 2)}\n`)
 console.log(`Native production graph audit: ${output}`)
+await emitOpeningProfile(report,true,true)

@@ -1,0 +1,174 @@
+{
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourceFile": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sourceSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "offsetUnit": "UTF-16 code units",
+  "locations": {
+    "curveModuleFactory": 3152243,
+    "freehandModuleFactory": 5064375,
+    "inputHandler": 5154132
+  },
+  "sampling": {
+    "minimumScreenDistance": 2,
+    "maximumLivePointsBeforeDecimation": 3000,
+    "screenTolerance": 1.25
+  },
+  "limits": {
+    "maximumPathCharacters": 24000,
+    "maximumLocalCoordinate": 8000,
+    "minimumBoxSize": 2,
+    "serializedDecimalPlaces": 1,
+    "fitToleranceAttempts": 5
+  },
+  "cases": [
+    {
+      "name": "折线拐角",
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 30,
+          "y": 10
+        },
+        {
+          "x": 50,
+          "y": -10
+        },
+        {
+          "x": 100,
+          "y": 15
+        }
+      ],
+      "scale": 1,
+      "tolerance": 1.25,
+      "result": {
+        "x": 0,
+        "y": -10.2,
+        "w": 100,
+        "h": 25.2,
+        "d": "M0 10.2 C9 13.2 19 20.5 27.2 20.5 C28.2 20.5 29.1 20.4 30 20.2 C37.8 18.4 42.5 1.4 50 0.2 C50.9 0.1 51.8 0 52.7 0 C67.1 0 84.3 17.4 100 25.2"
+      }
+    },
+    {
+      "name": "负坐标及分数",
+      "points": [
+        {
+          "x": -55.2,
+          "y": 10.4
+        },
+        {
+          "x": -25.2,
+          "y": 20.4
+        },
+        {
+          "x": -5.2,
+          "y": 0.4
+        },
+        {
+          "x": 44.8,
+          "y": 25.4
+        }
+      ],
+      "scale": 0.22105263157894736,
+      "tolerance": 5.654761904761905,
+      "result": {
+        "x": -55.2,
+        "y": 0.4,
+        "w": 100,
+        "h": 25,
+        "d": "M0 10 C9 13 19 20.3 27.2 20.3 C28.2 20.3 29.1 20.2 30 20 C37.8 18.2 43.3 6.7 50 0 C66.7 8.3 83.3 16.7 100 25"
+      }
+    },
+    {
+      "name": "两点",
+      "points": [
+        {
+          "x": 20,
+          "y": 40
+        },
+        {
+          "x": 30,
+          "y": 60
+        }
+      ],
+      "scale": 1,
+      "tolerance": 1.25,
+      "result": {
+        "x": 20,
+        "y": 40,
+        "w": 10,
+        "h": 20,
+        "d": "M0 0 L10 20"
+      }
+    },
+    {
+      "name": "直线",
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 0
+        },
+        {
+          "x": 20,
+          "y": 0
+        },
+        {
+          "x": 30,
+          "y": 0
+        }
+      ],
+      "scale": 1,
+      "tolerance": 1.25,
+      "result": {
+        "x": 0,
+        "y": 0,
+        "w": 30,
+        "h": 2,
+        "d": "M0 0 C10 0 20 0 30 0"
+      }
+    },
+    {
+      "name": "尖锐曲线",
+      "points": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 10,
+          "y": 100
+        },
+        {
+          "x": 20,
+          "y": -100
+        },
+        {
+          "x": 30,
+          "y": 100
+        },
+        {
+          "x": 40,
+          "y": 0
+        }
+      ],
+      "scale": 1,
+      "tolerance": 1.25,
+      "result": {
+        "x": 0,
+        "y": -100,
+        "w": 40,
+        "h": 206.4,
+        "d": "M0 100 C7.7 176.5 10.1 204.5 10.2 204.5 C10.5 204.5 5.5 141.1 5.5 84.9 C5.5 40.2 8.7 0 20 0 C31.3 0 34.5 40.2 34.5 84.9 C34.5 139.8 29.8 201.6 29.8 204.4 C29.8 206.4 32.1 179.2 40 100"
+      }
+    }
+  ],
+  "scope": "仅固定上游纯数学函数的数值对照；发布包不进入产品。没有声明原生已实现或完整视觉通过。",
+  "visualQualified": false,
+  "functionalQualified": false
+}

@@ -1,0 +1,217 @@
+[
+  {
+    "file": "design-1440-dark.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-1440-light.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-1920-dark.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-1920-light.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-390-dark.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-390-light.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-768-dark.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-768-light.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-all-comments.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-comment-composer.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-comment-options.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-comments-active.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-drawing.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-export.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-heading-inspector.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-history.png",
+    "identical": false,
+    "bounds": [
+      1214,
+      151,
+      1228,
+      160
+    ]
+  },
+  {
+    "file": "design-inspector.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-pages.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-shapes.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "design-zoom.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-1440-dark.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-1440-light.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-1920-dark.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-1920-light.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-390-dark.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-390-light.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-768-dark.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-768-light.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-all-comments.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-color-custom.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-color-theme.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-comment-composer.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-comment-options.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-comments-active.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-export.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-heading-inspector.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-history.png",
+    "identical": false,
+    "bounds": [
+      1187,
+      152,
+      1200,
+      161
+    ]
+  },
+  {
+    "file": "slides-inspector.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-layouts.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-shapes.png",
+    "identical": true,
+    "bounds": null
+  },
+  {
+    "file": "slides-zoom.png",
+    "identical": true,
+    "bounds": null
+  }
+]

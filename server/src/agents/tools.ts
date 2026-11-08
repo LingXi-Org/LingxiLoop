@@ -77,8 +77,9 @@ export async function authorizeAgent(context: ActionContext) {
 
 /** Both model JSON Schema and native parsing come from this same schema. */
 export function nativeTool<S extends z.ZodObject>(action: string, schema: S,
-  definition: Omit<ToolDefinition<z.output<S>>, 'action' | 'name' | 'parameters' | 'parse'>): ToolDefinition<z.output<S>> {
-  const parameters = z.toJSONSchema(schema, { io: 'input' })
+  definition: Omit<ToolDefinition<z.output<S>>, 'action' | 'name' | 'parameters' | 'parse'>,
+  schemaOptions: { reused?: 'ref' } = {}): ToolDefinition<z.output<S>> {
+  const parameters = z.toJSONSchema(schema, { io: 'input', ...schemaOptions })
   if (parameters.type !== 'object' || !parameters.properties || parameters.additionalProperties !== false) throw new Error(`${action} requires a strict object schema`)
   return { ...definition, action, name: action.replace('.', '__'), parameters: parameters as ToolDefinition['parameters'],
     parse: input => schema.parse(input),

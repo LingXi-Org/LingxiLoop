@@ -17,3 +17,11 @@ test('culling retains rotated descendants, active editor ancestors and flex sibl
   assert.deepEqual([...expandVisibleNodes(page, ['child'])].sort(), ['child','group','sibling'])
   assert.ok(!expandVisibleNodes(page, ['child']).has('other'))
 })
+
+test('适配视图使用实际旋转外框，可见区域继续保留描边和阴影余量',()=>{
+  const page=createPage('paint-bounds'),node={...createNode('shape','painted'),x:10,y:20,width:100,height:50,rotation:90,style:{strokeWidth:12,shadow:{x:3,y:4,blur:20,spread:5,color:'#000000'}}}
+  page.nodes[node.id]=node;page.nodeOrder=[node.id]
+  const raw=elementBounds(page,false)[0],paint=elementBounds(page)[0]
+  for(const [key,value]of Object.entries({x:35,y:-5,width:50,height:100}))assert.ok(Math.abs(raw[key as 'x'|'y'|'width'|'height']-value)<1e-9)
+  assert.ok(paint.x<=raw.x-12&&paint.y<=raw.y-12&&paint.width>=raw.width+24&&paint.height>=raw.height+24)
+})

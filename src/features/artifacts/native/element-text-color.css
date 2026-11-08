@@ -1,0 +1,7 @@
+.native-editor .native-text-contrast-row{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;align-items:center;padding:1px 8px 4px 12px;margin:-2px -12px 0 -16px;min-height:0;box-sizing:border-box}
+.native-editor .native-text-contrast{display:inline-flex;justify-self:start;min-width:0;align-items:center;gap:6px;font-size:11px;line-height:16px;color:var(--native-fg);margin-right:28px}
+.native-editor .native-text-contrast[data-verdict=fail]{color:rgb(121,76,2)}
+.native-editor .native-text-contrast-swatch{display:inline-flex;flex:none;width:16px;height:16px;align-items:center;justify-content:center;border-radius:4px;box-shadow:0 0 0 1px rgba(11,11,11,.05)}
+.dark .native-editor .native-text-contrast[data-verdict=fail],.native-editor[data-theme=dark] .native-text-contrast[data-verdict=fail]{color:rgb(228,156,6)}
+@container(max-width:599px){.native-editor .native-text-contrast-row{grid-template-columns:92px minmax(0,1fr)}}
+@media(pointer:coarse){.native-editor .native-text-contrast-row{grid-template-columns:calc(76px * 13 / 12) minmax(0,1fr)}}

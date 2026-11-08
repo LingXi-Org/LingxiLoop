@@ -19,7 +19,7 @@ import { artifactKind, type ArtifactKind } from './kinds.js'
 import { publishArtifactProgress } from './progress.js'
 import { artifactById, conversationDesignId, conversationSlidesId, lockReportWork, type ArtifactRow } from './repository.js'
 import { artifactReferencePages, readArtifactReference } from './skills.js'
-import { isProjectPath, listing, putBlob, sha256, type WireEntry } from './store.js'
+import { isProjectPath, putBlob, sha256 } from './store.js'
 import { slidesSummary } from './slides-observation.js'
 import { slideEditingContext } from './slides-workspace.js'
 import { ensureNativeDocument, NativeDocumentError, nativeOperationReceipt, readNativeDocument, readNativePageSnapshot, submitNativeOperations } from './native-document.js'
@@ -31,10 +31,6 @@ const reportMethods = { submit_report: 'specialist', submit_verification: 'verif
 /** Tools that read, or only change the files and comments any member may edit. */
 const READ_METHODS = new Set(['plan_explanation', 'current', 'available_agents', 'read_document', 'read_page', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
 const WORKSPACE_METHODS = new Set(['stop_workspace', 'stop_assignment', 'submit_report', 'submit_verification'])
-const DESIGN_FILE_JSON = ' Native arguments are JSON. Encode content as a JSON string: double quotes, backslashes and line breaks must be escaped so JSON decoding recovers the exact file text. Field-encoding example only: '
-  + JSON.stringify({ content: '<div title="QK" data-demo="a\\b">\nQK\n</div>' })
-  + '. Do not paste raw multiline markup into a quoted JSON string or JSON-encode the file twice. Single-quoted HTML attributes reduce escaping; keep the complete component concise.'
-
 export function createArtifactTools(kind: ArtifactKind, control: Control): ToolDefinition[] {
   const definition = artifactKind(kind)
   const method = (context: ActionContext) => context.action.action.slice(kind.length + 1)
@@ -115,16 +111,6 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
     await scope(context, { artifactId: typeof input.artifactId === 'string' ? input.artifactId : undefined })
   }
 
-  async function publishFiles(context: ActionContext, artifact: ArtifactRow, files: Record<string, WireEntry>) {
-    const native = application(context)
-    const outcome = await native.api.publishArtifactFiles({ ...actor(context), artifactId: artifact.id, files })
-    if (outcome.status !== 200) {
-      throw new NoEffectError(outcome.body.message ?? `${outcome.body.code}: ${JSON.stringify(outcome.body.paths ?? [])}`,
-        outcome.status === 409 ? 'version_conflict' : outcome.status === 413 ? 'too_large' : 'invalid_input')
-    }
-    return result(context, native, { version: outcome.body.version, seq: outcome.body.seq, shas: outcome.body.shas }, artifact)
-  }
-
   async function applyNative(context: ActionContext, artifact: ArtifactRow, request: unknown) {
     try { return await submitNativeOperations(context.database as Queryable, { artifactId: artifact.id, ...actor(context), request }) }
     catch (error) {
@@ -136,27 +122,15 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
     }
   }
 
-  const verify: ToolDefinition['verify'] = async (context, input, value) => {
-    const receipt = value as { artifactId: string; result: Record<string, unknown> & { shas?: Record<string, string>; id?: string; thread?: { id: string; messages: unknown[] } } }
+  const verify: ToolDefinition['verify'] = async (context, _input, value) => {
+    const receipt = value as { artifactId: string; result: Record<string, unknown> & { id?: string; thread?: { id: string; messages: unknown[] } } }
     const db = context.database as Queryable, name = method(context)
     const artifact = await artifactById(db, context.work.tenantId, receipt.artifactId)
     if (!artifact || artifact.kind !== kind || !await resolve(context, artifact.id)) throw new Error('Artifact scope changed')
-    if (name === 'apply_ops' || name === 'install_design_system' && typeof receipt.result.operationId === 'string') {
+    if (name === 'apply_ops' || name === 'install_design_system') {
       const stored = await nativeOperationReceipt(db, artifact.id, String(receipt.result.operationId))
       return compareResource(`artifact_operation:${artifact.id}:${receipt.result.operationId}`,
         { operationId: receipt.result.operationId, seq: receipt.result.committedSeq }, stored ? { operationId: stored.operationId, seq: stored.seq } : {})
-    }
-    if (name === 'install_design_system') {
-      const files = (await listing(db, artifact.id)).files
-      const expected = receipt.result.shas ?? {}
-      return compareResource(`artifact:${artifact.id}`, expected, Object.fromEntries(Object.keys(expected).map(path => [path, files[path]?.sha256 ?? null])))
-    }
-    if (name === 'write_files' || name === 'edit_file') {
-      const files = (await listing(db, artifact.id)).files
-      const expected = Object.fromEntries(Object.entries((input as { files?: Record<string, { delete?: boolean }> }).files ?? {})
-        .map(([path, entry]) => [path, entry.delete ? null : receipt.result.shas?.[path] ?? null]))
-      if (name === 'edit_file') expected[(input as { path: string }).path] = receipt.result.shas?.[(input as { path: string }).path] ?? null
-      return compareResource(`artifact:${artifact.id}`, expected, Object.fromEntries(Object.keys(expected).map(path => [path, files[path]?.sha256 ?? null])))
     }
     if (name === 'submit_report' || name === 'submit_verification') {
       const row = (await db.query('SELECT finding FROM artifact_assignment_reports WHERE id=$1 AND artifact_id=$2', [receipt.result.id,artifact.id])).rows[0]
@@ -247,7 +221,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
           seq: committed.seq, committedSeq: committed.committedSeq, changedPageIds: committed.changedPageIds,
           versions: committed.document.versions, history: committed.history, deduplicated: committed.deduplicated } } }
       },
-    }),
+    }, { reused: 'ref' }),
     ...(kind === 'design' ? [nativeTool('design.plan_explanation', z.object({ delivery: z.enum(['canvas', 'text', 'other']) }).strict(), {
       description: 'Choose the response surface from the meaning of the current human request before answering. Choose canvas by default for an introduction, connected concepts, mechanisms, processes, relationships, multi-dimensional comparisons, tradeoffs or another broad/complex explanation, even without canvas keywords. A prose answer or Markdown comparison table accompanies the saved canvas for these requests. Reserve text for greetings, a single direct fact or explicit text-only requests. Choose other when the person requested a different deliverable or an operation rather than an explanation. This records a semantic decision only: it neither creates content nor proves delivery.',
       effect: 'read', approval: false, authorize,
@@ -286,27 +260,6 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const file = await application(context).api.readArtifactFile(context.work.tenantId, artifact.id, input.path)
         if (!file) throw new NoEffectError(`${input.path} does not exist`, 'not_found')
         return { ok: true, value: { path: file.path, sha256: file.sha256, text: file.bytes.toString('utf8') } }
-      } }),
-    nativeTool(`${kind}.write_files`, agentArtifactSchemas.write_files, { description: `Save whole project files of the ${label} in one all-or-nothing publish; {"delete": true} removes a file. ifMatch is the sha256 you read (null: the file must not exist).` + (kind === 'design' ? DESIGN_FILE_JSON : ''), effect: 'transaction', approval: false, authorize, verify,
-      async execute(context, input) {
-        const artifact = await required(context, input)
-        const files: Record<string, WireEntry> = {}
-        for (const [path, entry] of Object.entries(input.files)) {
-          files[path] = 'delete' in entry ? { delete: true, ...(entry.ifMatch ? { ifMatch: entry.ifMatch } : {}) }
-            : { base64: Buffer.from(entry.content, 'utf8').toString('base64'), contentType: 'text/plain', ...(entry.ifMatch !== undefined ? { ifMatch: entry.ifMatch } : {}) }
-        }
-        return publishFiles(context, artifact, files)
-      } }),
-    nativeTool(`${kind}.edit_file`, agentArtifactSchemas.edit_file, { description: `Replace exact text in one project file of the ${label}, against its current content.`, effect: 'transaction', approval: false, authorize, verify,
-      async execute(context, input) {
-        const artifact = await required(context, input)
-        const file = await application(context).api.readArtifactFile(context.work.tenantId, artifact.id, input.path)
-        if (!file) throw new NoEffectError(`${input.path} does not exist`, 'not_found')
-        const text = file.bytes.toString('utf8'), count = text.split(input.oldString).length - 1
-        if (count === 0) throw new NoEffectError(`oldString was not found in ${input.path}; read the file again`, 'invalid_input')
-        if (count > 1 && !input.replaceAll) throw new NoEffectError(`oldString occurs ${count} times in ${input.path}; give more context or set replaceAll`, 'invalid_input')
-        const next = input.replaceAll ? text.split(input.oldString).join(input.newString) : text.replace(input.oldString, () => input.newString)
-        return publishFiles(context, artifact, { [input.path]: { base64: Buffer.from(next, 'utf8').toString('base64'), contentType: 'text/plain', ifMatch: sha256(file.bytes) } })
       } }),
     nativeTool(`${kind}.import_asset`, agentArtifactSchemas.import_asset, { description: `Store an image or font attachment (id from files.list) in the ${label}; use its /_blob/<id> url verbatim.`, effect: 'transaction', approval: false, authorize, verify,
       async execute(context, input) {
@@ -393,56 +346,35 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
       return { ok: true, value: { result: snapshot, artifactId: snapshot.id } }
     } }))
   if (kind === 'slides') tools.push(
-    nativeTool('slides.design_systems', agentArtifactSchemas.design_systems, { description: 'Read this deck\'s installed native themes, tokens, provenance and retained inert resources. read_document gives a compact theme catalog. For legacy systems use read_file to inspect their files.', effect: 'read', approval: false, authorize,
+    nativeTool('slides.design_systems', agentArtifactSchemas.design_systems, { description: '读取当前原生稿件的设计系统、主题与资源。', effect: 'read', approval: false, authorize,
       async execute(context, input) {
-        const artifact = await required(context, input), api = application(context).api
-        const document = await readNativeDocument(context.database as Queryable, artifact.id)
-        if (document) return { ok: true, value: { designSystems: Object.values(document.document.themes), themeId: document.document.themeId } }
-        const index = await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/deck.json')
-        const metadata = index ? JSON.parse(index.bytes.toString('utf8')) as { designSystems?: unknown } : {}
-        return { ok: true, value: { designSystems: metadata.designSystems ?? [],
-          files: Object.fromEntries(Object.entries((await listing(context.database as Queryable, artifact.id)).files).filter(([path]) => path.startsWith('project/ds/'))) } }
+        const artifact = await required(context, input), db = context.database as Queryable
+        const snapshot = await ensureNativeDocument({ db, transaction: run => run(db) }, { artifactId: artifact.id, companyId: context.work.tenantId, actorId: context.work.agentId, write: false })
+        return { ok: true, value: { designSystems: Object.values(snapshot.document.themes), themeId: snapshot.document.themeId } }
       } }),
-    nativeTool('slides.install_design_system', agentArtifactSchemas.install_design_system, { description: 'Install a new namespaced native theme atomically, retaining tokens.json, styles, templates, references and source/version attribution as inert resources. Read project/document.json and supply its SHA as ifMatch. Prefer versioned theme.set through apply_ops for existing native themes. Legacy decks use their project/deck.json SHA. Import image/font attachments with slides.import_asset.', effect: 'transaction', approval: false, authorize, verify,
+    nativeTool('slides.install_design_system', agentArtifactSchemas.install_design_system, { description: 'Install a new namespaced native theme atomically, retaining tokens.json, styles, templates, references and source/version attribution as inert resources. Read project/document.json and supply its SHA as ifMatch. Use versioned theme.set through apply_ops for existing native themes. Import image/font attachments with slides.import_asset.', effect: 'transaction', approval: false, authorize, verify,
       async execute(context, input) {
         const artifact = await required(context, input), api = application(context).api
-        const db = context.database as Queryable, snapshot = await readNativeDocument(db, artifact.id)
-        if (snapshot) {
-          const manifest = await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/document.json')
-          if (manifest?.sha256 !== input.ifMatch) throw new NoEffectError('Read the current project/document.json SHA before installing a theme, or use versioned theme.set with apply_ops.', 'version_conflict')
-          if (snapshot.document.themes[input.namespace]) throw new NoEffectError('Theme namespace already exists; use apply_ops to update it with the observed version.', 'version_conflict')
-          let raw: unknown
-          try { raw = JSON.parse(input.files['tokens.json'] ?? '') } catch { throw new NoEffectError('tokens.json must contain valid JSON', 'invalid_input') }
-          const tokens: Record<string, string | number> = {}
-          const flatten = (value: unknown, prefix: string) => {
-            if (typeof value === 'string' || typeof value === 'number') tokens[prefix] = value
-            else if (value && typeof value === 'object') for (const [key, child] of Object.entries(value)) flatten(child, prefix ? `${prefix}.${key}` : key)
-          }
-          flatten(raw, '')
-          const request = prepareBatch(snapshot.document, [{ type: 'theme.set', theme: { id: input.namespace, name: input.title, tokens,
-            originalTokens: z.json().parse(raw), resources: input.files, source: { namespace: input.namespace, variant: 'default', url: input.source, ...(input.version ? { version: input.version } : {}) },
-          } }], sha256(Buffer.from(context.action.idempotencyKey)))
-          const committed = await applyNative(context, artifact, request)
-          if (!committed.deduplicated) await queueNativeEvents(context, [{ type: 'artifact.changed', kind: 'files.changed', companyId: context.work.tenantId,
-            artifactId: artifact.id, artifactKind: 'slides', timestamp: new Date().toISOString(), paths: ['project/document.json'], ver: String(committed.seq) }])
-          return { ok: true, value: { artifactId: artifact.id, result: { operationId: committed.operationId, committedSeq: committed.committedSeq, seq: committed.seq, themeId: input.namespace } } }
+        const db = context.database as Queryable
+        const snapshot = await ensureNativeDocument({ db, transaction: run => run(db) }, { artifactId: artifact.id, companyId: context.work.tenantId, actorId: context.work.agentId, write: true })
+        const manifest = await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/document.json')
+        if (manifest?.sha256 !== input.ifMatch) throw new NoEffectError('Read the current project/document.json SHA before installing a theme, or use versioned theme.set with apply_ops.', 'version_conflict')
+        if (snapshot.document.themes[input.namespace]) throw new NoEffectError('Theme namespace already exists; use apply_ops to update it with the observed version.', 'version_conflict')
+        let raw: unknown
+        try { raw = JSON.parse(input.files['tokens.json'] ?? '') } catch { throw new NoEffectError('tokens.json must contain valid JSON', 'invalid_input') }
+        const tokens: Record<string, string | number> = {}
+        const flatten = (value: unknown, prefix: string) => {
+          if (typeof value === 'string' || typeof value === 'number') tokens[prefix] = value
+          else if (value && typeof value === 'object') for (const [key, child] of Object.entries(value)) flatten(child, prefix ? `${prefix}.${key}` : key)
         }
-        const index = await api.readArtifactFile(context.work.tenantId, artifact.id, 'project/deck.json')
-        if (!index || index.sha256 !== input.ifMatch) throw new NoEffectError('Read the current deck.json before installing a design system.', 'version_conflict')
-        const metadata = JSON.parse(index.bytes.toString('utf8')) as Record<string, unknown>
-        const systems = Array.isArray(metadata.designSystems) ? metadata.designSystems : Object.values((metadata.designSystems ?? {}) as object)
-        const prefix = `project/ds/${input.namespace}/`
-        const current = await listing(context.database as Queryable, artifact.id)
-        if (systems.some(system => system?.namespace === input.namespace) || Object.keys(current.files).some(path => path.startsWith(prefix))) {
-          throw new NoEffectError('This namespace already exists; inspect and edit its files with ifMatch.', 'version_conflict')
-        }
-        if (!input.files['tokens.json']) throw new NoEffectError('tokens.json is required; read_reference ds-format.md describes the format.', 'invalid_input')
-        try { JSON.parse(input.files['tokens.json']) } catch { throw new NoEffectError('tokens.json must contain valid JSON.', 'invalid_input') }
-        const files: Record<string, WireEntry> = Object.fromEntries(Object.entries(input.files).map(([path, content]) =>
-          [prefix + path, { base64: Buffer.from(content).toString('base64'), contentType: 'text/plain', ifMatch: null }]))
-        metadata.designSystems = [...systems, { namespace: input.namespace, title: input.title, artifact: input.source, version: input.version ?? null, copiedAt: new Date().toISOString() }]
-        files['project/deck.json'] = { base64: Buffer.from(JSON.stringify(metadata, null, 2) + '\n').toString('base64'), contentType: 'application/json', ifMatch: input.ifMatch }
-        return publishFiles(context, artifact, files)
+        flatten(raw, '')
+        const request = prepareBatch(snapshot.document, [{ type: 'theme.set', theme: { id: input.namespace, name: input.title, tokens,
+          originalTokens: z.json().parse(raw), resources: input.files, source: { namespace: input.namespace, variant: 'default', url: input.source, ...(input.version ? { version: input.version } : {}) },
+        } }], sha256(Buffer.from(context.action.idempotencyKey)))
+        const committed = await applyNative(context, artifact, request)
+        if (!committed.deduplicated) await queueNativeEvents(context, [{ type: 'artifact.changed', kind: 'files.changed', companyId: context.work.tenantId,
+          artifactId: artifact.id, artifactKind: 'slides', timestamp: new Date().toISOString(), paths: ['project/document.json'], ver: String(committed.seq) }])
+        return { ok: true, value: { artifactId: artifact.id, result: { operationId: committed.operationId, committedSeq: committed.committedSeq, seq: committed.seq, themeId: input.namespace } } }
       } }),
   )
   return tools
