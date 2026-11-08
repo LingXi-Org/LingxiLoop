@@ -1,3 +1,4 @@
+import { prefetchEditor } from '@/features/artifacts/editor-preload'
 import {readDesignLink} from '../../../shared/artifact-links'
 import { PanelRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { userFacingError } from '@/lib/userFacingError'
 import { useSurface } from '@/stores/surface'
 import { loadArtifactView } from './DesignWorkspace'
-import { openConversationDesign, prefetchConversationDesign, restoreLinkedConversationDesign } from './open-design'
+import { openConversationDesign, restoreLinkedConversationDesign } from './open-design'
 
 /** The conversation header's Design entry: the conversation's one canvas, created on first open. */
 export function DesignButton({ conversationId }: { conversationId: string }) {
@@ -19,10 +20,10 @@ export function DesignButton({ conversationId }: { conversationId: string }) {
     void restoreLinkedConversationDesign(conversationId,linkedArtifact,controller.signal).catch(reason=>{if(!controller.signal.aborted)toast.error(userFacingError(reason,'设计链接暂时无法打开，请重试。'))})
     return()=>controller.abort()
   },[conversationId,linkedArtifact])
-  // Hover, focus and press load the panel and native editor while locating the canvas.
+  // Intent loads the panel and native editor; opening resolves the document.
   const warm = () => {
     void loadArtifactView().catch(() => {})
-    prefetchConversationDesign(conversationId)
+    prefetchEditor()
   }
   const open = async (opener: HTMLButtonElement) => {
     warm()

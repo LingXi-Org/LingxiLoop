@@ -6,16 +6,6 @@ import { useAuth } from '@/stores/auth'
 import { useSurface } from '@/stores/surface'
 import { PENDING_DESIGN_ID } from './pending'
 
-const looked = new Map<string, number>()
-/** Intent only reads: an existing board's grant starts, nothing is created. */
-export function prefetchConversationDesign(conversationId: string) {
-  prefetchEditor()
-  if (Date.now() - (looked.get(conversationId) ?? 0) < 60_000) return
-  looked.set(conversationId, Date.now())
-  void artifactsApi.getConversationDesign(conversationId)
-    .then(design => { if (design) prefetchEditor() }, () => looked.delete(conversationId))
-}
-
 /** A slow ensure request belongs to the conversation that initiated it. */
 export async function openConversationDesign(conversationId: string, opener?: HTMLElement) {
   const { user, activeCompanyId } = useAuth.getState()

@@ -241,9 +241,16 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
         const owner = page(operation.pageId), item = node(owner.id, operation.nodeId)
         const fields = fieldsOf(operation.patch)
         const unsets = [...operation.unset ?? []]
+        const positioned={...item,...operation.patch}
+        const nextCss=unsets.includes('css')?undefined:Object.hasOwn(operation.patch,'css')?operation.patch.css:item.css
+        const changesPosition=['x','y'].some(field=>Object.hasOwn(operation.patch,field))
+          ||['left','right','top','bottom','position'].some(property=>nextCss?.[property]!==item.css?.[property])
+        if(changesPosition){
+          requireKey(key.node(owner.id,item.id,'field/parentId'))
+          if(positioned.parentId)requireKey(key.node(owner.id,positioned.parentId,'field/layout'))
+        }
         if(!Object.hasOwn(operation.patch,'css')&&!unsets.includes('css')){
-          const positioned={...item,...operation.patch},css={...item.css},flow=isFlowChild(owner,positioned);let updated=false
-          if(['x','y'].some(field=>Object.hasOwn(operation.patch,field))){requireKey(key.node(owner.id,item.id,'field/parentId'));if(positioned.parentId)requireKey(key.node(owner.id,positioned.parentId,'field/layout'))}
+          const css={...item.css},flow=isFlowChild(owner,positioned);let updated=false
           for(const [field,property]of [['x','left'],['y','top'],['width','width'],['height','height']] as const){
             if(!Object.hasOwn(operation.patch,field))continue
             if(flow&&(field==='x'||field==='y')){

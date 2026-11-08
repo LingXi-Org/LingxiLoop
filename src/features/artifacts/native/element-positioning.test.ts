@@ -64,3 +64,20 @@ test('内容盒缩放扣除内边距和边框，零尺寸同样只写原生字�
  const zero=elementResizePatch(page,node,boxPins,painted,{...painted,width:8},'e')
  assert.equal(zero.width,0);assert.equal(zero.css?.width,undefined)
 })
+
+for (const flow of [false,true]) test(`坐标表示依赖父级布局，显式CSS也保留并发保护：${flow?'流式':'绝对'}`,()=>{
+ const doc=createDocument('design','layout-cas'),owner=createPage('owner'),parent={...createNode('group','parent'),layout:{mode:flow?'flex' as const:'absolute' as const}},child={...createNode('text','child'),parentId:'parent',x:10,css:{left:'10px',color:'red'}}
+ owner.nodes={parent,child};owner.nodeOrder=['parent','child'];doc.pages.owner=owner;doc.pageOrder=['owner']
+ const patch=elementMovePatch(owner,child,{...pins,left:10},10,0)
+ const captured=prepareBatch(doc,[{type:'node.patch',pageId:owner.id,nodeId:child.id,patch}],'drag')
+ const remote=applyOperations(doc,prepareBatch(doc,[{type:'node.patch',pageId:owner.id,nodeId:parent.id,patch:{layout:{mode:flow?'absolute':'flex'}}}],'remote-layout')).document
+ assert.throws(()=>applyOperations(remote,captured),{name:'ArtifactOperationConflict'})
+})
+
+test('仅改颜色且保留偏移的操作可与父布局变更合并',()=>{
+ const doc=createDocument('design','color-cas'),owner=createPage('owner'),parent={...createNode('group','parent'),layout:{mode:'absolute' as const}},child={...createNode('text','child'),parentId:'parent',css:{left:'10px',color:'red'}}
+ owner.nodes={parent,child};owner.nodeOrder=['parent','child'];doc.pages.owner=owner;doc.pageOrder=['owner']
+ const captured=prepareBatch(doc,[{type:'node.patch',pageId:owner.id,nodeId:child.id,patch:{css:{...child.css,color:'blue'}}}],'color')
+ const remote=applyOperations(doc,prepareBatch(doc,[{type:'node.patch',pageId:owner.id,nodeId:parent.id,patch:{layout:{mode:'flex'}}}],'remote-layout')).document
+ assert.equal(applyOperations(remote,captured).document.pages.owner.nodes.child.css?.color,'blue')
+})
