@@ -1,5 +1,5 @@
 import { http } from '@/api/core/http'
-import type { ArtifactEditorGrant, ArtifactSnapshot, ArtifactSummary } from './contracts'
+import type { ArtifactSnapshot, ArtifactSummary } from './contracts'
 import type { SlideEditorContext } from '../../../shared/slides-editor-context'
 
 export interface SlideWorkspace { artifactId: string; conversationId: string; agentId: string; sourceConversationId: string | null }
@@ -19,5 +19,4 @@ export const artifactsApi = {
   get: (artifactId: string, signal?: AbortSignal) => http<ArtifactSnapshot>(`/artifacts/${id(artifactId)}`, { signal }),
   rename: (artifactId: string, title: string, expectedVersion: number, operationId: string) => http<ArtifactSnapshot>(`/artifacts/${id(artifactId)}`, { method: 'PATCH', body: JSON.stringify({ title, expectedVersion, operationId }) }),
   remove: (artifactId: string) => http<{ ok: boolean }>(`/artifacts/${id(artifactId)}`, { method: 'DELETE' }),
-  editorGrant: (artifactId: string, signal?: AbortSignal) => http<ArtifactEditorGrant>(`/artifacts/${id(artifactId)}/editor-grant`, { method: 'POST', signal }),
 }

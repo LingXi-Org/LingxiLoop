@@ -16,7 +16,7 @@ const reference = args['reference-root'],
   rows = []
 const inventory = JSON.parse(
   await readFile(
-    new URL('../docs/evidence/issue-707/source-inventory.json', import.meta.url),
+    new URL('../scripts/fixtures/native-editors/source-inventory.json', import.meta.url),
     'utf8',
   ),
 )

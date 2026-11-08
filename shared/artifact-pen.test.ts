@@ -3,7 +3,7 @@ import test from 'node:test'
 import {readFileSync} from 'node:fs'
 import {fitCanvasPen} from './artifact-pen.js'
 
-const reference=JSON.parse(readFileSync(new URL('../docs/evidence/issue-707/source-design-pen.json',import.meta.url),'utf8')) as {cases:Array<{name:string;points:Array<{x:number;y:number}>;tolerance:number;result:{x:number;y:number;w:number;h:number;d:string}}>}
+const reference=JSON.parse(readFileSync(new URL('../scripts/fixtures/native-editors/source-design-pen.json',import.meta.url),'utf8')) as {cases:Array<{name:string;points:Array<{x:number;y:number}>;tolerance:number;result:{x:number;y:number;w:number;h:number;d:string}}>}
 for(const sample of reference.cases)test(`freehand geometry matches fixed source: ${sample.name}`,()=>{
   const original=JSON.stringify(sample.points)
   assert.deepEqual(fitCanvasPen(sample.points,sample.tolerance),sample.result)

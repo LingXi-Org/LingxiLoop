@@ -6,14 +6,12 @@ import { Button } from '@/components/ui/button'
 import { userFacingError } from '@/lib/userFacingError'
 import { useSurface } from '@/stores/surface'
 import { loadArtifactView } from './DesignWorkspace'
-import { warmEditorWhenIdle } from '@/features/artifacts/editor-preload'
 import { openConversationDesign, prefetchConversationDesign, restoreLinkedConversationDesign } from './open-design'
 
 /** The conversation header's Design entry: the conversation's one canvas, created on first open. */
 export function DesignButton({ conversationId }: { conversationId: string }) {
   const [pending, setPending] = useState(false)
   const expanded = useSurface(state => state.surface?.kind === 'design')
-  useEffect(() => warmEditorWhenIdle('design'), [])
   const linkedArtifact=readDesignLink(new URLSearchParams(window.location.search))?.artifactId
   useEffect(()=>{
     if(!linkedArtifact)return
@@ -21,8 +19,7 @@ export function DesignButton({ conversationId }: { conversationId: string }) {
     void restoreLinkedConversationDesign(conversationId,linkedArtifact,controller.signal).catch(reason=>{if(!controller.signal.aborted)toast.error(userFacingError(reason,'设计链接暂时无法打开，请重试。'))})
     return()=>controller.abort()
   },[conversationId,linkedArtifact])
-  // Intent (hover/focus/press) starts the panel code, the editor assets and an
-  // existing board's grant while the board is being ensured.
+  // Hover, focus and press load the panel and native editor while locating the canvas.
   const warm = () => {
     void loadArtifactView().catch(() => {})
     prefetchConversationDesign(conversationId)

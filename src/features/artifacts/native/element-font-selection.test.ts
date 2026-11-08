@@ -45,3 +45,18 @@ test('混合字体统一使用固定来源目录的通用回退，不翻译作�
  const choice=(family:string)=>elementFontSelectionFamilyChoice({value:family,family,label:'自定义字体'}).family
  assert.equal(choice('Arial'),'Arial, sans-serif');assert.equal(choice('Georgia'),'Georgia, serif');assert.equal(choice('Courier New'),'Courier New, monospace');assert.equal(choice('Merriweather'),'Merriweather, serif');assert.equal(choice('宋体'),'"宋体"')
 })
+
+test('单选缺省字形读取真实标题粗体与继承斜体，多选不误用单项继承',()=>{
+ const single=mergeElementFontStates([{value:null,fallback:'700',companionValue:null,companionFallback:'italic'}])
+ assert.equal(single.companionFallback,'italic')
+ const node=createNode('text','single'),page=createPage('page'),result=elementFontSelectionVariantPatch(node,page,{weight:400,style:'normal'},single)
+ assert.equal(result.patch.style?.fontWeight,400);assert.equal(result.patch.style?.fontStyle,'normal')
+ const multi=mergeElementFontStates([{value:null,fallback:'700',companionFallback:'italic'},{value:null,fallback:'700',companionFallback:'italic'}])
+ assert.equal('companionFallback' in multi,false)
+})
+
+test('单选自有inherit斜体声明优先于计算值，重选当前字形零写入',()=>{
+ const node=createNode('text','single'),page=createPage('page');node.style={fontWeight:700};node.css={'font-style':'inherit'}
+ const single=mergeElementFontStates([{value:'700',fallback:'700',companionValue:'inherit',companionFallback:'italic'}])
+ assert.deepEqual(elementFontSelectionVariantPatch(node,page,{weight:700,style:'normal'},single),{patch:{},unset:[]})
+})

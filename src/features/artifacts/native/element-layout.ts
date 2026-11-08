@@ -16,7 +16,7 @@ export function elementLayoutPatch(node:ArtifactNode,page:ArtifactPage,changes:E
     if(value)values.set(property,value);else values.delete(property)
   }
   if(Object.entries(changes).some(([property,value])=>property.startsWith('padding')&&value?.trim())&&!values.has('box-sizing'))values.set('box-sizing','content-box')
-  const result=nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))
+  const result=nodeCodePatch(node,page,before,[...values].map(([name,value])=>({name,value})))
   if(Object.hasOwn(changes,'padding'))for(const field of ['paddingX','paddingY'] as const)if(node.style[field]!==undefined)result.unset.push(`style.${field}`)
   return{patch:result.patch,unset:[...new Set(result.unset)]}
 }

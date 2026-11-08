@@ -3,7 +3,7 @@ import test from 'node:test'
 import {readFileSync} from 'node:fs'
 import {parseEditableVector,normalizeEditableVector,moveVectorPart,toggleVectorSmooth,pullVectorHandles,deleteVectorPoint,nearestVectorSegment,splitVectorSegment,breakVectorTangent} from './artifact-vector-edit.js'
 
-const source=JSON.parse(readFileSync(new URL('../docs/evidence/issue-707/source-design-vector-edit.json',import.meta.url),'utf8'))
+const source=JSON.parse(readFileSync(new URL('../scripts/fixtures/native-editors/source-design-vector-edit.json',import.meta.url),'utf8'))
 const rounded=(value:unknown):unknown=>typeof value==='number'?Math.round(value*1e6)/1e6:Array.isArray(value)?value.map(rounded):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,rounded(item)])):value
 for(const sample of source.cases)test(`控制点数学对照固定源码：${sample.name}`,()=>{
   const path=parseEditableVector(sample.d,sample.transform,sample.tolerance)

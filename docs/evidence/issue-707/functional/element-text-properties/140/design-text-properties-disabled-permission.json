@@ -1,7 +1,0 @@
-{
-  "kind": "文本可选属性禁用状态",
-  "case": "text-properties-disabled-permission",
-  "noWrites": true,
-  "peerChangePreserved": true,
-  "consoleOrPageErrors": []
-}

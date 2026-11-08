@@ -2,7 +2,7 @@ import {RotateCcw} from 'lucide-react'
 import {elementFontChoice} from './element-font-display'
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { EditorIcon, Menu, MenuItem, FloatingPopover } from './EditorPrimitives'
-import { editorFontChoice, editorFontVariants, editorFontMenuVariants, editorFontVariantLabel, type EditorFont, type EditorFontVariant } from './editor-fonts'
+import { editorFontChoice, editorFontVariants, editorFontVariantLabel, type EditorFont, type EditorFontVariant } from './editor-fonts'
 
 const FontPopover = lazy(() => import('./FontPopover'))
 export function FontField({ value, theme, element = false, disabled = false, onReset, families, mixed = false, onBegin, onChange }: { value?: string; theme?: string; element?: boolean; disabled?: boolean; onReset?():void; families?:readonly string[]; mixed?:boolean; onBegin(): void; onChange(font: EditorFont): void }) {
@@ -24,10 +24,10 @@ export function FontField({ value, theme, element = false, disabled = false, onR
   </div>
 }
 
-export function FontVariantField({ family, weight = 400, style = 'normal', preserveCurrent = false, disabled = false, onBegin, onChange }: { family?: string; weight?: number; style?: 'normal' | 'italic'; preserveCurrent?: boolean; disabled?: boolean; onBegin(): void; onChange(variant: EditorFontVariant): void }) {
+export function FontVariantField({ family, weight = 400, style = 'normal', disabled = false, onBegin, onChange }: { family?: string; weight?: number; style?: 'normal' | 'italic'; disabled?: boolean; onBegin(): void; onChange(variant: EditorFontVariant): void }) {
   return <div className="native-field native-font-field native-font-variants"><span>字重</span>
     <Menu label="字重" text={editorFontVariantLabel(weight, style)} disabled={disabled} onOpen={onBegin}>
-      {(preserveCurrent?editorFontMenuVariants(family,weight,style):editorFontVariants(family)).map(variant => <MenuItem key={`${variant.weight}-${variant.style}`} selected={weight === variant.weight && style === variant.style} onClick={() => onChange(variant)}>{variant.label}</MenuItem>)}
+      {editorFontVariants(family).map(variant => <MenuItem key={`${variant.weight}-${variant.style}`} selected={weight === variant.weight && style === variant.style} onClick={() => onChange(variant)}>{variant.label}</MenuItem>)}
     </Menu>
   </div>
 }

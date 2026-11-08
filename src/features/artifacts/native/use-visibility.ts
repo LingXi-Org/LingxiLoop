@@ -1,5 +1,6 @@
+import {isFlowChild} from '../../../../shared/artifact-geometry'
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
-import {naturalNodeStyle,layoutRevision,isFlowChild,isNaturalText} from './natural-layout'
+import {naturalNodeStyle,layoutRevision,isNaturalText} from './natural-layout'
 import type { ArtifactDocument, ArtifactPage } from '../../../../shared/artifact-document'
 import {readElementFrame,layoutPosition} from './rendered-geometry'
 import type { Bounds, NativeCompute } from './compute'

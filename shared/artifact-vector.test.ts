@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs'
 import {canvasVectorGeometry,constrainVectorAngle,appendVectorPoint,canCloseVectorDraft,vectorDraftPath,type VectorDraftPoint} from './artifact-vector.js'
 import {isArtifactPenPath} from './artifact-path.js'
 
-const source=JSON.parse(readFileSync(new URL('../docs/evidence/issue-707/source-design-vector.json',import.meta.url),'utf8')) as {cases:Array<{name:string;anchors:VectorDraftPoint[];closed?:boolean;result:unknown;preview:string}>}
+const source=JSON.parse(readFileSync(new URL('../scripts/fixtures/native-editors/source-design-vector.json',import.meta.url),'utf8')) as {cases:Array<{name:string;anchors:VectorDraftPoint[];closed?:boolean;result:unknown;preview:string}>}
 for(const sample of source.cases)test(`vector creation matches fixed source: ${sample.name}`,()=>{
   const before=JSON.stringify(sample.anchors),geometry=canvasVectorGeometry(sample.anchors,!!sample.closed)
   assert.deepEqual(geometry,sample.result);assert.equal(JSON.stringify(sample.anchors),before)

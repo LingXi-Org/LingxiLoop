@@ -12,7 +12,7 @@ export function textPropertyPatch(node:ArtifactNode,page:ArtifactPage,changes:Re
   for(const [name,value]of Object.entries(textDecorationValues(node)))values.set(name,value)
  }
  for(const [name,value]of Object.entries(changes))if(value===null)values.delete(name);else values.set(name,value)
- return nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))
+ return nodeCodePatch(node,page,before,[...values].map(([name,value])=>({name,value})))
 }
 export function textListKind(node:ArtifactNode):TextListKind{
  const blocks=node.richText?.content

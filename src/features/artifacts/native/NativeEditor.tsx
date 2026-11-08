@@ -610,7 +610,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
         if(pins)for(const [name,value]of Object.entries(elementMoveValues(pins,dx,dy)))element.style.setProperty(name,`${value}px`,element.style.getPropertyPriority(name))
         else element.style.translate=`${dx}px ${dy}px`
       }else if(pins){
-        const patch=elementResizePatch(active.base.pages[active.pageId].nodes[node.id],pins,node,resized.find(item=>item.id===node.id)!,active.handle??'se')
+        const patch=elementResizePatch(active.base.pages[active.pageId],active.base.pages[active.pageId].nodes[node.id],pins,node,resized.find(item=>item.id===node.id)!,active.handle??'se')
         for(const field of ['width','height','x','y'] as const)if(patch[field]!==undefined)element.style.setProperty(field==='x'?'left':field==='y'?'top':field,`${patch[field]}px`,element.style.getPropertyPriority(field==='x'?'left':field==='y'?'top':field))
         if(patch.css)applyCodeStyle(element,Object.fromEntries(Object.entries(patch.css).filter(([name])=>['left','right','top','bottom','width','height'].includes(name))))
       }else{element.style.width=`${Math.max(16,node.width+dx)}px`;element.style.height=node.type==='note'&&canvasPages(active.base).some(sheet=>sheet.contentId===active.pageId)?'auto':`${Math.max(16,node.height+dy)}px`}
@@ -645,7 +645,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       const operations:ArtifactOperation[]=active.nodes.flatMap(node=>{
         const original=active.base.pages[active.pageId].nodes[node.id],pins=active.positionPins?.[node.id]
         const resized=active.type==='resize'?resizeSelection(active.nodes,active.handle??'se',dx,dy).find(item=>item.id===node.id)!:null
-        const patch=active.type==='move'?pins?elementMovePatch(original,pins,dx,dy):{x:node.path?Math.round((node.x+dx)*10)/10:Math.round(node.x+dx),y:node.path?Math.round((node.y+dy)*10)/10:Math.round(node.y+dy)}:pins?elementResizePatch(original,pins,node,resized!,active.handle??'se'):((({x,y,width,height,points})=>({x,y,width,height,...(points?{points}:{})}))(resized!))
+        const patch=active.type==='move'?pins?elementMovePatch(active.base.pages[active.pageId],original,pins,dx,dy):{x:node.path?Math.round((node.x+dx)*10)/10:Math.round(node.x+dx),y:node.path?Math.round((node.y+dy)*10)/10:Math.round(node.y+dy)}:pins?elementResizePatch(active.base.pages[active.pageId],original,pins,node,resized!,active.handle??'se'):((({x,y,width,height,points})=>({x,y,width,height,...(points?{points}:{})}))(resized!))
         return Object.keys(patch).length?[{type:'node.patch',pageId:active.pageId,nodeId:node.id,patch}]:[]
       })
       if(operations.length)dispatch(operations,active.base)
@@ -756,7 +756,7 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
       if (current && selected.length && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
         event.preventDefault();const base=session.getSnapshot().document;if(!base||!writable)return
         const step=event.shiftKey?10:1,dx=event.key==='ArrowLeft'?-step:event.key==='ArrowRight'?step:0,dy=event.key==='ArrowUp'?-step:event.key==='ArrowDown'?step:0,nodes=selectedNodes.filter(node=>!node.locked),pins=capturePositionPins(current,nodes,current.id===canvasContentId)
-        const operations:ArtifactOperation[]=nodes.flatMap(node=>{const original=base.pages[current.id]?.nodes[node.id];if(!original)return[];const patch=pins[node.id]?elementNudgePatch(original,pins[node.id],dx,dy):{x:node.x+dx,y:node.y+dy};return Object.keys(patch).length?[{type:'node.patch',pageId:current.id,nodeId:node.id,patch}]:[]})
+        const operations:ArtifactOperation[]=nodes.flatMap(node=>{const original=base.pages[current.id]?.nodes[node.id];if(!original)return[];const patch=pins[node.id]?elementNudgePatch(base.pages[current.id],original,pins[node.id],dx,dy):{x:node.x+dx,y:node.y+dy};return Object.keys(patch).length?[{type:'node.patch',pageId:current.id,nodeId:node.id,patch}]:[]})
         if(operations.length)dispatch(operations,base)
       }
     }} onKeyUp={event => { if(!editorOwnsEvent(event.currentTarget,event.target))return;if (event.key === ' ') space.current = false }}

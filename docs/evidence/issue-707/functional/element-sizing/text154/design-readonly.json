@@ -1,6 +1,0 @@
-{
-  "kind": "中文元素尺寸回归",
-  "case": "readonly",
-  "noWrites": true,
-  "consoleOrPageErrors": []
-}

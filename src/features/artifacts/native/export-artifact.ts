@@ -17,7 +17,6 @@ export interface ArtifactExportResult { blob: Blob; filename: string; warnings: 
 export async function exportArtifact(document: ArtifactDocument, options: ArtifactExportOptions): Promise<ArtifactExportResult> {
   options.signal?.throwIfAborted()
   const snapshot = structuredClone(exportPages(document, options.format))
-  if (typeof window === 'undefined') return (await import('./export/execute')).executeExport(snapshot, options)
   return runArtifactRealm({type:'start',document:snapshot,format:options.format,pixelRatio:options.pixelRatio,htmlArchive:options.htmlArchive},options)
 }
 

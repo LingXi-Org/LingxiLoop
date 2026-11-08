@@ -1,7 +1,0 @@
-{
-  "kind": "isolated-color-cas-diagnostic",
-  "mode": "design",
-  "remoteColorPreserved": true,
-  "staleEditConflicts": true,
-  "scope": "actual focus changes and shared CAS through controlled HTTP fixture"
-}

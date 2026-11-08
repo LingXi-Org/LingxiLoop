@@ -10,7 +10,7 @@ import { addMessage, addThread, agentViews, canSendToAgent, editMessage, emptyDo
 import { issueGrant, readGrant } from './grants.js'
 import { ARTIFACT_KIND_DEFINITIONS, BAOYU_DESIGN_ROOT } from './kinds.js'
 import { artifactSkills } from './skills.js'
-import { blobIdOf, fileOf, isWireEntry, putBlob, sha256 } from './store.js'
+import { blobIdOf, fileOf, putBlob, sha256 } from './store.js'
 
 const grant = { artifactId: 'design-1', companyId: 'company', userId: 'user', kind: 'design' as const, write: true }
 
@@ -113,8 +113,6 @@ test('each kind keeps the upstream writable paths', () => {
   assert.equal(fileOf(slides, 'project/slides/cover.html'), 'slides/cover.html')
   assert.equal(fileOf(slides, 'project/slides/a/b.html'), null)
   assert.equal(fileOf(slides, 'project/notes.md'), null)
-  assert.equal(isWireEntry({ base64: '', contentType: 'text/html', ifMatch: null }), true)
-  assert.equal(isWireEntry({ delete: true, ifMatch: 7 }), false)
 })
 
 test('comment threads follow the upstream agent hand-off lifecycle', () => {

@@ -1,7 +1,5 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { artifactEditorOrigin } from '../../../../shared/artifact-editor-origin.js'
-import { env } from '../../env.js'
 import {
   readArtifactCollaboration,
   updateArtifactSharedState,
@@ -23,7 +21,6 @@ import { requireAuth, requestedCompanyId } from '../../http/request-context.js'
 import { permissionService } from '../access/public.js'
 import { pool } from '../../db/pool.js'
 import { conversationDesignId } from './repository.js'
-import { issueGrant } from './grants.js'
 import { saveSlideEditorContext, slideRevisions } from './slides-workspace.js'
 import {
   artifactAssignmentRequestSchema,
@@ -113,20 +110,7 @@ api.delete('/artifacts/:id', safe(async (req, res) => {
   res.json({ ok: true })
 }))
 
-/** The editor page's address: a signed grant for this person, artifact and access mode. */
-api.post('/artifacts/:id/editor-grant', safe(async (req, res) => {
-  const read = await requireArtifact(req, String(req.params.id))
-  const write = (await permissionService.can({ actorUserId: read.userId, companyId: read.companyId, action: 'artifact:write',
-    resource: { type: 'artifact', id: String(req.params.id) } })).allowed
-  const { grant, expiresAt } = issueGrant({ artifactId: String(req.params.id), companyId: read.companyId, userId: read.userId, kind: read.kind, write })
-  const isolatedUrl = `${await artifactEditorOrigin(grant, env.ARTIFACT_EDITOR_BASE)}/artifact-editor/${read.kind}/${grant}/`
-  // Slides keeps its opaque main-site `url` for pages served before their
-  // ingress accepted isolated Slides; current pages open `isolatedUrl`.
-  res.json({ url: read.kind === 'design' ? isolatedUrl : `/artifact-editor/slides/${grant}/`, isolatedUrl, expiresAt, write })
-}))
-
 /* ============== Collaboration (shared state, isolated execution) ============== */
-
 api.get('/artifacts/:id/collaboration', safe(async (req,res) => {
   const { userId,companyId } = await requireArtifact(req,String(req.params.id))
   res.json(await readArtifactCollaboration(companyId,userId,String(req.params.id),artifactCollaborationQuerySchema.parse(req.query).afterSeq))

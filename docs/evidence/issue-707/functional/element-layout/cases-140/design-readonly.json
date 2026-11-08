@@ -1,7 +1,0 @@
-{
-  "kind": "中文元素内外边距回归",
-  "mode": "design",
-  "case": "readonly",
-  "noWrites": true,
-  "consoleOrPageErrors": []
-}

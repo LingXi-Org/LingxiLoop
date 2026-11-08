@@ -1,8 +1,0 @@
-{
-  "kind": "文字颜色对端锁定草稿保护",
-  "case": "contrast-color-css-peer-lock",
-  "peerLockPreserved": true,
-  "blockedDraftRecovered": true,
-  "noLocalWrites": true,
-  "consoleOrPageErrors": []
-}

@@ -1,8 +1,0 @@
-{
-  "kind": "中文元素锁定边距回归",
-  "mode": "design",
-  "case": "lock-draft",
-  "noWrites": true,
-  "draftRetained": true,
-  "consoleOrPageErrors": []
-}

@@ -1,10 +1,9 @@
+import { seedOriginalRevision } from './_artifact-original-fixture.js'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { after, before, test } from 'node:test'
 import { createServer, type Server } from 'node:http'
-import { artifactEditorOrigin } from '../../../shared/artifact-editor-origin.js'
 import { pool } from '../db/pool.js'
-import { env } from '../env.js'
 import { CH_ARTIFACTS, sub } from '../redis.js'
 import { publishArtifactEvent } from '../modules/artifacts/events.js'
 import { artifactBlobRouter, artifactEditorRouter } from '../modules/artifacts/index.js'
@@ -16,13 +15,13 @@ import { createCanvasPage, renameCanvasPage, deleteCanvasPage, moveCanvasArtboar
 import { prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
 import { readNativeDocument, submitNativeOperations } from '../modules/artifacts/native-document.js'
 import { withTransaction } from '../db/transaction.js'
-import { publishArtifactFiles, replyComment } from '../modules/artifacts/facade.js'
+import { replyComment } from '../modules/artifacts/facade.js'
 import { encodeCommentAnchor } from '../../../shared/artifact-comment-anchor.js'
 import { permissionService } from '../modules/access/public.js'
 import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedCompanyWithAgent, seedUserMembership, teardownAll } from './_helpers.js'
 
-// Full HTTP router + PostgreSQL/Redis for the product API and retained compatibility
-// grant-authorized routes. Session identity and WuKong transport are fixtures;
+// Full HTTP router + PostgreSQL/Redis for the native product API and isolated
+// read-authorized content routes. Session identity and WuKong transport are fixtures;
 // authorization, persistence and the installed published SDK are real.
 let server: Server, origin: string, companyId: string, projectId: string, agentId: string
 const userId = 'artifact-member'
@@ -37,7 +36,7 @@ before(async () => {
     VALUES('artifact-room',$1,$2,'group','Design boundary',$3::jsonb)`, [companyId, projectId, JSON.stringify([userId, agentId])])
   await pool.query(`INSERT INTO im_channel_bindings(channel_id,company_id,profile) VALUES('artifact-room',$1,$2::jsonb)`,
     [companyId, JSON.stringify({ channelType: 2, members: [userId, agentId] })])
-  // As in web.ts, the editor routes read their own bodies, so they precede the API's JSON parser.
+  // Isolated content routes do not use product cookies.
   const app = (await import('express')).default()
   app.use('/artifact-editor', artifactEditorRouter)
   app.use('/_blob', artifactBlobRouter)
@@ -54,7 +53,8 @@ const api = (path: string, method = 'GET', body?: unknown, headers?: Record<stri
 })
 const save = (editor: string, files: Record<string, unknown>) => fetch(`${origin}${editor}__deck/publish`, {
   method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ files }) })
-const entry = (text: string, ifMatch?: string | null) => ({ base64: Buffer.from(text).toString('base64'), contentType: 'text/html', ...(ifMatch !== undefined ? { ifMatch } : {}) })
+const entry = (text: string) => ({ body: Buffer.from(text), contentType: 'text/html' })
+const isolatedPath = (kind: 'design' | 'slides', id: string) => `/artifact-editor/${kind}/${issueGrant({ artifactId: id, companyId, userId, kind, write: false }).grant}/`
 
 async function document(id: string): Promise<ArtifactDocument> {
   const response = await api(`/artifacts/${id}/document?allPages=true`)
@@ -103,11 +103,10 @@ test('old Slides gain independent durable native chats without rewriting source 
     VALUES($1,$2,$3,'artifact-room','slides','Legacy',$4,$4,'user')`, [old.id, companyId, projectId, userId])
   const initialIndex = definition.initialIndex('Legacy', new Date().toISOString()) as { designSystems: { namespace: string }[]; order: string[]; style: { look: string }[] }
   initialIndex.designSystems = initialIndex.designSystems.filter(system => system.namespace === 'slides-builtin')
-  const published = await publishArtifactFiles({ companyId, artifactId: old.id, actorId: userId, actorKind: 'user', files: {
-    'project/deck.json': entry(JSON.stringify(initialIndex), null),
-    'project/ds/slides-builtin/tokens.json': entry(JSON.stringify(definition.initialResources!['project/ds/slides-builtin/tokens.json']), null),
-  } })
-  assert.equal(published.status, 200)
+  await withTransaction(pool, db => seedOriginalRevision(db, old.id, {
+    'project/deck.json': entry(JSON.stringify(initialIndex)),
+    'project/ds/slides-builtin/tokens.json': entry(JSON.stringify(definition.initialResources!['project/ds/slides-builtin/tokens.json'])),
+  }, userId))
   const original = (await pool.query('SELECT path,sha256,body FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [old.id])).rows
   assert.deepEqual(original.map(row => row.path), ['project/deck.json', 'project/ds/slides-builtin/tokens.json'])
   assert.deepEqual(initialIndex.order, [])
@@ -142,9 +141,10 @@ test('old Slides gain independent durable native chats without rewriting source 
 
 test('Slides selection context, concurrent field CAS, legacy write rejection and nondestructive restore', async () => {
   const deck = await (await api(`/projects/${projectId}/slides`, 'POST', { title: 'Versioned' })).json() as { id: string }
-  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
+  const grant = { url: isolatedPath('slides', deck.id) }
+  assert.equal((await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).status, 404)
   const video = await fetch(`${origin}${grant.url}__deck/assets`, { method: 'POST', headers: { 'content-type': 'video/mp4' }, body: Buffer.from('retired-video') })
-  assert.equal(video.status, 415)
+  assert.equal(video.status, 405)
   assert.equal((await pool.query('SELECT id FROM artifact_blobs WHERE artifact_id=$1', [deck.id])).rowCount, 0)
   const base = await seedTitle(deck.id)
   const before = await (await api(`/artifacts/${deck.id}/revisions`)).json() as { current: string; revisions: { seq: string }[] }
@@ -166,12 +166,9 @@ test('Slides selection context, concurrent field CAS, legacy write rejection and
   assert.equal(saved.pages['page-1'].nodes.title.text, 'Agent')
   assert.equal(saved.pages['page-1'].nodes.title.x, 60)
   assert.equal(saved.pages['page-1'].notes, 'Keep notes')
-  const files = { 'project/slides/one.html': entry('<h1>Retired writer</h1>', null) }
+  const files = { 'project/slides/one.html': entry('<h1>Retired writer</h1>') }
   const retired = await save(grant.url, files)
-  assert.equal(retired.status, 409)
-  assert.equal((await retired.json() as { code: string }).code, 'editor_upgrade_required')
-  const agentLegacy = await publishArtifactFiles({ companyId, artifactId: deck.id, actorId: agentId, actorKind: 'agent', files })
-  assert.equal(agentLegacy.status, 409); assert.equal(agentLegacy.body.code, 'editor_upgrade_required')
+  assert.equal(retired.status, 405)
   assert.deepEqual(await document(deck.id), saved)
   const previewResponse=await api(`/artifacts/${deck.id}/revisions/${before.revisions[0].seq}/document?allPages=true`)
   assert.equal(previewResponse.status,200)
@@ -201,17 +198,13 @@ test('a conversation Design opens as native data with all-or-nothing saves and i
   const design = await created.json() as { id: string; files: Record<string, { sha256: string }> }
   assert.ok(design.files['project/document.json'])
   assert.equal((await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }).id, design.id)
-  const grant = await (await api(`/artifacts/${design.id}/editor-grant`, 'POST')).json() as { url: string; isolatedUrl: string; write: boolean }
-  assert.match(grant.url, /^http:\/\/[a-f0-9]{32}-artifact\.localhost:5180\//)
-  assert.equal(grant.isolatedUrl, grant.url)
-  grant.url = new URL(grant.url).pathname
-  assert.equal(grant.write, true)
-  assert.equal((await fetch(origin + grant.url)).status, 410, 'retired editor entry cannot load its main bundle')
-  assert.deepEqual(await (await fetch(`${origin}/artifact-editor/preload.json`)).json(), { design: [], slides: [] })
+  assert.equal((await api(`/artifacts/${design.id}/editor-grant`, 'POST')).status, 404)
+  const grant = { url: isolatedPath('design', design.id) }
+  assert.equal((await fetch(origin + grant.url)).status, 404)
+  assert.equal((await fetch(`${origin}/artifact-editor/preload.json`)).status, 404)
   for (const privatePath of ['project/document.json', 'index.html', 'artifact-type/dc-runtime.js']) {
     assert.equal((await fetch(`${origin}/artifact-editor/design-assets/${privatePath}`)).status, 404)
   }
-  assert.equal((await (await fetch(`${origin}${grant.url}__deck/session`)).json() as { canEdit: boolean }).canEdit, true)
   const initial = await seedTitle(design.id)
   const embed = createNode('embed', 'isolated')
   embed.embed = { source: '<html><body><p>Isolated source</p></body></html>', format: 'html' }
@@ -238,9 +231,8 @@ test('a conversation Design opens as native data with all-or-nothing saves and i
   ])
   assert.equal(atomic.status, 409)
   assert.deepEqual(await document(design.id), saved)
-  assert.equal((await save(grant.url, { 'project/Main.dc.html': entry('<x-dc>retired</x-dc>', null) })).status, 409)
-  const listing = await (await fetch(`${origin}${grant.url}_files.json`)).json() as { files: Record<string, unknown> }
-  assert.ok(listing.files['project/document.json']); assert.ok(listing.files['project/pages/page-1.json'])
+  assert.equal((await save(grant.url, { 'project/Main.dc.html': entry('<x-dc>retired</x-dc>') })).status, 405)
+  for (const retired of ['_files.json', '__deck/session', '__deck/events', '__comments']) assert.equal((await fetch(`${origin}${grant.url}${retired}`)).status, 404)
   assert.equal((await fetch(`${origin}${grant.url}project/document.json`)).status, 200)
   const reopened = await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }
   assert.equal(reopened.id, design.id, 'reopening the panel reuses the conversation board')
@@ -429,13 +421,12 @@ test('project Slides decks are listed, created as native documents, renamed with
   assert.equal(Object.keys(snapshot.themes).length, 6)
   const listed = await (await api(`/projects/${projectId}/slides`)).json() as { id: string; title: string }[]
   assert.deepEqual(listed.map(item => item.id), [deck.id])
-  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string; isolatedUrl: string }
-  assert.match(grant.url, /^\/artifact-editor\/slides\/[^/]+\/$/)
-  assert.equal(grant.isolatedUrl, `${await artifactEditorOrigin(grant.url.split('/')[3], env.ARTIFACT_EDITOR_BASE)}${grant.url}`)
-  assert.equal((await fetch(origin + grant.url)).status, 410)
+  assert.equal((await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).status, 404)
+  const grant = { url: isolatedPath('slides', deck.id) }
+  assert.equal((await fetch(origin + grant.url)).status, 404)
   assert.equal((await fetch(origin + grant.url + 'project/document.json')).status, 200)
   assert.equal((await fetch(origin + grant.url + 'project/pages/page-1.json')).status, 200)
-  assert.deepEqual(await (await fetch(`${origin}/artifact-editor/preload.json`)).json(), { design: [], slides: [] })
+  assert.equal((await fetch(`${origin}/artifact-editor/preload.json`)).status, 404)
   for (const path of ['/artifact-editor/slides-assets/project/deck.json', '/artifact-editor/slides-assets/node/compiler.cjs', '/artifact-editor/slides/invalid/project/document.json']) {
     assert.equal((await fetch(origin + path)).status, 404)
   }
@@ -447,32 +438,28 @@ test('project Slides decks are listed, created as native documents, renamed with
   assert.equal((await api(`/artifacts/${deck.id}`)).status, 404)
 })
 
-test('open editor streams stop delivering files and comments after membership is revoked', async () => {
-  const deck = await (await api(`/projects/${projectId}/slides`, 'POST', { title: 'Revocation' })).json() as { id: string }
-  const grant = await (await api(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
-  const streams = await Promise.all(['__deck/events', '__comments/events'].map(async route => {
-    const response = await fetch(`${origin}${grant.url}${route}`, { signal: AbortSignal.timeout(5_000) })
-    assert.equal(response.status, 200)
-    const reader = response.body!.getReader()
-    let initial = ''
-    while (!initial.includes(route === '__deck/events' ? 'id:' : 'event: comments')) {
-      const chunk = await reader.read(); assert.equal(chunk.done, false)
-      initial += Buffer.from(chunk.value!).toString()
-    }
-    return reader
-  }))
+test('原生操作流和评论在成员权限撤销后停止暴露内容', async () => {
+  const deck = await (await api(`/projects/${projectId}/slides`, 'POST', { title: '撤权检查' })).json() as { id: string }
+  await seedTitle(deck.id)
+  const response = await api(`/artifacts/${deck.id}/changes/events`, 'GET', undefined, { 'last-event-id': '0' })
+  assert.equal(response.status, 200)
+  const reader = response.body!.getReader()
+  let initial = ''
+  while (!initial.includes('event: operation')) {
+    const chunk = await reader.read(); assert.equal(chunk.done, false)
+    initial += Buffer.from(chunk.value!).toString()
+  }
   try {
     await pool.query('DELETE FROM project_memberships WHERE project_id=$1 AND user_id=$2', [projectId, userId])
-    for (const kind of ['files.changed', 'comments.changed'] as const) {
-      await publishArtifactEvent({ companyId, artifactId: deck.id, kind, paths: ['project/slides/private.html'], ver: 'private' })
-    }
-    for (const reader of streams) assert.deepEqual(await reader.read(), { value: undefined, done: true })
+    await publishArtifactEvent({ companyId, artifactId: deck.id, kind: 'files.changed', paths: ['project/document.json'], ver: 'private' })
+    assert.deepEqual(await reader.read(), { value: undefined, done: true })
+    assert.ok([403, 404].includes((await api(`/artifacts/${deck.id}/comments`)).status))
+    assert.ok([403, 404].includes((await api(`/artifacts/${deck.id}/changes`)).status))
   } finally {
-    await Promise.allSettled(streams.map(reader => reader.cancel()))
+    await reader.cancel()
     await pool.query(`INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')`, [projectId, companyId, userId])
   }
 })
-
 
 test('assigning and steering work returns the artifact and persists the requested assignment', async () => {
   const design = await (await api('/conversations/artifact-room/design', 'POST')).json() as { id: string }
@@ -491,44 +478,25 @@ test('assigning and steering work returns the artifact and persists the requeste
 })
 
 
-test('retained native grants follow current read/write policy without upgrading issued capabilities', async () => {
+test('只读隔离资源能力在项目降权及恢复后始终不能写入', async () => {
   const status = (await pool.query<{ status: string }>('SELECT status FROM projects WHERE id=$1', [projectId])).rows[0].status
   for (const kind of ['design', 'slides'] as const) {
-    const created = kind === 'design'
-      ? await api('/conversations/artifact-room/design', 'POST')
-      : await api(`/projects/${projectId}/slides`, 'POST', { title: 'Grant boundary' })
-    assert.ok([200, 201].includes(created.status))
-    const artifact = await created.json() as { id: string }
-    type Grant = { url: string; write: boolean }
-    const writer = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
-    assert.equal(writer.write, true)
-    const pathOf = (grant: Grant) => new URL(grant.url, origin).pathname
-    const writerPath = pathOf(writer), indexPath = 'project/document.json'
-    const stored = (await pool.query<{ body: Buffer; sha256: string }>('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0]
-    const files = { [kind === 'design' ? 'project/canvas.json' : 'project/deck.json']: entry('{}', null) }
-    assert.equal((await fetch(origin + writerPath + indexPath)).status, 200)
-    let reader: Grant | undefined
+    const artifact = await (await (kind === 'design' ? api('/conversations/artifact-room/design', 'POST')
+      : api(`/projects/${projectId}/slides`, 'POST', { title: '只读资源边界' }))).json() as { id: string }
+    const path = isolatedPath(kind, artifact.id), indexPath = 'project/document.json'
+    const before = await document(artifact.id)
     try {
       await pool.query("UPDATE projects SET status='READ_ONLY' WHERE id=$1", [projectId])
-      const session = await fetch(origin + writerPath + '__deck/session')
-      assert.equal(session.status, 200)
-      assert.equal((await session.json() as { canEdit: boolean }).canEdit, false, 'old writer must not report stale write authority')
-      assert.equal((await fetch(origin + writerPath + indexPath)).status, 200, 'read permission survives write downgrade')
-      assert.equal((await save(writerPath, files)).status, 404)
-      reader = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
-      assert.equal(reader.write, false)
-      assert.equal((await fetch(origin + pathOf(reader) + indexPath)).status, 200)
-      assert.equal((await save(pathOf(reader), files)).status, 404)
+      assert.equal((await fetch(origin + path + indexPath)).status, 200)
+      assert.equal((await save(path, {})).status, 405)
+      const read = await api(`/artifacts/${artifact.id}/document`)
+      assert.equal(read.status, 200); assert.equal((await read.json() as { write: boolean }).write, false)
+      assert.ok([403, 404].includes((await operate(artifact.id, before, [{ type: 'document.patch', patch: { title: '禁止写入' } }])).status))
     } finally {
       await pool.query('UPDATE projects SET status=$2 WHERE id=$1', [projectId, status])
     }
-    assert.ok(reader)
-    assert.equal((await save(pathOf(reader), files)).status, 404, 'a read-only capability never gains write access when project permission returns')
-    assert.equal((await fetch(origin + writerPath + '__deck/session').then(r => r.json()) as { canEdit: boolean }).canEdit, true)
-    const fresh = await (await api(`/artifacts/${artifact.id}/editor-grant`, 'POST')).json() as Grant
-    assert.equal(fresh.write, true)
-    assert.equal((await save(pathOf(fresh), files)).status, 409, 'write authority cannot bypass the native document fence')
-    assert.deepEqual((await pool.query('SELECT body FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0].body, stored.body)
+    assert.equal((await save(path, {})).status, 405)
+    assert.deepEqual(await document(artifact.id), before)
   }
 })
 
@@ -537,21 +505,21 @@ test('expired, cross-tenant, wrong-kind and revoked native grants cannot read or
     const artifact = await (await (kind === 'design'
       ? api('/conversations/artifact-room/design', 'POST')
       : api(`/projects/${projectId}/slides`, 'POST', { title: 'Expired grant boundary' }))).json() as { id: string }
-    const current = issueGrant({ artifactId: artifact.id, companyId, userId, kind, write: true })
-    const expired = issueGrant({ artifactId: artifact.id, companyId, userId, kind, write: true }, Date.now() - GRANT_TTL_MS - 1000)
-    const foreign = issueGrant({ artifactId: artifact.id, companyId: 'different-tenant', userId, kind, write: true })
+    const current = issueGrant({ artifactId: artifact.id, companyId, userId, kind, write: false })
+    const expired = issueGrant({ artifactId: artifact.id, companyId, userId, kind, write: false }, Date.now() - GRANT_TTL_MS - 1000)
+    const foreign = issueGrant({ artifactId: artifact.id, companyId: 'different-tenant', userId, kind, write: false })
     const indexPath = 'project/document.json'
     const before = (await pool.query<{ body: Buffer; sha256: string }>('SELECT body,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [artifact.id, indexPath])).rows[0]
-    const files = { [kind === 'design' ? 'project/canvas.json' : 'project/deck.json']: entry('{}', null) }
+    const files = { [kind === 'design' ? 'project/canvas.json' : 'project/deck.json']: entry('{}') }
     for (const [routeKind, token] of [[kind, expired.grant], [kind, foreign.grant], [kind === 'design' ? 'slides' : 'design', current.grant]]) {
       const path = `/artifact-editor/${routeKind}/${token}/`
-      for (const route of ['_files.json', indexPath, '__deck/session']) assert.equal((await fetch(origin + path + route)).status, 404)
+      for (const route of [indexPath, 'native/runtime.js']) assert.equal((await fetch(origin + path + route)).status, 404)
       assert.equal((await save(path, files)).status, 404)
     }
     const path = `/artifact-editor/${kind}/${current.grant}/`
     try {
       await pool.query('DELETE FROM project_memberships WHERE project_id=$1 AND user_id=$2', [projectId, userId])
-      for (const route of ['_files.json', indexPath, '__deck/session']) assert.equal((await fetch(origin + path + route)).status, 404)
+      for (const route of [indexPath, 'native/runtime.js']) assert.equal((await fetch(origin + path + route)).status, 404)
       assert.equal((await save(path, files)).status, 404)
     } finally {
       await pool.query("INSERT INTO project_memberships(project_id,company_id,user_id,role) VALUES($1,$2,$3,'TEACHER')", [projectId, companyId, userId])

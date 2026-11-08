@@ -11,7 +11,7 @@ import {
 
 const reference = JSON.parse(
   readFileSync(
-    new URL('../../../../docs/evidence/issue-707/source-slides-transitions.json', import.meta.url),
+    new URL('../../../../scripts/fixtures/native-editors/source-slides-transitions.json', import.meta.url),
     'utf8',
   ),
 )

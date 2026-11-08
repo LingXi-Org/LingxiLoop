@@ -11,7 +11,7 @@ export interface ElementFontState {
 }
 
 export function elementFontSelectionVariantValue(state:ReturnType<typeof mergeElementFontStates>){
- return{weight:parseElementFontWeight(state.value??'')??parseElementFontWeight(state.fallback??'')??400,italic:/^(italic|oblique)/.test((state.companionValue??'').trim())}
+ return{weight:parseElementFontWeight(state.value??'')??parseElementFontWeight(state.fallback??'')??400,italic:/^(italic|oblique)/.test((state.companionValue||state.companionFallback||'').trim())}
 }
 
 /** 多选选择使用同一对声明；混合值必须提交，不能被单元素相同值短路。 */
@@ -30,6 +30,7 @@ export function mergeElementFontStates(states:readonly ElementFontState[]){
   value:!mixed&&values[0]||null,
   companionValue:!companionMixed&&companions[0]||null,
   mixed,companionMixed,
+  ...(states.length===1&&states[0]?.companionFallback?{companionFallback:states[0].companionFallback}:{}),
   ...(!fallbacks.some(value=>value!==fallbacks[0])&&fallbacks[0]?{fallback:fallbacks[0]}:{})
  }
 }

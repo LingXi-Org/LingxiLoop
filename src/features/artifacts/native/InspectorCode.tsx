@@ -50,7 +50,7 @@ export default function InspectorCode(props:Props){
       const operations:ArtifactOperation[]=selected.map((id):Extract<ArtifactOperation,{type:'node.patch'}>=>{
         const node=value.base.pages[pageId]?.nodes[id]
         if(!node)throw new Error('原元素已被移除，修改尚未保存。')
-        return {type:'node.patch',pageId,nodeId:id,...nodeCodePatch(node,value.before,result.entries)}
+        return {type:'node.patch',pageId,nodeId:id,...nodeCodePatch(node,value.base.pages[pageId],value.before,result.entries)}
       }).filter(operation=>Object.keys(operation.patch).length>0||!!operation.unset?.length)
       if(operations.length&&!latest.current.props.dispatch(operations,value.base)){retain();return false}
       latest.current.props.codeDrafts.clear(pageId,selected)

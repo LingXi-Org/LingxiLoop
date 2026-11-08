@@ -10,9 +10,9 @@ import JSZip from 'jszip'
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),temporary=await mkdtemp(join(tmpdir(),'lingxi-canvas-export-')),output=resolve(process.argv[2]??'/tmp/lingxi-canvas-text-export.json')
 const fixtureFont=process.env.NATIVE_CANVAS_EXPORT_FONT??'system-ui'
-const penFixture=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-pen.json'),'utf8')).cases[0].result
-const vectorFixture=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).cases[3].result
-const editedVectorFixture=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector-edit.json'),'utf8')).runtimeCases.find(row=>row.name==='break').savedNodes[0][1]
+const penFixture=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-pen.json'),'utf8')).cases[0].result
+const vectorFixture=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-vector.json'),'utf8')).cases[3].result
+const editedVectorFixture=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-vector-edit.json'),'utf8')).runtimeCases.find(row=>row.name==='break').savedNodes[0][1]
 const runner=process.env.PLAYWRIGHT_MODULE??'playwright',{chromium}=await import(runner.startsWith('/')?pathToFileURL(runner).href:runner)
 let server,browser
 try{

@@ -1,9 +1,0 @@
-{
-  "kind": "isolated-canvas-pages-cas-diagnostic",
-  "readonlyConflictKeepsDialogAndDraft": true,
-  "remoteNamePreserved": true,
-  "localDraftRetained": true,
-  "conflictShown": true,
-  "scope": "actual React and shared CAS; controlled HTTP fixture",
-  "consoleOrPageErrors": []
-}

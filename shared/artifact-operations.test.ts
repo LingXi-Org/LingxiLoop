@@ -31,17 +31,35 @@ test('代码样式与属性首次写入、重开、共享撤销重做及冲突�
   assert.equal(before.pages.first!.nodes.title!.css,undefined)
 })
 
-test('原生几何操作同步已有位置声明，撤销恢复原始表示，旧样式修改不能覆盖',()=>{
+test('原生几何只写原生字段，移除镜像CSS，撤销恢复原始表示并保持冲突保护',()=>{
   const before=fixture(),node=before.pages.first!.nodes.title!
   node.x=760;node.css={left:'120px !important',filter:'blur(1px)'}
   const move=prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{x:121}}],'move-code')
   const moved=applyOperations(before,move)
-  assert.equal(moved.document.pages.first!.nodes.title!.css?.left,'121px !important')
+  assert.equal(moved.document.pages.first!.nodes.title!.x,121)
+  assert.equal(moved.document.pages.first!.nodes.title!.css?.left,undefined)
   assert.equal(moved.document.pages.first!.nodes.title!.css?.filter,'blur(1px)')
   const undone=applyOperations(moved.document,prepareBatch(moved.document,moved.inverse,'undo-move-code'))
   assert.deepEqual(undone.document.pages.first!.nodes.title,node)
   const remote=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{css:{...node.css,left:'140px'}}}],'remote-code')).document
   assert.throws(()=>applyOperations(remote,move),ArtifactOperationConflict)
+})
+
+test('普通原生缩放不制造CSS副本，已有镜像删除后可撤销且文档可重开',()=>{
+ const before=fixture(),node=before.pages.first!.nodes.title!;node.css={width:'200px !important',height:'80px',transform:'rotate(0deg)'}
+ const result=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:'first',nodeId:'title',patch:{width:300,height:100,rotation:15}}]))
+ const changed=result.document.pages.first!.nodes.title!;assert.equal(changed.css,undefined);assert.equal(changed.width,300);assert.equal(changed.height,100);assert.equal(changed.rotation,15)
+ assert.equal(validateArtifactDocument(JSON.parse(JSON.stringify(result.document))).pages.first!.nodes.title!.css,undefined)
+ const undone=applyOperations(result.document,prepareBatch(result.document,result.inverse));assert.deepEqual(undone.document.pages.first!.nodes.title,node)
+})
+
+test('弹性布局偏移只写CSS并覆盖父级布局版本，撤销保留原始绝对框架',()=>{
+ const before=fixture(),page=before.pages.first!,node=page.nodes.title!,parent=createNode('group','parent');parent.layout={mode:'flex'};page.nodes.parent=parent;page.nodeOrder.unshift(parent.id);node.parentId=parent.id;node.x=760;node.css={left:'20px'}
+ const batch=prepareBatch(before,[{type:'node.patch',pageId:page.id,nodeId:node.id,patch:{x:30}}]),result=applyOperations(before,batch),next=result.document.pages.first!.nodes.title!
+ assert.equal(next.x,760);assert.equal(next.css?.left,'30px')
+ assert.deepEqual(applyOperations(result.document,prepareBatch(result.document,result.inverse)).document.pages.first!.nodes.title,node)
+ const remote=applyOperations(before,prepareBatch(before,[{type:'node.patch',pageId:page.id,nodeId:parent.id,patch:{layout:{mode:'absolute'}}}])).document
+ assert.throws(()=>applyOperations(remote,batch),ArtifactOperationConflict)
 })
 
 test('first motion identity write supports shared undo/redo, explicit removal and stale-field protection',()=>{

@@ -1,3 +1,4 @@
+import {isFlowChild} from '../../../../shared/artifact-geometry'
 import type {ArtifactDocument,ArtifactNode,ArtifactPage,ArtifactStyle} from '../../../../shared/artifact-document'
 import {artifactResolvedStyle} from '../../../../shared/artifact-themes'
 
@@ -20,7 +21,6 @@ export function naturalNodeStyle(page:ArtifactPage,node:ArtifactNode,document?:A
 }
 
 export const isNaturalText=(node:ArtifactNode)=>node.type==='note'||node.type==='text'&&node.textSizing==='content'
-export const isFlowChild=(page:ArtifactPage,node:ArtifactNode)=>!!node.parentId&&['flex','grid'].includes(page.nodes[node.parentId]?.layout?.mode??'')
 export function hasFlowAncestor(page:ArtifactPage,node:ArtifactNode){
   const seen=new Set<string>();let parentId=node.parentId
   while(parentId&&!seen.has(parentId)){seen.add(parentId);const parent=page.nodes[parentId];if(!parent)break;if(parent.layout?.mode==='flex'||parent.layout?.mode==='grid')return true;parentId=parent.parentId}

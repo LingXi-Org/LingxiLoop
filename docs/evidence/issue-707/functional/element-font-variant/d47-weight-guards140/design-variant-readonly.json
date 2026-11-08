@@ -1,6 +1,0 @@
-{
-  "case": "variant-readonly",
-  "normalDisabledState": true,
-  "noWrites": true,
-  "consoleOrPageErrors": []
-}

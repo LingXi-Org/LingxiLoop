@@ -1,4 +1,5 @@
 import type { ArtifactNode, ArtifactPage } from './artifact-document.js'
+export const isFlowChild=(page:ArtifactPage,node:ArtifactNode)=>!!node.parentId&&['flex','grid'].includes(page.nodes[node.parentId]?.layout?.mode??'')
 export type ArtifactMatrix = [number,number,number,number,number,number]
 const multiply=(a:ArtifactMatrix,b:ArtifactMatrix):ArtifactMatrix=>[a[0]*b[0]+a[2]*b[1],a[1]*b[0]+a[3]*b[1],a[0]*b[2]+a[2]*b[3],a[1]*b[2]+a[3]*b[3],a[0]*b[4]+a[2]*b[5]+a[4],a[1]*b[4]+a[3]*b[5]+a[5]]
 export function nodeMatrix(page: ArtifactPage,node:ArtifactNode):ArtifactMatrix {

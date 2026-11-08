@@ -108,7 +108,7 @@ in the retained token files. Native compatibility adapters preserve these format
 semantics without importing the former editor runtime. Native editor behavior and
 regression oracles are compared with the pinned distribution in a separate
 reference environment; source locations and hashes are retained in
-`docs/evidence/issue-707/`.
+`scripts/fixtures/native-editors/`.
 
 ## Bible Strong Avatar
 

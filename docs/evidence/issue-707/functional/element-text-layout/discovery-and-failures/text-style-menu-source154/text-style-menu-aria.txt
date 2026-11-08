@@ -1,4 +1,0 @@
-- 'menu "Text style: Heading 1"':
-  - textbox "Search styles"
-  - group:
-    - menuitemradio "Heading 1 48px" [checked]

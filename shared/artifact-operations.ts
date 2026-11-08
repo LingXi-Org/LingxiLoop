@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { canvasPages, canvasPageOf } from './artifact-canvas-pages.js'
-import {nodeTransform} from './artifact-appearance.js'
+import {isFlowChild} from './artifact-geometry.js'
 import {
   artifactAssetSchema, artifactDocumentSchema, artifactIdSchema, artifactNodeSchema, artifactPageSchema,
   artifactStyleSchema, artifactThemeSchema, validateArtifactDocument, validateArtifactCanvasPages,
@@ -241,16 +241,22 @@ function planOperations(before: ArtifactDocument, operations: ArtifactOperation[
         const owner = page(operation.pageId), item = node(owner.id, operation.nodeId)
         const fields = fieldsOf(operation.patch)
         const unsets = [...operation.unset ?? []]
-        if(item.css&&!Object.hasOwn(operation.patch,'css')&&!unsets.includes('css')){
-          const css={...item.css};let updated=false
+        if(!Object.hasOwn(operation.patch,'css')&&!unsets.includes('css')){
+          const positioned={...item,...operation.patch},css={...item.css},flow=isFlowChild(owner,positioned);let updated=false
+          if(['x','y'].some(field=>Object.hasOwn(operation.patch,field))){requireKey(key.node(owner.id,item.id,'field/parentId'));if(positioned.parentId)requireKey(key.node(owner.id,positioned.parentId,'field/layout'))}
           for(const [field,property]of [['x','left'],['y','top'],['width','width'],['height','height']] as const){
-            if(Object.hasOwn(operation.patch,field)&&Object.hasOwn(css,property)){css[property]=`${operation.patch[field]}px${/!important\s*$/i.test(css[property])?' !important':''}`;updated=true}
+            if(!Object.hasOwn(operation.patch,field))continue
+            if(flow&&(field==='x'||field==='y')){
+              requireKey(key.node(owner.id,item.id,`field/${field}`))
+              const index=fields.findIndex(([name])=>name===field);fields.splice(index,1)
+              css[property]=`${operation.patch[field]}px${/!important\s*$/i.test(css[property]??'')?' !important':''}`;updated=true
+            }else{if(Object.hasOwn(css,property)){delete css[property];updated=true}const opposite=field==='x'?'right':field==='y'?'bottom':undefined;if(opposite&&css[opposite]==='auto'){delete css[opposite];updated=true}}
           }
-          if(['rotation','flipX','flipY'].some(field=>Object.hasOwn(operation.patch,field))&&Object.hasOwn(css,'transform')){css.transform=nodeTransform({...item,...operation.patch});updated=true}
-          if(updated)fields.push(['css',css])
+          if(['rotation','flipX','flipY'].some(field=>Object.hasOwn(operation.patch,field))&&Object.hasOwn(css,'transform')){delete css.transform;updated=true}
+          if(updated)fields.push(['css',Object.keys(css).length?css:undefined])
         }
         // Fixed geometry replaces a cleared declaration. Keep that change in
-        // the same versioned batch and inverse as the CSS bridge above.
+        // the same versioned batch and inverse as the canonical geometry above.
         for(const [axis,flag]of [['width','implicitWidth'],['height','implicitHeight']] as const){
           if(item[flag]===undefined||Object.hasOwn(operation.patch,flag)||unsets.includes(flag))continue
           const changedCss=fields.find(([field])=>field==='css'),nextCss=unsets.includes('css')?undefined:changedCss?changedCss[1] as ArtifactNode['css']:item.css

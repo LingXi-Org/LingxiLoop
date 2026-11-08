@@ -24,5 +24,5 @@ export function elementAlignmentPatch(node:ArtifactNode,page:ArtifactPage,direct
     if(values.get('position')==='relative'){values.set('left','0px');values.set('right','auto')}
     margin(start,center||!atStart?'auto':'0px');margin(end,center||atStart?'auto':'0px')
   }
-  return nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))
+  return nodeCodePatch(node,page,before,[...values].map(([name,value])=>({name,value})))
 }

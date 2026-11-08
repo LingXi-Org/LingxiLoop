@@ -1,4 +1,0 @@
-{
-  "message": "TimeoutError: page.waitForFunction: Timeout 30000ms exceeded.",
-  "errors": []
-}

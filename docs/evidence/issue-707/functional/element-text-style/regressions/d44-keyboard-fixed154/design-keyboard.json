@@ -1,7 +1,0 @@
-{
-  "case": "keyboard",
-  "arrowAndTyping": true,
-  "tabClosesToNextExistingFontControl": true,
-  "shiftTabRestoresTrigger": true,
-  "noWrite": true
-}

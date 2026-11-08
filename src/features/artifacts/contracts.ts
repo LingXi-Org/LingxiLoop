@@ -24,14 +24,6 @@ export interface ArtifactSnapshot extends Omit<ArtifactSummary, 'fileCount' | 'a
   assignments: Array<{ id: string; agentId: string; assignment: string; status: string; executionRole: 'specialist' | 'verifier' }>
 }
 
-export interface ArtifactEditorGrant {
-  url: string
-  /** The grant's own editor origin; absent from servers that predate it. */
-  isolatedUrl?: string
-  expiresAt: number
-  write: boolean
-}
-
 /** The collaboration progress card an artifact's workspace posts in its conversation. */
 export interface ArtifactProgress {
   artifactId: string

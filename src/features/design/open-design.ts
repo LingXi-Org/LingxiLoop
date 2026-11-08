@@ -9,11 +9,11 @@ import { PENDING_DESIGN_ID } from './pending'
 const looked = new Map<string, number>()
 /** Intent only reads: an existing board's grant starts, nothing is created. */
 export function prefetchConversationDesign(conversationId: string) {
-  prefetchEditor('design')
+  prefetchEditor()
   if (Date.now() - (looked.get(conversationId) ?? 0) < 60_000) return
   looked.set(conversationId, Date.now())
   void artifactsApi.getConversationDesign(conversationId)
-    .then(design => { if (design) prefetchEditor('design', design.id) }, () => looked.delete(conversationId))
+    .then(design => { if (design) prefetchEditor() }, () => looked.delete(conversationId))
 }
 
 /** A slow ensure request belongs to the conversation that initiated it. */
@@ -39,7 +39,7 @@ export async function openConversationDesign(conversationId: string, opener?: HT
   }
   // Closing the placeholder while the board was being prepared is a decision.
   if (placeholder && !placeholderOpen()) return
-  prefetchEditor('design', design.id)
+  prefetchEditor()
   if (opener?.isConnected) opener.focus({ preventScroll: true })
   useSurface.getState().openDesign(design.id, design.title)
 }
@@ -51,6 +51,6 @@ export async function restoreLinkedConversationDesign(conversationId:string,arti
   const design=await artifactsApi.getConversationDesign(conversationId)
   if(signal.aborted||useAuth.getState().user?.id!==user?.id||useAuth.getState().activeCompanyId!==activeCompanyId||useWorkspace.getState().selectedId!==projectId||useApp.getState().selectedConversationId!==conversationId||useSurface.getState().surface!==surface)return
   if(!design||design.id!==artifactId)throw new Error('该设计不存在或无权访问，请从会话重新打开。')
-  prefetchEditor('design',design.id)
+  prefetchEditor()
   useSurface.getState().openDesign(design.id,design.title)
 }

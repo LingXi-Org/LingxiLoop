@@ -1,12 +1,9 @@
+import {editorThemeLabel} from './editor-copy'
 import ElementFontSelection from './ElementFontSelection'
-import {textPropertyPatch} from './element-text-properties'
-import ElementFontVariantField from './ElementFontVariantField'
-import {elementFontVariantPatch,elementFontVariantValue,elementFontWeightText,parseElementFontWeight} from './element-font-variant'
 import {documentFontFamilies,type FontFamilyCensus} from '../../../../shared/artifact-font-families'
 import {ArrowUpDown,MoveHorizontal} from 'lucide-react'
 import ElementTextProperties from './ElementTextProperties'
 import ElementTextStyle from './ElementTextStyle'
-import {elementFontFamilyPatch} from './element-font-properties'
 import type {TypographyCensus} from '../../../../shared/artifact-typography'
 import ElementLayoutProperties from './ElementLayoutProperties'
 import ElementTextAlignment from './ElementTextAlignment'
@@ -16,7 +13,7 @@ import ElementAlignmentControls from './ElementAlignmentControls'
 import ElementLinkField from './ElementLinkField'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject, type ComponentProps } from 'react'
 import type { ArtifactDocument, ArtifactNode, ArtifactPage } from '../../../../shared/artifact-document'
-import {artifactVersionKey,type ArtifactOperation} from '../../../../shared/artifact-operations'
+import type {ArtifactOperation} from '../../../../shared/artifact-operations'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
 import Field from './InspectorField'
 import DesignArtboardProperties from './DesignArtboardProperties'
@@ -80,49 +77,11 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
   const panelResize=useDesignInspectorWidth(aside,kind==='design',panelWidth,setPanelWidth)
   const codeField=useRef<HTMLTextAreaElement|null>(null),codeFocus=useRef(false)
   const elementTextInspector=kind==='design'&&!!current&&current.id!==canvasContentId&&primary?.type!=='table'
-  const fontNodeKey=elementTextInspector&&current&&primary?`${current.id}/${primary.id}`:''
-  const [renderedFont,setRenderedFont]=useState<{key:string;family:string;weight:number;italic:boolean}>()
-  useLayoutEffect(()=>{if(!fontNodeKey||!current||!primary)return;const scope=aside.current?.closest('[data-native-artifact-editor]'),element=scope?.querySelector<HTMLElement>(`[data-page-id="${CSS.escape(current.id)}"] [data-node-id="${CSS.escape(primary.id)}"]`);if(!element)return;const css=getComputedStyle(element),family=css.fontFamily,weight=Number(css.fontWeight)||400,italic=/^(italic|oblique)/.test(css.fontStyle);setRenderedFont(previous=>previous?.key===fontNodeKey&&previous.family===family&&previous.weight===weight&&previous.italic===italic?previous:{key:fontNodeKey,family,weight,italic})},[doc,fontNodeKey,current?.id,primary?.id])
-  const fontFamily=elementTextInspector&&renderedFont?.key===fontNodeKey?renderedFont.family:primary?artifactResolvedStyle(primary.style,doc).fontFamily:undefined
+  const fontFamily=primary?artifactResolvedStyle(primary.style,doc).fontFamily:undefined
   const usedFontFamilies=useMemo(()=>elementTextInspector&&current?documentFontFamilies(doc,current.id,fontFamilies,loadedPageIds):[],[doc,current?.id,fontFamilies,loadedPageIds,elementTextInspector])
   const tabs=[{id:'properties' as const,name:'属性'},...(kind==='design'&&sheet?[{id:'outline' as const,name:'图层'}]:[]),...(kind==='design'?[{id:'code' as const,name:'代码'}]:[]),{id:'theme' as const,name:'主题'}]
-  const changeElementFont=(font:EditorFont|null)=>{
-    const base=inspectorBase.current??getBase(),page=current&&base?.pages[current.id]
-    if(!base||!page)return
-    try{
-      const latest=getBase()?.pages[page.id]
-      if(!latest)return
-      // 依据当前显示决定是否需要修改；提交仍使用打开时捕获的版本，原值选择也不能丢失协作意图。
-      const operations:ArtifactOperation[]=selected.flatMap(id=>{const node=latest.nodes[id];if(!node)return[];const result=elementFontFamilyPatch(node,latest,font);return Object.keys(result.patch).length||result.unset.length?[{type:'node.patch' as const,pageId:page.id,nodeId:id,...result}]:[]})
-      if(!writable||selected.some(id=>!latest.nodes[id]||latest.nodes[id].locked)){retainDraft(operations);return}
-      if(operations.length)commitCode(operations,base,selected.flatMap(id=>['css','style.fontFamily','style.themeFont','style.themeFontFallback','locked'].map(field=>artifactVersionKey.node(page.id,id,`field/${field}`))))
-    }catch{onNotice('字体未能修改，请重试。')}
-  }
-  const changeElementVariant=(variant:Parameters<typeof elementFontVariantPatch>[2])=>{
-    const base=inspectorBase.current??getBase(),page=current&&base?.pages[current.id],latest=current&&getBase()?.pages[current.id]
-    if(!base||!page||!latest)return
-    try{
-      const operations:ArtifactOperation[]=selected.flatMap(id=>{const node=latest.nodes[id];if(!node)return[];const metrics=renderedFont?.key===`${latest.id}/${id}`?renderedFont:{weight:node.style.fontWeight??400,italic:node.style.fontStyle==='italic'},result=elementFontVariantPatch(node,latest,variant,metrics);return Object.keys(result.patch).length||result.unset.length?[{type:'node.patch' as const,pageId:page.id,nodeId:id,...result}]:[]})
-      if(!writable||selected.some(id=>!latest.nodes[id]||latest.nodes[id].locked)){retainDraft(operations);return}
-      if(operations.length)commitCode(operations,base,selected.flatMap(id=>['css','style.fontWeight','style.fontStyle','locked'].map(field=>artifactVersionKey.node(page.id,id,`field/${field}`))))
-    }catch{onNotice('字形未能修改，请重试。')}
-  }
-  const weightText=primary?elementFontWeightText(primary):''
-  const rawWeight=!!weightText&&parseElementFontWeight(weightText)===undefined
-  const fontVariant=primary?elementFontVariantValue(primary,renderedFont?.key===fontNodeKey?renderedFont:{weight:primary.style.fontWeight??400,italic:primary.style.fontStyle==='italic'}):{weight:400,italic:false}
-  const retainElementWeight=(value:string,base:ArtifactDocument)=>{
-    const page=current&&base.pages[current.id];if(!page)return
-    retainDraft(selected.flatMap(id=>{const node=page.nodes[id];return node?[{type:'node.patch' as const,pageId:page.id,nodeId:id,patch:{css:{...node.css,'font-weight':value}}}]:[]}))
-  }
-  const changeElementWeight=(value:string|null,base:ArtifactDocument)=>{
-    const page=current&&getBase()?.pages[current.id];if(!page)return
-    const operations:ArtifactOperation[]=selected.flatMap(id=>{const node=page.nodes[id];if(!node)return[];const result=textPropertyPatch(node,page,{'font-weight':value});return Object.keys(result.patch).length||result.unset.length?[{type:'node.patch' as const,pageId:page.id,nodeId:id,...result}]:[]})
-    if(!writable||selected.some(id=>!page.nodes[id]||page.nodes[id].locked)){retainDraft(operations);return}
-    if(operations.length)commitCode(operations,base,selected.flatMap(id=>['css','style.fontWeight','locked'].map(field=>artifactVersionKey.node(page.id,id,`field/${field}`))))
-  }
   const changeFont = (font: EditorFont) => {
     if (!primary || !current || !doc) return
-    if(kind==='design'&&current.id!==canvasContentId&&['text','note'].includes(primary.type)){changeElementFont(font);return}
     const initial = inspectorBase.current?.pages[current.id]?.nodes[primary.id] ?? primary
     const choice = font.theme ? { themeFont: font.theme, themeFontFallback: font.family } : { fontFamily: font.family }
     const family = artifactResolvedStyle({ ...initial.style, ...choice, ...(font.theme ? { fontFamily: undefined } : {}) }, doc).fontFamily ?? font.family
@@ -136,7 +95,7 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
       for(const id of selected){
         const node=page.nodes[id];if(!node)continue
         const before=nodeCodeEntries(node,page),values=new Map(before.map(entry=>[entry.name,entry.value]));values.set('color',value==='none'?'transparent':value)
-        const {patch,unset}=nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))
+        const {patch,unset}=nodeCodePatch(node,page,before,[...values].map(([name,value])=>({name,value})))
         if(Object.keys(patch).length||unset.length)operations.push({type:'node.patch',pageId:page.id,nodeId:id,patch,...(unset.length?{unset}:{})})
       }
       const latestPage=getBase()?.pages[page.id]
@@ -148,11 +107,12 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
     }catch{onNotice('文字颜色未能修改，请检查颜色后重试。')}
   }
   const multiTextNodes=current?selected.map(id=>current.nodes[id]).filter((node):node is ArtifactNode=>!!node&&['text','note'].includes(node.type)):[]
+  const elementFonts=current&&<ElementFontSelection key={`fonts:${current.id}:${selected.join('|')}`} doc={doc} page={current} nodeIds={selected} families={usedFontFamilies} writable={writable} getBase={getBase} commit={commitCode} retain={retainDraft} onNotice={onNotice} onHistory={onHistory}/>
   const textSpacingFields=primary&&<><Field label="行高" leadingIcon={elementTextInspector?<ArrowUpDown size={16} strokeWidth={1.5}/>:undefined} type="number" min={.5} max={10} value={primary.style.lineHeight??1.25} onChange={v=>patchNode({style:{lineHeight:Math.max(.5,Math.min(10,Number(v)))}})} /><Field label="字距" leadingIcon={elementTextInspector?<MoveHorizontal size={16} strokeWidth={1.5}/>:undefined} type="number" value={primary.style.letterSpacing??0} onChange={v=>patchNode({style:{letterSpacing:Number(v)}})} /></>
   return <aside ref={aside} className="native-inspector" data-sheet={sheet} aria-label="属性面板" onFocusCapture={beginInspector}>{kind==='design'&&!sheet&&<InspectorWidthGrip width={panelWidth} max={panelResize.max} defaultWidth={panelResize.defaultWidth} setWidth={setPanelWidth}/>}<header className="native-inspector-header"><div role="tablist" aria-label="属性选项卡" className="native-inspector-tabs">{tabs.map((tab,index)=><button key={tab.id} data-inspector-tab={tab.id} type="button" role="tab" className="native-panel-tab" aria-selected={inspectorTab===tab.id} tabIndex={inspectorTab===tab.id?0:-1} onClick={()=>{if(tab.id==='code'){if(inspectorTab==='code')codeField.current?.focus();else codeFocus.current=true}setInspectorTab(tab.id)}} onKeyDown={event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();event.stopPropagation();const next=event.key==='Home'?0:event.key==='End'?tabs.length-1:(index+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;codeFocus.current=false;setInspectorTab(tabs[next].id);event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>('[role=tab]')[next]?.focus()}}>{tab.name}</button>)}</div><span style={{flex:1}} /><IconButton icon="close" label="关闭属性" onClick={() => setInspectorOpen(false)} /></header>
       {kind==='design'&&<div className="native-inspector-outline-slot" data-sheet={sheet} hidden={inspectorTab==='theme'||sheet&&inspectorTab!=='outline'}><DesignOutline {...outline} document={doc} selected={selected} sheet={sheet} writable={writable} dispatch={dispatch}/></div>}
       {inspectorTab==='code'&&current&&<InspectorCode key={`${current.id}:${selected.join('|')}:${codeDrafts.generation()}`} document={doc} pageId={current.id} selected={selected} codeDrafts={codeDrafts} readOnly={!writable} field={codeField} requestFocus={codeFocus} getBase={getBase} dispatch={commitCode} onNotice={onNotice}/>}
-      {inspectorTab === 'theme' && <div className="native-theme-picker" aria-label="主题选择"><button type="button" aria-pressed={!doc.themeId} disabled={!writable} onClick={()=>dispatch([{type:'document.patch',patch:{themeId:null}}])}>默认主题</button>{Object.values(doc.themes).map(theme=><button type="button" key={theme.id} aria-label={`使用主题 ${theme.name}`} disabled={!writable} aria-pressed={doc.themeId===theme.id} onClick={()=>dispatch([{type:'document.patch',patch:{themeId:theme.id}}])}><span className="native-theme-preview" style={{background:String(theme.tokens.background??'#faf8f4'),color:String(theme.tokens.text??'#141413')}}>文字</span>{theme.name}</button>)}</div>}
+      {inspectorTab === 'theme' && <div className="native-theme-picker" aria-label="主题选择"><button type="button" aria-pressed={!doc.themeId} disabled={!writable} onClick={()=>dispatch([{type:'document.patch',patch:{themeId:null}}])}>默认主题</button>{Object.values(doc.themes).map(theme=><button type="button" key={theme.id} aria-label={`使用主题 ${editorThemeLabel(theme)}`} disabled={!writable} aria-pressed={doc.themeId===theme.id} onClick={()=>dispatch([{type:'document.patch',patch:{themeId:theme.id}}])}><span className="native-theme-preview" style={{background:String(theme.tokens.background??'#faf8f4'),color:String(theme.tokens.text??'#141413')}}>文字</span>{editorThemeLabel(theme)}</button>)}</div>}
       <div className="native-properties-pane" hidden={inspectorTab!=='properties'}><fieldset disabled={!writable}>
         {primary ? <>
           {kind==='design'&&current&&current.id!==canvasContentId&&<ElementAlignmentControls node={current.nodes[primary.id]??primary} page={current} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/>}
@@ -169,8 +129,7 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
           {kind==='design'&&current&&<ElementLinkField key={`${current.id}:${primary.id}`} node={primary} pageId={current.id} writable={writable} getBase={getBase} commit={commitCode} retain={retainDraft}/>}
           {(primary.type==='text'||primary.type==='note'||primary.type==='table')&&<ElementTextProperties key={`text:${current?.id}:${primary.id}`} node={primary} page={current} enabled={elementTextInspector} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice} alignment={kind==='design'&&current&&current.id!==canvasContentId?<ElementTextAlignment node={current.nodes[primary.id]??primary} page={current} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/>:<div className="native-property-segment"><span>对齐</span><div>{(['left','center','right'] as const).map(direction=><IconButton key={direction} icon={direction} label={({left:'文本左对齐',center:'文本居中',right:'文本右对齐'})[direction]} active={(primary.style.textAlign??'left')===direction} onClick={()=>patchNode({style:{textAlign:direction}})} />)}<button type="button" aria-label="文本两端对齐" aria-pressed={primary.style.textAlign==='justify'} onClick={()=>patchNode({style:{textAlign:'justify'}})}>☰</button></div></div>}>
             {elementTextInspector&&current?<ElementTextStyle key={`style:${current.id}:${selected.join('|')}`} doc={doc} node={primary} nodeIds={selected} page={current} census={typography} loadedPageIds={loadedPageIds} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/>:primary.type!=='table'&&<label className="native-field"><span>文本样式</span><select aria-label="文本样式" value={primary.richText?.content?.[0]?.type==='heading'?String(primary.richText.content[0].attrs?.level??1):'body'} onChange={e=>{const level=Number(e.target.value),heading=!!level,content=primary.richText?.content??[{type:'paragraph' as const,content:[{type:'text' as const,text:primary.text??''}]}];patchNode({richText:{type:'doc',content:content.map(block=>block.type==='paragraph'||block.type==='heading'?{...block,type:heading?'heading':'paragraph',attrs:{...block.attrs,...(heading?{level}: {})}}:block)},style:{fontSize:heading?({1:48,2:36,3:30,4:26,5:22,6:20} as Record<number,number>)[level]:24,fontWeight:heading?700:400}})}}><option value="body">正文</option>{[1,2,3,4,5,6].map(level=><option key={level} value={level}>标题 {level}</option>)}</select></label>}
-            <FontField families={usedFontFamilies} element={elementTextInspector} disabled={!writable||elementTextInspector&&!!primary.locked} value={fontFamily} theme={elementTextInspector?undefined:primary.style.themeFont} onReset={elementTextInspector&&(primary.style.fontFamily!==undefined||primary.style.themeFont!==undefined||primary.css?.['font-family']!==undefined)?()=>changeElementFont(null):undefined} onBegin={()=>{inspectorBase.current=doc}} onChange={changeFont} />
-            {elementTextInspector?<ElementFontVariantField key={`variant:${current?.id}:${selected.join('|')}`} raw={rawWeight?{value:weightText,getBase,apply:changeElementWeight,retain:retainElementWeight,onHistory}:undefined} family={fontFamily} weight={fontVariant.weight} italic={fontVariant.italic} explicit={primary.style.fontWeight!==undefined||primary.style.fontStyle!==undefined||primary.css?.['font-weight']!==undefined||primary.css?.['font-style']!==undefined} disabled={!writable||!!primary.locked} onBegin={()=>{inspectorBase.current=doc}} onReset={()=>changeElementVariant(null)} onChange={changeElementVariant}/>:<FontVariantField preserveCurrent={elementTextInspector} disabled={!writable||elementTextInspector&&!!primary.locked} family={fontFamily} weight={primary.style.fontWeight} style={primary.style.fontStyle} onBegin={()=>{inspectorBase.current=getBase()}} onChange={variant=>patchNode({style:{fontWeight:variant.weight,fontStyle:variant.style}})} />}
+            {elementTextInspector?elementFonts:<><FontField value={fontFamily} theme={primary.style.themeFont} onBegin={()=>{inspectorBase.current=doc}} onChange={changeFont}/><FontVariantField disabled={!writable} family={fontFamily} weight={primary.style.fontWeight} style={primary.style.fontStyle} onBegin={()=>{inspectorBase.current=getBase()}} onChange={variant=>patchNode({style:{fontWeight:variant.weight,fontStyle:variant.style}})}/></>}
             <Field label="字号" unit={elementTextInspector} type="number" min={1} max={1000} value={primary.style.fontSize??32} onChange={v=>patchNode({style:{fontSize:Math.max(1,Math.min(1000,Number(v)))}})} />
             <div className="native-property-pair"><span>间距</span>{elementTextInspector?<div className="native-text-spacing-inputs">{textSpacingFields}</div>:textSpacingFields}</div>
             {kind==='design'&&current&&current.id!==canvasContentId&&primary.type!=='table'?<ElementTextColor document={doc} pageId={current.id} nodeId={primary.id} value={primary.css?.color??artifactResolvedStyle(primary.style,doc).color??'#222222'} disabled={!writable||!!primary.locked} mixed={selected.length!==1} onChange={changeElementTextColor}/>:<Field label="颜色" type="color" value={artifactResolvedStyle(primary.style,doc).color??'#222222'} onChange={v=>patchNode({style:{color:v==='none'?'transparent':v}},['style.themeColor'])} />}
@@ -206,7 +165,7 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
             <label className="native-field"><span>纸张</span><select aria-label="页面尺寸" value={current.paper ?? 'custom'} onChange={event => { const paper = event.target.value as 'A4' | 'Letter' | 'custom'; inspectDispatch([{ type: 'page.patch', pageId: current.id, patch: { paper, ...(paper === 'A4' ? { width: 794, height: 1123 } : paper === 'Letter' ? { width: 816, height: 1056 } : {}) } }]) }}><option value="custom">自定义</option><option value="A4">A4</option><option value="Letter">美式信纸</option></select></label><label className="native-field"><span>页面高度</span><select aria-label="页面高度模式" value={current.sizing ?? 'fixed'} onChange={event => inspectDispatch([{ type: 'page.patch', pageId: current.id, patch: { sizing: event.target.value as 'fixed' | 'flow' } }])}><option value="fixed">固定</option><option value="flow">随内容增长</option></select></label><Field label="标题" value={current.title} onChange={value => inspectDispatch([{ type: 'page.patch', pageId: current.id, patch: { title: value } }])} /><Field label="宽" type="number" value={current.width} onChange={value => inspectDispatch([{ type: 'page.patch', pageId: current.id, patch: { width: Math.max(1, Number(value)) } }])} /><Field label="高" type="number" value={current.height} onChange={value => inspectDispatch([{ type: 'page.patch', pageId: current.id, patch: { height: Math.max(1, Number(value)) } }])} /><label className="native-check"><input type="checkbox" checked={current.skip} onChange={event => inspectDispatch([{ type: 'page.patch', pageId: current.id, patch: { skip: event.target.checked } }])} />放映时跳过</label><button type="button" onClick={() => { inspectDispatch([{ type: 'page.delete', pageId: current.id }]); setSelected([]) }}>删除页面</button>
           </details>
         </> : kind==='design'&&!selected.length?<div className="native-inspector-empty"><strong>未选择任何内容</strong><p>点击设计中的任意元素，可在此编辑其属性。</p></div>:null}
-        {!primary&&kind==='design'&&current&&current.id!==canvasContentId&&selected.length>1&&multiTextNodes.length===selected.length&&<section className="native-property-section native-element-text-properties"><header><h3>文本</h3></header><div className="native-element-text-body"><ElementTextStyle key={`style:${current.id}:${selected.join('|')}`} doc={doc} node={multiTextNodes[0]} nodeIds={selected} page={current} census={typography} loadedPageIds={loadedPageIds} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/><ElementFontSelection key={`fonts:${current.id}:${selected.join('|')}`} doc={doc} page={current} nodeIds={selected} families={usedFontFamilies} writable={writable} getBase={getBase} commit={commitCode} retain={retainDraft} onNotice={onNotice} onHistory={onHistory}/></div></section>}
+        {!primary&&kind==='design'&&current&&current.id!==canvasContentId&&selected.length>1&&multiTextNodes.length===selected.length&&<section className="native-property-section native-element-text-properties"><header><h3>文本</h3></header><div className="native-element-text-body"><ElementTextStyle key={`style:${current.id}:${selected.join('|')}`} doc={doc} node={multiTextNodes[0]} nodeIds={selected} page={current} census={typography} loadedPageIds={loadedPageIds} writable={writable} getBase={getBase} commit={commitCode} onNotice={onNotice}/>{elementFonts}</div></section>}
         {selected.length > 0 && <><h4>排列</h4><div className="native-inspector-actions">{(['left', 'center', 'right', 'top', 'middle', 'bottom'] as const).map(direction => <button type="button" key={direction} onClick={() => align(direction)}>{({ left: '左对齐', center: '水平居中', right: '右对齐', top: '顶部', middle: '垂直居中', bottom: '底部' })[direction]}</button>)}<button type="button" disabled={selected.length<3} onClick={() => distribute('horizontal')}>水平分布</button><button type="button" disabled={selected.length<3} onClick={() => distribute('vertical')}>垂直分布</button><button type="button" onClick={deleteSelection}>删除元素</button><button type="button" onClick={() => pasteNodes(selectedWithChildren())}>复制元素</button></div></>}
       </fieldset></div></aside>
 }

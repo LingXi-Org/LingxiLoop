@@ -1,7 +1,0 @@
-{
-  "kind": "isolated-shape-roundtrip-diagnostic",
-  "mode": "design",
-  "directionalArrows": false,
-  "drawnArrow": true,
-  "consoleOrPageErrors": []
-}

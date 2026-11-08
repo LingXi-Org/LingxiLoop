@@ -3,7 +3,7 @@ import test from 'node:test'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
-import { editorError } from './editor-copy'
+import { editorThemeLabel, editorError } from './editor-copy'
 
 test('runtime and remote failures always produce Chinese editor feedback', () => {
   const fallback = '导出尚未完成，请重试。'
@@ -33,3 +33,10 @@ test('editor component prose and accessible labels contain no English UI copy', 
   }
   assert.deepEqual(violations, [])
 })
+
+ test('内置主题名称和明暗标签全部中文，作者命名保持原样', () => {
+  assert.equal(editorThemeLabel({name:'Claude · Light',source:{namespace:'slides-builtin',variant:'light'}}),'经典 · 浅色')
+  assert.equal(editorThemeLabel({name:'Ember · Dark',source:{namespace:'baoyu-ember',variant:'dark'}}),'余烬 · 深色')
+  assert.equal(editorThemeLabel({name:'Seazar',source:{namespace:'baoyu-seazar',variant:'light'}}),'塞扎尔 · 浅色')
+  assert.equal(editorThemeLabel({name:'作者的主题'}),'作者的主题')
+ })

@@ -2,10 +2,15 @@ import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
 import { test } from 'node:test'
 import { createDocument, createNode, createPage } from '../../../../../shared/artifact-document'
-import { exportArtifact } from '../export-artifact'
+import type { ArtifactExportOptions } from '../export-artifact'
+import { exportPages } from '../export-pages'
+import { executeExport } from './execute'
 import { ExportResources } from './common'
 import { encodeArtifactPdf } from './pdf-writer'
 import { renderPageHtml, pageText } from './render'
+
+const executeSnapshot = async (document: ReturnType<typeof createDocument>, options: ArtifactExportOptions) =>
+  executeExport(structuredClone(exportPages(document, options.format)), options)
 
 test('Design导出采用画板默认字体并保留显式父级字体',async()=>{
  const document=createDocument('design','font-default'),page=createPage('page'),node=createNode('text','text');node.style={fontSize:48};node.text='继承文字';page.nodes.text=node;page.nodeOrder=['text'];document.pages.page=page;document.pageOrder=['page']
@@ -72,7 +77,7 @@ test('extended appearance exports with geometry, annotations stay off artboards 
 
 test('offline HTML escapes authored text and preserves the fixed snapshot', async () => {
   const document = fixture(), before = JSON.stringify(document)
-  const result = await exportArtifact(document, { format: 'html' })
+  const result = await executeSnapshot(document, { format: 'html' })
   const html = await result.blob.text()
   assert.ok(html.includes('&lt;script&gt;doNotExecute()&lt;/script&gt;'))
   assert.ok(html.includes('中文 text'))
@@ -90,7 +95,7 @@ test('整份幻灯片导出排除跳过页，包括备注与不能读取的媒�
   document.pages[skipped.id] = skipped
   document.pageOrder.unshift(skipped.id)
   const before = JSON.stringify(document)
-  const result = await exportArtifact(document, { format: 'html', resolveAsset: async () => { throw new Error('不应读取跳过页素材') } })
+  const result = await executeSnapshot(document, { format: 'html', resolveAsset: async () => { throw new Error('不应读取跳过页素材') } })
   const html = await result.blob.text()
   assert.equal((html.match(/<article(?:\s|>)/g) ?? []).length, 1)
   assert.ok(!html.includes(skipped.notes))
@@ -102,13 +107,13 @@ test('全部跳过时整份幻灯片导出给出中文说明', async () => {
   const document = fixture()
   document.pages.page!.skip = true
   for (const format of ['html', 'pdf', 'pptx'] as const)
-    await assert.rejects(exportArtifact(document, { format }), /所有页面均已跳过，请先恢复至少一页/)
+    await assert.rejects(executeSnapshot(document, { format }), /所有页面均已跳过，请先恢复至少一页/)
 })
 
 test('HTML retains slide transition and motion identity as escaped data for offline playback', async () => {
   const document=fixture(),page=document.pages.page!
   page.transition='magic';page.nodes.text!.motionId='original-heading'
-  const result=await exportArtifact(document,{format:'html'}),html=await result.blob.text()
+  const result=await executeSnapshot(document,{format:'html'}),html=await result.blob.text()
   assert.match(html,/data-transition="magic"/)
   assert.match(html,/data-motion-id="original-heading"/)
   assert.match(html,/data-motion-root/)
@@ -121,16 +126,16 @@ test('image metadata never authorizes embedding a JSON API response or forged im
   const node = { ...createNode('image', 'image'), assetId: 'image' }
   document.pages.page!.nodes.image = node; document.pages.page!.nodeOrder.push('image')
   for (const type of ['application/json', 'image/png']) {
-    await assert.rejects(exportArtifact(document, { format: 'html', resolveAsset: async () => new Blob(['{"private":"never-export"}'], { type }) }), /图片/)
+    await assert.rejects(executeSnapshot(document, { format: 'html', resolveAsset: async () => new Blob(['{"private":"never-export"}'], { type }) }), /图片/)
   }
-  await assert.rejects(exportArtifact(document, { format: 'html' }), /授权读取器/)
+  await assert.rejects(executeSnapshot(document, { format: 'html' }), /授权读取器/)
 })
 
 test('cancellation occurs before loading resources or modifying a document', async () => {
   const controller = new AbortController(); controller.abort()
   const document = fixture(), before = JSON.stringify(document)
   let reads = 0
-  await assert.rejects(exportArtifact(document, { format: 'html', signal: controller.signal, resolveAsset: async () => { reads++; return new Blob() } }), { name: 'AbortError' })
+  await assert.rejects(executeSnapshot(document, { format: 'html', signal: controller.signal, resolveAsset: async () => { reads++; return new Blob() } }), { name: 'AbortError' })
   assert.equal(reads, 0); assert.equal(JSON.stringify(document), before)
 })
 
@@ -139,12 +144,12 @@ test('offline HTML uses the isolated content snapshot and reports loss of intera
   document.assets.preview = { id: 'preview', url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/kK0AAAAASUVORK5CYII=', contentType: 'image/png' }
   const node = { ...createNode('embed', 'embed'), embed: { source: '<script src="./support.js"></script><x-dc>{{title}}</x-dc>', format: 'html' as const, previewAssetId: 'preview' } }
   document.pages.page!.nodes.embed = node; document.pages.page!.nodeOrder.push('embed')
-  const result = await exportArtifact(document, { format: 'html' }), html = await result.blob.text()
+  const result = await executeSnapshot(document, { format: 'html' }), html = await result.blob.text()
   assert.ok(html.includes('data:image/png;base64,'))
   assert.ok(!html.includes('support.js') && !html.includes('{{title}}') && !html.includes('<iframe'))
   assert.ok(result.warnings.some(warning => warning.includes('静态快照')))
   delete (node.embed as { previewAssetId?: string }).previewAssetId
-  await assert.rejects(exportArtifact(document, { format: 'html' }), /预览快照/)
+  await assert.rejects(executeSnapshot(document, { format: 'html' }), /预览快照/)
 })
 
 test('formula output uses KaTeX and a malformed source remains readable with a warning', async () => {
@@ -210,7 +215,7 @@ test('table headers remain semantic and editable in export without promoting old
 
 test('画板网页归档包含可离线打开的单页文件，并保留文档快照', async () => {
   const document=fixture(),before=JSON.stringify(document)
-  const result=await exportArtifact(document,{format:'html',htmlArchive:true})
+  const result=await executeSnapshot(document,{format:'html',htmlArchive:true})
   assert.equal(result.blob.type,'application/zip')
   assert.equal(result.filename,'导出测试-html.zip')
   const {default:JSZip}=await import('jszip'),archive=await JSZip.loadAsync(await result.blob.arrayBuffer())

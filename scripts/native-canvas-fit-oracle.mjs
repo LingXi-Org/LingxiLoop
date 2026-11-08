@@ -13,7 +13,7 @@ let phase='固定来源'
 async function main(){
 const args=Object.fromEntries(process.argv.slice(2).map(value=>value.replace(/^--/,'').split('=')))
 assert.ok(args['reference-root'],'请指定独立的固定版本参考目录')
-const reference=resolve(args['reference-root']),output=resolve(args.output??join(tmpdir(),'lingxi-fit-oracle')),golden=JSON.parse(await readFile(new URL('../docs/evidence/issue-707/source-design-fit-camera.json',import.meta.url),'utf8'))
+const reference=resolve(args['reference-root']),output=resolve(args.output??join(tmpdir(),'lingxi-fit-oracle')),golden=JSON.parse(await readFile(new URL('../scripts/fixtures/native-editors/source-design-fit-camera.json',import.meta.url),'utf8'))
 const source=await readFile(join(reference,golden.sourceFile),'utf8')
 assert.equal(createHash('sha256').update(source).digest('hex'),golden.sourceSha256)
 const {start,end}=golden.functionLocation
@@ -24,7 +24,7 @@ await mkdir(output,{recursive:true})
 const report={sourceCommit:golden.sourceCommit,mathCases:golden.cases.length,mathPassed:true,runtime:[],boardPreview:[],playMenu:[],scope:'固定源码纯数学和可选参考运行，不替代完整视觉、授权服务或性能门槛'}
 if(args.capture==='true'){
   phase='参考资源校验'
-  const inventory=JSON.parse(await readFile(new URL('../docs/evidence/issue-707/source-inventory.json',import.meta.url),'utf8'))
+  const inventory=JSON.parse(await readFile(new URL('../scripts/fixtures/native-editors/source-inventory.json',import.meta.url),'utf8'))
   for(const item of inventory.sources)assert.equal(createHash('sha256').update(await readFile(join(reference,item.path))).digest('hex'),item.sha256)
   report.referenceResourceHashesVerified=inventory.sources.length
   const runner=process.env.PLAYWRIGHT_MODULE??'playwright',{chromium}=await import(runner.startsWith('/')?pathToFileURL(runner).href:runner)

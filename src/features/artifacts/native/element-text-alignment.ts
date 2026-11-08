@@ -14,5 +14,5 @@ export function elementTextAlignmentValue(node:ArtifactNode,page:ArtifactPage):T
 }
 export function elementTextAlignmentPatch(node:ArtifactNode,page:ArtifactPage,value:TextAlignment|null){
  const before=nodeCodeEntries(node,page),values=new Map(before.map(entry=>[entry.name,entry.value]));if(value===null)values.delete('text-align');else values.set('text-align',value)
- return nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))
+ return nodeCodePatch(node,page,before,[...values].map(([name,value])=>({name,value})))
 }

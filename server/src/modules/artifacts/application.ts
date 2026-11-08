@@ -23,7 +23,7 @@ import {
   insertActivity,
   type ReportRow,
 } from './repository.js'
-import { listing, publish, readProjectFile, sha256, type WireEntry } from './store.js'
+import { listing, readProjectFile, sha256 } from './store.js'
 import { createArtifactWorkspacesApplication } from './workspaces-application.js'
 import { slideWorkspaceConversation } from './slides-workspace.js'
 import { ensureNativeDocument, NativeDocumentError, submitNativeRename, readNativePage } from './native-document.js'
@@ -116,24 +116,6 @@ export function createArtifactApplication(infrastructure: ArtifactInfrastructure
     }
     await publishArtifact(input.companyId, { kind: 'activity.created', artifactId: input.artifactId, activity })
     return activity
-  }
-
-  /** One save from the editor page or an agent: the upstream publish, then one change event for open editors. */
-  async function publishArtifactFiles(input: {
-    companyId: string; artifactId: string; actorId: string; actorKind: ArtifactActorKind
-    files: Record<string, WireEntry>; origin?: string
-  }) {
-    const artifact = await requireArtifact(input.companyId, input.artifactId)
-    const outcome = await transaction(run => publish(run, artifactKind(artifact.kind), artifact.id, input.files, input.actorId, artifact.kind === 'slides' && input.actorKind === 'agent'))
-    if (outcome.status === 200 && outcome.changed.length) {
-      await publishArtifact(input.companyId, { kind: 'files.changed', artifactId: artifact.id, paths: outcome.changed,
-        ver: outcome.body.version, ...(input.origin ? { origin: input.origin } : {}) })
-      if (input.actorKind === 'agent') {
-        await logActivity({ companyId: input.companyId, artifactId: artifact.id, actorId: input.actorId, actorKind: 'agent',
-          action: 'files_published', path: outcome.changed[0], detail: { paths: outcome.changed, seq: outcome.body.seq } })
-      }
-    }
-    return outcome
   }
 
   async function readArtifactFile(companyId: string, artifactId: string, path: string) {
@@ -307,7 +289,6 @@ export function createArtifactApplication(infrastructure: ArtifactInfrastructure
     listArtifactAvailableAgents: collaborationApplication.listArtifactAvailableAgents,
     listArtifacts: workspaceApplication.listArtifacts,
     listComments,
-    publishArtifactFiles,
     readArtifactFile,
     renameArtifact,
     replyComment,

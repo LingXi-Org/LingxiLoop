@@ -1,7 +1,0 @@
-{
-  "baselineCommit": "645ff2bd8dd2e661b6dd3bedff0370d68282b73f",
-  "baselineErrors": 748,
-  "candidateErrors": 748,
-  "sameNormalizedDiagnostics": true,
-  "qualified": false
-}

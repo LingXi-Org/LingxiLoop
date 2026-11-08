@@ -108,7 +108,7 @@ async function verifyWholeAndInlineClicks(page,rootSelector='body'){
 async function verifyMode(kind, browser, baseUrl, editorCase) {
   const visualChecks=['font-parity','text-style','element-layout','element-sizing','element-link','board-title','board-transform','design-artboard','page-radius','design-outline','slides-toolbar','inspector-code','code-style','inspector-load','slides-present-controls','slides-skipped-export','slide-speaker','slide-transitions','parity','table','table-stability','fonts','font-popup-layout','font-cas','fonts-lazy','fonts-readonly','svg-font','svg-font-error','svg-font-cancel','svg-font-module','canvas-pages','canvas-pages-cas','canvas-flow','canvas-contents','canvas-import','canvas-empty','canvas-layout-cache','canvas-links','canvas-title','canvas-pen','canvas-vector','canvas-vector-load','canvas-vector-retention','canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-fit-switch','canvas-fit-body','canvas-board-preview','canvas-board-export','canvas-board-preview-load','asset-reads','canvas-play-menu','asset-colors']
   const fixture = visualChecks.includes(options.checks) ? createVisualFixture(kind) : createFixture(kind, 'fixture', Array.from({ length: 50 }, (_, index) => `/api/artifacts/fixture/assets/image-${index + 1}`))
-  const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-fit-camera.json'),'utf8'))
+  const cameraReference=options['source-runtime']?JSON.parse(await readFile(resolve(options['source-runtime']),'utf8')):JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-fit-camera.json'),'utf8'))
   if(options['source-runtime']){assert.equal(cameraReference.sourceCommit,'016b39d7fdcc30bfacee31ea5541498ac53921c6');assert.equal(cameraReference.referenceResourceHashesVerified,12)}
   let document = fixture.document
   if(options.checks==='font-parity'){
@@ -256,7 +256,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(options['presentation-offpaper']==='true'){page.nodes.offpaper={...createNode('shape','offpaper'),x:-240,y:600,width:140,height:140,style:{fill:'#ff0000'}};page.nodeOrder.push('offpaper')}
   }
   if(['canvas-vector-edit','canvas-vector-edit-cas','canvas-vector-edit-retention','canvas-vector-edit-load','canvas-board-preview','canvas-board-export','canvas-board-preview-load','canvas-play-menu'].includes(options.checks)){
-    const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name==='open-enter').added[0]
+    const reference=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name==='open-enter').added[0]
     const node=canvasPenNode('editable-path',{x:2497.1,y:-1360.9,w:reference.w,h:reference.h,d:reference.d})
     document=applyOperations(document,prepareBatch(document,[...createCanvasContents(document,canvasPages(document)[0].id,'canvas-vector-body'),{type:'node.insert',pageId:'canvas-vector-body',node:{...node,scope:'canvas'}}])).document
   }
@@ -273,7 +273,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     document=applyOperations(document,prepareBatch(document,[...createCanvasContents(document,'positioned','positioned-body'),{type:'node.insert',pageId:'positioned-body',node:{...createNode('shape','positioned-object'),x:3000,y:4000,width:800,height:600,scope:'canvas',style:{fill:'#ff0000'}}}])).document
   }
   if(options.checks==='canvas-fit-switch')document=applyOperations(document,prepareBatch(document,[...createCanvasPage(document,'positioned'),{type:'page.insert',page:{...createPage('positioned-board','独立画板'),x:3000,y:4000,width:800,height:600,canvasPageId:'positioned'}}])).document
-  if(options.checks==='canvas-pen'){const geometry=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-pen.json'),'utf8')).cases[0].result,node={...createNode('drawing','thumbnail-pen'),x:100,y:600,width:geometry.w,height:geometry.h,path:{d:geometry.d,width:geometry.w,height:geometry.h},style:{stroke:'#8a8378',strokeWidth:2}};document.pages['page-3'].nodes[node.id]=node;document.pages['page-3'].nodeOrder.push(node.id)}
+  if(options.checks==='canvas-pen'){const geometry=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-pen.json'),'utf8')).cases[0].result,node={...createNode('drawing','thumbnail-pen'),x:100,y:600,width:geometry.w,height:geometry.h,path:{d:geometry.d,width:geometry.w,height:geometry.h},style:{stroke:'#8a8378',strokeWidth:2}};document.pages['page-3'].nodes[node.id]=node;document.pages['page-3'].nodeOrder.push(node.id)}
   if(['canvas-import','canvas-layout-cache'].includes(options.checks)){const samples={chinese:'中文自动换行'.repeat(50),english:'GOOD FOOD GOOD MOOD '.repeat(20),tabs:'a\tb\tc\td\te\tf\tg'.repeat(20),caps:'DDDQQQOOOGGG'.repeat(30)};importCanvasAnnotations(document,{'imported-note':{text:samples[options['import-case']??'chinese'],w:240,x:688,y:-778}},[]);if(options.checks==='canvas-layout-cache'){const body=document.pages[document.canvasPages[0].contentId];body.nodes['imported-note'].text='中文自动换行'.repeat(100);body.nodes['imported-note'].height=832;body.nodes['imported-note'].style.fontSize=32;body.nodes.unrelated={...createNode('shape','unrelated'),x:0,y:0};body.nodeOrder.push('unrelated');if(options['inherit-font']==='true'){const note=body.nodes['imported-note'];note.text='i'.repeat(2000);if(options['inherit-keyword'])note.style.fontFamily=options['inherit-keyword'];else delete note.style.fontFamily;const group={...createNode('group','inherited-group'),x:0,y:0,width:1000,height:8000,style:{fontFamily:'monospace'}};body.nodes[group.id]=group;body.nodeOrder.unshift(group.id);note.parentId=group.id;if(options['layout-case']){group.x=note.x;group.y=note.y;group.width=120;group.height=180;group.layout={mode:options['layout-case'],direction:'row',columns:1,align:'start'};note.x=0;note.y=0;note.text='a '.repeat(400);if(options['grid-second-row']==='true'){group.width=480;group.height=3000;group.layout={mode:'grid',columns:2,gap:20,align:'start'};for(let i=1;i<(options['grid-mixed']==='true'||options['grid-shapes-only']==='true'?6:4);i++){const sibling={...structuredClone(note),id:`grid-note-${i}`};if(options['grid-shapes-only']==='true'||options['grid-mixed']==='true'&&i>=2){sibling.type='shape';sibling.shape='rect';sibling.height=3128;delete sibling.text}body.nodes[sibling.id]=sibling;body.nodeOrder.push(sibling.id)}if(options['grid-shapes-only']==='true'){note.type='shape';note.shape='rect';note.height=3128;delete note.text}}}}}}
   if(options.checks==='canvas-empty')document={...document,pageOrder:[],pages:{}}
   if(options.checks==='canvas-flow'){
@@ -1677,7 +1677,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.equal(await node.evaluate(element=>element.style.getPropertyPriority('filter')),'important')
       assert.equal(await node.getAttribute('data-label'),'中文测试')
       assert.equal(await node.getAttribute('title'),'中文说明')
-      assert.equal(await node.evaluate(element=>element.tagName),'A')
+      assert.equal(await node.evaluate(element=>element.tagName),'H1');assert.equal(await node.locator('.native-element-link-hit').getAttribute('href'),'https://example.test/')
       if(options['code-case']==='drag'){
         const shape=page.locator('.native-stage [data-node-id="page-1-shape"]'),before=await shape.boundingBox()
         await page.mouse.move(before.x+before.width/2,before.y+before.height/2);await page.mouse.down();await page.mouse.move(before.x+before.width/2+20,before.y+before.height/2,{steps:4});await page.mouse.up()
@@ -1693,7 +1693,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         await page.keyboard.press('ArrowRight')
         await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.dataset.saveState==='saved')
         assert.equal(document.pages['page-1'].nodes['page-1-shape'].x,121)
-        assert.equal(document.pages['page-1'].nodes['page-1-shape'].css.left,'121px !important')
+        assert.equal(document.pages['page-1'].nodes['page-1-shape'].css?.left,undefined)
         const after=await shape.boundingBox();assert.ok(after.x>before.x&&after.x-before.x<2,JSON.stringify({before,after}))
         await page.keyboard.press('Control+z')
         await page.waitForFunction(()=>document.querySelector('.native-stage [data-node-id="page-1-shape"]').style.left==='120px')
@@ -2347,7 +2347,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     if(options.checks==='canvas-play-menu'){
       const before=JSON.stringify(document),board=page.locator('[data-artboard-id="page-1"]'),bounds=await board.boundingBox();assert.ok(bounds)
       const play=page.getByLabel('播放',{exact:true});await play.click();const menu=page.getByRole('group',{name:'播放选项',exact:true});await menu.waitFor();assert.equal(await menu.getByRole('button').count(),3);assert.equal(await menu.getByRole('group',{name:'静态画板',exact:true}).count(),1);assert.equal(await page.locator('.native-presenting').count(),0,'设计播放先打开画板菜单')
-      const source=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-playback.json'),'utf8')),sample=(cameraReference.playMenu??source.runtime).find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
+      const source=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-playback.json'),'utf8')),sample=(cameraReference.playMenu??source.runtime).find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light'))
       const metrics=await menu.evaluate(e=>({rect:e.getBoundingClientRect().toJSON(),heading:e.querySelector('.native-play-menu-heading').getBoundingClientRect().toJSON(),items:[...e.querySelectorAll('button')].map(item=>({label:item.textContent,rect:item.getBoundingClientRect().toJSON()}))}));await writeFile(join(output,'play-menu-metrics.json'),JSON.stringify(metrics,null,2));assert.ok(sample)
       for(const [actual,expected]of[[metrics.rect,sample.snapshot.rect],[metrics.heading,sample.snapshot.heading.rect],...metrics.items.map((item,i)=>[item.rect,sample.snapshot.items[i].rect])])for(const key of ['x','y','width','height'])assert.ok(Math.abs(actual[key]-expected[key])<=1,`播放菜单${key}应符合固定源码：原生${actual[key]}，参考${expected[key]}`)
       await page.screenshot({path:join(output,`design-play-menu-${options['canvas-theme']??'light'}.png`)})
@@ -2487,7 +2487,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       if(options['preview-deleted']==='true'){document=applyOperations(document,prepareBatch(document,[{type:'page.delete',pageId:previewId}])).document;await preview.waitFor({state:'detached'});await page.waitForFunction(()=>document.activeElement===document.querySelector('[data-native-artifact-editor]'),undefined,{timeout:3000});assert.equal(receipts.length,0);assert.deepEqual(errors,[]);return{kind:'isolated-board-preview-deleted-diagnostic',peerDeletionClosesPreview:true,editorFocusRestored:true,noLocalDocumentWrites:true,consoleOrPageErrors:errors}}
       assert.equal(await preview.getByRole('radiogroup',{name:'画板预览缩放',exact:true}).count(),1,'填满与适应使用源码的单选组语义与键盘行为')
       await preview.getByText(`LingxiLoop ${previewOrdinal}`,{exact:true}).waitFor();const idleStart=await page.evaluate(()=>window.__geometryMessages);await page.waitForTimeout(500);assert.ok((await page.evaluate(()=>window.__geometryMessages))-idleStart<12,'静止预览不应持续向Worker发送重复可见性查询')
-      const source=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-board-preview.json'),'utf8')),sample=source.runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light')),fit=options['preview-small']==='true'?source.smallArtboard.fit:sample.fit
+      const source=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-board-preview.json'),'utf8')),sample=source.runtime.find(row=>row.width===Number(options.width??1440)&&row.height===Number(options.height??1000)&&row.theme===(options['canvas-theme']??'light')),fit=options['preview-small']==='true'?source.smallArtboard.fit:sample.fit
       for(const [key,value]of Object.entries(fit).filter(([key])=>['x','y','width','height'].includes(key)))assert.ok(Math.abs((await artboard.boundingBox())[key]-value)<=1,`全窗口适应视图的${key}应符合固定源码`)
       if(options['preview-comments']==='true'){
         await preview.getByRole('button',{name:'评论',exact:true}).click();const heading=await preview.locator(`[data-node-id="${previewId}-heading"]`).boundingBox();await page.mouse.click(heading.x+heading.width/2,heading.y+heading.height/2)
@@ -2739,7 +2739,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
         }
       }
       if(['initial','handle','break','cancel'].includes(editorCase))await page.screenshot({path:join(output,`design-point-${editorCase}-${options['canvas-theme']??'light'}.png`)})
-      const source=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector-edit.json'),'utf8')).runtimeCases.find(sample=>sample.name===editorCase)
+      const source=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-vector-edit.json'),'utf8')).runtimeCases.find(sample=>sample.name===editorCase)
       assert.equal(await editor.locator('[data-vector-part^="a:"]').count(),source.state.parts.filter(p=>p.part.startsWith('a')).length)
       if(['initial','tab','keyboard-enter','cancel','undo-point'].includes(editorCase)){assert.equal(receipts.length,editorCase==='undo-point'?1:0);assert.deepEqual(document.pages['canvas-vector-body'].nodes['editable-path'],before)}
       else{
@@ -2828,7 +2828,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       return{kind:'isolated-canvas-vector-retention-diagnostic',scenario:editorCase,pointsRetained:editorCase!=='single-switch',oneSharedCommit:true,...(editorCase.startsWith('permission')||editorCase.startsWith('denied')||editorCase==='page'?{readonlyUnmountRetained:true,recoveryCopyContainsPoints:true,permissionRestored:true,...(editorCase==='page'?{canvasIsolation:true}:{})}:editorCase==='single-switch'?{sourceSingleAnchorDiscard:true}:{viewportPanned:true,noDraftMutation:true}),scope:'真实React与可信输入，受控HTTP权限回执，不代替真实授权API',consoleOrPageErrors:errors}
     }
     if(options.checks==='canvas-vector'){
-      const reference=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name===editorCase)
+      const reference=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-vector.json'),'utf8')).runtimeCases.find(sample=>sample.name===editorCase)
       await page.getByLabel('绘图工具',{exact:true}).click();await page.getByRole('group',{name:'绘图工具选项',exact:true}).getByRole('button',{name:/^钢笔/}).click()
       await page.waitForFunction(()=>document.querySelector('[data-native-artifact-editor]').dataset.vectorReady==='true')
       await page.locator('[data-native-vector-tool]').waitFor({state:'attached'})
@@ -2839,7 +2839,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
           await page.mouse.move(a,b);await page.mouse.down();await page.mouse.move(c,d,{steps:8});await page.mouse.up()
           if(editorCase==='middle-handle'){
             previewStyle=await page.locator('[data-native-vector-tool] [data-part=draft]').evaluate(e=>({stroke:getComputedStyle(e).stroke,strokeWidth:getComputedStyle(e).strokeWidth,nearby:[...e.parentElement.querySelectorAll('rect,circle,line')].map(c=>({tag:c.tagName,r:c.getAttribute('r'),width:c.getAttribute('width'),fill:getComputedStyle(c).fill,stroke:getComputedStyle(c).stroke,strokeWidth:getComputedStyle(c).strokeWidth}))}))
-            const expected=JSON.parse(await readFile(join(root,'docs/evidence/issue-707/source-design-vector.json'),'utf8')).previewStyles.find(row=>row.theme===(options['canvas-theme']==='dark'?'dark':'light'))
+            const expected=JSON.parse(await readFile(join(root,'scripts/fixtures/native-editors/source-design-vector.json'),'utf8')).previewStyles.find(row=>row.theme===(options['canvas-theme']==='dark'?'dark':'light'))
             assert.equal(previewStyle.stroke,expected.stroke);assert.equal(previewStyle.strokeWidth,expected.strokeWidth);assert.deepEqual(previewStyle.nearby,expected.nearby)
             await page.screenshot({path:join(output,`design-vector-draft-${options['canvas-theme']??'light'}.png`)})
           }

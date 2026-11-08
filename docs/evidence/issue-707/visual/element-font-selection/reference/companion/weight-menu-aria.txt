@@ -1,6 +1,0 @@
-- 'menu "Weight: Mixed"':
-  - group:
-    - menuitemradio "Regular"
-    - menuitemradio "Italic"
-    - menuitemradio "Bold"
-    - menuitemradio "Bold italic"

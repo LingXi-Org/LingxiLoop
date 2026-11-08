@@ -1,3 +1,4 @@
+import { seedOriginalRevision } from './_artifact-original-fixture.js'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
@@ -13,7 +14,7 @@ import {
   nativeSourceArchive, readNativeDocument, readNativeOriginal, readNativeOriginalBlob, readNativeOriginalResource, readNativePage, readNativePageSnapshot, restoreNativeRevision, submitNativeOperations, submitNativeRename,
 } from '../modules/artifacts/native-document.js'
 import type { ArtifactRow } from '../modules/artifacts/repository-types.js'
-import { listing, publish, readProjectFile, sha256 } from '../modules/artifacts/store.js'
+import { listing, readProjectFile, sha256 } from '../modules/artifacts/store.js'
 import { installStorageProvider, type Storage } from '../storage.js'
 import {projectNativeSnapshot} from '../modules/artifacts/native-projection.js'
 
@@ -146,10 +147,6 @@ test('native Slides manifest and page reads are allowed without opening legacy f
   for (const path of ['project/pages/../document.json', 'project/pages/nested/page.json', 'project/pages/.hidden.json']) {
     assert.equal(await readProjectFile(db, definition, item.id, path), null)
   }
-  const rejected = await withTransaction(db, client => publish(client, definition, item.id, {
-    'project/slides/legacy.html': { base64: Buffer.from('<h1>Retired write</h1>').toString('base64'), contentType: 'text/html', ifMatch: null },
-  }, 'human'))
-  assert.equal(rejected.status, 409); assert.equal(rejected.body.code, 'editor_upgrade_required')
   assert.deepEqual((await snapshot(item.id)).document, before.document)
 })
 
@@ -192,12 +189,8 @@ test('shared undo/redo includes Agent transactions and refuses a stale second cl
   assert.deepEqual(changes.items.map(change => change.kind), ['undo', 'redo', 'undo', 'edit'])
 })
 
-test('native files reject old editor publishes and retain tenant scope', async () => {
+test('native operation writes retain tenant scope', async () => {
   const item = await withText()
-  const blocked = await withTransaction(db, client => publish(client, artifactKind('slides'), item.id, {
-    'project/deck.json': { base64: Buffer.from('{}').toString('base64'), contentType: 'application/json' },
-  }, 'human'))
-  assert.equal(blocked.status, 409); assert.equal(blocked.body.code, 'editor_upgrade_required')
   const current = await snapshot(item.id)
   await assert.rejects(withTransaction(db, client => submitNativeOperations(client, { artifactId: item.id, companyId: 'other-company', actorId: 'human', actorKind: 'user',
     request: prepareBatch(current.document, [{ type: 'document.patch', patch: { title: 'Unauthorized' } }]) })), { status: 404 })
@@ -250,9 +243,8 @@ test('stored legacy PNGs convert to immutable original URLs without isolating su
     [pagePath]: { bytes: Buffer.from(source), contentType: 'text/html' },
     [imagePath]: { bytes: png, contentType: 'image/png' },
   }
-  const published = await withTransaction(db, client => publish(client, artifactKind('slides'), item.id,
-    Object.fromEntries(Object.entries(files).map(([path, file]) => [path, { base64: file.bytes.toString('base64'), contentType: file.contentType, ifMatch: null }])), 'human'))
-  assert.equal(published.status, 200)
+  const originalRevision = await withTransaction(db, client => seedOriginalRevision(client, item.id,
+    Object.fromEntries(Object.entries(files).map(([path, file]) => [path, { body: file.bytes, contentType: file.contentType }])), 'human'))
   const stored = (await db.query<{ body: Buffer; content_type: string; sha256: string }>('SELECT body,content_type,sha256 FROM artifact_files WHERE artifact_id=$1 AND path=$2', [item.id, imagePath])).rows[0]
   assert.ok(Buffer.isBuffer(stored.body))
   assert.deepEqual(stored.body, png)
@@ -288,7 +280,7 @@ test('stored legacy PNGs convert to immutable original URLs without isolating su
   assert.equal((await snapshot(item.id)).document.pages.cover.nodes.title.text, 'Edited native title')
   const currentVersion = (await listing(db, item.id)).ver
   const restored = await withTransaction(db, client => restoreNativeRevision(client, {
-    artifactId: item.id, companyId: 'company', actorId: 'human', seq: String((published.body as { seq: number }).seq), version: currentVersion,
+    artifactId: item.id, companyId: 'company', actorId: 'human', seq: String(originalRevision.seq), version: currentVersion,
   }))
   assert.equal(restored.document.pages.cover.nodes.title.text, 'Editable original 中文')
   assert.equal(Object.values(restored.document.pages.cover.nodes).filter(node => node.type === 'image').length, 2)
@@ -313,8 +305,8 @@ test('old source converts without rewriting originals and retained checkpoints r
   const sourceFiles = { 'project/deck.json': JSON.stringify({ v: 4, title: 'Original deck', order: ['cover'] }),
     'project/slides/cover.html': '<section id="cover"><h1 id="title">Original title</h1><p>中文 $x^2$</p></section>',
     'project/ds/reference/styles.css': 'h1{color:#224466}' }
-  await withTransaction(db, client => publish(client, artifactKind('slides'), item.id, Object.fromEntries(Object.entries(sourceFiles).map(([path, content]) => [path,
-    { base64: Buffer.from(content).toString('base64'), contentType: 'text/plain', ifMatch: null }])), 'human'))
+  await withTransaction(db, client => seedOriginalRevision(client, item.id, Object.fromEntries(Object.entries(sourceFiles).map(([path, content]) => [path,
+    { body: Buffer.from(content), contentType: 'text/plain' }])), 'human'))
   const context = { db, transaction: <T>(run: (client: import('../db/queryable.js').Queryable) => Promise<T>) => withTransaction(db, run) }
   const readOnly = await ensureNativeDocument(context, { artifactId: item.id, companyId: 'company', actorId: 'human', write: false })
   assert.ok(readOnly.document.pageOrder.length)
@@ -341,17 +333,15 @@ test('restoring a historical PNG resolves its exact recorded image without chang
   const oldImage = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aX9sAAAAASUVORK5CYII=', 'base64')
   const latestImage = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC', 'base64')
   const publishVersion = async (label: string, image: Buffer) => {
-    const current = await listing(db, item.id)
     const source = `<section id="cover"><h1 id="title">${label}</h1><img id="photo" src="${imagePath}"></section>`
     const files = {
       'project/deck.json': { bytes: Buffer.from(JSON.stringify({ v: 4, title: label, order: ['cover'] })), contentType: 'application/json' },
       [pagePath]: { bytes: Buffer.from(source), contentType: 'text/html' },
       [imagePath]: { bytes: image, contentType: 'image/png' },
     }
-    const result = await withTransaction(db, client => publish(client, artifactKind('slides'), item.id,
-      Object.fromEntries(Object.entries(files).map(([path, file]) => [path, { base64: file.bytes.toString('base64'), contentType: file.contentType, ifMatch: current.files[path]?.sha256 ?? null }])), 'human'))
-    assert.equal(result.status, 200)
-    return { seq: String((result.body as { seq: number }).seq), files }
+    const result = await withTransaction(db, client => seedOriginalRevision(client, item.id,
+      Object.fromEntries(Object.entries(files).map(([path, file]) => [path, { body: file.bytes, contentType: file.contentType }])), 'human'))
+    return { seq: String(result.seq), files }
   }
   const old = await publishVersion('Historical page', oldImage)
   const latest = await publishVersion('First conversion page', latestImage)
@@ -391,14 +381,12 @@ test('restored legacy embeds retain their checkpoint resources without changing 
   const item = await artifact('slides', false)
   const cssPath = 'project/ds/reference/theme.css'
   const legacy = async (label: string) => {
-    const before = await listing(db, item.id)
     const files = { 'project/deck.json': JSON.stringify({ v: 4, title: label, order: ['cover'] }),
       'project/slides/cover.html': `<link rel="stylesheet" href="../ds/reference/theme.css"><h1>${label}</h1><script>document.body.dataset.version='${label}'</script>`,
       [cssPath]: `h1{--checkpoint:${label}}` }
-    const outcome = await withTransaction(db, client => publish(client, artifactKind('slides'), item.id,
-      Object.fromEntries(Object.entries(files).map(([path, content]) => [path, { base64: Buffer.from(content).toString('base64'), contentType: 'text/plain', ifMatch: before.files[path]?.sha256 ?? null }])), 'human'))
-    assert.equal(outcome.status, 200)
-    return { seq: String((outcome.body as { seq: number }).seq), version: (await listing(db, item.id)).ver }
+    const outcome = await withTransaction(db, client => seedOriginalRevision(client, item.id,
+      Object.fromEntries(Object.entries(files).map(([path, content]) => [path, { body: Buffer.from(content), contentType: 'text/plain' }])), 'human'))
+    return { seq: String(outcome.seq), version: (await listing(db, item.id)).ver }
   }
   const old = await legacy('A')
   const latest = await legacy('B')
@@ -421,11 +409,9 @@ test('an Agent legacy source token cannot migrate or overwrite a newer source', 
   const item = await artifact('slides', false)
   const path = 'project/deck.json'
   const write = async (title: string) => {
-    const current = (await listing(db, item.id)).files[path]
-    const outcome = await withTransaction(db, client => publish(client, artifactKind('slides'), item.id, { [path]: {
-      base64: Buffer.from(JSON.stringify({ v: 4, title, order: [] })).toString('base64'), contentType: 'application/json', ifMatch: current?.sha256 ?? null,
+    await withTransaction(db, client => seedOriginalRevision(client, item.id, { [path]: {
+      body: Buffer.from(JSON.stringify({ v: 4, title, order: [] })), contentType: 'application/json',
     } }, 'human'))
-    assert.equal(outcome.status, 200)
   }
   const context = { db, transaction: <T>(run: (client: import('../db/queryable.js').Queryable) => Promise<T>) => withTransaction(db, run) }
   const input = { artifactId: item.id, companyId: 'company', actorId: 'human', write: false }

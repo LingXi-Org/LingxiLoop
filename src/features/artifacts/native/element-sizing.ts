@@ -19,7 +19,7 @@ export function elementSizingPatch(node:ArtifactNode,page:ArtifactPage,changes:P
       for(const side of ['right','bottom'])values.delete(side)
     }
   }
-  const result=nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))
+  const result=nodeCodePatch(node,page,before,[...values].map(([name,value])=>({name,value})))
   for(const [axis,flag]of [['width','implicitWidth'],['height','implicitHeight']] as const){
     if(!Object.hasOwn(changes,axis))continue
     const value=changes[axis];if(value&&value.trim()==='')continue

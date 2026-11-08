@@ -1,3 +1,4 @@
+import {isFlowChild} from '../../../../shared/artifact-geometry'
 import {artifactTextHeading,artifactTextRootTag} from '../../../../shared/artifact-text-root'
 import {pageRadiusCss} from '../../../../shared/artifact-page-radius'
 import { canvasContentOwner } from '../../../../shared/artifact-canvas-pages'
@@ -13,7 +14,7 @@ import { appearance, nodeTransform, paddingCss } from '../../../../shared/artifa
 import { editorFontFamily } from './editor-fonts'
 import { SvgImage } from './SvgImage'
 import {expandVisibleNodes} from './visibility'
-import {isFlowChild,isNaturalText} from './natural-layout'
+import {isNaturalText} from './natural-layout'
 import {canvasTextMetrics} from '../../../../shared/artifact-canvas-typography'
 import { inheritedSvgFont, pageDefaultFontFamily } from './svg-presentation'
 import './editor-fonts.css'

@@ -10,9 +10,9 @@ import { acquireArtifactSharedFence, availableAgents, releaseArtifactSharedFence
 import { createArtifactExecution } from './execution.js'
 import { createArtifactRuntime } from './runtime.js'
 import type { SharedStateUpdate } from '@lingxi-org/lingxios'
-import { ensureSlideWorkspace, slideEditingContext, slideWorkspaceConversation, restoreSlideRevision } from './slides-workspace.js'
+import { ensureSlideWorkspace, slideEditingContext, slideWorkspaceConversation } from './slides-workspace.js'
 import { syncProductChannel } from '../../agent-runtime/conversations.js'
-import { readNativeDocument, restoreNativeRevision } from './native-document.js'
+import { ensureNativeDocument, restoreNativeRevision } from './native-document.js'
 import { listing } from './store.js'
 
 const collaboration = createArtifactRuntime(async () => (await import('../../agent-runtime/runtime.js')).lingxiOSControl())
@@ -80,7 +80,6 @@ export const {
   listArtifactAvailableAgents,
   listArtifacts,
   listComments,
-  publishArtifactFiles,
   readArtifactFile,
   renameArtifact,
   replyComment,
@@ -116,16 +115,9 @@ export async function openSlideWorkspace(companyId: string, artifactId: string, 
 }
 
 export async function restoreSlides(companyId: string, artifactId: string, seq: string, version: string, userId: string) {
-  if (await readNativeDocument(pool, artifactId)) {
-    const result = await withTransaction(pool, db => restoreNativeRevision(db, { companyId, artifactId, seq, version, actorId: userId }))
-    await publish(CH_ARTIFACTS, { type: 'artifact.changed', companyId, artifactId, kind: 'files.changed',
-      paths: ['project/document.json', ...result.changedPageIds.map(id => `project/pages/${id}.json`)], timestamp: new Date().toISOString() })
-    return { status: 200, body: { ...result, version: (await listing(pool, artifactId)).ver }, changed: result.changedPageIds }
-  }
-  const outcome = await withTransaction(pool, db => restoreSlideRevision(db, artifactId, seq, version, userId))
-  if (outcome.status === 200 && outcome.changed.length) {
-    await publish(CH_ARTIFACTS, { type: 'artifact.changed', companyId, artifactId, artifactKind: 'slides', kind: 'files.changed',
-      paths: outcome.changed, ver: outcome.body.version, timestamp: new Date().toISOString() })
-  }
-  return outcome
+  await ensureNativeDocument({ db: pool, transaction: run => withTransaction(pool, run) }, { artifactId, companyId, actorId: userId, write: true })
+  const result = await withTransaction(pool, db => restoreNativeRevision(db, { companyId, artifactId, seq, version, actorId: userId }))
+  await publish(CH_ARTIFACTS, { type: 'artifact.changed', companyId, artifactId, kind: 'files.changed',
+    paths: ['project/document.json', ...result.changedPageIds.map(id => `project/pages/${id}.json`)], timestamp: new Date().toISOString() })
+  return { status: 200, body: { ...result, version: (await listing(pool, artifactId)).ver }, changed: result.changedPageIds }
 }

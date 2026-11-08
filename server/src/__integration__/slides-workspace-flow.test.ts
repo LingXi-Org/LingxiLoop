@@ -175,9 +175,7 @@ test('authenticated Slides cooperation keeps source provenance and completes in 
   const heading = createNode('text', 'heading'); heading.text = 'Verified title'
   await invoke(builder, 'apply_ops', { artifactId: deck.id, ...prepareBatch(initial, [{ type: 'node.insert', pageId: 'page-1', node: heading }], randomUUID()) })
   assert.equal((await readNativeDocument(pool, deck.id))!.document.pages['page-1'].nodes.heading.text, 'Verified title')
-  await assert.rejects(invoke(builder, 'write_files', { artifactId: deck.id, files: {
-    'project/slides/one.html': { content: '<h1>Retired writer</h1>', ifMatch: null },
-  } }), /native editor|versioned operations/)
+  assert.equal(createArtifactTools('slides', lingxiOSControl).some(tool => ['slides.write_files', 'slides.edit_file'].includes(tool.action)), false)
 
   const result = await invoke(builder, 'submit_report', { artifactId: deck.id, finding: 'Saved title', evidenceRefs: [{ kind: 'file', id: path }], confidence: 1 }) as { result: { id: string } }
   const verification = { artifactId: deck.id, finding: 'Read the saved title', evidenceRefs: [{ kind: 'file', id: path }], confidence: 1,
@@ -223,15 +221,13 @@ test('a sent editor comment is delivered to the dedicated room through the real 
   const created = await request(`/projects/${projectId}/slides`, 'POST', { title: 'Comment delivery' })
   const deck = await created.json() as { id: string }
   const workspace = await (await request(`/artifacts/${deck.id}/slides-workspace`, 'POST')).json() as { conversationId: string }
-  const grant = await (await request(`/artifacts/${deck.id}/editor-grant`, 'POST')).json() as { url: string }
-  const response = await fetch(origin + grant.url + '__comments', { method: 'POST', headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ anchor: 'slide:one', label: '第一页', text: '请修改选中标题。', send: true }) })
+  const response = await request(`/artifacts/${deck.id}/comments`, 'POST', { anchor: 'slide:one', label: '第一页', text: '请修改选中标题。', send: true })
   assert.equal(response.status, 201)
   const requests = (await pool.query("SELECT event FROM agent_native_event_outbox WHERE event->>'artifactId'=$1 AND event->>'type'='im.user'", [deck.id])).rows
   assert.equal(requests.length, 1)
   assert.equal(requests[0].event.channelId, workspace.conversationId)
   await deliverUserEvents(requests.map(row => row.event))
-  const snapshot = await (await fetch(origin + grant.url + '__comments')).json() as { threads: { agent?: { status: string } }[] }
+  const snapshot = await (await request(`/artifacts/${deck.id}/comments`)).json() as { threads: { agent?: { status: string } }[] }
   assert.equal(snapshot.threads[0]?.agent?.status, 'delivered')
 })
 

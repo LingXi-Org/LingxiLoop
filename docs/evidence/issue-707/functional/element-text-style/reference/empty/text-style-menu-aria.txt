@@ -1,4 +1,0 @@
-- 'menu "Text style: Heading 1"':
-  - textbox "Search styles": 无匹配样式
-  - button "Clear"
-  - menuitem "No matches" [disabled]

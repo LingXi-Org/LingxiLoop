@@ -1,8 +1,0 @@
-{
-  "kind": "isolated-narrow-editor-diagnostic",
-  "mode": "slides",
-  "singleToolbarRow": true,
-  "floatingPageNavigation": true,
-  "scope": "390×844 container and real editor through controlled HTTP fixture",
-  "consoleOrPageErrors": []
-}

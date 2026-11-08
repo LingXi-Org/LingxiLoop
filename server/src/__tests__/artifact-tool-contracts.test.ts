@@ -150,3 +150,13 @@ test('原生Agent工具承载独立打印模式且拒绝未知模式',()=>{
     assert.throws(()=>tool.parse({...batch,operations:[{type:'page.patch',pageId:'p',patch:{print:'unknown'}}]}))
   }
 })
+
+// 只有版本化操作可写稿件，旧整文件写入不再作为可调用工具暴露。
+test('原生稿件只注册操作写入接口', () => {
+  for (const kind of ['design', 'slides'] as const) {
+    const tools = createArtifactTools(kind, control)
+    assert.ok(tools.some(tool => tool.action === `${kind}.apply_ops`))
+    for (const method of ['write_files', 'edit_file'])
+      assert.equal(tools.some(tool => tool.action === `${kind}.${method}`), false)
+  }
+})

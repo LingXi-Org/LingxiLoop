@@ -1,4 +1,4 @@
-import type { ArtifactNodeType } from '../../../../shared/artifact-document'
+import type { ArtifactNodeType, ArtifactTheme } from '../../../../shared/artifact-document'
 
 /** Do not surface browser, library or server English diagnostics as editor copy. */
 export function editorError(error: unknown, fallback: string): string {
@@ -15,4 +15,13 @@ export const nodeTypeLabels = {drawing:'绘图',video:'视频',shape:'形状',gr
 export function editorColorLabel(value:string):string{
   const keyword=value.trim().toLowerCase()
   return keyword==='none'?'无':keyword==='transparent'?'透明':value
+}
+
+/** 内置资源的产品名称本地化；作者内容与原始资源保持不变。 */
+export function editorThemeLabel(theme: Pick<ArtifactTheme, 'name' | 'source'>): string {
+  const labels: Record<string, string> = { 'slides-builtin': '经典', 'baoyu-ember': '余烬', 'baoyu-seazar': '塞扎尔' }
+  const label = theme.source && labels[theme.source.namespace]
+  if (!label) return theme.name
+  const variant = theme.source?.variant === 'dark' ? '深色' : theme.source?.variant === 'light' ? '浅色' : ''
+  return label + (variant ? ` · ${variant}` : '')
 }

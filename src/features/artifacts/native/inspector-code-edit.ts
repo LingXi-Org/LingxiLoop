@@ -1,3 +1,4 @@
+import {isFlowChild} from '../../../../shared/artifact-geometry'
 import {artifactNodeSchema,artifactStyleSchema,type ArtifactNode,type ArtifactPage,type ArtifactStyle} from '../../../../shared/artifact-document'
 import type {InspectorCodeEntry} from '../../../../shared/artifact-inspector-code'
 import {isNativeCodeAttribute,isNativeCodeStyle} from '../../../../shared/artifact-node-code'
@@ -25,7 +26,7 @@ export function nodeCodeEntries(node:ArtifactNode,page:ArtifactPage):InspectorCo
 }
 
 /** Apply only edited declarations so mixed selections retain their other values. */
-export function nodeCodePatch(node:ArtifactNode,before:readonly InspectorCodeEntry[],after:readonly InspectorCodeEntry[]):{patch:Partial<ArtifactNode>;unset:string[]}{
+export function nodeCodePatch(node:ArtifactNode,page:ArtifactPage,before:readonly InspectorCodeEntry[],after:readonly InspectorCodeEntry[]):{patch:Partial<ArtifactNode>;unset:string[]}{
   const oldValues=new Map(before.map(entry=>[entry.name,entry.value])),newValues=new Map(after.map(entry=>[entry.name,entry.value]))
   const patch:Partial<ArtifactNode>={},unset:string[]=[],style:Record<string,unknown>={},css={...node.css},attributes={...node.attributes}
   let cssChanged=false,attributesChanged=false
@@ -41,7 +42,7 @@ export function nodeCodePatch(node:ArtifactNode,before:readonly InspectorCodeEnt
     if(value!==undefined&&!isNativeCodeStyle(name,value))throw new Error(`样式「${name}」格式无效或含有活动内容。`)
     const field=styleFields[name],number=value===undefined?undefined:unitless.has(field)?(/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(value)?Number(value):undefined):pixel(value)??(field==='strokeWidth'&&/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(value)?Number(value):undefined)
     const mapped=value!==undefined&&/!important\s*$/i.test(value)?undefined:field&&numeric.has(field)?number:value
-    if(geometry[name]&&number!==undefined&&artifactNodeSchema.shape[geometry[name]].safeParse(number).success){patch[geometry[name]]=number;delete css[name];cssChanged=cssChanged||Object.hasOwn(node.css??{},name)}
+    if(geometry[name]&&!(isFlowChild(page,node)&&(name==='left'||name==='top'))&&number!==undefined&&artifactNodeSchema.shape[geometry[name]].safeParse(number).success){patch[geometry[name]]=number;delete css[name];cssChanged=cssChanged||Object.hasOwn(node.css??{},name)}
     else if(field&&(value===undefined||mapped!==undefined&&artifactStyleSchema.shape[field].safeParse(mapped).success)){
       if(value===undefined)unset.push(`style.${field}`);else style[field]=numeric.has(field)?number:value
       if(name==='color')unset.push('style.themeColor')
