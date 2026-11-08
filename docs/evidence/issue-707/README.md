@@ -536,3 +536,10 @@ D41补齐[文本可选属性](functional/element-text-properties.json)：强调�
 
 
 8b3a1c6e普通CI42433149942及[真实静态图](performance/static-profile-8b3a1c6e.json)42433144142成功，联合850338仅为静态估计。[复审](reviews/8b3a1c6e.json)确认原三个反例通过，又在旧typed装饰与同名CSS并存文档实测顺序变体。现直接读取typed基值和原始CSS顺序，不将去重Map插入位置当作者顺序。两版各4保存/历史反例及各72固定浏览器样式组合通过、20单位通过；保留新单位修复前失败。新增按钮状态也遵循实际长短写顺序。见[旧稿修复](functional/element-text-properties-typed-order.json)。新候选CI和只读复审待执行，完整资格仍false。
+
+
+59e0c5cd普通CI42434147781、[生产静态图](performance/static-profile-59e0c5cd.json)42434142735及[限定只读复审](reviews/59e0c5cd.json)成功，原装饰/列表反例闭合；静态联合850325仍不是实际性能通过。
+
+a291[真实性能诊断](performance/diagnostic-a2918e44.json)42428025914完成，完整脱敏stdout解析1公共收据+8有限数值记录，[独立后验](reviews/a291-actual-diagnostic.json)复算一致。8样本6成功2失败，两个基线完整导航各3导出超时保留，qualified=false；每格每臂仅1样本。Design完整导航/工作区脚本+5.44%/+26.35%；Slides启动+23.31%/+15.87%、脚本+5.33%/+10.09%、PSS+30.37%/+16.77%。候选三次输入的nearest-rank p95依次40.9/35.8/36.1/37.7ms，不能代替最终10组统计。Slides两臂均1页6节点，候选缩略图8少于基线13且自然图像像素相同；JS堆计数与最大Worker分组不能唯一解释Renderer PSS差。
+
+[新增关闭图标隔离](performance/seventh-shared-icon.json)：真实图确认原生入口只为x图标绑定查询库混合chunk。沿用已有共享叶子方案仅加入x，组件与路径不改，保持七叶/唯一React校验。12图标/图分析与25合同本地通过；新候选生产图、实际收益和独立审查待验证。没有据此宣称解决全部脚本、内存或启动超预算。

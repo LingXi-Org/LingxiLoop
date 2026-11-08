@@ -32,8 +32,8 @@ await build({
       const chunks = Object.values(bundle).filter(value => value.type === 'chunk')
       const sharedIcons=chunks.find(chunk=>chunk.name==='artifact-shared-icons')
       if(sharedIcons){
-        assert.equal(sharedIcons.moduleIds.length,6,'The measured shared icon chunk must own only six leaf modules')
-        assert.ok(sharedIcons.moduleIds.every(id=>/\/node_modules\/lucide-react\/dist\/esm\/icons\/(bot|image|chevron-down|ellipsis|chevron-left|chevron-right)\.mjs$/.test(id.replaceAll('\\','/'))),'The shared icon chunk must not absorb React or other dependencies')
+        assert.equal(sharedIcons.moduleIds.length,7,'The measured shared icon chunk must own only seven leaf modules')
+        assert.ok(sharedIcons.moduleIds.every(id=>/\/node_modules\/lucide-react\/dist\/esm\/icons\/(bot|image|chevron-down|ellipsis|chevron-left|chevron-right|x)\.mjs$/.test(id.replaceAll('\\','/'))),'The shared icon chunk must not absorb React or other dependencies')
       }
       const owns = (chunk, suffix) => chunk.moduleIds.some(id => id.replaceAll('\\', '/').endsWith(suffix))
       const rootChunks = Object.fromEntries(Object.entries(openingModuleRoles).map(([role,modules])=>[role,modules.map(module=>{

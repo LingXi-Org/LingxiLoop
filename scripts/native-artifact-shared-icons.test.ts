@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs'
 import {nativeSharedIconChunk} from './native-artifact-shared-icons'
 
 test('only the measured shared public icons receive an explicit chunk',()=>{
- for(const icon of ['bot','image','chevron-down','ellipsis','chevron-left','chevron-right']){
+ for(const icon of ['bot','image','chevron-down','ellipsis','chevron-left','chevron-right','x']){
   assert.equal(nativeSharedIconChunk(`/repo/node_modules/lucide-react/dist/esm/icons/${icon}.mjs`),'artifact-shared-icons')
   assert.equal(nativeSharedIconChunk(`C:\\repo\\node_modules\\lucide-react\\dist\\esm\\icons\\${icon}.mjs`),'artifact-shared-icons')
  }
@@ -27,4 +27,11 @@ test('every measured native icon co-located along a forbidden UI path is isolate
    for(const module of chunk.publicDependencyModules)if(module.packageName==='lucide-react'&&nativeModules.has(module.packageRelativeModulePath))assert.equal(nativeSharedIconChunk('/repo/node_modules/lucide-react/'+module.packageRelativeModulePath),'artifact-shared-icons',`${filename}: ${name} still shares ${module.packageRelativeModulePath}`)
   }
  }
+})
+
+test('the measured close icon does not load an unrelated query library with native editing',()=>{
+ const profile=JSON.parse(readFileSync(new URL('../docs/evidence/issue-707/performance/static-profile-8b3a1c6e.json',import.meta.url),'utf8')).profiles[1]
+ const query=profile.nativeIncremental.chunkDetails.find((chunk:{publicDependencyModules:{packageName:string;packageRelativeModulePath:string}[]})=>chunk.publicDependencyModules.some(module=>module.packageName==='lucide-react'&&module.packageRelativeModulePath==='dist/esm/icons/x.mjs'))
+ assert.ok(query.dependencyPackages.some((entry:{label:string})=>entry.label==='dependency:@tanstack/query-core'))
+ assert.equal(nativeSharedIconChunk('/repo/node_modules/lucide-react/dist/esm/icons/x.mjs'),'artifact-shared-icons')
 })

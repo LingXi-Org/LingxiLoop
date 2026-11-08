@@ -1,0 +1,32 @@
+{
+  "referenceProfile": "static-profile-8b3a1c6e.json",
+  "fixedBeforeCommit": "59e0c5cd1e4b9a584a962e3150681be4e7c42bc3",
+  "confirmedConsumer": {
+    "nativeEntry": "src/features/artifacts/native/NativeEditor.tsx",
+    "closeIconModule": "lucide-react/dist/esm/icons/x.mjs",
+    "mixedChunk": "assets/useQuery-Btnfc9Vn.js",
+    "nativeImportedBindingCount": 1,
+    "chunkCodeBytes": 38253,
+    "chunkGzipBytes": 11648,
+    "packages": [
+      "@tanstack/query-core",
+      "@tanstack/react-query",
+      "lucide-react"
+    ],
+    "iconRenderedCodeUnits": 337
+  },
+  "change": "沿用已有六图标显式共享叶子策略，仅加入关闭图标x；七个leaf断言保留正常React和依赖归属。组件、SVG路径及运行交互不改。",
+  "validation": [
+    "新增真实图x回归在变更前失败，变更后共享图标/图分析12项通过",
+    "既有编排/存储/失败/数值日志25合同通过"
+  ],
+  "limits": [
+    "混合查询分组在a291两臂完整脚本池中均有同尺寸记录，日志池含预热资源，不能据此单独归因增量脚本差。",
+    "尚无本次候选真实图或实际传输/PSS结果，不能将静态结构变化记为收益。",
+    "没有变更测量时点、阈值、导出资格或样本失败规则。"
+  ],
+  "newCandidateCI": "待提交",
+  "newCandidateStaticProfile": "待远端构建",
+  "newCandidateIndependentReview": "待冻结",
+  "qualified": false
+}
