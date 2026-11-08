@@ -207,6 +207,7 @@ export function Menu({
   keyboardFocusSelector,
   offset = 4,
   popupRole = 'group',
+  triggerRole,
 }: {
   label: string
   icon?: EditorIconName
@@ -222,6 +223,7 @@ export function Menu({
   keyboardFocusSelector?:string
   offset?:number
   popupRole?: 'group' | 'menu'
+  triggerRole?: 'button'
   onOpen?(): void
 }) {
   const keyboardOpen=useRef(false)
@@ -266,7 +268,7 @@ export function Menu({
       ref={root}
       data-align={align}
       onToggle={(event) => {
-        if (event.target === event.currentTarget) { position(); if (event.currentTarget.open) {onOpen?.();if(keyboardOpen.current&&keyboardFocusSelector)popup.current?.querySelector<HTMLElement>(keyboardFocusSelector)?.focus()} }
+        if (event.target === event.currentTarget) { if(triggerRole)event.currentTarget.querySelector('summary')?.setAttribute('aria-expanded',String(event.currentTarget.open));position(); if (event.currentTarget.open) {onOpen?.();if(keyboardOpen.current&&keyboardFocusSelector)popup.current?.querySelector<HTMLElement>(keyboardFocusSelector)?.focus()} }
       }}
       onKeyDown={(event) => {
         const element = root.current
@@ -297,6 +299,9 @@ export function Menu({
       }}
     >
       <summary
+        role={triggerRole}
+        aria-expanded={triggerRole?false:undefined}
+        aria-haspopup={triggerRole&&popupRole==='menu'?'menu':undefined}
         aria-label={label}
         title={disabled ? disabledReason ?? label : label}
         aria-disabled={disabled}

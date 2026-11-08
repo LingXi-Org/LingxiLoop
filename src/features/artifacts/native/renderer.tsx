@@ -39,7 +39,7 @@ export function nativeStyle(source: ArtifactStyle, document: ArtifactDocument, b
   const style = artifactResolvedStyle(source, document)
   return { ...appearance(style), backgroundColor: boxRectangle&&style.gradient?'transparent':style.backgroundColor??style.fill??(boxRectangle?'#d6e6ff':undefined), color: style.color, fontFamily: editorFontFamily(style.fontFamily),
     fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight, fontStyle: style.fontStyle, textAlign: style.textAlign,
-    textDecoration: style.textDecoration, lineHeight: style.lineHeight ?? 1.25, padding:paddingCss(style),
+    textDecorationLine: style.textDecoration, lineHeight: style.lineHeight ?? 1.25, padding:paddingCss(style),
     opacity: style.opacity, borderRadius: style.borderRadius,
     border:(style.borderColor ?? style.stroke)?`${style.borderWidth ?? style.strokeWidth ?? 1}px ${style.borderStyle ?? 'solid'} ${style.borderColor ?? style.stroke}`:undefined }
 }

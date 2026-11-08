@@ -57,7 +57,7 @@ Screenshots alone do not establish the specified 1 px / 0.5% source parity gate.
 No production merge or deployment is included.
 
 
-逐项跟踪见 [parity-matrix.json](parity-matrix.json)：当前 155 条初始及增补控件/状态记录，均保留视觉与完整功能未通过标记；未列出的可达状态还须从源码及运行入口继续补齐。每项包含源码文案定义偏移、触发步骤、状态、原生位置、已有截图及局部功能证据。定义目录不等于可达性证明。
+逐项跟踪见 [parity-matrix.json](parity-matrix.json)：当前 173 条初始及增补控件/状态记录，均保留视觉与完整功能未通过标记；未列出的可达状态还须从源码及运行入口继续补齐。每项包含源码文案定义偏移、触发步骤、状态、原生位置、已有截图及局部功能证据。定义目录不等于可达性证明。
 
 源码目录可复现：`node scripts/native-editor-source-census.mjs --reference-root=/absolute/pinned-checkout --output=/tmp/census`。固定哈希下识别 Design 2557、Slides 1697 条文案定义；包含依赖库，尚未全部完成入口归属。偏移单位明确为 UTF-16，不把第一次字符串命中误当组件位置。
 
@@ -521,4 +521,9 @@ ed7a984c普通CI42420619003和生产静态图42420615258通过，[实图](perfor
 实际56单组预算失败后，新增[数字分解日志契约](performance/diagnostic-breakdown-log-contract.json)：只对已采集公开数值做有限输出，含PSS角色均值、每帧DOM/图片/heap、脚本大小分组及输入反馈数组。无URL/资源哈希/源码等，测量和门槛不变。17回归通过；新候选真实输出及独立审查待执行，不以工具完成宣称性能已修复。
 
 
-a2918e44普通CI42427968663通过，实际诊断42428025914正在进行；静态图独立工作流无workflow_dispatch，手动触发返回422，改读取普通web CI的既有构建审计，不为触发另改产品。工具[独立审查](reviews/a2918e44.json)无P1/P2，发现P3为新测试未进入CI名单；现加入原acceptance合同步骤，精确命令25项本地全过。a291已启动诊断保留；新名单远端执行、实际数字输出与预算仍未验证。
+a2918e44普通CI42427968663通过，实际诊断42428025914正在进行；静态图独立工作流无workflow_dispatch，手动触发返回422，普通web CI日志实际没有生产图记录；没有声称取得新图，也不为触发另改产品。工具[独立审查](reviews/a2918e44.json)无P1/P2，发现P3为新测试未进入CI名单；现加入原acceptance合同步骤，精确命令25项本地全过。a291已启动诊断保留；新名单远端执行、实际数字输出与预算仍未验证。
+
+
+D41补齐[文本可选属性](functional/element-text-properties.json)：强调、列表、大小写使用中文菜单及标签，通过原生操作保存和共享撤销。140/154各10流程和六格式实际导出通过限定功能；网页重读CSS/列表，PDF、PPTX及图片解析/解码不等于像素保真。原缺失菜单、React装饰属性撤销冲突和开发服务预构建漏列失败均保留。来源列表探针的无条件Escape清空选择已修正；实际来源标题内列表与原生规范富文本结构不同，完整文字布局、继承和全部视口对照仍未通过。新候选CI及独立审查待执行。
+
+[5b8e2492只读审查](reviews/5b8e2492.json)通过限定CI接线范围，普通CI42428584235成功。其[构建输入等价记录](performance/source-equivalence-5b8e2492.json)只证明与5a9d8bc5静态图复用的来源一致，不能算新的实图或实际性能数据。a291诊断42428025914继续运行，最终10组AB/BA仍未执行。

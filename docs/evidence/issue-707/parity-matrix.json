@@ -10048,6 +10048,41 @@
         "receipt": "functional/element-link-layout.json",
         "scope": "链接局部分组/输入，不代表完整属性面板、默认触摸状态、视觉或性能。"
       }
+    },
+    {
+      "id": "D41-design",
+      "editor": "design",
+      "control": "文本可选属性菜单、强调、列表及大小写",
+      "trigger": "选择画板文字→添加文本属性→强调/列表/大小写→编辑、移除、撤销重做、重开及导出",
+      "states": [
+        "添加无写入",
+        "保存重开",
+        "撤销重做",
+        "移除",
+        "只读",
+        "锁定",
+        "权限变化",
+        "六格式导出"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "runtime": "source-element-text-properties.json"
+      },
+      "implementation": "src/features/artifacts/native/ElementTextProperties.tsx",
+      "screenshots": {
+        "reference": "visual/element-text-properties/reference/",
+        "native": "visual/element-text-properties/implementation/",
+        "manifest": "visual/element-text-properties/manifest.json",
+        "matchedStateVerified": false
+      },
+      "result": "140/154各10流程及6格式导出通过限定功能；文字布局/继承/全部状态及列表结构视觉对照尚未通过。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-text-properties.json",
+        "scope": "仅Design文本可选属性局部；PDF/PPTX仅解析，非像素保真。"
+      }
     }
   ],
   "registeredReplacements": [
@@ -10094,6 +10129,10 @@
     {
       "area": "透明色显示值",
       "reason": "共享颜色字段将transparent显示为“透明”，保留文档CSS语法和作者代码；没有以此排除截图像素。"
+    },
+    {
+      "area": "文本可选属性中文菜单与标签",
+      "reason": "Emphasis、List、Case及选项、移除和错误提示全部中文；代码声明与作者文字保留。没有据此排除像素或图标。"
     }
   ],
   "removedServiceEntrances": [

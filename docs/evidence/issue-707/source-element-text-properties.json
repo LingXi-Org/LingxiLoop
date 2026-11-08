@@ -1,0 +1,30 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "sourcePath": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "runtimeHashesVerified": 12,
+  "runtime": "functional/element-text-properties/reference/",
+  "sourceOffsetsUtf16": {
+    "emphasisMetadata": 2949704,
+    "caseMetadata": 2950208,
+    "listSegments": 4495277,
+    "listKindAndEditingContract": 4495750
+  },
+  "facts": [
+    "标题动作是添加可选文本行，不是折叠。添加本身不修改原稿。",
+    "强调行提供下划线、删除线；声明为text-decoration-line。",
+    "大小写选项none/uppercase/lowercase/capitalize。",
+    "列表none/bullet/number；实际来源标题内部生成ul/li或ol/li，不是CSS伪装。",
+    "来源列表添加后菜单自行关闭；无条件Escape会清空画布选择，旧探针失败不是来源功能故障。"
+  ],
+  "implementation": [
+    "src/features/artifacts/native/ElementTextProperties.tsx",
+    "src/features/artifacts/native/element-text-properties.ts"
+  ],
+  "knownUnverified": [
+    "来源标题内列表与原生规范富文本列表结构不同，完整视觉尚未对照。",
+    "完整文字字体、字号、字距、继承、混合值、右键菜单及全部视口状态未通过。",
+    "尚未按原版测得全部新增行图标和像素差异。"
+  ],
+  "license": "THIRD_PARTY_NOTICES.md；来源发布资源只在独立参考环境运行，不进入产品。"
+}

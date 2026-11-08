@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {verifyTextPropertiesExports} from './native-editor-text-export-check.mjs'
 import {verifySizingExports} from './native-editor-sizing-export-check.mjs'
 import {elementLink,elementLinkPatch} from '../shared/artifact-element-link.ts'
 /** Isolated HTTP-fixture UI diagnostic, NOT full API acceptance or a benchmark.
@@ -44,7 +45,7 @@ const { chromium } = await import(modulePath.startsWith('/') ? pathToFileURL(mod
 const dependencyRoot = await realpath(join(root, 'node_modules'))
 const workspace = await mkdtemp(join(tmpdir(), 'lingxi-native-ui-'))
 await mkdir(output, { recursive: true })
-if(options.checks==='element-layout'&&options['layout-case']?.split(',').some(name=>['exports','capture'].includes(name))||options.checks==='element-sizing'&&options['sizing-case']==='exports'||options.checks==='element-link'&&['exports','nested-export','same-node'].includes(options['link-case'])||options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])||options.checks==='design-artboard'&&options['artboard-case']==='exports')await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
+if(options.checks==='element-layout'&&options['layout-case']?.split(',').some(name=>['exports','capture'].includes(name))||options.checks==='element-sizing'&&['exports','text-property-exports'].includes(options['sizing-case'])||options.checks==='element-link'&&['exports','nested-export','same-node'].includes(options['link-case'])||options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])||options.checks==='design-artboard'&&options['artboard-case']==='exports')await symlink(dependencyRoot,join(workspace,'node_modules'),'dir')
 const mocks = {
   http: `export async function http(path,init){const response=await fetch('/api'+path,{...init,headers:{'Content-Type':'application/json',...init?.headers}});if(!response.ok)throw Object.assign(new Error(await response.text()),{status:response.status});return response.json()}`,
   realtime: ['inspector-code','board-title','element-link','element-sizing','element-layout'].includes(options.checks)?`const listeners=new Set();window.__codeChanged=()=>{for(const fn of listeners)fn({type:'artifact.changed',artifactId:'fixture'})};export const ws={on:fn=>{listeners.add(fn);return()=>listeners.delete(fn)}}`:'export const ws={on:()=>()=>{}}',
@@ -61,7 +62,7 @@ try {
   server = await createServer({ configFile: false, root: workspace, publicDir: join(root, 'public'), plugins: [react()], logLevel: 'error',
     cacheDir:join(workspace,'.vite'),
     // Late CommonJS discovery reloads the fixture during PPTX export, even with HMR off.
-    optimizeDeps: options.checks==='element-layout'&&options['layout-case']?.split(',').some(name=>['exports','capture'].includes(name))||options.checks==='element-sizing'&&options['sizing-case']==='exports'||options.checks==='element-link'&&['exports','nested-export','same-node'].includes(options['link-case'])||options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])||options.checks==='design-artboard'&&options['artboard-case']==='exports'?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
+    optimizeDeps: options.checks==='element-layout'&&options['layout-case']?.split(',').some(name=>['exports','capture'].includes(name))||options.checks==='element-sizing'&&['exports','text-property-exports'].includes(options['sizing-case'])||options.checks==='element-link'&&['exports','nested-export','same-node'].includes(options['link-case'])||options.checks==='slides-skipped-export'||options.checks==='page-radius'&&['exports','jpeg'].includes(options['radius-case'])||options.checks==='design-artboard'&&options['artboard-case']==='exports'?{noDiscovery:true,include:['react','react-dom','react-dom/client','react/jsx-runtime','react/jsx-dev-runtime','pptxgenjs','html-to-image','jszip','katex']}:undefined,
     resolve: { alias: [
       ...Object.entries({ '@/api/core/http': 'http', '@/api/core/realtime': 'realtime', '@/api/transport': 'transport', '@/stores/auth': 'auth', '@/lib/workspaceSession': 'workspaceSession' }).map(([find, name]) => ({ find, replacement: join(workspace, `${name}.js`) })),
       { find: 'react', replacement: dirname(require.resolve('react/package.json')) },
@@ -130,7 +131,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
   }
   if(options.checks==='element-sizing'&&['text-align-css','text-align-important','text-align-history'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-align':editorCase==='text-align-important'?'center !important':'center'}
-  if(options.checks==='element-sizing'&&editorCase==='text-align-locked')document.pages['page-1'].nodes['page-1-heading'].locked=true
+  if(options.checks==='element-sizing'&&['text-align-locked','text-properties-disabled-locked'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].locked=true
   if(options.checks==='element-sizing'&&editorCase==='text-align-inherited')document.pages['page-1'].nodes['page-1-root'].style.textAlign='center'
   if(options.checks==='element-sizing'&&['text-align-logical-start','text-align-logical-end'].includes(editorCase))document.pages['page-1'].nodes['page-1-heading'].css={'text-align':editorCase.endsWith('start')?'start':'end'}
   if(options.checks==='element-sizing'&&editorCase==='exports'&&kind==='slides'){const node=document.pages['page-1'].nodes['page-1-heading'];node.css={width:'50%',height:'auto','max-width':'900px'};node.implicitHeight=true}
@@ -256,7 +257,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   const historyRequests = [],expectedCodeNetworkErrors=[]
   let denyCodeAccess=false
   let rejectSpeakerSave=['notes-network','notes-denied','notes-write-denied'].includes(options['speaker-case']);let denySpeakerRead=false;const speakerSaveIds=[]
-  let fixtureWrite=!(options.checks==='element-layout'&&editorCase==='readonly')&&!(options.checks==='element-sizing'&&['readonly','text-align-readonly','contrast-readonly'].includes(editorCase))&&!(options.checks==='element-link'&&editorCase==='readonly')&&!(options.checks==='board-title'&&editorCase==='readonly')&&!(options.checks==='board-transform'&&['readonly','group-readonly'].includes(editorCase))&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
+  let fixtureWrite=!(options.checks==='element-layout'&&editorCase==='readonly')&&!(options.checks==='element-sizing'&&['readonly','text-align-readonly','contrast-readonly','text-properties-disabled-readonly'].includes(editorCase))&&!(options.checks==='element-link'&&editorCase==='readonly')&&!(options.checks==='board-title'&&editorCase==='readonly')&&!(options.checks==='board-transform'&&['readonly','group-readonly'].includes(editorCase))&&options['artboard-case']!=='readonly'&&options['code-case']!=='readonly'&&options['preview-readonly']!=='true'&&options['speaker-case']!=='readonly'
   let holdImageReads=options.checks==='asset-reads',releaseImageReads
   const imageReadGate=new Promise(resolve=>{releaseImageReads=resolve}),physicalImageReads=[]
   const pageReads=[]
@@ -522,6 +523,69 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       const section=page.locator('.native-element-sizing'),field=section.getByRole('textbox',{name:'宽度',exact:true})
       await field.waitFor()
       const saved=()=>page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/operations')&&response.status()===200)
+      if(editorCase.startsWith('text-properties-disabled-')){
+        const add=page.getByRole('button',{name:'添加文本属性',exact:true});await add.waitFor()
+        let expected=original
+        if(editorCase.endsWith('permission')){
+          fixtureWrite=false;document=applyOperations(document,prepareBatch(document,[{type:'page.patch',pageId:'page-1',patch:{title:'权限变更后的页面'}}],'peer-text-properties-access')).document;expected=structuredClone(document)
+          const refreshed=page.waitForResponse(response=>new URL(response.url()).pathname.endsWith('/document')&&response.status()===200);await page.evaluate(()=>window.__codeChanged());await refreshed
+        }
+        await page.waitForFunction(()=>document.querySelector('[aria-label="添加文本属性"]')?.getAttribute('aria-disabled')==='true');await add.focus();await page.keyboard.press('Enter');assert.equal(await page.getByRole('menu',{name:'添加文本属性选项',exact:true}).count(),0)
+        assert.equal(receipts.length,0);assert.deepEqual(document,expected);assert.deepEqual(errors,[])
+        return{kind:'文本可选属性禁用状态',case:editorCase,noWrites:true,peerChangePreserved:true,consoleOrPageErrors:errors}
+      }
+      if(editorCase==='text-property-exports'){
+        const text=page.locator('.native-element-text-properties')
+        for(const type of ['强调','列表','大小写']){
+          await page.getByRole('button',{name:'添加文本属性',exact:true}).click();await page.getByRole('menuitem',{name:type,exact:true}).click()
+          const pending=saved()
+          if(type==='强调')await text.getByRole('button',{name:'下划线',exact:true}).click()
+          if(type==='列表')await text.getByRole('radio',{name:'项目符号列表',exact:true}).click()
+          if(type==='大小写'){await text.getByRole('button',{name:'大小写：无',exact:true}).click();await page.getByRole('menuitemradio',{name:'大写',exact:true}).click()}
+          await pending
+        }
+        return await verifyTextPropertiesExports({page,browser,output,getDocument:()=>document,errors})
+      }
+      if(editorCase.startsWith('text-property-')){
+        const subject=page.locator(`[data-page-id="page-1"] [data-node-id="${nodeId}"]`),textSection=page.locator('.native-element-text-properties')
+        const type=editorCase.includes('case')?'大小写':editorCase.includes('list')?'列表':'强调'
+        await page.getByRole('button',{name:'添加文本属性',exact:true}).click();await page.getByRole('menuitem',{name:type,exact:true}).click()
+        assert.equal(receipts.length,0,'添加可选行不写文档')
+        let pending=saved()
+        if(type==='大小写'){await textSection.getByRole('button',{name:'大小写：无',exact:true}).click();await page.getByRole('menuitemradio',{name:'大写',exact:true}).click()}
+        else if(type==='列表')await textSection.getByRole('radio',{name:'项目符号列表',exact:true}).click()
+        else await textSection.getByRole('button',{name:'下划线',exact:true}).click()
+        await pending
+        if(editorCase.endsWith('-all')){
+          if(type==='大小写')for(const [label,value]of [['小写','lowercase'],['首字母大写','capitalize'],['无','none'],['大写','uppercase']]){await textSection.getByRole('button',{name:/^大小写：/}).click();pending=saved();await page.getByRole('menuitemradio',{name:label,exact:true}).click();await pending;assert.equal(await subject.evaluate(element=>getComputedStyle(element).textTransform),value)}
+          if(type==='列表')for(const [label,value]of [['编号列表','orderedList'],['无列表','heading'],['项目符号列表','bulletList']]){pending=saved();await textSection.getByRole('radio',{name:label,exact:true}).click();await pending;assert.equal(document.pages['page-1'].nodes[nodeId].richText.content[0].type,value)}
+          if(type==='强调')for(const [label,expected]of [['删除线','underline line-through'],['下划线','line-through'],['删除线','none'],['下划线','underline']]){pending=saved();await textSection.getByRole('button',{name:label,exact:true}).click();await pending;assert.equal(await subject.evaluate(element=>getComputedStyle(element).textDecorationLine),expected)}
+        }
+        const edited=structuredClone(document.pages['page-1'].nodes[nodeId])
+        if(type==='大小写')assert.equal(edited.css['text-transform'],'uppercase')
+        else if(type==='列表')assert.equal(edited.richText.content[0].type,'bulletList')
+        else assert.equal(edited.css['text-decoration-line'],'underline')
+        if(editorCase.endsWith('-history')){
+          await page.locator('[data-native-artifact-editor]').focus();pending=saved();await page.keyboard.press('Control+z');await pending;assert.deepEqual(document.pages['page-1'].nodes[nodeId],original.pages['page-1'].nodes[nodeId])
+          pending=saved();await page.keyboard.press('Control+Shift+z');await pending;assert.deepEqual(document.pages['page-1'].nodes[nodeId],edited)
+        }
+        if(editorCase.endsWith('-remove')){pending=saved();await textSection.getByRole('button',{name:`移除${type}属性`,exact:true}).click();await pending;if(type==='大小写')assert.equal(document.pages['page-1'].nodes[nodeId].css?.['text-transform'],undefined);else if(type==='强调')assert.equal(document.pages['page-1'].nodes[nodeId].css?.['text-decoration-line'],undefined);else assert.deepEqual(document.pages['page-1'].nodes[nodeId].richText,original.pages['page-1'].nodes[nodeId].richText)}
+        const snapshot=structuredClone(document.pages['page-1'].nodes[nodeId]);await page.screenshot({path:join(output,`${editorCase}.png`)});await page.reload();await ready(1);assert.deepEqual(document.pages['page-1'].nodes[nodeId],snapshot)
+        if(type==='大小写'&&!editorCase.endsWith('-remove'))assert.equal(await subject.evaluate(element=>getComputedStyle(element).textTransform),'uppercase')
+        if(type==='强调'&&!editorCase.endsWith('-remove'))assert.equal(await subject.evaluate(element=>getComputedStyle(element).textDecorationLine),'underline')
+        if(type==='列表'&&!editorCase.endsWith('-remove'))assert.equal(await subject.locator('ul li').count(),1)
+        for(const id of original.pageOrder.filter(id=>id!=='page-1'))assert.deepEqual(document.pages[id],original.pages[id]);assert.deepEqual(errors,[])
+        return{kind:'文本可选属性保存回归',case:editorCase,batches:receipts.length,savedAndReopened:true,otherPagesUnchanged:true,node:snapshot,consoleOrPageErrors:errors}
+      }
+      if(editorCase==='text-properties-menu'){
+        const add=page.getByRole('button',{name:'添加文本属性',exact:true})
+        await writeFile(join(output,'text-property-panel-aria.txt'),await page.getByRole('complementary',{name:'属性面板',exact:true}).ariaSnapshot());await writeFile(join(output,'text-property-panel.html'),await page.getByRole('complementary',{name:'属性面板',exact:true}).evaluate(element=>element.outerHTML))
+        assert.equal(await add.count(),1,'原版文本属性菜单入口必须存在')
+        await add.click();await page.getByRole('menuitem',{name:'强调',exact:true}).waitFor()
+        for(const label of ['强调','列表','大小写'])assert.equal(await page.getByRole('menuitem',{name:label,exact:true}).count(),1)
+        await page.screenshot({path:join(output,'text-properties-menu.png')});assert.equal(await add.getAttribute('aria-expanded'),'true');await page.keyboard.press('Escape');await page.waitForFunction(()=>document.querySelector('[aria-label="添加文本属性"]')?.getAttribute('aria-expanded')==='false');assert.equal(await add.evaluate(element=>element===document.activeElement),true);assert.equal(receipts.length,0);assert.deepEqual(document,original);assert.deepEqual(errors,[])
+        return{kind:'文本可选属性菜单',case:editorCase,noWrites:true,documentUnchanged:true,consoleOrPageErrors:errors}
+      }
       if(editorCase.startsWith('contrast-')){
         if(editorCase.startsWith('contrast-overlap-'))assert.equal(await page.locator('[data-node-id=contrast-overlap]').count(),1,'实际遮挡图层必须已挂载')
         if(editorCase==='contrast-overlap-image'){await page.locator('[data-node-id=contrast-overlap] img').waitFor();assert.equal(await page.locator('[data-page-id=page-1] [data-node-type=image] img').count(),2)}

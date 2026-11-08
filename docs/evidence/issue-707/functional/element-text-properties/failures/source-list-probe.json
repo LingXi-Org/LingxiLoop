@@ -1,0 +1,14 @@
+{
+  "scope": "来源探针失败；不是来源列表功能失败",
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "observed": [
+    "列表添加后无条件Escape清空选择；随后Bulleted list/Numbered list locator.click等待30000ms超时。",
+    "只添加List再按Escape时，Properties panel快照明确显示Nothing selected，无Align属性，后续evaluate等待30000ms超时。"
+  ],
+  "correction": "仅当角色menu仍可见时发送Escape；重新捕获bullet/number保存HTML均实际生成列表。",
+  "successfulEvidence": [
+    "reference/bullet.json",
+    "reference/number.json"
+  ],
+  "originalScratch": "/workspace/lingxi-issue707-scratch/text-property-source-list-closed-inspect154/text-property-aria.txt"
+}

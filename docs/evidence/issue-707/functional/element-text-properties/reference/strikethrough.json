@@ -1,0 +1,75 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "referenceResourceHashesVerified": 12,
+  "browser": "154.0.8037.57",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "theme": "light",
+  "case": {
+    "name": "contrast-base",
+    "textAction": "strikethrough",
+    "addedTextProperty": "Emphasis",
+    "textMenuData": [
+      {
+        "text": "Emphasis",
+        "label": null,
+        "disabled": null,
+        "html": "<div role=\"menuitem\" id=\"base-ui-_r_ij_\" tabindex=\"-1\" class=\"cds-reset flex w-full items-center gap-xs compact:px-2 comfortable:px-2.5 py-[calc((var(--cds-h-control)-var(--cds-leading-body))/2)] rounded text-body font-normal font-control [--cds-shortcut-cap-ink:var(--cds-text-muted)] select-none outline-none focus-visible:outline-hidden data-[disabled]:opacity-disabled data-[disabled]:pointer-events-none data-[disabled]:focus-visible:shadow-focus text-primary data-[highlighted]:bg-fill-ghost-hover\"><span class=\"min-w-0 flex-1 truncate\">Emphasis</span></div>"
+      },
+      {
+        "text": "List",
+        "label": null,
+        "disabled": null,
+        "html": "<div role=\"menuitem\" id=\"base-ui-_r_il_\" tabindex=\"-1\" class=\"cds-reset flex w-full items-center gap-xs compact:px-2 comfortable:px-2.5 py-[calc((var(--cds-h-control)-var(--cds-leading-body))/2)] rounded text-body font-normal font-control [--cds-shortcut-cap-ink:var(--cds-text-muted)] select-none outline-none focus-visible:outline-hidden data-[disabled]:opacity-disabled data-[disabled]:pointer-events-none data-[disabled]:focus-visible:shadow-focus text-primary data-[highlighted]:bg-fill-ghost-hover\"><span class=\"min-w-0 flex-1 truncate\">List</span></div>"
+      },
+      {
+        "text": "Case",
+        "label": null,
+        "disabled": null,
+        "html": "<div role=\"menuitem\" id=\"base-ui-_r_in_\" tabindex=\"-1\" class=\"cds-reset flex w-full items-center gap-xs compact:px-2 comfortable:px-2.5 py-[calc((var(--cds-h-control)-var(--cds-leading-body))/2)] rounded text-body font-normal font-control [--cds-shortcut-cap-ink:var(--cds-text-muted)] select-none outline-none focus-visible:outline-hidden data-[disabled]:opacity-disabled data-[disabled]:pointer-events-none data-[disabled]:focus-visible:shadow-focus text-primary data-[highlighted]:bg-fill-ghost-hover\"><span class=\"min-w-0 flex-1 truncate\">Case</span></div>"
+      }
+    ],
+    "beforeActionSnippet": "<h1 style=\"position:absolute;left:64px;top:40px;width:1152px;height:76px;margin:0;font-family:Arial;font-size:48px;font-weight:700;line-height:1.25;color:#18332b\">LingxiLoop 1</h1>",
+    "snippet": "<h1 style=\"position: absolute; left: 64px; top: 40px; width: 1152px; height: 76px; margin: 0; font-family: Arial; font-size: 48px; font-weight: 700; line-height: 1.25; color: #18332b; text-decoration-line: line-through\">LingxiLoop 1</h1>",
+    "geometry": {
+      "layoutWidth": 1152,
+      "layoutHeight": 76,
+      "boxSizing": "content-box",
+      "paddingTop": "0px",
+      "paddingRight": "0px",
+      "paddingBottom": "0px",
+      "paddingLeft": "0px",
+      "marginTop": "0px",
+      "marginRight": "0px",
+      "marginBottom": "0px",
+      "marginLeft": "0px",
+      "style": "position: absolute; left: 64px; top: 40px; width: 1152px; height: 76px; margin: 0px; font-family: Arial; font-size: 48px; font-weight: 700; line-height: 1.25; color: rgb(24, 51, 43); text-decoration-line: line-through;",
+      "rect": {
+        "x": 64,
+        "y": 40,
+        "width": 1152,
+        "height": 76,
+        "top": 40,
+        "right": 1216,
+        "bottom": 116,
+        "left": 64
+      },
+      "width": "1152px",
+      "height": "76px",
+      "position": "absolute",
+      "left": "64px",
+      "top": "40px",
+      "minWidth": "0px",
+      "maxWidth": "none",
+      "minHeight": "0px",
+      "maxHeight": "none",
+      "right": "704px",
+      "bottom": "964px",
+      "textAlign": "start"
+    },
+    "beforeGlobalSaveUnchanged": true,
+    "unchanged": false
+  }
+}

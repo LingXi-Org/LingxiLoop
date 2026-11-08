@@ -1,0 +1,10 @@
+{
+  "candidate": "5b8e2492ff3327f7b30798a10f882d3d2afea83f",
+  "actualProfileCommit": "5a9d8bc53847d771c6e97cba57cef56c53b53be9",
+  "sourceInputsSha256": "947909d9da850178f4788d2f1570c8c3b0a1f40091d07f836330956c5d75924e",
+  "actualProfileSourceInputsSha256": "947909d9da850178f4788d2f1570c8c3b0a1f40091d07f836330956c5d75924e",
+  "sameInputs": true,
+  "changedBuildInputs": [],
+  "qualified": false,
+  "scope": "仅证明产品构建输入未变，重用5a既有实图；不是a291/5b重新执行的生产图或实际性能资格。普通web CI无该profile输出，独立workflow不支持手动触发。"
+}

@@ -1,0 +1,34 @@
+{
+  "candidate": "5b8e2492ff3327f7b30798a10f882d3d2afea83f",
+  "baseline": "a2918e446fe4f0e1bde7c3fe7fe1fc01955b80dc",
+  "scope": "独立detached只读限定接线复审；无浏览器/构建/SDK/安装，不读取root后续WIP、不修改运行中诊断",
+  "result": "原P3 CI接线缺口闭合；本范围无新P1/P2/P3",
+  "findings": [],
+  "closedFinding": {
+    "originalReport": "/tmp/lingxi-review-a2918e44.json",
+    "severity": "P3",
+    "location": ".github/workflows/native-artifact-acceptance.yml:86",
+    "result": "既有合同步骤保留ci/storage/failure并加入diagnostic-breakdown测试文件，仍位于依赖安装和测量之前。"
+  },
+  "verified": [
+    {
+      "check": "精确新合同命令",
+      "command": "node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs scripts/native-artifact-diagnostic-breakdown.test.mjs",
+      "result": "25项全通过，无安装或私包获取",
+      "log": "/tmp/lingxi-review-5b8e-tests.log"
+    },
+    {
+      "check": "精确变更范围",
+      "result": "只有workflow单行执行名单及证据/原a291报告；没有产品/CLI/helper/测试/依赖/计时/门槛/qualified/eligibility变化。git diff --check通过。"
+    },
+    {
+      "check": "阶段和证据声明",
+      "result": "新增测试仍在existing guard之后、install/measure之前。文档区分本地25项通过与远端新名单尚未执行，原a291运行归属及P3限定保留。"
+    }
+  ],
+  "unverified": [
+    "新精确候选的远端实际执行尚未发生；不把本地25项当作已经有新远端运行证据",
+    "a291历史实际诊断仍运行，未取消或重复派发；其结果不能自动归入本新候选",
+    "真实breakdown输出、性能预算/10组ABBA及整个视觉/服务资格仍待；本次只闭合接线P3"
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "matchedStateVerified": false,
+  "visualQualified": false,
+  "images": [
+    {
+      "path": "visual/element-text-properties/exports/140/html.png",
+      "sha256": "b04ffb6756a6a56e7fbe6779eeb587437e93095f38b8854451f4273e8c76d418"
+    },
+    {
+      "path": "visual/element-text-properties/exports/154/html.png",
+      "sha256": "a69cb5a223246e4bcb79542853bc88537baf636ecbd16c5ed629f9d51823a977"
+    },
+    {
+      "path": "visual/element-text-properties/failures/before/design-failure.png",
+      "sha256": "d95d5e57e6a7e300febf23711e2cdca361b3526e115b216ca0310357676c6679"
+    },
+    {
+      "path": "visual/element-text-properties/failures/export-dev-discovery/design-failure.png",
+      "sha256": "b515ad65b447677826f6450eb66bdcb50e7e29c6bfdc1c7d2f9630effc59f7a6"
+    },
+    {
+      "path": "visual/element-text-properties/failures/react-shorthand-warning/design-failure.png",
+      "sha256": "5a34b8f92d49ac6d357bf21df857f66115510da42d56f0d86580135db814cd3e"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/140/text-property-case-history.png",
+      "sha256": "0f08fedea653ccb148f181424a82669c6f1023392254ad001faa7705f9394792"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/140/text-property-case-remove.png",
+      "sha256": "5eb390ec68c184f8917d0e20ecbec80b5ef2e5440415f19be260532a6d530a4a"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/140/text-property-emphasis-history.png",
+      "sha256": "b7e4ec4751bcd92d29e746abac2613a90858899b9091deab593469baf0ef3b9d"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/140/text-property-emphasis-remove.png",
+      "sha256": "8d36aa5e273d1be05c51ad9c22785b5c1ee0f39bbda33c356e69b98cf73dc5b8"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/140/text-property-list-history.png",
+      "sha256": "7046cdb434390c43bbadd2edde5a8c6c3c4e5d6e97fd5d67f3986fdccf14c7af"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/140/text-property-list-remove.png",
+      "sha256": "27a4501f8916ea1f72158437b34749516cbc484699514f8afc9ee66a14415c71"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/154/menu.png",
+      "sha256": "296b138792a1e1ac001b0003f2225b212be80d713085ed9869107264102f4c55"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/154/text-property-case-history.png",
+      "sha256": "4d6c027f19c770938d21d13c058ab4b1d38bcd063e028c034aa48c5813dd51df"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/154/text-property-case-remove.png",
+      "sha256": "2590504de1c3f1621a14e537945e5dbd73a42da294eea1a5b6dc3cc1eaf2d7a6"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/154/text-property-emphasis-history.png",
+      "sha256": "6dfed44035144d7eef05b5ab232d3405f7f3b98a8884edce134cbbc0bfd0831e"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/154/text-property-emphasis-remove.png",
+      "sha256": "9c8a22f7c64dbf8301e4516a04b775574e11f043f033efff2d9f32415e3e0821"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/154/text-property-list-history.png",
+      "sha256": "59df55ee41c307cce2171129f38ecd96974e451716a3c331b226ec29281ade94"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/154/text-property-list-remove.png",
+      "sha256": "48e30b3a378bfd907a2b8e29455007c6ec5d663dabe8b495dcc534a428243997"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/options154/text-property-case-all.png",
+      "sha256": "de85dbfce26325b15c46cb491c4a1630a032d69b6bc6eb89ebd24e7c98104434"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/options154/text-property-emphasis-all.png",
+      "sha256": "f67fff5d89140d814ab4442f0ac57564bf7d10978b4eb1ca1ef6deb04ec8dbf7"
+    },
+    {
+      "path": "visual/element-text-properties/implementation/options154/text-property-list-all.png",
+      "sha256": "36cf736368f9149aeff50229a58d7eb064c93ffda08843d13e05454aa5fa26db"
+    },
+    {
+      "path": "visual/element-text-properties/reference/bullet.png",
+      "sha256": "90741af87904ee97ca7ab1002995d526c8b14623f1a1b24c1eb6152ec8db1ee1"
+    },
+    {
+      "path": "visual/element-text-properties/reference/menu.png",
+      "sha256": "cb43355d06652317d5f1166b6f06fe9836e8a1fe5be4280c0661dbf2017f1996"
+    },
+    {
+      "path": "visual/element-text-properties/reference/number.png",
+      "sha256": "4963f5f7cb6ce139ec6879f37eaff2b5bf60c4ec9835a193f279e83ddf2c9348"
+    },
+    {
+      "path": "visual/element-text-properties/reference/strikethrough.png",
+      "sha256": "971d7c9229396089727377dbdffeee76f0dc84ff493dd273150c5197d5af84bc"
+    },
+    {
+      "path": "visual/element-text-properties/reference/underline.png",
+      "sha256": "1c0a740b3520ac5632bcb32a165b8e4e13a95c5d9df4688da39ddaa1a82bfd73"
+    },
+    {
+      "path": "visual/element-text-properties/reference/uppercase.png",
+      "sha256": "6e2145d1914a08261b2d959ad562e087e0fa6e14598e6b6013c218b38e9c740a"
+    }
+  ]
+}
