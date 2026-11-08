@@ -6,7 +6,7 @@ export function nativeTransport(artifactId: string, revisionSeq?:string): Native
   const readonly=()=>Promise.reject(new Error('历史版本仅供预览。'))
   return {
     read: signal => http(documentPath, { signal }),
-    page: (pageId, version, signal) => http(`${base}/pages/${encodeURIComponent(pageId)}?hash=${encodeURIComponent(version)}`, { signal }),
+    page: (pageId, version, signal) => http(`${base}/pages/${encodeURIComponent(pageId)}?hash=${encodeURIComponent(version)}`, { signal, priority:'high' }),
     all: signal => http(`${documentPath}?allPages=true`, { signal }),
     commit: revisionSeq===undefined?(batch, signal) => http(`${base}/operations`, { method: 'POST', body: JSON.stringify(batch), signal }):readonly,
     history: revisionSeq===undefined?(kind, targetOperationId, expectedHistoryVersion, operationId) => http(`${base}/operations`, { method: 'POST', body: JSON.stringify({ kind, targetOperationId, expectedHistoryVersion, operationId }) }):readonly,

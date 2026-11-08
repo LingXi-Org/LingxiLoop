@@ -1,4 +1,4 @@
-import type { Bounds, BoundsIssue, ComputeMessage, ComputeResponse, ComputeTask, ComputeValue, MathResult, Point, Rect, ThemeResult, ThemeTokens } from './compute-protocol'
+import type { Bounds, ComputeMessage, ComputeResponse, ComputeTask, ComputeValue, ElementGeometry, ElementProjection, MathResult, Point, Rect, ThemeResult, ThemeTokens } from './compute-protocol'
 import type {PenGeometry} from '../../../../shared/artifact-pen'
 export type { Bounds, BoundsIssue, MathResult, Point, Rect, ThemeResult, ThemeTokens } from './compute-protocol'
 
@@ -52,7 +52,7 @@ export class NativeCompute {
     this.pending.clear()
   }
 
-  private request<T extends ComputeValue>(task: ComputeTask, revision: number, signal?: AbortSignal): Promise<T> {
+  private request<T extends ComputeValue>(task: ComputeTask, revision: number, signal?: AbortSignal, transfer:Transferable[]=[]): Promise<T> {
     if (signal?.aborted || this.disposed || revision < this.revision) return Promise.reject(aborted())
     if (revision > this.revision) { this.revision = revision; this.rejectAll(aborted()) }
     let worker: Worker
@@ -71,7 +71,7 @@ export class NativeCompute {
       this.pending.set(id, { revision, resolve: value => resolve(value as T), reject,
         cleanup: () => signal?.removeEventListener('abort', cancel) })
       signal?.addEventListener('abort', cancel, { once: true })
-      try { worker.postMessage({ id, revision, task } satisfies ComputeMessage) }
+      try { worker.postMessage({ id, revision, task } satisfies ComputeMessage,transfer) }
       catch (reason) {
         this.pending.delete(id)
         signal?.removeEventListener('abort', cancel)
@@ -90,20 +90,13 @@ export class NativeCompute {
   snap(point: Point, tolerance: number, revision: number, signal?: AbortSignal) {
     return this.request<Point>({ kind: 'snap', point, tolerance }, revision, signal)
   }
-  async setElements(pageId: string, elements: Bounds[], revision: number) {
-    await this.request<null>({ kind: 'elements', pageId, elements }, revision)
+  projectElements(pageId:string,geometry:ElementGeometry,viewport:Rect,geometryKey:number,revision:number,signal?:AbortSignal){
+    // Transfer an owned copy; the viewport cache must retain its reusable coordinates.
+    const coordinates=geometry.coordinates.slice()
+    return this.request<ElementProjection>({kind:'project-elements',pageId,geometry:{ids:geometry.ids,coordinates},viewport,geometryKey},revision,signal,[coordinates.buffer])
   }
-  async updateElements(pageId: string, upserts: Bounds[], removed: string[], revision: number) {
-    await this.request<null>({ kind: 'update-elements', pageId, upserts, removed }, revision)
-  }
-  visibleElements(pageId: string, viewport: Rect, revision: number, signal?: AbortSignal) {
-    return this.request<string[]>({ kind: 'visible-elements', pageId, viewport }, revision, signal)
-  }
-  async dropElements(pageId: string, revision = this.revision) {
+  async dropElements(pageId: string, revision: number) {
     await this.request<null>({ kind: 'drop-elements', pageId }, revision)
-  }
-  validateNodeBounds(elements: Bounds[], revision: number, signal?: AbortSignal) {
-    return this.request<BoundsIssue[]>({ kind: 'validate-bounds', elements }, revision, signal)
   }
   resolveTheme(tokens: ThemeTokens, revision: number, signal?: AbortSignal) {
     return this.request<ThemeResult>({ kind: 'resolve-theme', tokens }, revision, signal)

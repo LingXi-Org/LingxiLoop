@@ -1,3 +1,4 @@
+import {packElementGeometry,type ElementGeometry} from './compute-protocol'
 import {isFlowChild} from '../../../../shared/artifact-geometry'
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import {naturalNodeStyle,layoutRevision,isNaturalText} from './natural-layout'
@@ -12,7 +13,8 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
   pages: ArtifactPage[]; revision: number; viewport: { x: number; y: number; width: number; height: number }; scale: number
   root: RefObject<HTMLDivElement | null>; compute: NativeCompute; pageId: string | null; selected: string[]; editingId: string | null; onError(message: string): void
 }) {
-  const cache = useRef(new Map<string, { page: ArtifactPage; bounds: Bounds[] }>())
+  const cache = useRef(new Map<string, { page: ArtifactPage; bounds: Bounds[];geometry:ElementGeometry;geometryKey:number }>())
+  const geometryKey=useRef(0)
   const [visible, setVisible] = useState<Record<string, { page: ArtifactPage; ids: Set<string>; bottom: number }>>({})
   useLayoutEffect(()=>{
     const container=root.current
@@ -51,27 +53,22 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
     for (const id of cache.current.keys()) if (!activeIds.has(id)) { cache.current.delete(id); void compute.dropElements(id, revision).catch(() => {}) }
     void (async () => {
       const next: typeof visible = {}
-      // Sequential queries remain correct when more than eight boards are visible:
-      // each query finishes before the worker can evict its page's bounded index.
-      for (const page of pages) {
-        if (controller.signal.aborted) return
-        const shell = Array.from(container.querySelectorAll<HTMLElement>('[data-page-id]')).find(element => element.dataset.pageId === page.id)
-        if (!shell) continue
-        const bounds = shell.getBoundingClientRect()
-        const previous = cache.current.get(page.id)
-        const rectangles = previous?.page === page ? previous.bounds : elementBounds(page)
-        if (previous?.page !== page) {
-          await compute.setElements(page.id, rectangles, revision)
-          cache.current.set(page.id, { page, bounds: rectangles })
-          const issues = await compute.validateNodeBounds(rectangles, revision, controller.signal)
-          if (issues.length) onError('部分元素位置无效，请检查元素尺寸。')
-        } else {
-          try { await compute.updateElements(page.id, [], [], revision) }
-          catch (error) { if (controller.signal.aborted || (error as Error).name === 'AbortError') throw error; await compute.setElements(page.id, rectangles, revision) }
-        }
-        const ids = await compute.visibleElements(page.id, { x: (viewportBounds.left - bounds.left) / scale - 48, y: (viewportBounds.top - bounds.top) / scale - 48, width: viewportBounds.width / scale + 96, height: viewportBounds.height / scale + 96 }, revision, controller.signal)
-        next[page.id] = { page, ids: expandVisibleNodes(page, ids, page.id === pageId ? [...selected, ...(editingId ? [editingId] : [])] : []), bottom: Math.max(40, ...rectangles.map(item => item.y + item.height)) }
-      }
+      const shells=new Map(Array.from(container.querySelectorAll<HTMLElement>('[data-page-id]')).map(element=>[element.dataset.pageId,element]))
+      // Read layout once, then submit independent atomic jobs without per-page round trips.
+      const queries=pages.flatMap(page=>{
+        const shell=shells.get(page.id);if(!shell)return[]
+        const bounds=shell.getBoundingClientRect(),previous=cache.current.get(page.id)
+        const rectangles=previous?.page===page?previous.bounds:elementBounds(page)
+        const entry=previous?.page===page?previous:{page,bounds:rectangles,geometry:packElementGeometry(rectangles),geometryKey:++geometryKey.current}
+        cache.current.set(page.id,entry)
+        return[{page,entry,viewport:{x:(viewportBounds.left-bounds.left)/scale-48,y:(viewportBounds.top-bounds.top)/scale-48,width:viewportBounds.width/scale+96,height:viewportBounds.height/scale+96}}]
+      })
+      await Promise.all(queries.map(async({page,entry,viewport})=>{
+        const result=await compute.projectElements(page.id,entry.geometry,viewport,entry.geometryKey,revision,controller.signal)
+        if(controller.signal.aborted)return
+        if(result.issues.length)onError('部分元素位置无效，请检查元素尺寸。')
+        next[page.id]={page,ids:expandVisibleNodes(page,result.ids,page.id===pageId?[...selected,...(editingId?[editingId]:[])]:[]),bottom:Math.max(40,...entry.bounds.map(item=>item.y+item.height))}
+      }))
       if (!controller.signal.aborted) setVisible(next)
     })().catch(error => { if (!controller.signal.aborted && error?.name !== 'AbortError') onError('元素计算暂时不可用，请重新打开文稿。') })
     return () => controller.abort()

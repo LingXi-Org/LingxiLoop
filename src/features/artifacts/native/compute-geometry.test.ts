@@ -1,3 +1,4 @@
+import {packElementGeometry} from './compute-protocol'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { BoundsIndex, ElementIndexes } from './compute-geometry'
@@ -20,15 +21,24 @@ test('snap chooses nearest page edge/centre independently and leaves distant coo
   assert.deepEqual(index.snap({ x: 300, y: 500 }, 6), { x: 300, y: 500 })
 })
 
-test('element indexes keep only eight pages and reject stale geometry after edits', () => {
-  const indexes = new ElementIndexes(), viewport = { x: 0, y: 0, width: 100, height: 100 }
-  for (let page = 0; page < 8; page++) indexes.replace(`p${page}`, [{ id: 'node', ...viewport }], 1)
-  assert.deepEqual(indexes.visible('p0', viewport, 1), ['node'])
-  indexes.replace('p8', [{ id: 'node', ...viewport }], 1)
-  assert.throws(() => indexes.visible('p1', viewport, 1), /missing_index/)
-  indexes.update('p0', [{ id: 'node', x: 200, y: 200, width: 100, height: 100 }], [], 2)
-  assert.throws(() => indexes.visible('p0', viewport, 1), /stale_index/)
-  assert.deepEqual(indexes.visible('p0', viewport, 2), [])
-  indexes.drop('p0')
-  assert.throws(() => indexes.visible('p0', viewport, 2), /missing_index/)
+test('50个画板可在一个计算回合内依次装载并裁剪，索引仍只有8页',()=>{
+ const indexes=new ElementIndexes(),viewport={x:0,y:0,width:100,height:100}
+ for(let page=0;page<50;page++){
+  const result=indexes.project(`p${page}`,packElementGeometry([{id:'visible',...viewport},{id:'outside',x:1000,y:0,width:20,height:20}]),viewport,1,page)
+  assert.deepEqual(result.ids,['visible']);assert.deepEqual(result.issues,[])
+  assert.ok(indexes.size<=8)
+ }
+ const result=indexes.project('p0',packElementGeometry([{id:'updated',...viewport}]),viewport,2,51)
+ assert.deepEqual(result.ids,['updated'])
+ assert.throws(()=>indexes.project('p0',packElementGeometry([]),viewport,1,1),/stale_index/)
+})
+
+test('视口改变复用同份几何，几何改变后重新校验；异常位置仍有中文上层反馈依据',()=>{
+ const indexes=new ElementIndexes(),viewport={x:0,y:0,width:100,height:100}
+ const first=indexes.project('page',packElementGeometry([{id:'a',...viewport}]),viewport,1,1)
+ const next=indexes.project('page',packElementGeometry([{id:'a',...viewport}]),{...viewport,x:500},1,1)
+ assert.deepEqual(first.ids,['a']);assert.deepEqual(next.ids,[])
+ assert.equal(first.issues,next.issues,'未改几何不重复校验')
+ const invalid=indexes.project('page',packElementGeometry([{id:'a',...viewport,width:-1}]),viewport,2,2)
+ assert.deepEqual(invalid.issues,[{id:'a',code:'negative_size'}]);assert.deepEqual(invalid.ids,[])
 })
