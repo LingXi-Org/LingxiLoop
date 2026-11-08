@@ -1,0 +1,83 @@
+{
+  "candidate": "d2b8b37a85c97513dfa360fe592b4765fe3cf9dd",
+  "comparison": "42a5db1055186aa2b64a920b26b5d8c6817046c1",
+  "reviewType": "独立只读真实生产脱敏静态图后验；无浏览器/私有SDK或构建产物下载。",
+  "status": "实际静态图完整性和隔离核对通过；基线漂移仍未证实原因，性能资格仍false。没有新增P1/P2，不能将跨运行52gzip差值解释为真实收益或回归。",
+  "findings": [],
+  "evidence": {
+    "profile": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-d2b8b37a.json",
+    "run": 42455137923,
+    "job": 128652424685,
+    "ciRunField": 42455142873,
+    "closureScript": "/workspace/lingxi-issue707-scratch/review-d2-actual/verify.py",
+    "closureResult": "/workspace/lingxi-issue707-scratch/review-d2-actual/checks.json",
+    "driftScript": "/workspace/lingxi-issue707-scratch/review-d2-actual/drift.py",
+    "driftResult": "/workspace/lingxi-issue707-scratch/review-d2-actual/chunk-drift.json",
+    "functionalReview": "/tmp/lingxi-review-d2b8b37a.json"
+  },
+  "verified": [
+    "collectorCommit与d2精确候选一致；两个profile的openingIsolationPassed/buildCompleted/sourceInputsUnchanged均true、uncommittedInputsPossible=false、qualified=false。",
+    "application/native两根imports递归闭包及chunk/codeBytes/gzipBytes合计一致；application与nativeIncremental互斥；没有遗漏静态导入。",
+    "原生两根均无Thread/CodeBlock/parse5/streamdown/高亮器/Query重型静态路径；Native/RTE静态闭包仍分别28/33块、联合33块，native增量22块。",
+    "共享图标块仅七个公开lucide leaf(Bot/Image/ChevronDown/Ellipsis/ChevronLeft/ChevronRight/X)，2286raw/646gzip，无第一方模块或React；createLucideIcon工厂独立。",
+    "React和ReactDOM各8模块，唯一应用预热块且渲染/原始码元与基线相同，没有复制React。",
+    "本次修改的NativeInspector仍不进入启动静态闭包；FontField/FontPopover/ElementFontMenu及字体显示/分组/声明helper亦保持按需。",
+    "按去hash逻辑名+第一方模块集合+包名数量+公开模块集合逐块配对，候选相对42所有归属、聚合/公开模块元数据、原始字节与去hash静态/动态边及binding计数完全相同。"
+  ],
+  "gzipBytes": {
+    "currentBaseline": {
+      "application": 618927,
+      "nativeIncremental": 155935,
+      "union": 774862
+    },
+    "currentCandidate": {
+      "application": 621281,
+      "nativeIncremental": 217845,
+      "union": 839126
+    },
+    "currentBuildGrowth": {
+      "application": 2354,
+      "nativeIncremental": 61910,
+      "union": 64264,
+      "unionPercent": 8.293605829167007,
+      "nativePercent": 39.70244011928048
+    },
+    "crossRunVs42": {
+      "application": 38,
+      "nativeIncremental": 14,
+      "union": 52,
+      "applicationRawDelta": 0,
+      "nativeRawDelta": 0,
+      "actualPerformanceConclusion": false
+    }
+  },
+  "baselineDrift": {
+    "sourceInputsSha256": "66d9f949341b96b852a2c04862751cbf28648db8e6787e79beb3348a5213202f",
+    "currentBaselineDeepEqualsEarlier6e": true,
+    "42Baseline": {
+      "applicationRaw": 2039122,
+      "applicationGzip": 619244,
+      "nativeRaw": 481852,
+      "nativeGzip": 155918,
+      "unionGzip": 775162
+    },
+    "d2Baseline": {
+      "applicationRaw": 2038926,
+      "applicationGzip": 618927,
+      "nativeRaw": 481852,
+      "nativeGzip": 155935,
+      "unionGzip": 774862
+    },
+    "attribution": "两轮模块集合/数量及去hash依赖边一致；唯一raw差发生在应用DesktopApp块381997→381801(-196)，gzip121606→121249(-357)。其中avatar-core仍162模块/original294963码元，rendered273117→271863(-1254)，回到6e值。其他raw不变，gzip小幅波动。",
+    "causeEstablished": false,
+    "limit": "回到历史同一profile并不能解释42那轮漂移；源码输入摘要不证明全部构建环境/优化因素完全相同。没有读取实际构建JS或私有依赖内部源码，不猜测环境/SDK/并发原因。"
+  },
+  "qualification": [
+    "application∪native合计839126、相对本轮基线+8.293606%，不通过静态5%口径；没有把成本转到预热应用后扣除。",
+    "本地逐chunk gzip、UTF16模块码元和绑定计数不能替代实际网络、执行、Worker、路由动态预热、冷启动/输入或PSS计量，也不能唯一归因。",
+    "未运行最终10组AB/BA，完整视觉/服务/实际性能仍未合格。静态passed标志与qualified=false不同。",
+    "本报告只补图后验，不覆盖已独立完成的CAS功能审查；新功能结果与静态图分别存证。"
+  ],
+  "modifiedProductFiles": false,
+  "browserLaunched": false
+}

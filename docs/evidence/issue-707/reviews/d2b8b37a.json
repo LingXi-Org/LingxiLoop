@@ -1,0 +1,121 @@
+{
+  "candidate": "d2b8b37a85c97513dfa360fe592b4765fe3cf9dd",
+  "baseline": "42a5db1055186aa2b64a920b26b5d8c6817046c1",
+  "checkout": "/workspace/lingxi-issue707-scratch/review-d2b8b37a",
+  "reviewType": "repository-review 独立只读限定字体CAS修复复审",
+  "status": "原字体意图静默丢弃P2在本候选实测闭合；未发现新增P1/P2。限定范围通过，不代表完整计划或最终性能资格。",
+  "findings": [],
+  "closedFinding": {
+    "title": "打开Arial后Agent改Tahoma，再选原Arial的意图被错误判为无变化",
+    "before": "父线程d46-cas-original-before154记录冲突等待超时；本次修复前真实失败保留于候选证据，未冒称本审查再次运行父候选。",
+    "after": "Chrome140/154均选回Arial后进入共享冲突，无操作写入对端，下载恢复副本保留Arial和打开时基准。CSS别名原值/新值同样保护；对端已等于目标Lato则零写入。",
+    "location": "src/features/artifacts/native/NativeInspector.tsx:92",
+    "implementationBoundary": "operations通过latest构造，但commitCode显式传入旧base；readKeys包含css、style.fontFamily、style.themeFont、style.themeFontFallback、locked。没有用latest重新prepare或更新CAS基准，Slides路径不变。"
+  },
+  "validation": [
+    {
+      "name": "8文件定向单位",
+      "passed": 40,
+      "log": "/tmp/lingxi-review-d2b-units.log",
+      "scope": "声明摘要/分组/显示/字体转换/Session/服务投影/中文；不是父线程47单位全部独立重跑。"
+    },
+    {
+      "name": "CI/存储/失败/诊断合同",
+      "passed": 25,
+      "log": "/tmp/lingxi-review-d2b-contracts.log"
+    },
+    {
+      "name": "140/154各4CAS场景",
+      "passed": 8,
+      "cases": [
+        "original",
+        "css-original",
+        "css-new",
+        "same"
+      ],
+      "receipt": "/workspace/lingxi-issue707-scratch/review-d2b-probes/stock-results.json",
+      "logs": [
+        "/tmp/lingxi-review-d2b-original140.log",
+        "/tmp/lingxi-review-d2b-css-original140.log",
+        "/tmp/lingxi-review-d2b-css-new140.log",
+        "/tmp/lingxi-review-d2b-same140.log",
+        "/tmp/lingxi-review-d2b-original154.log",
+        "/tmp/lingxi-review-d2b-css-original154.log",
+        "/tmp/lingxi-review-d2b-css-new154.log",
+        "/tmp/lingxi-review-d2b-same154.log"
+      ]
+    },
+    {
+      "name": "140/154各12菜单状态",
+      "passed": 24,
+      "logs": [
+        "/tmp/lingxi-review-d2b-menu140.log",
+        "/tmp/lingxi-review-d2b-menu154.log"
+      ],
+      "scope": "前3P2、通用回退栈当前项、继承、作者字体、键盘/空项、未加载页保存重开、同字体主题解绑、CDP中文组词均无回归。不是OS级Fcitx或全部字体/菜单还原。"
+    },
+    {
+      "name": "额外真实HTTP/下载恢复反例154",
+      "passed": 4,
+      "probe": "/workspace/lingxi-issue707-scratch/review-d2b-probes/intent.mjs",
+      "receipt": "/workspace/lingxi-issue707-scratch/review-d2b-probes/additional-results.json",
+      "cases": [
+        {
+          "name": "padding-original",
+          "detail": "初始css padding-left11px/border-radius6px，peer改font-familyTahoma、padding27px及outline。选原Arial后冲突、零对端写入，恢复包包含旧css/fontFamily/theme/fallback/locked五基准0。",
+          "evidence": [
+            "/workspace/lingxi-issue707-scratch/review-d2b-padding-original154/review-recovery.json",
+            "/workspace/lingxi-issue707-scratch/review-d2b-padding-original154/review-rebased-preview.json"
+          ]
+        },
+        {
+          "name": "padding-new",
+          "detail": "同CSS并发输入，选新Lato后冲突；独立内存以当前文档重新prepare下载operations，目标Lato正确且padding27px/border6px/outline均保留。此内存校验没有提交产品写入。",
+          "evidence": [
+            "/workspace/lingxi-issue707-scratch/review-d2b-padding-new154/review-recovery.json",
+            "/workspace/lingxi-issue707-scratch/review-d2b-padding-new154/review-rebased-preview.json"
+          ]
+        },
+        {
+          "name": "css-same",
+          "detail": "peer CSS已为Lato并携带padding27px/border/outline，选择Lato零写入，CSS和字体保持。",
+          "evidence": [
+            "/workspace/lingxi-issue707-scratch/review-d2b-css-same154/review-noop.json"
+          ]
+        },
+        {
+          "name": "theme-original",
+          "detail": "peer新增themeFont=font.peer/fallbackTahoma后选原Arial，虽然style.fontFamily本身未改，主题readKeys仍触发冲突；恢复目标Arial且unset主题引用/回退，旧五基准仍0。",
+          "evidence": [
+            "/workspace/lingxi-issue707-scratch/review-d2b-theme-original154/review-recovery.json",
+            "/workspace/lingxi-issue707-scratch/review-d2b-theme-original154/review-rebased-preview.json"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "git diff --check 42a5db10 HEAD及冻结工作树干净",
+      "passed": true
+    }
+  ],
+  "codeReview": [
+    "生产变更仅字体changeElementFont与artifactVersionKey导入；没有共享模型、服务、数据库或Slides实现变更。",
+    "commitCode检查实时session写权限；Session.dispatch以传入base调用prepareBatch并覆写readKeys为该快照版本，应用到当前文档发生冲突时原批次进入恢复队列。",
+    "latest其他CSS属性进入恢复operations，旧CSS版本仍作为读依赖，防止字体别名绕过冲突。目标无差异时不提交，不伪造空历史。",
+    "主题与锁定读依赖显式保留；实测主题仅改变引用字段也不能绕过冲突。只读/锁定guard及retainDraft分支仍存在，本轮未扩大到所有权限竞争。",
+    "受控HTTP夹具没有冒充真实Agent/授权服务；脚本原值场景实际等待共享conflict和恢复下载，不将仅收据HTTP成功当通过。"
+  ],
+  "unverified": [
+    "没有运行真实授权Agent/HTTP、跨租户或OS级Fcitx。peer是受控HTTP文档变化而非外部Agent服务。",
+    "本轮没有重跑全部readonly/locked或完整50页/媒体导出；变更guard与模型/服务未改，前候选相关回归可保留但不能冒称本轮新通过。",
+    "准确私有SDK未安装，不使用桩/适配器，没有本地完整typecheck/build通过。",
+    "完整Source/CSS/字体目录/混合面板、四尺寸双主题所有像素状态和最终至少10组真实性能仍未完成。"
+  ],
+  "retainedFailures": [
+    "父候选原值CAS先红事实及42基线静态漂移均保持；本轮不改写原报告。"
+  ],
+  "browserLifecycle": "140/154完全顺序执行；全部浏览器与临时服务已退出，已通知根线程归还。",
+  "modifiedProductFiles": false,
+  "publishedOrDeployed": false,
+  "staticGraphPosterior": "另存/tmp/lingxi-review-d2-actual-graph.json，不替代本功能复验或性能资格。"
+}

@@ -58,6 +58,7 @@ const testsByScope = {
     'src/features/artifacts/native/element-font-properties.test.ts',
     'src/features/artifacts/native/element-font-picker.test.ts',
     'src/features/artifacts/native/element-font-display.test.ts',
+    'src/features/artifacts/native/element-font-variant.test.ts',
     'src/features/artifacts/native/element-alignment.test.ts',
     'src/features/artifacts/native/element-positioning.test.ts',
     'src/features/artifacts/native/element-sizing.test.ts',

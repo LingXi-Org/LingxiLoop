@@ -10268,6 +10268,42 @@
         "receipt": "functional/element-font-menu.json",
         "scope": "限定字体菜单及派生摘要，不是全产品授权或全部来源状态。"
       }
+    },
+    {
+      "id": "D47-design",
+      "editor": "design",
+      "control": "字形菜单、成对还原与继承读数",
+      "trigger": "单选文字→字重→选择/还原；打开菜单后对端修改或撤回权限",
+      "states": [
+        "默认",
+        "深色",
+        "触屏",
+        "14字形",
+        "继承",
+        "CSS优先级",
+        "同值",
+        "共享历史",
+        "只读",
+        "协作冲突",
+        "本地恢复"
+      ],
+      "reference": {
+        "path": "source-element-font-variant.json",
+        "runtime": "visual/element-font-variant/reference/"
+      },
+      "implementation": "ElementFontVariantField.tsx、element-font-variant.ts、NativeInspector.tsx、FontField.tsx",
+      "screenshots": {
+        "reference": "visual/element-font-variant/reference/",
+        "native": "visual/element-font-variant/implementation/",
+        "matchedStateVerified": false
+      },
+      "result": "单选字面与继承、成对还原、当前值、定向协作和局部弹层几何通过；原版CSS表达式/完整混合、多选和全局视觉/性能未完成。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-font-variant.json",
+        "scope": "有限状态，非完整字体系统或全产品验收"
+      }
     }
   ],
   "registeredReplacements": [

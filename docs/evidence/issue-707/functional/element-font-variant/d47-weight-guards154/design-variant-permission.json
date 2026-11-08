@@ -1,0 +1,6 @@
+{
+  "case": "variant-permission",
+  "normalDisabledState": true,
+  "noWrites": true,
+  "consoleOrPageErrors": []
+}

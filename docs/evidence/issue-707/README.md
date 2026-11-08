@@ -579,3 +579,9 @@ D46增加[字体菜单与声明摘要](functional/element-font-menu.json)，清�
 
 
 42a5db10普通CI42453998419、[真实静态图](performance/static-profile-42a5db10.json)42453993923及[功能复审](reviews/42a5db10.json)限定通过，原3P2独立闭合。[图后验](reviews/42a5db10-actual-graph.json)隔离核对通过，但本轮baseline漂移：同Source输入哈希，DesktopApp raw+196，唯一包聚合变化avatar-core rendered+1254，模块/归属/边不变，具体环境原因未证实。仅本轮union839074/775162=+8.244986%，跨轮gzip-21不当收益，最终性能未资格。随后[新增真实字体协作反例与修复](functional/element-font-family-conflicts.json)：对端改字体后选择原值原先被静默丢弃，已改当前差异判断+捕获版本/readKeys提交，两版四协作场景及各12菜单、47单位通过。新候选CI/独立审查待提交；其余计划仍未完成。
+
+
+d2b8b37a普通CI42455142873、[真实静态图](performance/static-profile-d2b8b37a.json)42455137923以及[冻结功能复审](reviews/d2b8b37a.json)/[图后验](reviews/d2b8b37a-actual-graph.json)限定通过，未发现新增可复现问题；独立确认原值/CSS别名冲突恢复不覆盖对端，主题引用也纳入原版本保护。静态联合839126，比基线774862为+8.293606%，不是实际传输/性能通过。该轮baseline恢复为6e输出，跨轮漂移具体原因仍未证实。
+
+
+D47增加[字形菜单、成对还原与继承读数](functional/element-font-variant.json)，清单179项。[固定来源](source-element-font-variant.json)确认字重与font-style配对、还原不连锁清除装饰、继承无勾选和先聚焦值控件。原生保留操作/草稿/CAS/共享历史；补中文还原字重及字体逆时针图标/焦点，修正字体分组弹层400和选项435字重。浅/深/触屏/14字形局部弹层尺寸通过，最大相对偏差0.328125px；粗指针绝对提前50px和完整图标像素仍未资格。32定向单位与中文文案通过；本地type仍76条SDK级联，owning0，不称通过。两版单选字形/历史与3协作场景通过；最终154旧字体两模式和11菜单、140正常禁用3场景已通过。多选探针真实失败为面板缺字重入口，非字面CSS、完整混合及全部状态继续实施；候选CI/独立冻结审查提交后登记。

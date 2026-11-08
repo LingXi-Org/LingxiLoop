@@ -1,0 +1,6 @@
+{
+  "case": "variant-peer-lock",
+  "normalDisabledState": true,
+  "noWrites": true,
+  "consoleOrPageErrors": []
+}

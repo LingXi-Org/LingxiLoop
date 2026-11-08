@@ -127,7 +127,7 @@
 
 .native-editor .native-element-font-menu{--native-font-menu-muted:rgba(0,0,0,.6);--native-font-menu-separator:rgba(0,0,0,.08)}
 .dark .native-editor .native-element-font-menu,.native-editor[data-theme=dark] .native-element-font-menu{--native-font-menu-muted:rgba(255,255,255,.57);--native-font-menu-separator:rgba(255,255,255,.04)}
-.native-editor .native-element-font-popup:has(.native-element-font-menu){font-weight:435}
+.native-editor .native-element-font-popup:has(.native-element-font-menu){font-weight:400}
 .native-editor .native-element-font-menu .native-text-style-empty{color:inherit;opacity:.4}
 .native-editor .native-element-font-menu .native-font-option[data-font-preview=true]>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.25;font-variation-settings:normal}
 .native-editor .native-element-font-menu .native-font-clear{color:inherit;border-radius:3.5px}
@@ -135,3 +135,17 @@
 
 .native-editor .native-element-font-menu .native-font-option[data-font-preview=false]{height:24px;min-height:24px}
 @media(pointer:coarse){.native-editor .native-element-font-menu .native-font-option[data-font-preview=false]{height:40px;min-height:40px}}
+.native-editor .native-element-text-body .native-font-weight-label-text{width:39.921875px}
+.native-editor .native-font-variant-popup{border-radius:10px;font-size:13px;line-height:19px;max-height:min(440px,calc(100vh - 16px));box-shadow:0 0 0 1px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.08)}
+.native-editor .native-font-variant-list{max-height:inherit;overflow-y:auto;padding:4px;overscroll-behavior:contain}
+.native-editor .native-font-variant-option{display:flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;width:100%;height:24px;min-height:24px;padding:2.5px 8px;border:0;border-radius:6px;background:transparent;color:inherit;text-align:start;font:inherit;font-weight:435}
+.native-editor .native-font-variant-option:hover,.native-editor .native-font-variant-option:focus-visible{outline:0;background:var(--native-hover)}
+@media(pointer:coarse){.native-editor .native-font-variant-popup{border-radius:14px;font-size:14px;line-height:20px}.native-editor .native-font-variant-list{padding:6px}.native-editor .native-font-variant-option{height:40px;min-height:40px;padding:6px 10px;border-radius:8px}}
+
+.native-editor .native-element-font-menu .native-font-option,.native-editor .native-element-font-menu .native-text-style-empty,.native-editor .native-element-font-menu .native-font-clear{font-weight:435}
+.native-editor .native-element-text-body .native-font-field[data-inherited=true]>button>span{color:rgba(0,0,0,.6)}
+.dark .native-editor .native-element-text-body .native-font-field[data-inherited=true]>button>span,.native-editor[data-theme=dark] .native-element-text-body .native-font-field[data-inherited=true]>button>span{color:rgba(255,255,255,.57)}
+@media(pointer:coarse){.native-editor .native-element-text-body .native-font-weight-label-text{width:43.25px}}
+.dark .native-editor .native-font-variant-popup,.native-editor[data-theme=dark] .native-font-variant-popup{background:rgb(48,48,48);color:rgba(255,255,255,.93);border-bottom:1px solid rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 8px 24px rgba(0,0,0,.32),0 2px 6px rgba(0,0,0,.2)}
+
+.native-editor .native-font-variant-option>svg{width:12px;height:16px;flex:none;color:var(--native-accent)}
