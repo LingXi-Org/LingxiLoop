@@ -530,3 +530,6 @@ D41补齐[文本可选属性](functional/element-text-properties.json)：强调�
 
 
 6ec6e293普通CI42431461935与[真实静态图](performance/static-profile-6ec6e293.json)42431458308成功；静态应用621260、原生228630、联合849890，仍不是实际性能通过。[冻结只读审查](reviews/6ec6e293.json)发现两项P2：复合装饰切换丢失线条、嵌套列表类型切换破坏层级。因此该候选不能因基本流程与构建通过被视为功能通过。现按独立原输入修复；两版各2反例的保存、重开、共享历史及无错误回归通过，17单位/缩略图检查通过，保留原前后DOM与失败。见[修复证据](functional/element-text-properties-review.json)。修复候选CI及冻结复审待执行，完整资格仍false。
+
+
+9687ef07普通CI42432427976及[真实静态图](performance/static-profile-9687ef07.json)42432423469成功；联合850267仅为静态估计。[独立复审](reviews/9687ef07.json)确认原两P2闭合，又实测发现作者先写blue长写、后写red简写时编辑错误恢复blue。现按原声明顺序展开后仅编辑线条，正反顺序单位和140/154各3反例保存/重开/历史通过；测试也等待实际DOM提交，不用HTTP完成代替渲染完成。18单位、lint43/4通过；修复后CI与冻结复审待执行。[顺序修复证据](functional/element-text-properties-order.json)保留原输入/前后DOM。全局资格仍false。

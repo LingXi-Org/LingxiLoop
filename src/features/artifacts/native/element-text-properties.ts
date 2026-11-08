@@ -5,10 +5,12 @@ import {nodeCodeEntries,nodeCodePatch} from './inspector-code-edit'
 export const textCaseLabels={none:'无',uppercase:'大写',lowercase:'小写',capitalize:'首字母大写'} as const
 export type TextListKind='none'|'bullet'|'number'
 export function textPropertyPatch(node:ArtifactNode,page:ArtifactPage,changes:Record<string,string|null>){
- const before=nodeCodeEntries(node,page),values=new Map(before.map(entry=>[entry.name,entry.value]))
+ const before=nodeCodeEntries(node,page)
+ let values=new Map(before.map(entry=>[entry.name,entry.value]))
  if(Object.hasOwn(changes,'text-decoration-line')&&values.has('text-decoration')){
-  const expanded=expandTextDecoration(values.get('text-decoration')!);values.delete('text-decoration')
-  for(const [name,value]of Object.entries(expanded))if(!values.has(name))values.set(name,value)
+  const expanded=new Map<string,string>()
+  for(const [name,value]of values)for(const [key,part]of Object.entries(name==='text-decoration'?expandTextDecoration(value):{[name]:value}))expanded.set(key,part)
+  values=expanded
  }
  for(const [name,value]of Object.entries(changes))if(value===null)values.delete(name);else values.set(name,value)
  return nodeCodePatch(node,before,[...values].map(([name,value])=>({name,value})))

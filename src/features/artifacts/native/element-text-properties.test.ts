@@ -50,3 +50,11 @@ test('切换嵌套列表种类只修改外层类型，条目身份顺序和子�
  assert.deepEqual(changed.richText,{...node.richText,content:[{...node.richText.content[0],type:'orderedList'}]});assert.equal(changed.richText?.content?.[0].content?.length,2)
  assert.deepEqual({...changed,...textListPatch(changed,'bullet')},node)
 })
+
+test('装饰按作者声明顺序取生效伴随值，后置简写覆盖早期颜色',()=>{
+ const node={...createNode('text','text'),css:{'text-decoration-color':'blue','text-decoration':'underline dotted red 2px'}},page={...createPage('page'),nodes:{text:node},nodeOrder:['text']}
+ const result=textPropertyPatch(node,page,{'text-decoration-line':'underline line-through'})
+ assert.equal(result.patch.css?.['text-decoration-color'],'red')
+ const reversed={...node,css:{'text-decoration':'underline dotted red 2px','text-decoration-color':'blue'}}
+ assert.equal(textPropertyPatch(reversed,page,{'text-decoration-line':'underline line-through'}).patch.css?.['text-decoration-color'],'blue')
+})

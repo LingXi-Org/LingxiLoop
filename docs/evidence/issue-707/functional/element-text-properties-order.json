@@ -1,0 +1,27 @@
+{
+  "candidateUnderReview": "9687ef07ae9bb2ce56f2597c060913d4a3f5ef2b",
+  "review": "reviews/9687ef07.json",
+  "finding": {
+    "severity": "P2",
+    "trigger": "作者CSS按顺序text-decoration-color:blue，随后text-decoration:underline dotted red 2px；原显示红色",
+    "before": "只切换删除线后颜色错误变蓝，两浏览器已保存复现",
+    "correction": "按原声明顺序展开有效长写，再仅替换线条；反向顺序仍保留作者后写蓝色。"
+  },
+  "rootChecks": [
+    "新增顺序单位在修复前失败，修复后正反顺序通过",
+    "18属性/共享代码/缩略图单位通过",
+    "140/154各3反例通过保存重开/共享历史/其他页面/无错误",
+    "回归等待实际DOM提交，保留独立154原HTTP后DOM时序失败；未改门槛或超时",
+    "lint43warnings4infos"
+  ],
+  "previousCandidateCI": {
+    "run": 42432427976,
+    "passed": true
+  },
+  "previousCandidateStaticProfile": "performance/static-profile-9687ef07.json",
+  "newCandidateCI": "待提交",
+  "newCandidateIndependentReview": "待冻结",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}
