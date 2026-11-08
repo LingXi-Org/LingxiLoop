@@ -10345,6 +10345,41 @@
         "receipt": "functional/element-font-weight-input.json",
         "scope": "限定组件状态，不是全编辑器资格。"
       }
+    },
+    {
+      "id": "D49-design",
+      "editor": "design",
+      "control": "多选字体与字重",
+      "trigger": "选中文字→Shift扩选→字体/字重→编辑、保存、撤销、重开及协作冲突。",
+      "states": [
+        "共同声明",
+        "混合声明",
+        "相同计算值",
+        "未声明",
+        "混合斜体",
+        "共同原始文本",
+        "锁定",
+        "共享历史",
+        "保存重开",
+        "整组冲突恢复"
+      ],
+      "reference": {
+        "path": "source-element-font-selection.json",
+        "runtime": "visual/element-font-selection/reference/"
+      },
+      "implementation": "ElementFontSelection.tsx、element-font-selection.ts、FontField.tsx、ElementFontVariantField.tsx",
+      "screenshots": {
+        "reference": "visual/element-font-selection/reference/",
+        "native": "visual/element-font-selection/implementation/",
+        "matchedStateVerified": false
+      },
+      "result": "限定多选字体/字重流程通过；其他多选属性、全图及最终性能未完成。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-font-selection.json",
+        "scope": "限定控件状态，不是全部编辑器资格。"
+      }
     }
   ],
   "registeredReplacements": [

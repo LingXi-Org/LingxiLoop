@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "bundle": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+  "bundleSha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+  "runtimeResourceHashesVerified": 12,
+  "sourceLocations": {
+    "multiAggregation": "nz函数f；逐项value/companionValue比较、共同fallback、移除companionFallback",
+    "weightRow": "XB函数；混合项无勾选，统一weight/style对",
+    "familyRow": "PropertyFontFamilyRow；混合项无选中字体"
+  },
+  "runtime": "visual/element-font-selection/reference/",
+  "observed": [
+    "字体声明不同显示Mixed；字重声明不同即使计算值一致也显示Mixed，菜单无勾选。",
+    "先选未声明字重的H1，再扩选未声明的P：实际700/400，控件仍Bold，菜单全部unchecked；该触发路径作为显示回退，不回填作者声明。",
+    "共同700 !important使用Weight文本输入，实际两元素700。",
+    "共同700但伴随italic/normal混合，选择Regular后两元素均400 normal，作者font-style均清除。"
+  ],
+  "limits": [
+    "混合多选的整块属性面板仍未完成；此证据只覆盖字体与字重。",
+    "反向选择诊断未能进入字体控件，失败保留，未作为已通过状态。"
+  ]
+}

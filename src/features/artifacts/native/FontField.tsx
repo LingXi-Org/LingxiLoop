@@ -5,21 +5,21 @@ import { EditorIcon, Menu, MenuItem, FloatingPopover } from './EditorPrimitives'
 import { editorFontChoice, editorFontVariants, editorFontMenuVariants, editorFontVariantLabel, type EditorFont, type EditorFontVariant } from './editor-fonts'
 
 const FontPopover = lazy(() => import('./FontPopover'))
-export function FontField({ value, theme, element = false, disabled = false, onReset, families, onBegin, onChange }: { value?: string; theme?: string; element?: boolean; disabled?: boolean; onReset?():void; families?:readonly string[]; onBegin(): void; onChange(font: EditorFont): void }) {
+export function FontField({ value, theme, element = false, disabled = false, onReset, families, mixed = false, onBegin, onChange }: { value?: string; theme?: string; element?: boolean; disabled?: boolean; onReset?():void; families?:readonly string[]; mixed?:boolean; onBegin(): void; onChange(font: EditorFont): void }) {
   const trigger = useRef<HTMLButtonElement>(null)
   const [open, setOpen] = useState(false)
   const restore = useRef(false),openingKey=useRef<'ArrowDown'|'ArrowUp'|null>(null)
   const close = (restoreFocus = false) => { restore.current = restoreFocus; setOpen(false) }
   useEffect(() => { if (disabled) close() }, [disabled])
   useEffect(() => { if (!open && restore.current) { restore.current = false; if (!disabled) trigger.current?.focus() } }, [open, disabled])
-  const selected = element?elementFontChoice(value):editorFontChoice(value, theme),focusSearch=!element||typeof window==='undefined'||!window.matchMedia('(pointer:coarse)').matches
-  return <div className="native-field native-font-field" data-inherited={element&&!onReset||undefined} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close() }} onKeyDown={event => { if (open && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(true) } }}>
+  const selected = mixed?undefined:element?elementFontChoice(value):editorFontChoice(value, theme),focusSearch=!element||typeof window==='undefined'||!window.matchMedia('(pointer:coarse)').matches
+  return <div className="native-field native-font-field" data-inherited={element&&(!onReset||mixed)||undefined} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) close() }} onKeyDown={event => { if (open && event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(true) } }}>
     <span className={element?"native-font-label":undefined}>{element?<><span className="native-font-label-text">字体</span>{onReset&&<span className="native-font-reset-wrap"><button type="button" className="native-font-reset" aria-label="还原字体" title="使用继承的字体" disabled={disabled} onClick={()=>{trigger.current?.focus();onBegin();onReset()}}><RotateCcw aria-hidden="true" size={12} strokeWidth={1.5}/></button></span>}</>:"字体"}</span>
     <button ref={trigger} type="button" disabled={disabled} aria-label="字体" aria-haspopup={element?'menu':'dialog'} aria-expanded={open && !disabled} onKeyDown={event=>{if(element&&(event.key==='ArrowDown'||event.key==='ArrowUp')){event.preventDefault();event.stopPropagation();openingKey.current=event.key;onBegin();setOpen(true)}}} onClick={() => { openingKey.current=null;if (!open) onBegin(); setOpen(value => !value) }}>
-      <span>{selected?.label ?? '自定义字体'}</span><EditorIcon name="chevron" size={12} />
+      <span>{mixed?'混合':selected?.label ?? '自定义字体'}</span><EditorIcon name="chevron" size={12} />
     </button>
     {open && !disabled && <FloatingPopover anchor={trigger} label="字体选择" role={element?'menu':'dialog'} align="start" initialFocusSelector={element&&openingKey.current?'[data-font-current=true]':focusSearch?"input":undefined} className={`native-font-popup${element?' native-element-font-popup':''}`} matchAnchorWidth={element} stableWhileOpen={element} gap={element?6:4} onClose={close}>
-      <Suspense fallback={<div role="status" className="native-font-empty">正在加载字体选项…</div>}><FontPopover autoFocus={focusSearch&&!openingKey.current} element={element} selected={selected} families={families} currentFamily={element&&onReset?value:undefined} initialKey={openingKey.current} onChange={onChange} onClose={close} /></Suspense>
+      <Suspense fallback={<div role="status" className="native-font-empty">正在加载字体选项…</div>}><FontPopover autoFocus={focusSearch&&!openingKey.current} element={element} selected={selected} families={families} currentFamily={element&&onReset&&!mixed?value:undefined} initialKey={openingKey.current} onChange={onChange} onClose={close} /></Suspense>
     </FloatingPopover>}
   </div>
 }

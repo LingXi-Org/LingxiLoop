@@ -39,6 +39,8 @@ try{
           if(args['font-current-italic']==='true')content=content.replace('font-weight:700;','font-weight:700;font-style:italic;')
           if(args['style-current-family'])content=content.replace('font-family:Arial','font-family:'+args['style-current-family'])
           if(args['style-census-fixture']==='true')content=content.replace('</x-dc>','<h2 style="position:absolute;left:1000px;top:200px;font-size:32px;font-family:Arial">次级标题</h2><p style="position:absolute;left:1000px;top:300px;font-size:18px;font-family:Arial">正文内容</p><small style="position:absolute;left:1000px;top:400px;font-size:14px;font-family:Arial">补充说明</small></x-dc>')
+          if(args['style-secondary-weight'])content=content.replace('font-size:18px;font-family:Arial',`font-size:18px;font-weight:${args['style-secondary-weight']};font-family:Arial`)
+          if(args['style-secondary-style'])content=content.replace('font-size:18px;',`font-size:18px;font-style:${args['style-secondary-style']};`)
           if(args['text-align-initial'])content=content.replace('<h1 style="',`<h1 style="text-align:${args['text-align-initial']};`)
           if(args['contrast-color'])content=content.replace('color:#18332b',`color:${args['contrast-color']}`)
           if(args['contrast-size'])content=content.replace('font-size:48px',`font-size:${args['contrast-size']}px`)
@@ -61,7 +63,7 @@ try{
       const textRect=await heading.boundingBox();await page.mouse.click(textRect.x+(args.node?textRect.width*.5:8),textRect.y+textRect.height*.5)
       if(args.node==='shape'){const expand=page.getByRole('button',{name:/^Expand group/}).first();if(await expand.count())await expand.click();await page.getByRole('treeitem',{name:'group',exact:true}).click()}
       if(args['outline-element']==='true')await page.getByRole('treeitem',{name:'Heading, “LingxiLoop 1”',exact:true}).click()
-      if(args['style-multi']==='true')await frame.locator('p').first().click({modifiers:['Shift']})
+      if(args['style-multi']==='true'){if(args['style-multi-reverse']==='true'){await frame.locator('p').first().click();await heading.click({modifiers:['Shift']})}else await frame.locator('p').first().click({modifiers:['Shift']});await page.waitForTimeout(250)}
       if(args['text-editing']==='true')await heading.dblclick()
       if(!args.node)await page.getByRole('button',{name:/^Font:/}).waitFor();else await page.getByRole('textbox',{name:'Width',exact:true}).waitFor()
       if(args.node)await page.waitForFunction(expected=>document.querySelector('input[aria-label="Width"]')?.value===expected,({image:'640px',shape:'180px',group:'1920px'})[args.node])
@@ -213,7 +215,7 @@ try{
       if(/^(padding|margin)/.test(name))await page.mouse.move(20,200)
       await page.screenshot({path:join(output,`sizing-${name}.png`)})
       const frameRect=await board.locator('iframe').boundingBox(),camera={beforeDomEntry:rect,frameRect,scale:frameRect.width/1920,headingScreenRect:await heading.boundingBox()}
-      cases.push({name,textAction:args['text-action']??null,addedTextProperty:args['text-property']??null,textMenuData,textChrome,textScrolled:args['text-scroll']==='true',startupPreviewExited,layoutChrome,textAlignmentChrome,textContrastChrome,linkChrome,initialTextAlignment:args['text-align-initial']??null,beforeActionSnippet:original.match(/<h1\b[\s\S]*?<\/h1>/)?.[0],subject:args.node??'text',camera,selectionHandles,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
+      cases.push({name,multiFontMetrics:args['style-multi']==='true'?await frame.locator('h1,p').evaluateAll(elements=>elements.map(element=>({tag:element.tagName,authored:element.getAttribute('style'),weight:getComputedStyle(element).fontWeight,italic:getComputedStyle(element).fontStyle,family:getComputedStyle(element).fontFamily}))):undefined,textAction:args['text-action']??null,addedTextProperty:args['text-property']??null,textMenuData,textChrome,textScrolled:args['text-scroll']==='true',startupPreviewExited,layoutChrome,textAlignmentChrome,textContrastChrome,linkChrome,initialTextAlignment:args['text-align-initial']??null,beforeActionSnippet:original.match(/<h1\b[\s\S]*?<\/h1>/)?.[0],subject:args.node??'text',camera,selectionHandles,dragObservation,snippet,geometry,controls,geometryBeforeGlobalSave,controlsBeforeGlobalSave,beforeGlobalSaveUnchanged:beforeGlobalSave===original,unchanged:html===original,focus:await page.evaluate(()=>({tag:document.activeElement?.tagName,label:document.activeElement?.getAttribute('aria-label')}))})
       await writeFile(join(output,'reference.json'),JSON.stringify({sourceCommit:'016b39d7fdcc30bfacee31ea5541498ac53921c6',referenceResourceHashesVerified:inventory.sources.length,browser:browser.version(),theme:args.theme??'light',viewport:{width:Number(args.width??1440),height:Number(args.height??1000)},cases},null,2)+'\n')
       console.log(name+' 已捕获')
     }finally{await page?.close();server?.kill('SIGTERM');await rm(project,{recursive:true,force:true})}

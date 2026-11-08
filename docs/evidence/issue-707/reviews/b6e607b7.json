@@ -1,0 +1,169 @@
+{
+  "candidate": "b6e607b7a8c9e7f2eeae896756547946e41f0271",
+  "baseline": "86a18de1c3c5d442795bd33975be351941b563f9",
+  "checkout": "/workspace/lingxi-issue707-scratch/review-b6e607b7",
+  "reviewType": "repository-review 独立只读冻结功能/模型投影/导出审查",
+  "status": "本次限定范围通过，未发现新增P1/P2。完整多选/像素/其他约定门槛仍未完成，不代表完整计划验收。",
+  "findings": [],
+  "validation": [
+    {
+      "name": " owning单位",
+      "passed": 48,
+      "files": [
+        "element-font-variant.test.ts",
+        "export/export.test.ts",
+        "thumbnail.test.tsx",
+        "shared/artifact-previews.test.ts",
+        "server/native-projection.test.ts",
+        "editor-copy.test.ts"
+      ],
+      "log": "/tmp/lingxi-review-b6e-units.log"
+    },
+    {
+      "name": "CI/存储/失败/诊断合同",
+      "passed": 25,
+      "log": "/tmp/lingxi-review-b6e-contracts.log"
+    },
+    {
+      "name": "140/154各18流程",
+      "passed": 36,
+      "cases": [
+        "variant-expression",
+        "variant-important",
+        "variant-expression-ime",
+        "variant-expression-cancel",
+        "variant-expression-clear",
+        "variant-expression-reset",
+        "variant-expression-literal",
+        "variant-expression-literal-blur",
+        "variant-expression-cas",
+        "variant-expression-same",
+        "variant-expression-permission",
+        "variant-expression-lock",
+        "variant-companion",
+        "variant-regular",
+        "variant-regular-edit",
+        "variant-heading-link",
+        "variant-default-preflight",
+        "variant-inherited"
+      ],
+      "logs": [
+        "/tmp/lingxi-review-b6e-flows140.log",
+        "/tmp/lingxi-review-b6e-flows154.log"
+      ],
+      "scope": "表达式/优先级文本保存与重开、组成中CtrlS保护、取消、清空与字面转换焦点、失焦不抢下控件、配对reset、旧基准冲突及本地恢复、权限/锁定草稿、Source伴随inherit同值零写入；单标题实际400/还原700、编辑列表切换保留原ProseMirror DOM、标题名和全局标题重置隔离。现有流程内IME为脚本派发事件，非OS IME。"
+    },
+    {
+      "name": "两版原3种字形CAS回归",
+      "passed": 6,
+      "cases": [
+        "默认",
+        "css别名",
+        "peer已等于目标"
+      ],
+      "logs": [
+        "/tmp/lingxi-review-b6e-cas140.log",
+        "/tmp/lingxi-review-b6e-cas-css140.log",
+        "/tmp/lingxi-review-b6e-cas-same140.log",
+        "/tmp/lingxi-review-b6e-cas154.log",
+        "/tmp/lingxi-review-b6e-cas-css154.log",
+        "/tmp/lingxi-review-b6e-cas-same154.log"
+      ]
+    },
+    {
+      "name": "两版普通400/配对还原700各六格式",
+      "actualDownloads": 24,
+      "logs": [
+        "/tmp/lingxi-review-b6e-exports140.log",
+        "/tmp/lingxi-review-b6e-exports154.log"
+      ],
+      "scope": "HTML/PDF/PPTX/SVG/PNG/JPEG实际下载。HTML重新解析计算字重400/700；PPTX保留可编辑标题文本且bold分别false/true；PDF独立pdfinfo页数，位图/矢量图实际解码尺寸；源文档不变、未导航、无页面错误。不宣称PDF/PPTX/图片像素保真。"
+    },
+    {
+      "name": "154受影响旧功能",
+      "passedCases": [
+        "text-style multi-rendered/unset/variable",
+        "element-link http/history",
+        "same-node父/子真实可信点击及HTML/PDF/PPTX",
+        "fonts Design/Slides"
+      ],
+      "logs": [
+        "/tmp/lingxi-review-b6e-legacy-text154.log",
+        "/tmp/lingxi-review-b6e-legacy-links154.log",
+        "/tmp/lingxi-review-b6e-legacy-same-node154.log",
+        "/tmp/lingxi-review-b6e-legacy-fonts154.log"
+      ],
+      "scope": "新标题根不破坏原选择字号/继承、共享历史、同节点内外链接实际命中及字形选择；same-node三格式实际下载不与下一项混计。"
+    },
+    {
+      "name": "154带整体链接的标题六格式",
+      "actualDownloads": 6,
+      "log": "/tmp/lingxi-review-b6e-heading-link-exports154.log",
+      "scope": "Native及离线HTML均以作者LingxiLoop 1为唯一标题名，导出仍700；其余格式独立解析/解码，源文档不变。与same-node三格式一起，本轮总33个视觉格式下载，不含恢复JSON。"
+    },
+    {
+      "name": "追加154原生CDP组成",
+      "passed": true,
+      "probe": "/workspace/lingxi-issue707-scratch/review-b6e-probes/input.mjs",
+      "evidence": "/workspace/lingxi-issue707-scratch/review-b6e-cdp154/cdp-ime-state.json",
+      "scope": "compositionstart/input的isTrusted=true；compositionend实际isTrusted=false如实保留，未脚本dispatch。组词中CtrlS零写入，提交var(--中文字重,600)后1批saved、无错误。不是实体系统拼音输入。"
+    },
+    {
+      "name": "追加154无效草稿切换节点",
+      "passed": true,
+      "evidence": [
+        "/workspace/lingxi-issue707-scratch/review-b6e-invalid154/invalid-switch-state.json",
+        "/workspace/lingxi-issue707-scratch/review-b6e-invalid154/invalid-switch-recovery.json"
+      ],
+      "scope": "输入var(并得到正常校验提示后，点击第二个不同raw字重节点；新字段正确显示第二节点，原无效文本在下载drafts仍绑定原heading，未误绑第二节点，两份正式css不变、零写入/错误。祖先ElementTextProperties按page/node设置key提供作用域隔离。"
+    },
+    {
+      "name": "git diff --check 86a18de1 HEAD/工作树干净",
+      "passed": true
+    }
+  ],
+  "codeReview": [
+    "ElementFontWeightInput首次改动捕获base；apply仍经commitCode旧基准与css/style.fontWeight/locked读键；菜单配对操作继续读style.fontStyle。权限/锁定阻止时保留意图，未通过latest重新prepare绕过冲突。",
+    "parseElementFontWeight使用来源normal/bold/无符号十进制字面；var/inherit/important保留文本。原伴随inherit决定菜单当前语义，不错误覆盖实际继承的斜体。",
+    "共享artifactTextHeading只将单个heading块作为h1-h6根。编辑时强制div根，避免列表改变根标签重建ProseMirror。native局部标题默认700与编辑子标题继承避免全局preflight压成400。",
+    "整体链接标题用body span作aria-labelledby，Native按useId+node identity、HTML按page.id+node.id生成，跨页同名node不会仅因node.id重复而共用标签。作者自有aria-label/labelledby仍优先。",
+    "artifactPreviews只对派生副本补默认700，原文档/旧快照不回填，预览仍裁剪正文/notes/embed sources；新增纯投影单位实际通过。",
+    "共享HTML/thumbnail/PPTX沿用同一heading判断；PPTX字重仍是bold阈值表达，不将其声明成完整数值字重/像素保真。",
+    "新增真实PG服务测试代码已只读核对：持久化400、undo/redo/重开、原页hash和旧快照不回填明确断言。该PG测试由父线程执行，本审查没有重跑PG或冒称已运行。"
+  ],
+  "sourceFollowups": {
+    "scope": "额外授权D49来源定标，不纳入b6资格门槛；三个固定Source016b39d7均12资源hash、154、文档前后未变。",
+    "scalarReceipt": "/workspace/lingxi-issue707-scratch/review-b6e-probes/d49-source-scalars.json",
+    "family": {
+      "output": "/workspace/lingxi-issue707-scratch/d49-source-multi-family154",
+      "font": "Mixed",
+      "weight": "Mixed"
+    },
+    "unset": {
+      "output": "/workspace/lingxi-issue707-scratch/d49-source-multi-unset154",
+      "weight": "Bold，非Mixed",
+      "menu": "Regular/Italic/Bold/Bold italic，4项均unchecked"
+    },
+    "samecomputed": {
+      "output": "/workspace/lingxi-issue707-scratch/d49-source-multi-samecomputed154",
+      "weight": "Mixed",
+      "menu": "额外Medium+Regular/Italic/Bold/Bold italic共5项，均unchecked"
+    }
+  },
+  "waiverAndAuthority": {
+    "source": "docs/evidence/issue-707/acceptance-exceptions.json及父线程授权说明",
+    "liveCommentAgentApi": "用户已明确豁免本次真实评论/Agent授权API测试；不将其列为未完成阻断项。现有授权/隔离和其他功能要求仍保留。",
+    "deployment": "本审查始终只读，不执行发布/合并/部署；sole integrator为根线程。"
+  },
+  "unverified": [
+    "未独立运行真实PG或下载私有SDK；本地type/build缺包失败未被冒称通过，父线程报告正式CI42466315561成功，本审查未读取其全部远程日志。",
+    "多选字重/完整混合、其余属性/系统样式、全部键盘、粗指针全局位置与四尺寸双主题整图0.5%仍待验收。",
+    "本轮导出仅功能、DOM/结构/包读取及尺寸，未对所有格式做字体像素/布局保真资格。",
+    "未跑bench或最终10组AB/BA，不据脚本/导出成功判冷启动、真实脚本传输/PSS或输入门槛通过。"
+  ],
+  "retainedFailures": "本轮独立流程没有产品失败；候选中记录的前红、错误夹具/等待、私有SDK缺失类型/构建失败均保持原样，未以本报告抹去。",
+  "browserLifecycle": "140/154及额外Source完全顺序，所有浏览器/服务已退出，已通知根线程归还Chrome。",
+  "staticGraphPosterior": "/tmp/lingxi-review-b6e607b7-actual-graph.json另存，不替代本功能结果。",
+  "modifiedProductFiles": false,
+  "publishedOrDeployed": false
+}

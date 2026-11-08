@@ -115,6 +115,16 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     // 使用普通可编辑文字导出路径；复杂CSS组仍按现有规则整组栅格化。
     if(options['font-exports']==='true')delete document.pages['page-1'].nodes['page-1-root'].css
 
+    if(editorCase.startsWith('multi-font-')){
+      const owner=document.pages['page-1'],first=owner.nodes['page-1-heading'],second={...structuredClone(first),id:'page-1-body',x:1000,y:300};owner.nodes[second.id]=second;owner.nodeOrder.push(second.id)
+      if(editorCase.startsWith('multi-font-family'))second.style.fontFamily='Georgia'
+      if(editorCase==='multi-font-mixed'||editorCase==='multi-font-cas'){second.style.fontWeight=400}
+      if(editorCase==='multi-font-unset'){delete first.style.fontWeight;delete second.style.fontWeight;second.richText=undefined}
+      if(editorCase==='multi-font-samecomputed'){first.style.fontWeight=500;delete second.style.fontWeight;owner.nodes['page-1-root'].style.fontWeight=500;second.richText=undefined}
+      if(editorCase==='multi-font-companion'){first.style.fontStyle='italic';second.style.fontStyle='normal'}
+      if(editorCase==='multi-font-raw'){first.css={'font-weight':'700 !important'};second.css={'font-weight':'700 !important'}}
+      if(editorCase==='multi-font-locked')second.locked=true
+    }
     if(editorCase==='variant-default-preflight')delete document.pages['page-1'].nodes['page-1-heading'].style.fontWeight
     if(editorCase==='variant-heading-link')document.pages['page-1'].nodes['page-1-heading'].attributes={href:'https://heading.test/'}
     if(editorCase==='variant-companion'){document.pages['page-1'].nodes['page-1-heading'].css={'font-style':'inherit'};document.pages['page-1'].nodes['page-1-root'].style.fontStyle='italic'}
@@ -3356,7 +3366,29 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       return{kind:'isolated-font-cas-diagnostic',mode:kind,searchSurvivesRemoteChange:true,remoteFamilyPreserved:true,localSelectionRecoverable:true,saveState:'conflict',scope:'actual React and shared CAS reducer; controlled HTTP fixture',consoleOrPageErrors:errors}
     }
     if(options.checks==='font-parity'){
-      assert.equal(kind,'design');const node=page.locator('[data-node-id="page-1-heading"]');await node.click();await page.getByRole('button',{name:'显示属性',exact:true}).click();const trigger=page.getByRole('button',{name:'字体',exact:true});await trigger.waitFor()
+      assert.equal(kind,'design');const node=page.locator('[data-node-id="page-1-heading"]');await node.click();if(editorCase.startsWith('multi-font-'))await page.locator('[data-node-id="page-1-body"]').click({modifiers:['Shift']});await page.getByRole('button',{name:'显示属性',exact:true}).click();const trigger=page.getByRole('button',{name:'字体',exact:true});await trigger.waitFor()
+      if(editorCase.startsWith('multi-font-')){
+        const before=structuredClone(document.pages['page-1']),weight=page.getByLabel('字重',{exact:true})
+        await weight.waitFor();await page.screenshot({path:join(output,`${editorCase}-initial.png`)})
+        if(editorCase==='multi-font-locked'){assert.equal(await weight.isDisabled(),true);assert.equal(await trigger.isDisabled(),true);assert.equal(receipts.length,0);return{case:editorCase,wholeSelectionDisabled:true,noWrites:true}}
+        if(editorCase==='multi-font-cas'||editorCase==='multi-font-family-cas'){
+          const isFamily=editorCase==='multi-font-family-cas',control=isFamily?trigger:weight,key=`node/page-1/page-1-body/field/${isFamily?'style.fontFamily':'style.fontWeight'}`,version=document.versions[key]??0
+          await control.click();document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-body',patch:{style:isFamily?{fontFamily:'Inter'}:{fontWeight:500},css:{padding:'17px'}}}])).document
+          const remote=structuredClone(document),seq=String(document.seq);await page.waitForRequest(request=>request.method()==='PUT'&&request.url().includes('/editor-context')&&request.postDataJSON()?.version===seq)
+          const menu=page.getByRole('menu',{name:isFamily?'字体选择':'字形选项',exact:true});if(isFamily)await menu.getByRole('group',{name:'全部字体',exact:true}).getByRole('menuitemradio',{name:'阿里亚尔体',exact:true}).click();else await menu.getByRole('menuitemradio',{name:'常规',exact:true}).click()
+          await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='conflict');const pending=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click();const path=join(workspace,'multi-font-recovery.json');await(await pending).saveAs(path);const recovery=JSON.parse(await readFile(path,'utf8'));assert.ok(recovery.operations.some(batch=>batch.expectedVersions[key]===version&&batch.operations.some(op=>op.nodeId==='page-1-body'&&(isFamily?op.patch?.style?.fontFamily==='Arial':op.patch?.style?.fontWeight===400))));assert.deepEqual(document,remote);assert.equal(receipts.length,0);assert.deepEqual(errors,[]);return{case:editorCase,wholeSelectionConflict:true,remotePreserved:true,recoveryCapturedVersion:true,noWrites:true}
+        }
+        const operationResponse=()=>{const response=page.waitForResponse(response=>response.url().endsWith('/operations')&&response.request().method()==='POST');response.catch(()=>{});return response},changed=operationResponse()
+        if(editorCase==='multi-font-family'){
+          assert.equal(await trigger.textContent(),'混合');await trigger.click();const menu=page.getByRole('menu',{name:'字体选择',exact:true});assert.equal(await menu.getByRole('menuitemradio',{checked:true}).count(),0);await menu.getByRole('group',{name:'全部字体',exact:true}).getByRole('menuitemradio',{name:'阿里亚尔体',exact:true}).click()
+        }else if(editorCase==='multi-font-raw'){assert.equal(await weight.inputValue(),'700 !important');await weight.fill('400');await weight.press('Enter')}
+        else{
+          assert.equal(await weight.textContent(),editorCase==='multi-font-unset'?'粗体':'混合');await weight.click();const menu=page.getByRole('menu',{name:'字形选项',exact:true});assert.equal(await menu.getByRole('menuitemradio',{checked:true}).count(),0);await menu.getByRole('menuitemradio',{name:'常规',exact:true}).click()
+        }
+        await changed;await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');const after=structuredClone(document.pages['page-1'])
+        for(const id of ['page-1-heading','page-1-body']){const value=after.nodes[id];if(editorCase==='multi-font-family')assert.equal(value.style.fontFamily,'Arial');else{assert.equal(value.style.fontWeight,400);assert.equal(value.css?.['font-weight'],undefined);if(editorCase==='multi-font-companion')assert.equal(value.style.fontStyle,undefined)}}
+        await page.keyboard.press('Escape');await node.click();const undone=operationResponse();await page.keyboard.press('Control+z');await undone;await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');assert.deepEqual(document.pages['page-1'],before);const redone=operationResponse();await page.keyboard.press('Control+Shift+z');await redone;await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');assert.deepEqual(document.pages['page-1'],after);await page.reload();await ready(1);assert.deepEqual(document.pages['page-1'],after);assert.deepEqual(errors,[]);return{case:editorCase,sharedHistory:true,savedAndReopened:true,consoleOrPageErrors:errors}
+      }
       if(editorCase==='variant-scroll'){
         const before=JSON.stringify(document),weight=page.getByLabel('字重',{exact:true}),observations=[]
         const capture=()=>page.locator('.native-font-variant-list').evaluate(list=>({active:document.activeElement?.textContent,checked:document.activeElement?.getAttribute('aria-checked'),row:document.activeElement?.getBoundingClientRect().toJSON(),viewport:list.getBoundingClientRect().toJSON(),scrollTop:list.scrollTop,windowScroll:{x:window.scrollX,y:window.scrollY}}))

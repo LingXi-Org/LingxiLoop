@@ -1,0 +1,53 @@
+{
+  "stage": "D49 Design多选字体与字重",
+  "baselineCandidate": "b6e607b7a8c9e7f2eeae896756547946e41f0271",
+  "scope": "多选共同/混合字体、字重、伴随声明及共同原始字重文本；不是所有文本属性或整块面板验收。",
+  "source": "../source-element-font-selection.json",
+  "implementation": [
+    "ElementFontSelection.tsx",
+    "element-font-selection.ts",
+    "FontField.tsx",
+    "ElementFontVariantField.tsx",
+    "NativeInspector.tsx"
+  ],
+  "checks": {
+    "units": {
+      "passed": 17,
+      "log": "element-font-selection/d49-owning-final.log"
+    },
+    "webLint": "945文件43既有警告4信息，无新增错误。",
+    "localTypecheck": {
+      "diagnostics": 76,
+      "owning": 0,
+      "passed": false,
+      "reason": "精确LingxiOS包缺失及其连带诊断；未使用替身。"
+    },
+    "browser154": "9多选状态/历史/保存重开/CAS +3单选旧回归通过。",
+    "browser140": "9多选状态/历史/保存重开/CAS +3单选旧回归通过。",
+    "persist": "现有操作API、共享历史、保存重开，不新增数据表或服务。",
+    "narrow": "390×844深色触屏mixed/raw/family三流程共享历史、保存重开通过；不宣称整图资格。"
+  },
+  "failuresRetained": [
+    "首次实际多选没有字重控件。",
+    "140历史断言曾在真实保存响应之前读取旧状态；改为等待POST响应，未放宽预期。",
+    "最初CAS恢复断言要求未变的padding重复出现在delta中；改验目标声明、捕获版本和整个远端文档保持。",
+    "H1与普通正文均未声明时原生显示常规，固定来源显示粗体；已保留先红后绿回归。",
+    "最初未捕获的待响应Promise遮盖断言；仅验收脚本捕获终止拒绝，实际断言仍失败并退出。",
+    "Source反向扩选诊断未能显示字体控件，未计通过。"
+  ],
+  "qualification": {
+    "wholeVisual": false,
+    "actualPerformance": false,
+    "completePlan": false
+  },
+  "priorCandidate": {
+    "review": "../reviews/b6e607b7.json",
+    "actualGraph": "../reviews/b6e607b7-actual-graph.json",
+    "ci": 42466315561,
+    "ciPassed": true,
+    "staticProfile": "../performance/static-profile-b6e607b7.json",
+    "staticUnionGzip": 839815,
+    "baselineUnionGzip": 774862,
+    "staticIsActualPerformance": false
+  }
+}

@@ -1,0 +1,80 @@
+
+> lingxiloop@0.1.0-beta typecheck
+> tsc --noEmit && tsc -p tsconfig.node.json --noEmit
+
+server/src/agent-runtime/activity-tasks.ts(1,53): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/activity-tasks.ts(8,44): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/activity-tasks.ts(10,21): error TS2339: Property 'kind' does not exist on type '{}'.
+server/src/agent-runtime/activity-tasks.ts(10,46): error TS2339: Property 'runId' does not exist on type '{}'.
+server/src/agent-runtime/activity-tasks.ts(20,18): error TS2339: Property 'spanId' does not exist on type '{}'.
+server/src/agent-runtime/activity-tasks.ts(21,25): error TS2339: Property 'parentSpanId' does not exist on type '{}'.
+server/src/agent-runtime/activity-tasks.ts(25,42): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/activity-tasks.ts(27,40): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/activity-tasks.ts(28,30): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/activity-tasks.ts(35,46): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/assistant-transport.ts(4,174): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+server/src/agent-runtime/assistant-transport.ts(5,120): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/assistant-transport.ts(194,49): error TS18048: 'previous' is possibly 'undefined'.
+server/src/agent-runtime/assistant-transport.ts(194,100): error TS18048: 'previous' is possibly 'undefined'.
+server/src/agent-runtime/assistant-transport.ts(273,14): error TS2532: Object is possibly 'undefined'.
+server/src/agent-runtime/assistant-transport.ts(273,85): error TS2532: Object is possibly 'undefined'.
+server/src/agent-runtime/assistant-transport.ts(274,78): error TS2532: Object is possibly 'undefined'.
+server/src/agent-runtime/delivery-reference.ts(1,34): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/identity.ts(1,82): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/message-projection.ts(4,106): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+server/src/agent-runtime/message-projection.ts(92,8): error TS18048: 'tool.activityIdentity' is possibly 'undefined'.
+server/src/agent-runtime/message-projection.ts(92,54): error TS18048: 'tool.activityIdentity' is possibly 'undefined'.
+server/src/agent-runtime/message-projection.ts(97,54): error TS7006: Parameter 'next' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(109,54): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(110,81): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(137,41): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(176,47): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(248,45): error TS7006: Parameter 'segment' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(263,42): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(278,100): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(287,63): error TS7006: Parameter 'part' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(306,67): error TS7006: Parameter 'source' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(312,38): error TS7006: Parameter 'source' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(314,73): error TS7006: Parameter 'item' implicitly has an 'any' type.
+server/src/agent-runtime/message-projection.ts(328,29): error TS7006: Parameter 'item' implicitly has an 'any' type.
+server/src/agent-runtime/pricing.ts(1,33): error TS2307: Cannot find module '@lingxi-org/lingxios/worker' or its corresponding type declarations.
+server/src/agent-runtime/public-events.ts(1,47): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+server/src/agent-runtime/questionnaire-projection.ts(1,34): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/run-trace.ts(2,30): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+server/src/agent-runtime/run-trace.ts(43,58): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/run-trace.ts(44,36): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/run-trace.ts(90,54): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/run-trace.ts(129,40): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/run-trace.ts(144,53): error TS7006: Parameter 'item' implicitly has an 'any' type.
+server/src/agent-runtime/run-trace.ts(144,118): error TS7006: Parameter 'item' implicitly has an 'any' type.
+server/src/agent-runtime/run-trace.ts(175,42): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/run-trace.ts(176,30): error TS7006: Parameter 'span' implicitly has an 'any' type.
+server/src/agent-runtime/terminal-feedback.ts(1,120): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/terminal-feedback.ts(87,41): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly context_limit: "后续协作超出了可处理的上下文范围，可以缩小材料范围后继续。"; readonly budget_limit: "本轮预算已达上限，后续协作未能全部继续。"; readonly model_unavailable: "后续协作的模型服务暂时不可用。"; readonly permission_denied: "后续协作因权限不足已停止。"; readonly dependency_unavailable: "后续协作所需服务暂时不可用。"; readonly cancelled: "后续协作已取消。"; readonly interrupted: "后续协作在恢复过程中中断。...'.
+server/src/agent-runtime/terminal-feedback.ts(90,61): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ readonly context_limit: "当前执行超出了可处理的上下文范围，可以缩小材料范围后继续。"; readonly budget_limit: string; readonly model_unavailable: "模型响应超时，当前答复未能完成。" | "模型服务暂时不可用，当前答复未能完成。"; readonly permission_denied: "当前权限不足，执行已停止。"; readonly dependency_unavailable: "所需服务暂时不可用，执行未能完成。"; readonly cancelled: "执行已取消。"; readonly interrupted: "执行在...'.
+server/src/agent-runtime/tool-activity.ts(1,63): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+server/src/agent-runtime/trace-activity.ts(1,34): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+src/features/agents/api.ts(3,37): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
+src/features/agents/contracts.ts(2,34): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/components/ConversationMessage.test.tsx(5,31): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/components/ResearchSources.test.tsx(4,31): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/components/ResearchSources.tsx(3,30): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/components/RunResultCards.tsx(2,39): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/components/RunResultCards.tsx(38,22): error TS7006: Parameter 'artifact' implicitly has an 'any' type.
+src/features/chat/runtime/harness-activity-api.test.ts(5,31): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/runtime/harness-api.test.ts(5,31): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/runtime/harness-api.ts(2,49): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/runtime/harness.test.ts(4,136): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/runtime/run-updates.test.ts(5,47): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/runtime/run-updates.test.ts(22,99): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/runtime/run-updates.ts(21,8): error TS18048: 'before' is possibly 'undefined'.
+src/features/chat/runtime/run-updates.ts(21,8): error TS18048: 'before.harness' is possibly 'undefined'.
+src/features/chat/runtime/run-updates.ts(21,65): error TS18048: 'before' is possibly 'undefined'.
+src/features/chat/runtime/run-updates.ts(21,65): error TS18048: 'before.harness' is possibly 'undefined'.
+src/features/chat/runtime/run-updates.ts(22,8): error TS18048: 'before' is possibly 'undefined'.
+src/features/chat/runtime/run-updates.ts(22,8): error TS18048: 'before.harness' is possibly 'undefined'.
+src/features/chat/runtime/runActivityHistory.test.ts(5,31): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/runtime/terminal-presentation.test.ts(4,31): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/features/chat/runtime/transport.test.ts(5,47): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/lib/agentRunSnapshot.ts(2,48): error TS2307: Cannot find module '@lingxi-org/lingxios/ui' or its corresponding type declarations.
+src/lib/executionBudget.ts(1,38): error TS2307: Cannot find module '@lingxi-org/lingxios' or its corresponding type declarations.
