@@ -426,6 +426,9 @@ export default function NativeEditor({ revisionSeq, artifactId, kind, title, vis
     // fit the real contents when their first page request completes.
     if(initialCamera.current&&pendingCanvasFit.current!==activeCanvasId)rememberCanvasView(activeCanvasId,{zoom,...previousCanvasMapping.current?.world})
     const sheet=doc&&canvasPages(doc).find(sheet=>sheet.id===value),content=sheet?.contentId?doc?.pages[sheet.contentId]:undefined
+    if(sheet?.contentId)void session.ensurePage(sheet.contentId)
+    const firstBoard=doc?.pageOrder.find(id=>canvasPageOf(doc.pages[id])===value)
+    if(firstBoard)void session.ensurePage(firstBoard)
     const remembered=canvasViews.current.get(value),awaitingBody=!remembered&&!!sheet?.contentId&&!state.loadedPageIds.includes(sheet.contentId)
     const fit=!remembered&&!awaitingBody?fitDesignCamera(doc?.pageOrder.filter(id=>canvasPageOf(doc.pages[id])===value).map(id=>doc.pages[id])??[],content?elementBounds(content,false):[],viewport.width,viewport.height):undefined
     const next:CanvasView=remembered??(fit?{zoom:fit.scale*2,x:fit.x,y:fit.y}:{zoom:1})

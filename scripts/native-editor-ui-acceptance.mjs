@@ -361,7 +361,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   }
   page.setDefaultTimeout(30_000)
   if(options['presentation-portrait']==='true')await page.addInitScript(()=>{const original=window.setTimeout;window.setTimeout=(fn,delay,...args)=>original(fn,[570,670,730].includes(delay)?delay*10:delay,...args)})
-  await page.addInitScript(()=>{window.__geometryLog=[];window.__geometryMessages=0;window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(Array.isArray(e.data?.value)){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')window.__penRequests++;if(['visible','update-pages','elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...message});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}})
+  await page.addInitScript(({details})=>{window.__geometryLog=[];window.__geometryMessages=0;window.__penRequests=0;const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.addEventListener('message',e=>{if(details&&(Array.isArray(e.data?.value)||Array.isArray(e.data?.value?.ids))){window.__geometryLog.push({direction:'reply',...e.data});window.__geometryLog=window.__geometryLog.slice(-60)}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')window.__penRequests++;if(details&&['visible','update-pages','project-elements'].includes(message?.task?.kind)){window.__geometryLog.push({direction:'request',...structuredClone(message)});window.__geometryLog=window.__geometryLog.slice(-60)}return super.postMessage(message,...args)}}},{details:options.checks!=='viewport-loading'})
   if(options.checks==='viewport-loading')await page.addInitScript(()=>{window.__holdVisible=false;window.__heldVisible=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.visibleIds=new Set();this.addEventListener('message',event=>{if(this.visibleIds.delete(event.data?.id)&&window.__holdVisible){event.stopImmediatePropagation();window.__heldVisible.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){if(message?.task?.kind==='visible')this.visibleIds.add(message.id);return super.postMessage(message,...args)}}})
   if(options.checks==='canvas-pen')await page.addInitScript(()=>{window.__holdPen=false;window.__heldPen=[];const Original=window.Worker;window.Worker=class extends Original{constructor(...args){super(...args);this.penIds=new Set();this.addEventListener('message',event=>{if(this.penIds.delete(event.data?.id)&&window.__holdPen){event.stopImmediatePropagation();window.__heldPen.push(()=>this.dispatchEvent(new MessageEvent('message',{data:event.data})))}})}postMessage(message,...args){window.__geometryMessages++;if(message?.task?.kind==='pen')this.penIds.add(message.id);return super.postMessage(message,...args)}}})
   page.on('pageerror', error => errors.push(error.message))
@@ -2256,9 +2256,30 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       assert.ok(pageReads.length<5,'the resolved zoom query loads only nearby pages')
       await scrollCanvasTo(document.pages['page-50'])
       await ready(50);assert.ok(pageReads.includes('page-50'));assert.ok(pageReads.length<8)
+      const timings=[],mounted=[],frames=document.pageOrder.map(id=>{const p=document.pages[id];return{id,x:p.x,y:p.y,width:p.width}})
+      const loadAndPaint=async id=>page.evaluate(({id,frames})=>new Promise((resolve,reject)=>{
+        const stage=document.querySelector('.native-stage'),mounted=document.querySelector('[data-artboard-id]'),reference=frames.find(p=>p.id===mounted.dataset.artboardId),point=frames.find(p=>p.id===id)
+        const scale=Number.parseFloat(mounted.style.width)/reference.width,start=performance.now(),messages=window.__geometryMessages
+        stage.scrollTo({left:Number.parseFloat(mounted.style.left)+(point.x-reference.x)*scale-48,top:Number.parseFloat(mounted.style.top)+(point.y-reference.y)*scale-80,behavior:'instant'})
+        const check=()=>{
+          const surface=document.querySelector(`[data-page-id="${id}"]`),images=surface?[...surface.querySelectorAll('[data-node-type=image] img')]:[]
+          if(surface?.querySelector('[data-formula-ready=true]')&&images.length&&images.every(image=>image.complete&&image.naturalWidth>0))requestAnimationFrame(()=>resolve({ms:performance.now()-start,messages:window.__geometryMessages-messages,nodes:document.querySelectorAll('.native-node').length}))
+          else if(performance.now()-start>10000)reject(Error('页面未能在检查时限内完成绘制'))
+          else requestAnimationFrame(check)
+        }
+        requestAnimationFrame(check)
+      }),{id,frames})
+      for(let index=1;index<=50;index++){
+        const result=await loadAndPaint(`page-${index}`)
+        timings.push({page:index,ms:result.ms,messages:result.messages});mounted.push(result.nodes)
+      }
+      const writes=receipts.length,reads=pageReads.length,returnResult=await loadAndPaint('page-1'),returnMs=returnResult.ms
+      assert.equal(pageReads.length,reads,'返回已读页复用已校验正文');assert.equal(receipts.length,writes)
+      assert.ok(Math.max(...mounted)<500,'遍历50页仍裁剪离屏节点')
       for(const id of document.pageOrder)assert.equal(pageHash(document.pages[id]),initialPageHashes[id])
       assert.equal(document.seq,0);assert.deepEqual(errors,[])
-      return{kind:'isolated-viewport-loading-diagnostic',pages:50,staleViewportLoads:0,resolvedPageReads:pageReads,originalDocumentUnchanged:true,consoleOrPageErrors:errors,scope:'真实 React、Worker 与缩放控件；延迟交付真实 Worker 响应，HTTP 夹具不代替授权 API 或性能验收'}
+      await writeFile(join(output,'page-loading.json'),JSON.stringify({scope:'受控HTTP夹具，单次浏览器调用内记录滚动→正文/图片/公式就绪→下一帧；非线上网络延迟资格',timings,returnMs,maxMountedNodes:Math.max(...mounted)},null,2)+'\n')
+      return{kind:'isolated-viewport-loading-diagnostic',pageTraversal:50,warmReturnMs:returnMs,maxMountedNodes:Math.max(...mounted),pages:50,staleViewportLoads:0,resolvedPageReads:pageReads,originalDocumentUnchanged:true,consoleOrPageErrors:errors,scope:'真实 React、Worker 与缩放控件；延迟交付真实 Worker 响应，HTTP 夹具不代替授权 API 或性能验收'}
     }
     if(options.checks==='canvas-empty'){
       await page.getByRole('button',{name:'便签 (N)',exact:true}).click();await page.mouse.click(200,240)
@@ -2299,7 +2320,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.waitForFunction(id=>{const node=document.querySelector(`[data-node-id="${id}"]`);if(!node)return false;const rect=node.getBoundingClientRect();return rect.top<0&&rect.bottom>100&&rect.bottom<300},targetId)
       const after=await target.boundingBox();assert.ok(after.y+after.height>100)
       if(options['grid-mixed']==='true'||options['grid-shapes-only']==='true'){await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'新建页面',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]').dataset.saveState==='saved');await page.getByLabel('页面菜单',{exact:true}).click();await page.getByRole('button',{name:'页面 1',exact:true}).click();await target.waitFor();await page.waitForFunction(id=>{const node=document.querySelector(`[data-node-id="${id}"]`);if(!node)return false;const rect=node.getBoundingClientRect();return rect.top<0&&rect.bottom>100},targetId);const restored=await target.boundingBox();assert.ok(restored.y<0&&restored.y+restored.height>100)}
-      await page.waitForFunction(({bodyId,targetId})=>window.__geometryLog.some(message=>message.direction==='request'&&message.task?.kind==='elements'&&message.task.pageId===bodyId&&message.task.elements.some(node=>node.id===targetId&&node.y>700)),{bodyId,targetId})
+      await page.waitForFunction(({bodyId,targetId})=>window.__geometryLog.some(message=>message.direction==='request'&&message.task?.kind==='project-elements'&&message.task.pageId===bodyId&&message.task.geometry.ids.map((id,i)=>({id,x:message.task.geometry.coordinates[i*4],y:message.task.geometry.coordinates[i*4+1],width:message.task.geometry.coordinates[i*4+2],height:message.task.geometry.coordinates[i*4+3]})).some(node=>node.id===targetId&&node.y>700)),{bodyId,targetId})
       for(const node of Object.values(document.pages[bodyId].nodes).filter(node=>node.type==='note'))assert.deepEqual([node.x,node.y,node.width,node.height],[0,0,240,832])
       if(options['grid-mixed']!=='true'&&options['grid-shapes-only']!=='true')assert.equal(receipts.length,0);assert.deepEqual(errors,[])
       return{kind:'isolated-grid-row-geometry-diagnostic',mixedNodes:options['grid-mixed']==='true',shapesOnly:options['grid-shapes-only']==='true',flowOffsetsReachWorker:true,secondRowVisibleAfterTrustedWheel:true,authoredGeometryUnchanged:true,before,after,scope:'actual React/Worker and trusted wheel; controlled HTTP fixture',consoleOrPageErrors:errors}
@@ -2500,7 +2521,8 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await page.screenshot({path:join(output,`design-board-fit-${options['canvas-theme']??'light'}.png`)})
       await preview.getByRole('radio',{name:'适应',exact:true}).focus();await page.keyboard.press('ArrowLeft');assert.equal(await preview.getByRole('radio',{name:'填满',exact:true}).getAttribute('aria-checked'),'true')
       for(const [key,value]of Object.entries(sample.fill).filter(([key])=>['x','y','width','height'].includes(key)))assert.ok(Math.abs((await artboard.boundingBox())[key]-value)<=1)
-      const heading=await preview.getByText(`LingxiLoop ${previewOrdinal}`,{exact:true}).boundingBox();assert.ok(Math.abs(heading.x-64)<=1&&Math.abs(heading.y-80)<=1,'填满保留原始CSS尺寸并裁剪溢出')
+      const headingNode=preview.locator(`[data-node-id="${previewId}-heading"]`);await headingNode.waitFor({state:'visible'})
+      const heading=await headingNode.boundingBox();assert.ok(heading&&Math.abs(heading.x-64)<=1&&Math.abs(heading.y-80)<=1,'填满保留原始CSS尺寸并裁剪溢出')
       await preview.getByRole('radio',{name:'填满',exact:true}).click()
       await page.screenshot({path:join(output,`design-board-fill-${options['canvas-theme']??'light'}.png`)})
       await page.keyboard.press('ArrowRight');assert.equal(await preview.getByRole('radio',{name:'适应',exact:true}).getAttribute('aria-checked'),'true')
@@ -2954,7 +2976,7 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       await node.waitFor();await page.evaluate(()=>document.fonts.ready)
       const measured=await node.evaluate(element=>{const content=element.querySelector('.native-text-content'),style=getComputedStyle(element);return{height:element.offsetHeight,textHeight:content.scrollHeight,padding:Number.parseFloat(style.paddingTop)+Number.parseFloat(style.paddingBottom)}})
       assert.ok(measured.height>=measured.textHeight+measured.padding-1,'imported background contains actual automatic text wrapping')
-      await page.waitForFunction(({id,height})=>window.__geometryLog.some(message=>message.direction==='request'&&message.task?.kind==='elements'&&message.task.pageId===id&&message.task.elements.some(node=>node.id==='imported-note'&&Math.abs(node.height-height-4)<=1)),{id:contentId,height:measured.height})
+      await page.waitForFunction(({id,height})=>window.__geometryLog.some(message=>message.direction==='request'&&message.task?.kind==='project-elements'&&message.task.pageId===id&&message.task.geometry.ids.map((id,i)=>({id,x:message.task.geometry.coordinates[i*4],y:message.task.geometry.coordinates[i*4+1],width:message.task.geometry.coordinates[i*4+2],height:message.task.geometry.coordinates[i*4+3]})).some(node=>node.id==='imported-note'&&Math.abs(node.height-height-4)<=1)),{id:contentId,height:measured.height})
 
       const pin=page.getByRole('button',{name:'评论 1：导入便签评论',exact:true})
       await pin.waitFor()

@@ -1,0 +1,284 @@
+{
+  "scope": "实际计算Worker，50画板×500矩形；10组交替AB/BA。仅几何管线，非真实浏览器加载/网络/内存资格。",
+  "node": "v24.19.0",
+  "source": {
+    "baseline": {
+      "commit": "2fc8d37369856e03a61c5249bf20c008481594b5",
+      "dirty": false
+    },
+    "candidate": {
+      "commit": "2fc8d37369856e03a61c5249bf20c008481594b5",
+      "dirty": true
+    }
+  },
+  "summary": {
+    "baseline": {
+      "p50Ms": 26.30216999999999,
+      "p75Ms": 27.778396999999984,
+      "p95Ms": 31.28406100000001,
+      "messages": 150
+    },
+    "candidate": {
+      "p50Ms": 5.970811000000026,
+      "p75Ms": 9.920646000000005,
+      "p95Ms": 14.72807499999999,
+      "messages": 50
+    }
+  },
+  "samples": [
+    {
+      "pair": 0,
+      "arm": "baseline",
+      "ms": 31.28406100000001,
+      "messages": 150
+    },
+    {
+      "pair": 0,
+      "arm": "candidate",
+      "ms": 9.920646000000005,
+      "messages": 50
+    },
+    {
+      "pair": 1,
+      "arm": "candidate",
+      "ms": 14.72807499999999,
+      "messages": 50
+    },
+    {
+      "pair": 1,
+      "arm": "baseline",
+      "ms": 26.846964000000014,
+      "messages": 150
+    },
+    {
+      "pair": 2,
+      "arm": "baseline",
+      "ms": 28.157892000000032,
+      "messages": 150
+    },
+    {
+      "pair": 2,
+      "arm": "candidate",
+      "ms": 11.195740999999998,
+      "messages": 50
+    },
+    {
+      "pair": 3,
+      "arm": "candidate",
+      "ms": 4.858363999999995,
+      "messages": 50
+    },
+    {
+      "pair": 3,
+      "arm": "baseline",
+      "ms": 27.778396999999984,
+      "messages": 150
+    },
+    {
+      "pair": 4,
+      "arm": "baseline",
+      "ms": 21.947468000000015,
+      "messages": 150
+    },
+    {
+      "pair": 4,
+      "arm": "candidate",
+      "ms": 4.173536000000013,
+      "messages": 50
+    },
+    {
+      "pair": 5,
+      "arm": "candidate",
+      "ms": 2.828156999999976,
+      "messages": 50
+    },
+    {
+      "pair": 5,
+      "arm": "baseline",
+      "ms": 27.11060500000002,
+      "messages": 150
+    },
+    {
+      "pair": 6,
+      "arm": "baseline",
+      "ms": 26.30216999999999,
+      "messages": 150
+    },
+    {
+      "pair": 6,
+      "arm": "candidate",
+      "ms": 4.689008000000001,
+      "messages": 50
+    },
+    {
+      "pair": 7,
+      "arm": "candidate",
+      "ms": 8.388725999999963,
+      "messages": 50
+    },
+    {
+      "pair": 7,
+      "arm": "baseline",
+      "ms": 23.81604999999996,
+      "messages": 150
+    },
+    {
+      "pair": 8,
+      "arm": "baseline",
+      "ms": 25.413411999999994,
+      "messages": 150
+    },
+    {
+      "pair": 8,
+      "arm": "candidate",
+      "ms": 5.970811000000026,
+      "messages": 50
+    },
+    {
+      "pair": 9,
+      "arm": "candidate",
+      "ms": 6.072103000000027,
+      "messages": 50
+    },
+    {
+      "pair": 9,
+      "arm": "baseline",
+      "ms": 24.194303000000048,
+      "messages": 150
+    }
+  ],
+  "warmSummary": {
+    "baseline": {
+      "p50Ms": 0.358113000000003,
+      "p75Ms": 0.47261600000001636,
+      "p95Ms": 0.6395389999999566
+    },
+    "candidate": {
+      "p50Ms": 0.15676799999999957,
+      "p75Ms": 0.1745239999999626,
+      "p95Ms": 0.27236299999998437
+    }
+  },
+  "warm": [
+    {
+      "pair": 0,
+      "arm": "baseline",
+      "ms": 0.6395389999999566,
+      "messages": 16
+    },
+    {
+      "pair": 0,
+      "arm": "candidate",
+      "ms": 0.27236299999998437,
+      "messages": 8
+    },
+    {
+      "pair": 1,
+      "arm": "candidate",
+      "ms": 0.14503000000001975,
+      "messages": 8
+    },
+    {
+      "pair": 1,
+      "arm": "baseline",
+      "ms": 0.36792800000000625,
+      "messages": 16
+    },
+    {
+      "pair": 2,
+      "arm": "baseline",
+      "ms": 0.34635500000001684,
+      "messages": 16
+    },
+    {
+      "pair": 2,
+      "arm": "candidate",
+      "ms": 0.1743539999999939,
+      "messages": 8
+    },
+    {
+      "pair": 3,
+      "arm": "candidate",
+      "ms": 0.150167999999951,
+      "messages": 8
+    },
+    {
+      "pair": 3,
+      "arm": "baseline",
+      "ms": 0.3524449999999888,
+      "messages": 16
+    },
+    {
+      "pair": 4,
+      "arm": "baseline",
+      "ms": 0.554360000000031,
+      "messages": 16
+    },
+    {
+      "pair": 4,
+      "arm": "candidate",
+      "ms": 0.1745239999999626,
+      "messages": 8
+    },
+    {
+      "pair": 5,
+      "arm": "candidate",
+      "ms": 0.15251100000000406,
+      "messages": 8
+    },
+    {
+      "pair": 5,
+      "arm": "baseline",
+      "ms": 0.47261600000001636,
+      "messages": 16
+    },
+    {
+      "pair": 6,
+      "arm": "baseline",
+      "ms": 0.3170499999999947,
+      "messages": 16
+    },
+    {
+      "pair": 6,
+      "arm": "candidate",
+      "ms": 0.17625699999996414,
+      "messages": 8
+    },
+    {
+      "pair": 7,
+      "arm": "candidate",
+      "ms": 0.1566670000000272,
+      "messages": 8
+    },
+    {
+      "pair": 7,
+      "arm": "baseline",
+      "ms": 0.358113000000003,
+      "messages": 16
+    },
+    {
+      "pair": 8,
+      "arm": "baseline",
+      "ms": 0.315337999999997,
+      "messages": 16
+    },
+    {
+      "pair": 8,
+      "arm": "candidate",
+      "ms": 0.1741840000000252,
+      "messages": 8
+    },
+    {
+      "pair": 9,
+      "arm": "candidate",
+      "ms": 0.15676799999999957,
+      "messages": 8
+    },
+    {
+      "pair": 9,
+      "arm": "baseline",
+      "ms": 0.4158509999999751,
+      "messages": 16
+    }
+  ]
+}

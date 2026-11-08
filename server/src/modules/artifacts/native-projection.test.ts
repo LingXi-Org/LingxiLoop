@@ -4,7 +4,7 @@ import {applyOperations,prepareBatch} from '../../../../shared/artifact-operatio
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createDocument, createNode, createPage } from '../../../../shared/artifact-document.js'
-import { projectNativeSnapshot } from './native-projection.js'
+import { initialNativePageIds, projectNativeSnapshot } from './native-projection.js'
 
 test('read-only legacy conversion retains all pages without writing immutable page state', () => {
   const document = createDocument('slides', 'readonly')
@@ -83,4 +83,12 @@ test('标题预览只读派生默认粗体，未加载正文与不可变原始�
  const document=createDocument('design','heading-projection'),page=createPage('page'),node=createNode('text','heading');node.text='标题正文';node.style={fontSize:48};node.richText={type:'doc',content:[{type:'heading',attrs:{level:1},content:[{type:'text',text:node.text}]}]};page.nodes.heading=node;page.nodeOrder=['heading'];document.pages.page=page;document.pageOrder=['page']
  const before=JSON.stringify(document),projection=projectNativeSnapshot({document,history:{version:0,undo:null,redo:null},pageVersions:{page:'immutable-heading-hash'}},[])
  assert.equal(projection.previews.page.nodes.heading.style.fontWeight,700);assert.deepEqual(projection.document.pages.page.nodes,{});assert.equal(projection.pageVersions.page,'immutable-heading-hash');assert.equal(JSON.stringify(document),before);assert.equal(node.style.fontWeight,undefined)
+})
+
+test('设计首屏同时返回当前画布正文和首个画板，其余页继续按需读取',()=>{
+ const document=createDocument('design','initial');document.canvasPages=[{id:'first',name:'第一页',contentId:'body'},{id:'second',name:'第二页'}]
+ const body={...createPage('body'),canvasPageId:'first'},board={...createPage('board'),canvasPageId:'first'},other={...createPage('other'),canvasPageId:'second'}
+ document.pages={body,board,other};document.pageOrder=['other','board']
+ assert.deepEqual(initialNativePageIds(document),['body','board'])
+ document.kind='slides';delete document.canvasPages;assert.deepEqual(initialNativePageIds(document),['other'])
 })

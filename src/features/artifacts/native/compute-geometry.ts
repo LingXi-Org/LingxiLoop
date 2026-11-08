@@ -1,4 +1,5 @@
-import type { Bounds, Point, Rect } from './compute-protocol'
+import {validateNodeBounds} from './compute-bulk'
+import type { Bounds, Point, Rect, ElementProjection, ElementGeometry } from './compute-protocol'
 
 /** Geometry contains only compact rectangles, never document/node payloads. */
 export class BoundsIndex {
@@ -43,36 +44,23 @@ export class BoundsIndex {
 
 /** Per-page element rectangles are retained only while useful to the viewport. */
 export class ElementIndexes {
-  private pages = new Map<string, { revision: number; index: BoundsIndex }>()
+  private pages=new Map<string,{revision:number;geometryKey:number;index:BoundsIndex;issues:ElementProjection['issues']}>()
 
-  replace(pageId: string, elements: readonly Bounds[], revision: number) {
-    const existing = this.pages.get(pageId)
-    if (existing && revision < existing.revision) throw new Error('stale_index')
-    const index = existing?.index ?? new BoundsIndex()
-    index.replace(elements)
-    this.pages.delete(pageId)
-    this.pages.set(pageId, { revision, index })
-    while (this.pages.size > 8) this.pages.delete(this.pages.keys().next().value!)
+  /** Index, validate and query together so LRU eviction cannot interrupt a page query. */
+  project(pageId:string,geometry:ElementGeometry,viewport:Rect,revision:number,geometryKey:number):ElementProjection{
+    const previous=this.pages.get(pageId)
+    if(previous&&revision<previous.revision)throw new Error('stale_index')
+    let entry=previous
+    if(!entry||entry.geometryKey!==geometryKey){
+      const elements=geometry.ids.map((id,i)=>({id,x:geometry.coordinates[i*4],y:geometry.coordinates[i*4+1],width:geometry.coordinates[i*4+2],height:geometry.coordinates[i*4+3]}))
+      entry={revision,geometryKey,index:new BoundsIndex(),issues:validateNodeBounds(elements)}
+      entry.index.replace(elements)
+    }
+    entry.revision=revision
+    this.pages.delete(pageId);this.pages.set(pageId,entry)
+    while(this.pages.size>8)this.pages.delete(this.pages.keys().next().value!)
+    return{ids:entry.index.visible(viewport),issues:entry.issues}
   }
-
-  update(pageId: string, upserts: readonly Bounds[], removed: readonly string[], revision: number) {
-    const page = this.pages.get(pageId)
-    if (!page) throw new Error('missing_index')
-    if (revision < page.revision) throw new Error('stale_index')
-    page.index.update(upserts, removed)
-    page.revision = revision
-    this.pages.delete(pageId)
-    this.pages.set(pageId, page)
-  }
-
-  visible(pageId: string, viewport: Rect, revision: number) {
-    const page = this.pages.get(pageId)
-    if (!page) throw new Error('missing_index')
-    if (page.revision !== revision) throw new Error('stale_index')
-    this.pages.delete(pageId)
-    this.pages.set(pageId, page)
-    return page.index.visible(viewport)
-  }
-
-  drop(pageId: string) { this.pages.delete(pageId) }
+  drop(pageId:string){this.pages.delete(pageId)}
+  get size(){return this.pages.size}
 }

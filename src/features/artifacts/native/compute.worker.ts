@@ -1,5 +1,5 @@
 import { BoundsIndex, ElementIndexes } from './compute-geometry'
-import { resolveTheme, validateNodeBounds } from './compute-bulk'
+import { resolveTheme } from './compute-bulk'
 import type { ComputeMessage, ComputeRequest, ComputeResponse, ComputeValue, MathResult } from './compute-protocol'
 
 const scope = globalThis as unknown as {
@@ -60,16 +60,10 @@ async function execute(request: ComputeRequest) {
       value=(await import('../../../../shared/artifact-pen')).fitCanvasPen(task.points,task.tolerance,true)
     } else if (task.kind === 'math') {
       value = await math(task.source, task.display)
-    } else if (task.kind === 'elements') {
-      elements.replace(task.pageId, task.elements, revision)
-    } else if (task.kind === 'update-elements') {
-      elements.update(task.pageId, task.upserts, task.removed, revision)
+    } else if (task.kind === 'project-elements') {
+      value = elements.project(task.pageId, task.geometry, task.viewport, revision, task.geometryKey)
     } else if (task.kind === 'drop-elements') {
       elements.drop(task.pageId)
-    } else if (task.kind === 'visible-elements') {
-      value = elements.visible(task.pageId, task.viewport, revision)
-    } else if (task.kind === 'validate-bounds') {
-      value = validateNodeBounds(task.elements)
     } else if (task.kind === 'resolve-theme') {
       value = resolveTheme(task.tokens)
     } else {

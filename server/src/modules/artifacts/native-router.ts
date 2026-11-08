@@ -14,10 +14,10 @@ import { blobFile, putBlob, sha256 } from './store.js'
 import { NativeHistoryConflict } from './native-history.js'
 import {
   ensureNativeDocument, nativeDocumentChanges, NativeDocumentError, nativeWritesEnabled,
-  nativeSourceArchive, readNativeOriginal, readNativeOriginalBlob, readNativePage, readNativePageSnapshot, readNativeRevision, submitNativeOperations,
+  nativeSourceArchive, readNativeOriginal, readNativeOriginalBlob, readNativePage, readNativeRevision, submitNativeOperations,
   type NativeOperationResult,
 } from './native-document.js'
-import { projectNativeSnapshot } from './native-projection.js'
+import { initialNativePageIds, projectNativeSnapshot } from './native-projection.js'
 import { artifactEditorOrigin } from '../../../../shared/artifact-editor-origin.js'
 import { issueGrant } from './grants.js'
 import { env } from '../../env.js'
@@ -46,7 +46,7 @@ nativeArtifactsRouter.get('/artifacts/:id/document', safe(async (req, res) => {
   const write = nativeWritesEnabled() && (await permissionService.can({ companyId: scope.companyId, actorUserId: scope.userId, action: 'artifact:write', resource: { type: 'artifact', id: artifactId } })).allowed
   try {
     const snapshot = await ensureNativeDocument({ db: pool, transaction }, { artifactId, companyId: scope.companyId, actorId: scope.userId, write })
-    const requested = typeof req.query.pages === 'string' ? req.query.pages.split(',').filter(Boolean) : [snapshot.document.pageOrder[0]].filter((id): id is string => Boolean(id))
+    const requested = typeof req.query.pages === 'string' ? req.query.pages.split(',').filter(Boolean) : initialNativePageIds(snapshot.document)
     const loaded = req.query.allPages === 'true' ? artifactPageIds(snapshot.document) : requested
     res.set('Cache-Control', 'no-store').json({ ...projectNativeSnapshot(snapshot, loaded), write })
   } catch (error) { if (!respondError(res, error)) throw error }
@@ -57,7 +57,7 @@ nativeArtifactsRouter.get('/artifacts/:id/revisions/:seq/document',safe(async(re
   const seq=z.string().regex(/^\d{1,18}$/).parse(req.params.seq)
   try{
     const snapshot=await readNativeRevision(pool,{artifactId,companyId:scope.companyId,seq})
-    const loaded=req.query.allPages==='true'||!Object.keys(snapshot.pageVersions).length?artifactPageIds(snapshot.document):snapshot.document.pageOrder.slice(0,1)
+    const loaded=req.query.allPages==='true'||!Object.keys(snapshot.pageVersions).length?artifactPageIds(snapshot.document):initialNativePageIds(snapshot.document)
     res.set('Cache-Control','no-store').json({...projectNativeSnapshot(snapshot,loaded),write:false})
   }catch(error){if(!respondError(res,error))throw error}
 }))
@@ -66,11 +66,10 @@ nativeArtifactsRouter.get('/artifacts/:id/pages/:pageId', safe(async (req, res) 
   const artifactId = String(req.params.id)
   const scope = await requireArtifact(req, artifactId)
   const hash = req.query.hash === undefined ? undefined : z.string().regex(/^[a-f0-9]{64}$/).parse(req.query.hash)
-  const snapshot = await readNativePageSnapshot(pool, artifactId, String(req.params.pageId), hash)
-  let page = snapshot?.page ?? null
+  let page = await readNativePage(pool, artifactId, String(req.params.pageId), hash)
   if (!page && !hash) page = (await ensureNativeDocument({ db: pool, transaction }, { artifactId, companyId: scope.companyId, actorId: scope.userId, write: false })).document.pages[String(req.params.pageId)] ?? null
   if (!page) { res.sendStatus(404); return }
-  res.set('Cache-Control', hash ? 'private, max-age=31536000, immutable' : 'no-store').json({ page, version: snapshot?.version ?? sha256(Buffer.from(JSON.stringify(page) + '\n')) })
+  res.set('Cache-Control', hash ? 'private, max-age=31536000, immutable' : 'no-store').json({ page, version: hash ?? sha256(Buffer.from(JSON.stringify(page) + '\n')) })
 }))
 
 nativeArtifactsRouter.post('/artifacts/:id/operations', safe(async (req, res) => {

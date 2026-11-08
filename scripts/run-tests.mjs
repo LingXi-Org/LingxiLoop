@@ -30,6 +30,7 @@ const testsByScope = {
     'server/src/modules/artifacts/check.test.ts',
     'server/src/modules/artifacts/native-history.test.ts',
     'server/src/modules/artifacts/native-projection.test.ts',
+    'server/src/modules/artifacts/native-page-router.test.ts',
     'server/src/modules/artifacts/native-comments-router.test.ts',
     'server/src/modules/artifacts/agent-summary.test.ts',
     'server/src/modules/artifacts/native-embed-source.test.ts',
