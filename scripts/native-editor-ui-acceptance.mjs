@@ -114,6 +114,13 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
   if(options.checks==='font-parity'){
     // 使用普通可编辑文字导出路径；复杂CSS组仍按现有规则整组栅格化。
     if(options['font-exports']==='true')delete document.pages['page-1'].nodes['page-1-root'].css
+    if(editorCase==='menu-generic-label')document.pages['page-1'].nodes['page-1-heading'].style.fontFamily='system-ui, Arial'
+    if(editorCase==='menu-cjk')document.pages['page-1'].nodes['page-1-heading'].style.fontFamily='宋体'
+    if(editorCase==='menu-scroll'){
+      const page=document.pages['page-1'],families=['Arial','Bebas Neue','Caveat','Courier New','DM Sans','Garamond','Georgia','Helvetica','Inter','Lato','Lora','Manrope','Merriweather','Montserrat'],ids=[]
+      for(const [index,family]of families.entries()){const node={...createNode('group',`font-declaration-${index}`),parentId:'page-1-root',style:{fontFamily:family},width:1,height:1};page.nodes[node.id]=node;ids.push(node.id)}
+      page.nodeOrder.splice(page.nodeOrder.indexOf('page-1-heading'),0,...ids);page.nodes['page-1-heading'].style.fontFamily='Work Sans'
+    }
     if(editorCase==='menu-theme'){const node=document.pages['page-1'].nodes['page-1-heading'];node.style={...node.style,fontFamily:'Arial',themeFont:'font.custom',themeFontFallback:'Arial'}}
     if(editorCase==='menu-custom')document.pages['page-1'].nodes['page-1-heading'].style.fontFamily='My Document Font'
     if(editorCase==='menu-same-stack')document.pages['page-1'].nodes['page-1-heading'].style.fontFamily='Arial, sans-serif'
@@ -3338,9 +3345,19 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
       if(editorCase.startsWith('menu-')){
         if(editorCase==='menu-inherited'){await trigger.hover();await page.getByRole('button',{name:'还原字体',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved')}
         const before=JSON.stringify(document),prior=receipts.length
-        if(editorCase==='menu-keyboard')await trigger.press('ArrowDown');else await trigger.click()
+        if(editorCase==='menu-keyboard'||editorCase==='menu-scroll')await trigger.press('ArrowDown');else await trigger.click()
         const menu=page.getByRole('menu',{name:'字体选择',exact:true});await menu.waitFor();const search=menu.getByRole('textbox',{name:'搜索字体',exact:true});await search.waitFor()
         const used=menu.getByRole('group',{name:'此设计中',exact:true}),all=menu.getByRole('group',{name:'全部字体',exact:true})
+        if(editorCase==='menu-generic-label'){
+          assert.equal(await trigger.textContent(),'阿里亚尔体');assert.equal(await menu.getByRole('menuitemradio',{checked:true}).count(),2);await page.screenshot({path:join(output,'font-generic-label-fixed.png')});await all.getByRole('menuitemradio',{name:'阿里亚尔体',exact:true}).click();assert.equal(receipts.length,prior);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'system-ui, Arial');assert.deepEqual(errors,[]);return{case:editorCase,sourceDisplayName:true,pinnedSourceGenericFirstSemanticsRetained:true,noWrites:true,consoleOrPageErrors:errors}
+        }
+        if(editorCase==='menu-cjk'){
+          const rows=await used.getByRole('menuitemradio').evaluateAll(elements=>elements.map(element=>({text:element.textContent,rect:element.getBoundingClientRect().toJSON()})));await writeFile(join(output,'font-cjk-rows.json'),JSON.stringify(rows,null,2)+'\n');assert.equal(rows[0].rect.height,24);assert.equal(rows[1].rect.y-rows[0].rect.y,24);await page.screenshot({path:join(output,'font-cjk-fixed.png')});await search.press('Escape');assert.equal(receipts.length,prior);assert.deepEqual(errors,[]);return{case:editorCase,ordinaryCjkRow24:true,noWrites:true,consoleOrPageErrors:errors}
+        }
+        if(editorCase==='menu-scroll'){
+          const capture=()=>page.locator('.native-element-font-menu').evaluate(root=>{const active=document.activeElement,list=root.querySelector('.native-font-list');return{active:active?.textContent,rect:active?.getBoundingClientRect().toJSON(),list:list.getBoundingClientRect().toJSON(),scrollTop:list.scrollTop}})
+          const observed=await capture();await writeFile(join(output,'font-focus-scroll.json'),JSON.stringify(observed,null,2)+'\n');assert.equal(observed.active,'工作无衬线体');assert.ok(observed.rect.top>=observed.list.top&&observed.rect.bottom<=observed.list.bottom,JSON.stringify(observed));await page.screenshot({path:join(output,'font-focus-cold-fixed.png')});await page.keyboard.press('Escape');await trigger.press('ArrowDown');await search.waitFor();const cached=await capture();assert.ok(cached.rect.top>=cached.list.top&&cached.rect.bottom<=cached.list.bottom,JSON.stringify(cached));await page.screenshot({path:join(output,'font-focus-cached-fixed.png')});await page.keyboard.press('Escape');assert.equal(receipts.length,prior);assert.deepEqual(errors,[]);return{case:editorCase,coldAndCachedKeyboardFocusVisible:true,noWrites:true,consoleOrPageErrors:errors}
+        }
         if(editorCase==='menu-unloaded'){
           assert.deepEqual(await used.getByRole('menuitemradio').allTextContents(),['阿里亚尔体','乔治亚体']);assert.equal(canvasBodyLoaded,false)
           await used.getByRole('menuitemradio',{name:'乔治亚体',exact:true}).click();await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='saved');assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'Georgia');canvasBodyLoaded=true;releaseCanvasBody?.();await page.reload();await ready(1);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'Georgia');assert.deepEqual(errors,[]);return{case:editorCase,unloadedFontVisibleBeforeBody:true,ordinarySharedSaveAndReopen:true,consoleOrPageErrors:errors}

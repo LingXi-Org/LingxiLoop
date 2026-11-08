@@ -1,0 +1,82 @@
+{
+  "triggerText": "无衬线体",
+  "triggerAria": "字体",
+  "before": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "system-ui, Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "after": {
+    "id": "page-1-heading",
+    "type": "text",
+    "x": 64,
+    "y": 40,
+    "width": 1152,
+    "height": 76,
+    "rotation": 0,
+    "parentId": "page-1-root",
+    "style": {
+      "fontFamily": "system-ui, Arial",
+      "fontSize": 48,
+      "fontWeight": 700,
+      "lineHeight": 1.25,
+      "color": "#18332b"
+    },
+    "text": "LingxiLoop 1",
+    "richText": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "heading",
+          "attrs": {
+            "level": 1
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "LingxiLoop 1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "beforeComputed": "system-ui, Arial",
+  "afterComputed": "system-ui, Arial",
+  "checkedBefore": [
+    "阿里亚尔体",
+    "阿里亚尔体"
+  ],
+  "writes": 0,
+  "errors": []
+}

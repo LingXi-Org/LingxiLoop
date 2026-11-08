@@ -1,0 +1,32 @@
+{
+  "reviewedCommit": "6e858c7b1294f94c5f280dbee8a16f955a1459c2",
+  "review": "../reviews/6e858c7b.json",
+  "referenceCommit": "016b39d7fdcc30bfacee31ea5541498ac53921c6",
+  "findings": [
+    {
+      "severity": "P2",
+      "issue": "通用字体在前时按钮显示无衬线体，菜单却勾选Arial；Source按钮亦显示Arial。",
+      "fix": "仅Design按钮使用来源displayFontFamily显示逻辑，文档选择语义与Slides保留。"
+    },
+    {
+      "severity": "P2",
+      "issue": "宋体来源普通行24像素，原生无条件预览行28像素。",
+      "fix": "按来源可预览family条件区分普通/预览行；普通行不强制样例字体和紧凑行高，触摸均40像素。作者值及中文编号不变。"
+    },
+    {
+      "severity": "P2",
+      "issue": "当前项位于14种已用字体之后时，两版键盘焦点在列表视口之外。",
+      "fix": "菜单项获得焦点时只调整自身列表scrollTop使该行可见；冷/缓存打开均覆盖，不增加全局监听、观察者、定时器或文档操作。"
+    }
+  ],
+  "retractedFinding": "Source真实154运行同样将system-ui, Arial的Arial勾选且点击不改声明；因此原数据P2撤回，按固定Source保留，不伪造修复。",
+  "checks": {
+    "before": "实际CJK28≠24、聚焦行840..868在列表424..684之外先红，纯显示名与预览单元先红；独立双版原始证据保留。",
+    "after": "140/154各12完整菜单流程通过；47定向单位通过；lint43警告4信息exit0。本地类型仍76条SDK级联、变更文件0，未通过。",
+    "source": "Source154宋体24与generic-first选择语义均12哈希固定；长列表键盘可见性按真实可访问契约检查，未声称Source此状态对比。"
+  },
+  "limits": "本次只关闭三个已复现差异；完整字体/CSS/混合面板、缺还原字重后继、整图/授权服务及最终性能未完成。",
+  "functionalQualified": false,
+  "visualQualified": false,
+  "performanceQualified": false
+}

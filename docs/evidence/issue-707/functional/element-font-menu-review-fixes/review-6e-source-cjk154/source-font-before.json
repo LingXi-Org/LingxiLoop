@@ -1,0 +1,405 @@
+{
+  "field": "Font: 宋体",
+  "text": "宋体",
+  "computed": {
+    "declaration": "宋体",
+    "computed": "宋体"
+  },
+  "checked": [
+    "宋体"
+  ],
+  "rows": [
+    {
+      "text": "宋体",
+      "rect": {
+        "x": 1205,
+        "y": 448,
+        "width": 195,
+        "height": 24,
+        "top": 448,
+        "right": 1400,
+        "bottom": 472,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Arial",
+      "rect": {
+        "x": 1205,
+        "y": 472,
+        "width": 195,
+        "height": 28,
+        "top": 472,
+        "right": 1400,
+        "bottom": 500,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Arial",
+      "rect": {
+        "x": 1205,
+        "y": 533,
+        "width": 195,
+        "height": 28,
+        "top": 533,
+        "right": 1400,
+        "bottom": 561,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Bebas Neue",
+      "rect": {
+        "x": 1205,
+        "y": 561,
+        "width": 195,
+        "height": 28,
+        "top": 561,
+        "right": 1400,
+        "bottom": 589,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Caveat",
+      "rect": {
+        "x": 1205,
+        "y": 589,
+        "width": 195,
+        "height": 28,
+        "top": 589,
+        "right": 1400,
+        "bottom": 617,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Courier New",
+      "rect": {
+        "x": 1205,
+        "y": 617,
+        "width": 195,
+        "height": 28,
+        "top": 617,
+        "right": 1400,
+        "bottom": 645,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "DM Sans",
+      "rect": {
+        "x": 1205,
+        "y": 645,
+        "width": 195,
+        "height": 28,
+        "top": 645,
+        "right": 1400,
+        "bottom": 673,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Garamond",
+      "rect": {
+        "x": 1205,
+        "y": 673,
+        "width": 195,
+        "height": 28,
+        "top": 673,
+        "right": 1400,
+        "bottom": 701,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Georgia",
+      "rect": {
+        "x": 1205,
+        "y": 701,
+        "width": 195,
+        "height": 28,
+        "top": 701,
+        "right": 1400,
+        "bottom": 729,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Helvetica",
+      "rect": {
+        "x": 1205,
+        "y": 729,
+        "width": 195,
+        "height": 28,
+        "top": 729,
+        "right": 1400,
+        "bottom": 757,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Inter",
+      "rect": {
+        "x": 1205,
+        "y": 757,
+        "width": 195,
+        "height": 28,
+        "top": 757,
+        "right": 1400,
+        "bottom": 785,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Lato",
+      "rect": {
+        "x": 1205,
+        "y": 785,
+        "width": 195,
+        "height": 28,
+        "top": 785,
+        "right": 1400,
+        "bottom": 813,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Lora",
+      "rect": {
+        "x": 1205,
+        "y": 813,
+        "width": 195,
+        "height": 28,
+        "top": 813,
+        "right": 1400,
+        "bottom": 841,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Manrope",
+      "rect": {
+        "x": 1205,
+        "y": 841,
+        "width": 195,
+        "height": 28,
+        "top": 841,
+        "right": 1400,
+        "bottom": 869,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Merriweather",
+      "rect": {
+        "x": 1205,
+        "y": 869,
+        "width": 195,
+        "height": 28,
+        "top": 869,
+        "right": 1400,
+        "bottom": 897,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Montserrat",
+      "rect": {
+        "x": 1205,
+        "y": 897,
+        "width": 195,
+        "height": 28,
+        "top": 897,
+        "right": 1400,
+        "bottom": 925,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Nunito",
+      "rect": {
+        "x": 1205,
+        "y": 925,
+        "width": 195,
+        "height": 28,
+        "top": 925,
+        "right": 1400,
+        "bottom": 953,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Open Sans",
+      "rect": {
+        "x": 1205,
+        "y": 953,
+        "width": 195,
+        "height": 28,
+        "top": 953,
+        "right": 1400,
+        "bottom": 981,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Playfair Display",
+      "rect": {
+        "x": 1205,
+        "y": 981,
+        "width": 195,
+        "height": 28,
+        "top": 981,
+        "right": 1400,
+        "bottom": 1009,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Poppins",
+      "rect": {
+        "x": 1205,
+        "y": 1009,
+        "width": 195,
+        "height": 28,
+        "top": 1009,
+        "right": 1400,
+        "bottom": 1037,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Raleway",
+      "rect": {
+        "x": 1205,
+        "y": 1037,
+        "width": 195,
+        "height": 28,
+        "top": 1037,
+        "right": 1400,
+        "bottom": 1065,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Roboto",
+      "rect": {
+        "x": 1205,
+        "y": 1065,
+        "width": 195,
+        "height": 28,
+        "top": 1065,
+        "right": 1400,
+        "bottom": 1093,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Space Grotesk",
+      "rect": {
+        "x": 1205,
+        "y": 1093,
+        "width": 195,
+        "height": 28,
+        "top": 1093,
+        "right": 1400,
+        "bottom": 1121,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Tahoma",
+      "rect": {
+        "x": 1205,
+        "y": 1121,
+        "width": 195,
+        "height": 28,
+        "top": 1121,
+        "right": 1400,
+        "bottom": 1149,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Times New Roman",
+      "rect": {
+        "x": 1205,
+        "y": 1149,
+        "width": 195,
+        "height": 28,
+        "top": 1149,
+        "right": 1400,
+        "bottom": 1177,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Trebuchet MS",
+      "rect": {
+        "x": 1205,
+        "y": 1177,
+        "width": 195,
+        "height": 28,
+        "top": 1177,
+        "right": 1400,
+        "bottom": 1205,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Verdana",
+      "rect": {
+        "x": 1205,
+        "y": 1205,
+        "width": 195,
+        "height": 28,
+        "top": 1205,
+        "right": 1400,
+        "bottom": 1233,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    },
+    {
+      "text": "Work Sans",
+      "rect": {
+        "x": 1205,
+        "y": 1233,
+        "width": 195,
+        "height": 28,
+        "top": 1233,
+        "right": 1400,
+        "bottom": 1261,
+        "left": 1205
+      },
+      "font": "ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, sans-serif, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", Roboto, \"PingFang SC\", \"PingFang TC\", \"Hiragino Sans\", \"Apple SD Gothic Neo\", sans-serif"
+    }
+  ]
+}

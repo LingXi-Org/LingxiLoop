@@ -20,3 +20,9 @@ test('作者自定义与通用字体可选，中文标签与可移植声明分�
  assert.deepEqual(groups[0].fonts.map(font=>font.family),['Other Custom Font','My Document Font','sans-serif'])
  assert.deepEqual(groups[0].fonts.map(font=>font.label),['自定义字体 1','自定义字体 2','无衬线体']);assert.ok(groups[0].fonts.every(font=>!font.theme))
 })
+
+test('来源仅为可预览字体使用大行，中文/特殊声明使用普通行',()=>{
+ const fonts=elementFontGroups(['宋体',"O'Brien",'Arial !important','My Document Font','Arial','ui-sans-serif'])[0].fonts
+ assert.deepEqual(fonts.map(font=>font.preview),[false,false,false,true,true,true])
+ assert.ok(elementFontGroups([])[0].fonts.every(font=>font.preview))
+})

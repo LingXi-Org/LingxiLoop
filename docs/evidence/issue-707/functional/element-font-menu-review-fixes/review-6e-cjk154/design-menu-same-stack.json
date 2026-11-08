@@ -1,0 +1,33 @@
+{
+  "rows": [
+    {
+      "text": "自定义字体 1",
+      "rect": {
+        "x": 1205,
+        "y": 448,
+        "width": 195,
+        "height": 28,
+        "top": 448,
+        "right": 1400,
+        "bottom": 476,
+        "left": 1205
+      },
+      "font": "宋体"
+    },
+    {
+      "text": "阿里亚尔体",
+      "rect": {
+        "x": 1205,
+        "y": 476,
+        "width": 195,
+        "height": 28,
+        "top": 476,
+        "right": 1400,
+        "bottom": 504,
+        "left": 1205
+      },
+      "font": "Arial"
+    }
+  ],
+  "errors": []
+}

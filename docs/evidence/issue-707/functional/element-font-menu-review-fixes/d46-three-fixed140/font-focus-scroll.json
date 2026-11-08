@@ -1,0 +1,24 @@
+{
+  "active": "工作无衬线体",
+  "rect": {
+    "x": 1205,
+    "y": 656,
+    "width": 195,
+    "height": 28,
+    "top": 656,
+    "right": 1400,
+    "bottom": 684,
+    "left": 1205
+  },
+  "list": {
+    "x": 1201,
+    "y": 424,
+    "width": 203,
+    "height": 260,
+    "top": 424,
+    "right": 1404,
+    "bottom": 684,
+    "left": 1201
+  },
+  "scrollTop": 184
+}
