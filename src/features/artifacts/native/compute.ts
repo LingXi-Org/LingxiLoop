@@ -17,6 +17,8 @@ export class NativeCompute {
   private nextId = 0
   private revision = -1
   private disposed = false
+  private geometryKeys = new WeakMap<ElementGeometry,number>()
+  private nextGeometryKey = 0
 
   private ensureWorker() {
     if (this.disposed) throw aborted()
@@ -90,7 +92,9 @@ export class NativeCompute {
   snap(point: Point, tolerance: number, revision: number, signal?: AbortSignal) {
     return this.request<Point>({ kind: 'snap', point, tolerance }, revision, signal)
   }
-  projectElements(pageId:string,geometry:ElementGeometry,viewport:Rect,geometryKey:number,revision:number,signal?:AbortSignal){
+  projectElements(pageId:string,geometry:ElementGeometry,viewport:Rect,revision:number,signal?:AbortSignal){
+    let geometryKey=this.geometryKeys.get(geometry)
+    if(geometryKey===undefined){geometryKey=++this.nextGeometryKey;this.geometryKeys.set(geometry,geometryKey)}
     // Transfer an owned copy; the viewport cache must retain its reusable coordinates.
     const coordinates=geometry.coordinates.slice()
     return this.request<ElementProjection>({kind:'project-elements',pageId,geometry:{ids:geometry.ids,coordinates},viewport,geometryKey},revision,signal,[coordinates.buffer])

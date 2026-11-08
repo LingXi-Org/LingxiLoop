@@ -13,8 +13,7 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
   pages: ArtifactPage[]; revision: number; viewport: { x: number; y: number; width: number; height: number }; scale: number
   root: RefObject<HTMLDivElement | null>; compute: NativeCompute; pageId: string | null; selected: string[]; editingId: string | null; onError(message: string): void
 }) {
-  const cache = useRef(new Map<string, { page: ArtifactPage; bounds: Bounds[];geometry:ElementGeometry;geometryKey:number }>())
-  const geometryKey=useRef(0)
+  const cache = useRef(new Map<string, { page: ArtifactPage; bounds: Bounds[];geometry:ElementGeometry }>())
   const [visible, setVisible] = useState<Record<string, { page: ArtifactPage; ids: Set<string>; bottom: number }>>({})
   useLayoutEffect(()=>{
     const container=root.current
@@ -59,12 +58,12 @@ export function useVisibleElements({ pages, revision, viewport, scale, root, com
         const shell=shells.get(page.id);if(!shell)return[]
         const bounds=shell.getBoundingClientRect(),previous=cache.current.get(page.id)
         const rectangles=previous?.page===page?previous.bounds:elementBounds(page)
-        const entry=previous?.page===page?previous:{page,bounds:rectangles,geometry:packElementGeometry(rectangles),geometryKey:++geometryKey.current}
+        const entry=previous?.page===page?previous:{page,bounds:rectangles,geometry:packElementGeometry(rectangles)}
         cache.current.set(page.id,entry)
         return[{page,entry,viewport:{x:(viewportBounds.left-bounds.left)/scale-48,y:(viewportBounds.top-bounds.top)/scale-48,width:viewportBounds.width/scale+96,height:viewportBounds.height/scale+96}}]
       })
       await Promise.all(queries.map(async({page,entry,viewport})=>{
-        const result=await compute.projectElements(page.id,entry.geometry,viewport,entry.geometryKey,revision,controller.signal)
+        const result=await compute.projectElements(page.id,entry.geometry,viewport,revision,controller.signal)
         if(controller.signal.aborted)return
         if(result.issues.length)onError('部分元素位置无效，请检查元素尺寸。')
         next[page.id]={page,ids:expandVisibleNodes(page,result.ids,page.id===pageId?[...selected,...(editingId?[editingId]:[])]:[]),bottom:Math.max(40,...entry.bounds.map(item=>item.y+item.height))}

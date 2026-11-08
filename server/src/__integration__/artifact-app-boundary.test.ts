@@ -378,8 +378,11 @@ test('Design free canvas objects use independent files, lazy reads, durable comm
     assert.deepEqual(saved.pageOrder,[board]);assert.equal(saved.pages[content].nodes[note.id].text,'画布便签')
     const projected=await(await api(`/artifacts/${design.id}/document`)).json() as {document:ArtifactDocument;loadedPageIds:string[];pageVersions:Record<string,string>}
     assert.equal(projected.document.canvasPages?.[0].contentId,content)
-    assert.deepEqual(projected.document.pages[content].nodes,{})
-    assert.equal(projected.loadedPageIds.includes(content),false)
+    assert.deepEqual(projected.document.pages[content],saved.pages[content],'首包直接包含首个画布正文')
+    assert.deepEqual(projected.loadedPageIds,[content,board])
+    const boardOnly=await(await api(`/artifacts/${design.id}/document?pages=${board}`)).json() as typeof projected
+    assert.deepEqual(boardOnly.document.pages[content].nodes,{})
+    assert.deepEqual(boardOnly.loadedPageIds,[board],'显式请求仍只加载指定页面')
     const hash=projected.pageVersions[content]
     const body=await(await api(`/artifacts/${design.id}/pages/${content}?hash=${hash}`)).json() as {page:ArtifactDocument['pages'][string]}
     assert.deepEqual(body.page,saved.pages[content])
