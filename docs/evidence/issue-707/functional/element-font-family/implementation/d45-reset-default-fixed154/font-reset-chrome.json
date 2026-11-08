@@ -1,0 +1,53 @@
+[
+  {
+    "tag": "BUTTON",
+    "rect": {
+      "x": 1148.25,
+      "y": 692,
+      "width": 20,
+      "height": 20,
+      "top": 692,
+      "right": 1168.25,
+      "bottom": 712,
+      "left": 1148.25
+    },
+    "display": "flex",
+    "padding": "0px",
+    "position": "static",
+    "opacity": "1"
+  },
+  {
+    "tag": "SPAN",
+    "rect": {
+      "x": 1142.25,
+      "y": 692,
+      "width": 26,
+      "height": 20,
+      "top": 692,
+      "right": 1168.25,
+      "bottom": 712,
+      "left": 1142.25
+    },
+    "display": "flex",
+    "padding": "0px",
+    "position": "static",
+    "opacity": "1"
+  },
+  {
+    "tag": "SPAN",
+    "rect": {
+      "x": 1117,
+      "y": 692,
+      "width": 76,
+      "height": 20,
+      "top": 692,
+      "right": 1193,
+      "bottom": 712,
+      "left": 1117
+    },
+    "display": "flex",
+    "padding": "0px",
+    "position": "static",
+    "opacity": "1"
+  }
+]

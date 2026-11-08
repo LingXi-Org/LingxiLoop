@@ -10185,12 +10185,48 @@
         "manifest": "functional/element-text-style/matrix.json",
         "matchedStateVerified": false
       },
-      "result": "文档字号菜单、派生元数据及角色原生持久化通过定向功能与局部几何；系统样式/完整混合面板、焦点前驱及整图/性能未完成。",
+      "result": "文档字号菜单、派生元数据及角色原生持久化通过定向功能与局部几何；D45已补字体还原焦点前驱，系统样式/完整混合面板及整图/性能未完成。",
       "functionalQualified": false,
       "visualQualified": false,
       "testEvidence": {
         "receipt": "functional/element-text-style.json",
         "scope": "Design文字字号菜单及派生摘要，不是完整排版系统、授权API或最终性能。"
+      }
+    },
+    {
+      "id": "D45-design",
+      "editor": "design",
+      "control": "字体选择保留字重/斜体、还原字体与继承",
+      "trigger": "文字→字体/字重→选择字体或还原→保存、撤销/重做、重开与导出",
+      "states": [
+        "字面字体",
+        "CSS优先",
+        "保留当前字重和斜体",
+        "父级继承",
+        "默认字体",
+        "悬停还原",
+        "键盘焦点",
+        "触摸",
+        "只读",
+        "并发冲突"
+      ],
+      "reference": {
+        "path": "skills/claude-design/scripts/editor/assets/index-CYLuwRoc.js",
+        "sha256": "2680772536cc2009f905e18926b1215008c3e5cd8dc2976d8fe93a8bed6eac08",
+        "runtime": "functional/element-font-family/reference/"
+      },
+      "implementation": "src/features/artifacts/native/element-font-properties.ts、FontField.tsx、NativeInspector.tsx、svg-presentation.ts、thumbnail.tsx、export/",
+      "screenshots": {
+        "reference": "visual/element-font-family/font-action-source-reset-chrome154/",
+        "native": "visual/element-font-family/d45-reset-layout154/",
+        "matchedStateVerified": false
+      },
+      "result": "定向字体选择、继承、共享历史、局部还原按钮几何和两浏览器各2场景六格式实际导出通过；完整字体目录、分组、菜单语义与混合属性、整图、性能未完成。",
+      "functionalQualified": false,
+      "visualQualified": false,
+      "testEvidence": {
+        "receipt": "functional/element-font-family.json",
+        "scope": "原生受控HTTP夹具与固定发布包参考；不是全产品授权、全部字体状态、像素或性能验收。"
       }
     }
   ],
@@ -10246,6 +10282,10 @@
     {
       "area": "文本样式菜单与字号单位",
       "reason": "角色、当前自定义、混合、空搜索及无障碍文案中文，px显示为像素；作者正文和代码语法保留。没有排除像素或图标。"
+    },
+    {
+      "area": "字体还原按钮与继承提示",
+      "reason": "Unset Font显示还原字体，提示使用继承的字体；字体名称使用中文。作者字体CSS值原样保留，没有据此排除图标或几何。"
     }
   ],
   "removedServiceEntrances": [

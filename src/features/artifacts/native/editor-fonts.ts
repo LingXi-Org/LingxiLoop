@@ -85,6 +85,12 @@ export function editorFontVariants(family: string | undefined): EditorFontVarian
   return weights.flatMap(weight => styles.map(style => ({ weight, style, label: editorFontVariantLabel(weight, style) })))
 }
 
+/** 原版保留当前字形，即使字体目录中没有列出它。 */
+export function editorFontMenuVariants(family:string|undefined,weight=400,style:'normal'|'italic'='normal'):EditorFontVariant[]{
+ const variants=editorFontVariants(family)
+ return variants.some(item=>item.weight===weight&&item.style===style)?variants:[{weight,style,label:editorFontVariantLabel(weight,style)},...variants]
+}
+
 /** Changing family only adjusts a face when that face does not exist in the new family. */
 export function editorFontFacePatch(family: string, current: Pick<ArtifactStyle, 'fontWeight' | 'fontStyle'>): Pick<ArtifactStyle, 'fontWeight' | 'fontStyle'> {
   const variants = editorFontVariants(family), weight = current.fontWeight ?? 400, style = current.fontStyle ?? 'normal'

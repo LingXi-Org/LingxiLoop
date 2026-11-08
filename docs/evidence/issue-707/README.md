@@ -57,7 +57,7 @@ Screenshots alone do not establish the specified 1 px / 0.5% source parity gate.
 No production merge or deployment is included.
 
 
-逐项跟踪见 [parity-matrix.json](parity-matrix.json)：当前 173 条初始及增补控件/状态记录，均保留视觉与完整功能未通过标记；未列出的可达状态还须从源码及运行入口继续补齐。每项包含源码文案定义偏移、触发步骤、状态、原生位置、已有截图及局部功能证据。定义目录不等于可达性证明。
+逐项跟踪见 [parity-matrix.json](parity-matrix.json)：当前 177 条初始及增补控件/状态记录，均保留视觉与完整功能未通过标记；未列出的可达状态还须从源码及运行入口继续补齐。每项包含源码文案定义偏移、触发步骤、状态、原生位置、已有截图及局部功能证据。定义目录不等于可达性证明。
 
 源码目录可复现：`node scripts/native-editor-source-census.mjs --reference-root=/absolute/pinned-checkout --output=/tmp/census`。固定哈希下识别 Design 2557、Slides 1697 条文案定义；包含依赖库，尚未全部完成入口归属。偏移单位明确为 UTF-16，不把第一次字符串命中误当组件位置。
 
@@ -562,3 +562,9 @@ D44增加[文本样式菜单及派生摘要](functional/element-text-style.json)
 
 
 240ad77d普通CI42444311225和[真实静态图](performance/static-profile-240ad77d.json)42444308080成功；联合838929、比645增加97，仍比基线+8.2682%。[静态复审](reviews/240ad77d-actual-graph.json)确认Role常量leaf与延迟helper/Inspector不进入启动静态闭包，七图标/唯一React隔离保留，但[功能冻结审查](reviews/240ad77d.json)发现双版P2：继承32与CSS变量43的混合选择被判共同32，候选因此未通过。现按所有已选节点实际字号修复，[前后证据](functional/element-text-style-mixed.json)保留首次失败；不能以原16流程或构建通过覆盖该P2。新候选CI及复审待完成。
+
+
+51e1f66f普通CI42445310317、[实际静态图](performance/static-profile-51e1f66f.json)42445304964、[功能复审](reviews/51e1f66f.json)及[图后验](reviews/51e1f66f-actual-graph.json)限定通过，原32/43多选P2闭合。独立140/154完整17流程、相同实际43、原始typed18+变量43的精确历史恢复与延迟摘要通过。首并发140 Target crashed及exit13保留、原因未证实；顺序重跑通过，未改产品或阈值。静态联合838904，比240少25，但仍比基线+8.2650%，不是实际性能资格。
+
+
+D45增加[字体选择、还原与继承](functional/element-font-family.json)，清单177项。固定来源确认换字体保留字重/斜体，当前未列出字形继续显示，撤销字体声明后继承父级或浏览器默认。原生新增中文还原按钮、实际字体读数及原生操作补丁，保留原有草稿/冲突与共享历史；来源字号菜单后继焦点差异已补齐。还原按钮局部几何通过，粗指针全局提前50px仍保留。38定向单位、9中文文案及lint通过；本地类型检查仍有76条缺少私有SDK级联，不能称通过。140/154最终各两个继承场景均完成六格式实际导出：网页重读字体、普通文字PPTX字体声明、PDF解析及图片解码通过，非像素资格。新测试依赖链接遗漏和复杂CSS根组降级误用均保留失败并说明；没有修改产品隔离或降级。字体26/29目录、使用字体分组、完整菜单/混合值、四尺寸双主题、实际授权API和最终性能仍未完成。候选CI/静态图及冻结独立审查提交后登记。

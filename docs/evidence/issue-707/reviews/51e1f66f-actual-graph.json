@@ -1,0 +1,67 @@
+{
+  "类型": "明确授权生产静态图只读后验",
+  "候选提交": "51e1f66fbe93cb02570a7bc38051df2a079b69c8",
+  "固定基线": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+  "父候选": "240ad77d727aba6b39e699930c333d7974ca0356",
+  "来源": {
+    "文件": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-51e1f66f.json",
+    "run": 42445304964,
+    "job": 128622868907,
+    "collectorCommit": "51e1f66fbe93cb02570a7bc38051df2a079b69c8",
+    "说明": "普通CI42445310317成功为主线程提供信息，本轮没有独立执行该CI。"
+  },
+  "结论": "限定静态图后验通过，未发现新增静态P1/P2/P3。原P2闭合由另份功能报告证明；本图保持懒加载/七图标/React隔离，不替代功能、实际性能或10组资格。",
+  "发现": [],
+  "完整性": [
+    "两条profile精确对应固定721及51e；顶层passed=true/qualified=false。两臂openingIsolationPassed/buildCompleted/sourceInputsUnchanged=true，uncommittedInputsPossible=false、qualified=false。",
+    "baseline整条profile与240轮深相等。递归所有imports均可解析，application闭包/列表与native双根减application/增量列表完全一致，二者无重复；各块raw/gzip求和与汇总相符。",
+    "候选app41块、native双根静态并集33、减app后22；NativeEditor完整静态闭包28、RichTextEditor33。"
+  ],
+  "惰性与隔离": [
+    "shared/artifact-typography-roles.ts词汇leaf仍在闭包；完整shared/artifact-typography.ts、NativeInspector.tsx、ElementTextStyle.tsx仍不在app∪native静态闭包，未因本次修复被提前拉入。",
+    "七图标块精确bot/image/chevron-down/ellipsis/chevron-left/chevron-right/x，2286 raw/646 gzip字节，只有lucide-react/7模块、无project模块/React/DOM/图标工厂。独立createLucideIcon块正常引用应用index。",
+    "所采闭包中React/ReactDOM只在一个应用index，均8/8模块及19130/544433 rendered UTF16码元，与基线一致；不扩大为未采动态闭包或整个运行时唯一性证明。",
+    "两个完整原生根无Query-core/ReactQuery、所列会话UI/CodeBlock及parse5/streamdown/shiki/@shikijs/htmlparser2有代码模块；app闭包也无Query包，未发现移入所采应用预热。仅限指定根静态图。"
+  ],
+  "静态字节精确复算": {
+    "721": {
+      "appGzip": 618927,
+      "nativeGzip": 155935,
+      "unionGzip": 774862
+    },
+    "240": {
+      "appGzip": 621263,
+      "nativeGzip": 217666,
+      "unionGzip": 838929
+    },
+    "51e": {
+      "appGzip": 621249,
+      "nativeGzip": 217655,
+      "unionGzip": 838904
+    },
+    "51e减240": {
+      "appGzip": -14,
+      "nativeGzip": -11,
+      "unionGzip": -25,
+      "appRaw": 0,
+      "nativeRaw": 0
+    },
+    "51e相对721百分比": {
+      "union": 8.264955566281484,
+      "native": 39.5805944784686
+    },
+    "限制": "逐块本地gzip估算。相对240总和减少25字节、raw JS相同，不能称实际浏览器收益；静态union仍比固定基线高8.2650%，native增量高39.5806%。没有因此证明5%实际门槛。"
+  },
+  "复现": {
+    "脚本": "/workspace/lingxi-issue707-scratch/review-51e-actual/verify.py",
+    "结果": "/workspace/lingxi-issue707-scratch/review-51e-actual/checks.json",
+    "日志": "/tmp/lingxi-review-51e-actual-verify.log",
+    "运行": "全部断言通过；另检查baseline深相等、角色leaf存在及三个lazy模块缺席。"
+  },
+  "功能证据保持独立": "/tmp/lingxi-review-51e1f66f.json 保留原P2独立复验、相同值、历史、权限、延迟摘要结果及首轮并发140未完成/顺序重跑通过记录。本静态报告没有覆盖或删除这些事实。",
+  "未验证与只读边界": [
+    "实际浏览器传输/Worker/启动/PSS、完整像素和最终10组AB/BA未运行/未通过。",
+    "未读root字体参考WIP，未改产品、提交/推送/部署/外发；未下载SDK、私有build/artifact或重新跑bench。"
+  ],
+  "最终性能资格": false
+}

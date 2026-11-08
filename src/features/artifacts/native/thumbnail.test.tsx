@@ -7,6 +7,15 @@ import { PageThumbnail } from './thumbnail'
 import {Parser} from 'htmlparser2'
 import {artifactPreviews} from '../../../../shared/artifact-previews'
 
+test('Design缩略图还原字体后继承画板默认与父级字体',()=>{
+ const document=createDocument('design','font-default'),page=createPage('page'),node=createNode('text','text');node.style={fontSize:48};node.text='继承文字';page.nodes.text=node;page.nodeOrder=['text'];document.pages.page=page;document.pageOrder=['page']
+ assert.match(renderToStaticMarkup(createElement(PageThumbnail,{page,document,loaded:true})),/font-family="Times New Roman"/)
+ const group={...createNode('group','group'),style:{fontFamily:'Georgia'}}
+ const groupedPage={...page,nodes:{...page.nodes,text:{...node,parentId:'group'},group},nodeOrder:['group','text']}
+ const groupedDocument={...document,pages:{page:groupedPage}}
+ assert.match(renderToStaticMarkup(createElement(PageThumbnail,{page:groupedPage,document:groupedDocument,loaded:true})),/font-family="Georgia"/)
+})
+
 test('链接缩略图保留局部下划线，紧凑摘要不携带网址或挂载链接',()=>{
   const document=createDocument('slides','link-thumb'),page=createPage('link-page'),node=createNode('text','link-text')
   node.text='前链接后';node.richText={type:'doc',content:[{type:'paragraph',content:[{type:'text',text:'前'},{type:'text',text:'链接',marks:[{type:'link',attrs:{href:'https://private-link.test/author-data'}}]},{type:'text',text:'后'}]}]}

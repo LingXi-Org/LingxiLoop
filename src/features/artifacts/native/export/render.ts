@@ -8,7 +8,7 @@ import { awaitPageFonts } from './fonts'
 import { escapeHtml, type ExportResources, offlineMathCss } from './common'
 import { appearance, nodeTransform, paddingCss } from '../../../../../shared/artifact-appearance'
 import { editorFontFamily } from '../editor-fonts'
-import { presentSvg } from '../svg-presentation'
+import { presentSvg, pageDefaultFontFamily } from '../svg-presentation'
 
 const safeText = (text: string) => escapeHtml(text).replace(/\n/g, '<br>')
 export function nodeHasMath(node: ArtifactNode) { return node.type === 'math' || /\$|\\(?:\(|\[|begin\{)/.test([node.text ?? '', ...(node.cells ?? []).flat()].join('\n')) }
@@ -146,7 +146,7 @@ export async function renderPageHtml(page: ArtifactPage, resources: ExportResour
     const link=href?`<a class="artifact-export-element-link" href="${escapeHtml(href)}"${node.attributes?.target?` target="${escapeHtml(node.attributes.target)}"`:''} rel="noopener noreferrer" aria-label="打开元素链接"></a>`:''
     return `<div class="artifact-export-node" data-node-id="${node.id}" data-motion-id="${node.motionId??node.id}"${node.parentId?'':' data-motion-root'}${href?' data-element-link':''}${attributes} style="${escapeHtml(css)}">${link}${content}</div>`
   }
-  return `<section class="artifact-export-page" data-page-id="${page.id}" data-transition="${page.transition}" aria-label="${escapeHtml(page.title)}" style="width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}${pageRadiusCss(page.radius)?`;border-radius:${pageRadiusCss(page.radius)}`:''}">${(await Promise.all(children(null).map(render))).join('')}</section>`
+  return `<section class="artifact-export-page" data-page-id="${page.id}" data-transition="${page.transition}" aria-label="${escapeHtml(page.title)}" style="${pageDefaultFontFamily(resources.document,page.id)?`font-family:${escapeHtml(pageDefaultFontFamily(resources.document,page.id)!)};`:''}width:${page.width}px;height:${page.height}px;background:${escapeHtml(artifactPageBackground(page, resources.document))}${pageRadiusCss(page.radius)?`;border-radius:${pageRadiusCss(page.radius)}`:''}">${(await Promise.all(children(null).map(render))).join('')}</section>`
 }
 
 export async function mountExportPage(page: ArtifactPage, resources: ExportResources): Promise<{ element: HTMLElement; viewport: HTMLElement; dispose: () => void }> {

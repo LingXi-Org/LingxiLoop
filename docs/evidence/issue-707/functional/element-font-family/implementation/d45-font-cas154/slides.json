@@ -1,0 +1,10 @@
+{
+  "kind": "isolated-font-cas-diagnostic",
+  "mode": "slides",
+  "searchSurvivesRemoteChange": true,
+  "remoteFamilyPreserved": true,
+  "localSelectionRecoverable": true,
+  "saveState": "conflict",
+  "scope": "actual React and shared CAS reducer; controlled HTTP fixture",
+  "consoleOrPageErrors": []
+}

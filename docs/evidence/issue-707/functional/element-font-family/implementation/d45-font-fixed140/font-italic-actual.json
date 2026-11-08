@@ -1,0 +1,15 @@
+{
+  "style": {
+    "fontFamily": "Bebas Neue",
+    "fontSize": 48,
+    "fontWeight": 700,
+    "lineHeight": 1.25,
+    "color": "#18332b",
+    "fontStyle": "italic"
+  },
+  "computed": {
+    "fontFamily": "\"LingxiLoopEditor Bebas Neue\", sans-serif",
+    "fontWeight": "700",
+    "fontStyle": "italic"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "message": "TimeoutError: page.waitForEvent: Timeout 30000ms exceeded while waiting for event \"download\"\n=========================== logs ===========================\nwaiting for event \"download\"\n============================================================",
+  "errors": [
+    "{\"kind\":\"导出工作线程错误\",\"url\":\"http://127.0.0.1:5173/@fs/workspace/LingxiLoop/src/features/artifacts/native/export/pptx.worker.ts?worker_file&type=module\"}"
+  ]
+}

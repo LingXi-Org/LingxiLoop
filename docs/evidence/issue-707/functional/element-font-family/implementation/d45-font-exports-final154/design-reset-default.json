@@ -1,0 +1,59 @@
+{
+  "case": "reset-default",
+  "preservedWeightAndStyle": true,
+  "sharedHistoryAndReopen": true,
+  "exported": {
+    "kind": "字体继承六格式实际导出",
+    "formats": [
+      {
+        "format": "html",
+        "bytes": 13021,
+        "style": {
+          "case": "none",
+          "decoration": "none",
+          "items": 0
+        },
+        "fontFamily": "\"Times New Roman\""
+      },
+      {
+        "format": "pdf",
+        "bytes": 86894,
+        "independentReader": true
+      },
+      {
+        "format": "pptx",
+        "bytes": 507127,
+        "fontFamily": "Times New Roman",
+        "packageParsed": true
+      },
+      {
+        "format": "svg",
+        "bytes": 66555,
+        "decoded": {
+          "width": 1920,
+          "height": 1080
+        }
+      },
+      {
+        "format": "png",
+        "bytes": 201217,
+        "decoded": {
+          "width": 3840,
+          "height": 2160
+        }
+      },
+      {
+        "format": "jpeg",
+        "bytes": 205025,
+        "decoded": {
+          "width": 3840,
+          "height": 2160
+        }
+      }
+    ],
+    "documentUnchanged": true,
+    "consoleOrPageErrors": [],
+    "scope": "受控HTTP夹具；网页重读CSS，演示文稿检查字体，其他格式独立解析/解码；未验证PDF/PPTX像素保真"
+  },
+  "consoleOrPageErrors": []
+}

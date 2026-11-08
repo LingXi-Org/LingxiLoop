@@ -1,0 +1,112 @@
+{
+  "候选提交": "51e1f66fbe93cb02570a7bc38051df2a079b69c8",
+  "比较基线": "240ad77d727aba6b39e699930c333d7974ca0356",
+  "冻结目录": "/workspace/lingxi-issue707-scratch/review-51e1f66f",
+  "审查依据": ".agents/skills/repository-review/SKILL.md / AGENTS.md Delivery 2",
+  "结论": "限定P2修复复审通过，原继承32/变量43多选错误共同值已闭合，未发现新的可复现P1/P2/P3。首轮并发140浏览器失败单独保留，顺序重跑通过不抹去原记录。完整菜单、视觉与最终性能仍未合格。",
+  "发现": [],
+  "原P2闭合": {
+    "原问题": "两个实际字号32px/43px的节点，作者值同为undefined使菜单错误显示并勾选共同32。原失败报告 /tmp/lingxi-review-240ad77d.json 保留。",
+    "代码修复": "ElementTextStyle当前页面DOM单次扫描，只对wanted的当前所选节点读取computed size/weight/italic；Map只保存当前查询命中的所选身份。每个target优先用该实际字号，再用可解析作者值；多选出现未知时不假定共同值。当前自定义预览读取首目标对应metrics。",
+    "实际闭合": "原独立输入在154和140均显示混合且无勾选；140完整原始节点变体（body仍保留typed18且CSS变量覆盖成43）统一32后，CtrlZ精确恢复两个原节点及32/43混合/零选中，CtrlShiftZ后重开32保持。",
+    "相同值": "一个typed43与另一个CSS变量43（author值不可解析但实际同43）在154和140都显示共同43而不是混合，只有一个43像素选中项。",
+    "范围": "只验证本菜单的具体混合问题，不将整个多选面板、全部CSS、字体或视觉标记为通过。"
+  },
+  "实际验证": [
+    {
+      "项目": "154默认17菜单流程",
+      "命令关键参数": "--mode=design --checks=text-style",
+      "结果": "全部通过，包括新multi-rendered初始混合→统一32→历史恢复32/43→redo/reopen，以及单选继承/变量、empty/keyboard、locked/readonly/permission/peer-lock/CAS。零控制台错误。",
+      "日志": "/tmp/lingxi-review-51e-ui154.log",
+      "目录": "/workspace/lingxi-issue707-scratch/review-51e-ui154"
+    },
+    {
+      "项目": "140默认17菜单流程",
+      "结果": "首轮前7流程通过后global阶段浏览器崩溃；降低并发后的原命令完整顺序重跑17项通过。首轮不计整体通过，不删除失败。",
+      "日志": [
+        "/tmp/lingxi-review-51e-ui140.log",
+        "/tmp/lingxi-review-51e-ui140-repeat.log"
+      ],
+      "目录": [
+        "/workspace/lingxi-issue707-scratch/review-51e-ui140",
+        "/workspace/lingxi-issue707-scratch/review-51e-ui140-repeat"
+      ]
+    },
+    {
+      "项目": "原独立反例154",
+      "探针": "/workspace/lingxi-issue707-scratch/review-51e-probes/mixed.mjs",
+      "命令关键参数": "--text-style-case=multi --review-mixed=true",
+      "结果": "实际32/43、触发器混合、checked=[]、0写入/0错误。",
+      "证据": "/workspace/lingxi-issue707-scratch/review-51e-mixed154/mixed-current.json"
+    },
+    {
+      "项目": "相同实际值154及140",
+      "探针": "/workspace/lingxi-issue707-scratch/review-51e-probes/mixed.mjs",
+      "命令关键参数": "--text-style-case=multi --review-mixed=true --review-equal=true",
+      "结果": "154通过；140首轮退出未生成结果，顺序重跑通过。两个实际43显示共同43、非混合、单个勾选且0写入。",
+      "证据": [
+        "/workspace/lingxi-issue707-scratch/review-51e-equal154/mixed-current.json",
+        "/workspace/lingxi-issue707-scratch/review-51e-equal140-repeat/mixed-current.json"
+      ],
+      "日志": [
+        "/tmp/lingxi-review-51e-equal154.log",
+        "/tmp/lingxi-review-51e-equal140.log",
+        "/tmp/lingxi-review-51e-equal140-repeat.log"
+      ]
+    },
+    {
+      "项目": "140原始节点精确历史补查",
+      "探针": "/workspace/lingxi-issue707-scratch/review-51e-probes/history.mjs",
+      "命令关键参数": "--text-style-case=multi --review-mixed=true --review-history=true",
+      "结果": "body初始typed18+var43保持原输入；统一32、undo两个节点deepEqual原值、菜单再开恢复混合/checked0、redo/reopen统一32通过。",
+      "证据": "/workspace/lingxi-issue707-scratch/review-51e-history140/original-history.json",
+      "日志": "/tmp/lingxi-review-51e-history140.log"
+    },
+    {
+      "项目": "154延迟页摘要回归",
+      "探针": "/workspace/lingxi-issue707-scratch/review-51e-probes/partial.mjs",
+      "结果": "页3节点尚未加载，摘要提供独有72像素；本页选用72保存不改页3，释放页3读取后菜单行一致；零错误。",
+      "证据": "/workspace/lingxi-issue707-scratch/review-51e-partial154/partial-census.json",
+      "日志": "/tmp/lingxi-review-51e-partial154.log"
+    },
+    {
+      "项目": "22角色/会话单位",
+      "命令": "node --import tsx --test shared/artifact-typography.test.ts src/features/artifacts/native/session.test.ts",
+      "结果": "22通过/0失败",
+      "日志": "/tmp/lingxi-review-51e-units.log"
+    },
+    {
+      "项目": "25接受合同",
+      "命令": "node --test scripts/native-artifact-ci.test.mjs scripts/native-artifact-storage.test.mjs scripts/native-artifact-failure.test.mjs scripts/native-artifact-diagnostic-breakdown.test.mjs",
+      "结果": "25通过/0失败",
+      "日志": "/tmp/lingxi-review-51e-contracts.log"
+    },
+    {
+      "项目": "冻结与变更范围",
+      "结果": "HEAD精确匹配，git diff --check全范围通过，产品工作树未修改。产品仅ElementTextStyle；没有新observer、页加载、全局cache、模型/API、CSS或测量/资格变更。新增multi-rendered在既有CI默认text-style命令可达，保留原功能与失败证据。"
+    }
+  ],
+  "首轮未完成记录": [
+    {
+      "范围": "140并发默认流程",
+      "实际": "先通过base/empty/keyboard/census/multi/multi-rendered/css，global阶段错误处理中的page.screenshot抛Target crashed；未形成该阶段可审查结果。",
+      "日志": "/tmp/lingxi-review-51e-ui140.log"
+    },
+    {
+      "范围": "140并发相同值探针",
+      "实际": "Node在finally await server.close报告unsettled top-level await、exit13；没有生成结果文件，不能算通过。",
+      "日志": "/tmp/lingxi-review-51e-equal140.log"
+    },
+    {
+      "解释": "错误根因没有独立定位。主线程另报告其并发探针也出现Target crashed及无基线的累计cgroup OOM计数，不能逐次归因。随后暂停新浏览器并按原配置、原超时、原断言顺序复跑，完整17项及相同值探针通过；没有修改产品或测试阈值来使其通过。"
+    }
+  ],
+  "剩余未验证": [
+    "没有穷尽全部CSS依赖/字体变化/未渲染选区、完整多选属性面板或Source全部状态；本报告不要求/声称补全这些。",
+    "本轮未重跑PG/真实授权HTTP/跨租户/外部Agent或真实OS输入法；模型/API本提交未改。",
+    "本轮未执行完整web/server typecheck/build或重新拉取普通CI日志；主线程已告知owning CI成功，但不冒充独立运行。",
+    "完整像素与最终候选10组AB/BA/真实传输/PSS未通过。新生产图将另作静态后验，不替代P2功能闭合。"
+  ],
+  "只读边界": "冻结checkout及自己的探针/日志；未读root未提交字体实验、改产品、提交/推送/部署/外发、下载私有SDK/build artifact。复用公共node_modules，无依赖安装。",
+  "完整计划资格": false
+}

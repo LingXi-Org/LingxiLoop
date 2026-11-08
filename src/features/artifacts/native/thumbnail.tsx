@@ -95,7 +95,7 @@ function describePage(page: ArtifactPage, document: ArtifactDocument): Preview {
       color: safeColor(style.color, '#222'),
       stroke: safeColor(style.stroke ?? style.borderColor, node.type === 'line' ? '#333' : 'transparent'),
       strokeWidth: style.strokeWidth ?? style.borderWidth ?? (node.type === 'line' ? 3 : 1),
-      fontFamily:editorFontFamily(style.fontFamily)??'sans-serif', opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
+      fontFamily:editorFontFamily(inheritedSvgFont(node,page,document))??'sans-serif', opacity: style.opacity ?? 1, radius: style.borderRadius ?? 0, fontSize: style.fontSize ?? 32, fontWeight: style.fontWeight ?? 400,
       text: (node.type === 'math' ? node.source ?? '' : node.text ?? plainText(node.richText)).slice(0, 512),
       shape: node.shape, crop: node.crop, gradient: style.gradient, shadow: style.shadow, flipX: node.flipX, flipY: node.flipY,
       ...(asset ? { assetId, imageKey: imageKey(document.id, asset) } : {}),

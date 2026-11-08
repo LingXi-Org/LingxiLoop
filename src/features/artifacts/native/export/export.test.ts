@@ -7,6 +7,13 @@ import { ExportResources } from './common'
 import { encodeArtifactPdf } from './pdf-writer'
 import { renderPageHtml, pageText } from './render'
 
+test('Design导出采用画板默认字体并保留显式父级字体',async()=>{
+ const document=createDocument('design','font-default'),page=createPage('page'),node=createNode('text','text');node.style={fontSize:48};node.text='继承文字';page.nodes.text=node;page.nodeOrder=['text'];document.pages.page=page;document.pageOrder=['page']
+ const html=await renderPageHtml(page,new ExportResources(document,{format:'html'}));assert.match(html,/<section[^>]+font-family:[^>]*Times New Roman/)
+ const group={...createNode('group','group'),style:{fontFamily:'Georgia'}};node.parentId='group';page.nodes.group=group;page.nodeOrder.unshift('group')
+ assert.match(await renderPageHtml(page,new ExportResources(document,{format:'html'})),/font-family:Georgia/)
+})
+
 test('a one-pixel-high horizontal stroke retains ink and arrow overflow in export', async () => {
   const document=fixture(),page=document.pages.page!
   const line={...createNode('line','horizontal'),width:240,height:1,points:[{x:0,y:0},{x:240,y:0}],lineEnd:'arrow' as const,style:{stroke:'#18332b',strokeWidth:12}}

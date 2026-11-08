@@ -29,5 +29,7 @@ test('SVG images inherit an authored group font while absent and explicit famili
   page.nodes={[parent.id]:parent,[node.id]:node};page.nodeOrder=[parent.id,node.id];document.pages[page.id]=page;document.pageOrder=[page.id]
   assert.equal(inheritedSvgFont(node,page,document),'Merriweather')
   assert.equal(inheritedSvgFont({...node,style:{fontFamily:'Arial'}},page,document),'Arial')
-  assert.equal(inheritedSvgFont({...node,parentId:null},page,document),undefined)
+  assert.equal(inheritedSvgFont({...node,parentId:null},page,document),'Times New Roman')
+  assert.equal(inheritedSvgFont({...node,parentId:null},page,{...document,kind:'slides'}),undefined)
+  assert.equal(inheritedSvgFont({...node,parentId:null,scope:'canvas'},page,document),undefined)
 })

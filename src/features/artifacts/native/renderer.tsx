@@ -14,7 +14,7 @@ import { SvgImage } from './SvgImage'
 import {expandVisibleNodes} from './visibility'
 import {isFlowChild,isNaturalText} from './natural-layout'
 import {canvasTextMetrics} from '../../../../shared/artifact-canvas-typography'
-import { inheritedSvgFont } from './svg-presentation'
+import { inheritedSvgFont, pageDefaultFontFamily } from './svg-presentation'
 import './editor-fonts.css'
 import {codeStyleProperties,codeAttributeProperties} from '../../../../shared/artifact-node-code'
 
@@ -214,5 +214,5 @@ export const PageContent = memo(function PageContent(props: PageRenderProps) {
     {href&&<a className="native-element-link-hit" href={href} target={node.attributes?.target} rel="noopener noreferrer" aria-label="打开元素链接" tabIndex={props.presenting?0:-1} />}
     {!props.measureOnly||['note','text'].includes(node.type)?<NodeContent {...props} node={authored} />:['shape','line','drawing'].includes(node.type)?<svg width="100%" height="100%" viewBox={`0 0 ${node.width} ${node.height}`} />:null}{children.get(node.id)?.map(child => render(child, node.layout?.mode === 'flex' || node.layout?.mode === 'grid'))}
   </div>}
-  return <div ref={root} className={`native-page-content ${props.canvasOnly ? 'native-canvas-content' : ''}`} data-content-layer style={{ width: page.width, height: page.height, background: props.canvasOnly ? 'transparent' : artifactPageBackground(page, document),borderRadius:props.canvasOnly?undefined:pageRadiusCss(page.radius) }}>{children.get(null)?.map(node => render(node, false))}</div>
+  return <div ref={root} className={`native-page-content ${props.canvasOnly ? 'native-canvas-content' : ''}`} data-content-layer style={{ fontFamily:props.canvasOnly?undefined:pageDefaultFontFamily(document,page.id),width: page.width, height: page.height, background: props.canvasOnly ? 'transparent' : artifactPageBackground(page, document),borderRadius:props.canvasOnly?undefined:pageRadiusCss(page.radius) }}>{children.get(null)?.map(node => render(node, false))}</div>
 })

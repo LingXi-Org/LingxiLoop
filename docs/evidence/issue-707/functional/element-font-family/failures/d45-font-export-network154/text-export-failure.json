@@ -1,0 +1,17 @@
+{
+  "format": "pptx",
+  "navigations": [],
+  "networkErrors": [],
+  "realmErrors": [
+    [
+      {
+        "message": "",
+        "name": "Error"
+      }
+    ]
+  ],
+  "alerts": [],
+  "statuses": [
+    "导出失败，请重试。关闭"
+  ]
+}
