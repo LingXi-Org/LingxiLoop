@@ -16,6 +16,7 @@ export function openArtifact(kind: ArtifactKind, artifactId: string, title: stri
 
 export function ArtifactChatCard({ artifactId, kind, title, description }: { artifactId: string; kind: ArtifactKind; title: string; description?: string }) {
   const label = ARTIFACT_LABELS[kind]
+  const opened = useSurface(state => state.surface?.kind === 'design' && state.surface.artifactId === artifactId)
   return <ArtifactCard
     title={title}
     meta={description ? `${label} · ${description}` : label}
@@ -24,6 +25,7 @@ export function ArtifactChatCard({ artifactId, kind, title, description }: { art
     onPointerEnter={() => prefetchEditor(kind, artifactId)}
     onFocus={() => prefetchEditor(kind, artifactId)}
     openLabel={`打开${label}`}
+    opened={opened}
     data-artifact-open-trigger={artifactId}
   />
 }

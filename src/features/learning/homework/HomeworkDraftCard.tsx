@@ -71,7 +71,7 @@ export function HomeworkDraftCard({ courseId, homeworkId, readOnly, preparing, o
   const disabled = busy || editingDisabled
   const edited = (change: () => void) => { epoch.current++; dirtyRef.current = true; setTeacherReviewConfirmed(false); change(); setDirty(true) }
   const publishedSummary = collapsePublished && homework?.status !== 'DRAFT' ? homework : null
-  return <Card aria-label={publishedSummary ? '已发布作业' : '作业草稿'} data-homework-id={homeworkId} size={publishedSummary ? 'sm' : 'default'} className="w-full min-w-0 max-w-2xl [overflow-wrap:anywhere]">
+  return <Card aria-label={publishedSummary ? '已发布作业' : '作业草稿'} data-homework-id={homeworkId} size={publishedSummary ? 'sm' : 'default'} className="action-ticket w-full min-w-0 max-w-[700px] rounded-2xl border-0 bg-card ring-0 [overflow-wrap:anywhere]">
     {publishedSummary ? <CollapsibleRoot open={publishedExpanded} onOpenChange={setPublishedExpanded} className="min-w-0 space-y-4">
       <CardHeader className="min-w-0">
         <Badge variant="secondary">{publishedSummary.status === 'CLOSED' ? '已关闭' : '已发布'}</Badge>

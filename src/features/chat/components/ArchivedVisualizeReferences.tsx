@@ -1,3 +1,4 @@
+import { ArchiveNote } from '@/components/assistant-ui/elements/archive-note'
 import { useState } from 'react'
 import { http } from '@/api/core/http'
 import type { LegacyVisualizeReference } from '../../../../shared/retired-visualize'
@@ -29,16 +30,19 @@ export function ArchivedVisualizeReferences({ references, conversationId, source
     finally { setPending(null) }
   }
   if (!references.length) return null
-  return <aside className="my-3 space-y-3 rounded-xl border border-border p-3 text-sm" aria-label="历史可视化引用">
-    <p className="text-muted-foreground">历史可视化的交互功能已停用。原始内容与个人保存状态可导出留存。</p>
-    {references.map(reference => <div key={`${reference.start}:${reference.path}`} className="space-y-1">
-      {reference.title && <p className="font-medium break-words">{reference.title}</p>}
-      {!readOnly && conversationId && sourceMessageId && <button type="button"
-        className="cursor-pointer rounded px-2 py-1 text-primary underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring aria-disabled:cursor-wait aria-disabled:opacity-60"
-        aria-disabled={pending !== null} aria-busy={pending === reference.path || undefined} onClick={() => { void download(reference) }}>
-        {pending === reference.path ? '正在导出…' : '下载历史内容'}
-      </button>}
-    </div>)}
-    {error && <p role="alert" className="text-destructive">{error}</p>}
+  return <aside aria-label="历史可视化引用" className="my-1">
+    <ArchiveNote kind="visualize" tag="可视化引用" title={`${references.length} 个历史可视化`}>
+      <p className="m-0 text-[12.5px] leading-[1.6] text-fg2">这些可视化来自旧版画板，已不能在线打开，可以下载原始内容。</p>
+      {references.map(reference => <div key={`${reference.start}:${reference.path}`} className="flex min-w-0 flex-wrap items-center gap-2">
+        {reference.title && <span className="min-w-0 text-[12.5px] font-medium break-words">{reference.title}</span>}
+        {!readOnly && conversationId && sourceMessageId && <button type="button"
+          className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-card px-2.5 text-[12.5px] font-medium text-foreground shadow-[0_0_0_1px_var(--input)] hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring aria-disabled:cursor-wait aria-disabled:opacity-60 max-md:min-h-11"
+          aria-disabled={pending !== null} aria-busy={pending === reference.path || undefined} onClick={() => { void download(reference) }}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg>
+          {pending === reference.path ? '正在导出…' : '下载历史内容'}
+        </button>}
+      </div>)}
+      {error && <p role="alert" className="m-0 text-xs text-destructive">{error}</p>}
+    </ArchiveNote>
   </aside>
 }

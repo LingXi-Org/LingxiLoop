@@ -4,15 +4,9 @@
 // third_party/assistant-ui-elements/README.md
 
 import { Children, type ComponentProps, type ReactNode, useState } from "react";
-import {
-  Ban,
-  CheckIcon,
-  ChevronRightIcon,
-  Loader2Icon,
-  XIcon,
-} from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { mono, paper } from "./surfaces";
+import { mono } from "./surfaces";
 
 export type TaskCardState =
   | "working"
@@ -39,50 +33,12 @@ export function TaskStateIcon({
   state: TaskCardState;
   className?: string;
 }) {
-  if (state === "done") {
-    return (
-      <CheckIcon
-        aria-hidden
-        className={cn("size-3.5 shrink-0 text-success", className)}
-      />
-    );
-  }
-  if (state === "failed") {
-    return (
-      <XIcon
-        aria-hidden
-        className={cn("text-destructive size-3.5 shrink-0", className)}
-      />
-    );
-  }
-  if (state === "cancelled") {
-    return (
-      <Ban
-        aria-hidden
-        className={cn("text-muted-foreground size-3.5 shrink-0", className)}
-      />
-    );
-  }
-  if (state === "working") {
-    return (
-      <Loader2Icon
-        aria-hidden
-        className={cn(
-          "text-muted-foreground size-3.5 shrink-0 animate-spin motion-reduce:animate-none",
-          className,
-        )}
-      />
-    );
-  }
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "border-foreground/35 m-1 size-1.5 shrink-0 rounded-full border",
-        className,
-      )}
-    />
-  );
+  const tone = state === "done" ? "border-[#1F8A5B] bg-[#1F8A5B]"
+    : state === "working" ? "border-[#3B6FD8] bg-[#3B6FD8] motion-safe:animate-pulse"
+    : state === "failed" ? "border-[#C8463B] bg-[#C8463B]"
+    : state === "cancelled" ? "border-muted-foreground bg-muted-foreground/40"
+    : "border-input bg-transparent";
+  return <span aria-hidden className={cn("m-[3px] size-2 shrink-0 rounded-full border-[1.5px]", tone, className)} />;
 }
 
 export function TaskCard({
@@ -126,8 +82,7 @@ export function TaskCard({
       data-slot="task-card"
       data-state={state}
       className={cn(
-        paper,
-        "flex w-full min-w-0 max-w-sm flex-col overflow-hidden rounded-2xl",
+        "lx-card flex w-full min-w-0 max-w-[380px] flex-col overflow-hidden",
         className,
       )}
       {...props}
@@ -137,7 +92,7 @@ export function TaskCard({
         aria-expanded={hasTranscript ? isOpen : undefined}
         disabled={!hasTranscript || inert}
         onClick={toggle}
-        className="hover:enabled:bg-foreground/[0.03] focus-visible:ring-ring/50 flex min-w-0 items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-start outline-none transition-colors focus-visible:ring-[3px] motion-reduce:transition-none disabled:cursor-default"
+        className="hover:enabled:bg-accent/50 focus-visible:ring-ring/50 flex min-h-[30px] min-w-0 items-center gap-2 rounded-[14px] px-3.5 py-1.5 text-start outline-none transition-colors focus-visible:ring-[3px] motion-reduce:transition-none disabled:cursor-default"
       >
         <TaskStateIcon state={state} />
         <span className="sr-only">{taskStateLabels[state]}</span>

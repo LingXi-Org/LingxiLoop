@@ -170,6 +170,15 @@ export function frameMarkup(frame: BotFrame, { uid, ink, paper, size }: { uid: s
     + `<g fill="none" stroke-linecap="round">${arcs('front')}</g></g>`
 }
 
+/** Static (non-animated) poses are pure functions of identity, pose and size.
+ *  Long transcripts and lists repeat the same agents, so render each once. */
+const UID_TOKEN = '__bloub_uid__'
+const staticMarkup = new Map<string, string>()
+function rememberStatic(key: string, markup: string) {
+  if (staticMarkup.size >= 400) staticMarkup.delete(staticMarkup.keys().next().value!)
+  staticMarkup.set(key, markup)
+}
+
 /** Native React renderer for Bloub's clock-free SVG morph engine. */
 export function BloubAvatar({ participant, status, size, paper = 'var(--paper)', animated = true, mode = 'neutral', className, seed }: Props) {
   const participantIdentity = useMemo(() => getBloubIdentity(participant, seed), [participant.id, participant.role, seed])
@@ -193,10 +202,13 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
   // the exact same scene time made all eyes blink and drift in lockstep. Each
   // identity gets a stable local offset so a room feels alive, not cloned.
   const motionOffset = ((participantHash >>> 8) % 1200) / 100
-  const engine = useMemo(
-    () => new BotEngine(RAYON, state, shape, expression),
-    [participant.id, identity.shape, identity.expression],
-  )
+  // The engine is only needed for motion, pointer looks or an uncached pose.
+  const engineRef = useRef<{ key: string; engine: BotEngine } | null>(null)
+  const engineKey = `${participant.id}|${identity.shape}|${identity.expression}`
+  const getEngine = () => {
+    if (engineRef.current?.key !== engineKey) engineRef.current = { key: engineKey, engine: new BotEngine(RAYON, state, shape, expression) }
+    return engineRef.current.engine
+  }
   const lastMediumFrame = useRef(-1)
   const reactId = useId()
   const uid = useMemo(() => `bloub-${reactId.replace(/[^a-zA-Z0-9_-]/g, '')}`, [reactId])
@@ -211,13 +223,20 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
     const now = getBloubClockTime()
     const localNow = now + motionOffset
     if (motionEnabled) {
+      const engine = getEngine()
       engine.setState(state, localNow)
       setFrame(engine.sample(localNow))
-    } else {
-      setFrame(sampleStaticPointerFrame(engine, state, phase, null))
+      return
     }
+    const key = `${engineKey}|${state}|${phase}|${ink}|${paper}|${size}`
+    let markup = staticMarkup.get(key)
+    if (markup === undefined) {
+      markup = frameMarkup(sampleStaticPointerFrame(getEngine(), state, phase, null), { uid: UID_TOKEN, ink, paper, size })
+      rememberStatic(key, markup)
+    }
+    if (layer.current) layer.current.innerHTML = markup.replaceAll(UID_TOKEN, uid)
   // Appearance inputs repaint the current pose; the painter reads them by ref.
-  }, [engine, motionEnabled, motionOffset, phase, state, reducedMotion, visible, uid, ink, paper, size])
+  }, [engineKey, motionEnabled, motionOffset, phase, state, reducedMotion, visible, uid, ink, paper, size])
 
   useEffect(() => {
     if (!motionEnabled) return
@@ -228,9 +247,9 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
       const minInterval = size < 32 ? 1 / 20 : size < 48 ? 1 / 30 : 0
       if (minInterval && lastMediumFrame.current >= 0 && now - lastMediumFrame.current < minInterval) return
       lastMediumFrame.current = now
-      setFrame(engine.sample(now + motionOffset))
+      setFrame(getEngine().sample(now + motionOffset))
     })
-  }, [engine, motionEnabled, motionOffset, size])
+  }, [engineKey, motionEnabled, motionOffset, size])
 
   const pointEyesAtPointer = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (mode !== 'chat' || !visible || reducedMotion || size < 36) return
@@ -240,14 +259,14 @@ export function BloubAvatar({ participant, status, size, paper = 'var(--paper)',
     const y = Math.max(-1, Math.min(1, (event.clientY - rect.top - rect.height / 2) / (rect.height / 2)))
     const look = { yaw: x * 46, pitch: -y * 34, mix: 0.86, spin: 0, wander: 0.16 }
     const now = getBloubClockTime() + motionOffset
-    if (motionEnabled) engine.setLook(look, now, 0.12)
-    else setFrame(sampleStaticPointerFrame(engine, state, phase, look))
+    if (motionEnabled) getEngine().setLook(look, now, 0.12)
+    else setFrame(sampleStaticPointerFrame(getEngine(), state, phase, look))
   }
   const releasePointerLook = () => {
     if (mode !== 'chat' || !visible || reducedMotion || size < 36) return
     const now = getBloubClockTime() + motionOffset
-    if (motionEnabled) engine.setLook(null, now, 0.38)
-    else setFrame(sampleStaticPointerFrame(engine, state, phase, null))
+    if (motionEnabled) getEngine().setLook(null, now, 0.38)
+    else setFrame(sampleStaticPointerFrame(getEngine(), state, phase, null))
   }
 
   const motionStyle = motionEnabled ? {

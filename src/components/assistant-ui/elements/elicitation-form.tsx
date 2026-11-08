@@ -1,10 +1,10 @@
 "use client"
 import { MessageFooterContents } from '../message-footer'
+import { ActionTicket, ticketGhost, ticketPrimary } from './approval-card'
 
-import { CheckIcon, PlugIcon, XIcon } from "lucide-react"
+import { CheckIcon, XIcon } from "lucide-react"
 import type { ComponentProps } from "react"
 import { cn } from "@/lib/utils"
-import { conversationCardSize, field, inkButton, mono, paper } from "./surfaces"
 
 export type ElicitationState = "request" | "accepted" | "declined"
 export type ElicitationValue = string | readonly string[]
@@ -63,151 +63,83 @@ export function ElicitationForm({
   acceptLabel?: string
   acceptedLabel?: string
 }) {
+  const choiceCount = (item: ElicitationField) => item.options?.length ?? 0
+  const formIcon = <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><path d="M9 11h6M9 15h4" /><rect x="4" y="3" width="16" height="18" rx="2" /></svg>
+  const inputClass = "h-9 w-full rounded-[10px] border border-input bg-background px-3 text-[13.5px] text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-brand disabled:opacity-60"
   return (
-    <div
-      data-slot="elicitation-form"
-      className={cn(
-        paper,
-        conversationCardSize.standard,
-        "flex flex-col gap-3.5 rounded-[20px] p-4",
-        className,
-      )}
-      {...props}
-    >
-      <MessageFooterContents><div className="flex items-center gap-2.5">
-        <span className="bg-foreground/[0.05] text-foreground/45 flex size-7 shrink-0 items-center justify-center rounded-lg">
-          <PlugIcon className="size-3.5" />
-        </span>
-        <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">{server}</span>
-        <span className={cn(mono, "text-foreground/30 shrink-0")}>需要补充信息</span>
-      </div>
-
-      <p className="text-foreground/55 text-xs leading-relaxed">{message}</p>
-
-      <div className="flex flex-col gap-2.5">
-        {fields.map((item) => {
-          const selected = Array.isArray(item.value) ? item.value : [item.value]
-          return (
-            <div key={item.name} className="flex flex-col gap-1">
-              <span className={cn(mono, "text-foreground/35")}>
-                {item.label}
-                {item.required && <span className="text-foreground/25"> *</span>}
-              </span>
-              {item.kind === "choice" ? (
-                <>
-                  <div className="flex flex-wrap gap-1.5">
-                    {item.options?.map((option) => {
-                      const active = selected.includes(option.value)
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          aria-pressed={active}
-                          disabled={state !== "request" || option.disabled}
-                          onClick={() => {
-                            const value = item.multiple
-                              ? active ? selected.filter((entry) => entry !== option.value) : [...selected, option.value]
-                              : option.value
-                            onFieldChange?.(item.name, value)
-                          }}
-                          className={cn(
-                            "rounded-full px-2.5 py-1 text-xs transition-colors disabled:cursor-default",
-                            active ? "bg-primary text-primary-foreground" : cn(field, "text-muted-foreground"),
-                          )}
-                        >
-                          {option.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {item.inputLabel && (
-                    <input
-                      aria-label={item.inputLabel}
-                      className={cn(field, "text-foreground/80 rounded-lg px-2.5 py-1.5 text-xs")}
-                      value={selected.filter((entry) => !item.options?.some((option) => option.value === entry)).join('、')}
-                      placeholder={item.placeholder}
-                      disabled={state !== "request"}
-                      onChange={(event) => {
-                        const choices = selected.filter((entry) => item.options?.some((option) => option.value === entry))
-                        onFieldChange?.(item.name, item.multiple
-                          ? [...choices, ...(event.target.value ? [event.target.value] : [])]
-                          : event.target.value)
-                      }}
-                    />
-                  )}
-                </>
-              ) : item.kind === "toggle" ? (
-                <button
-                  type="button"
-                  aria-label={item.label}
-                  aria-pressed={item.value === 'true'}
-                  disabled={state !== "request"}
-                  onClick={() => onFieldChange?.(item.name, item.value === "true" ? "false" : "true")}
-                  className="flex w-fit items-center gap-2"
-                >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "flex h-4 w-7 items-center rounded-full p-0.5 transition-colors duration-200",
-                      item.value === "true" ? "bg-primary" : "bg-muted",
+    <div data-slot="elicitation-form" className={cn("w-full max-w-[640px]", className)} {...props}>
+      <MessageFooterContents>
+      <ActionTicket
+        kind={<>{formIcon}{server}</>}
+        status={state === "request" ? <span className="text-xs text-muted-foreground">需要补充信息</span> : undefined}
+        title={message}
+        footer={state === "request" ? <>
+          <span className="flex-1" />
+          {onDecline && <button type="button" onClick={onDecline} className={ticketGhost}>跳过</button>}
+          <button type="button" onClick={onAccept} disabled={acceptDisabled} className={ticketPrimary}>{acceptLabel}</button>
+        </> : <span role="status" className="fade-in animate-in flex items-center gap-2 text-xs text-muted-foreground duration-300">
+          {state === "accepted" ? <><CheckIcon className="size-3.5 text-brand" />{acceptedLabel}</> : <><XIcon className="size-3.5" />已跳过</>}
+        </span>}>
+        <div className="flex flex-col gap-3">
+          {fields.map((item) => {
+            const selected = Array.isArray(item.value) ? item.value : [item.value]
+            const segmented = item.kind === "choice" && !item.multiple && choiceCount(item) <= 4
+            return (
+              <div key={item.name} className="flex flex-col gap-1.5">
+                {fields.length > 1 && <span className="text-xs text-muted-foreground">{item.label}{item.required && <span aria-hidden> *</span>}</span>}
+                {item.kind === "choice" ? (
+                  <>
+                    <div role="group" aria-label={item.label} className={segmented ? "flex gap-0.5 rounded-[10px] bg-accent p-[3px]" : "flex flex-wrap gap-1.5"}>
+                      {item.options?.map((option) => {
+                        const active = selected.includes(option.value)
+                        return (
+                          <button key={option.value} type="button" aria-pressed={active}
+                            disabled={state !== "request" || option.disabled}
+                            onClick={() => {
+                              const value = item.multiple
+                                ? active ? selected.filter((entry) => entry !== option.value) : [...selected, option.value]
+                                : option.value
+                              onFieldChange?.(item.name, value)
+                            }}
+                            className={cn("inline-flex h-[30px] items-center justify-center rounded-lg px-3.5 text-[13px] transition-colors disabled:cursor-default",
+                              segmented ? "flex-1" : "border border-border",
+                              active ? segmented ? "bg-card text-foreground shadow-[0_1px_2px_rgb(20_20_18/10%),0_0_0_1px_var(--border)]" : "border-brand bg-brand-surface text-brand" : "text-muted-foreground hover:text-foreground")}>
+                            {option.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {item.inputLabel && (
+                      <input aria-label={item.inputLabel} className={inputClass}
+                        value={selected.filter((entry) => !item.options?.some((option) => option.value === entry)).join('、')}
+                        placeholder={item.placeholder ?? "或者用一句话描述…"} disabled={state !== "request"}
+                        onChange={(event) => {
+                          const choices = selected.filter((entry) => item.options?.some((option) => option.value === entry))
+                          onFieldChange?.(item.name, item.multiple
+                            ? [...choices, ...(event.target.value ? [event.target.value] : [])]
+                            : event.target.value)
+                        }} />
                     )}
-                  >
-                    <span
-                      className={cn(
-                        "bg-primary-foreground size-3 rounded-full transition-transform duration-200 motion-reduce:transition-none",
-                        item.value === "true" && "translate-x-3",
-                      )}
-                    />
-                  </span>
-                  <span className="text-foreground/55 text-xs">{item.value === "true" ? "已开启" : "已关闭"}</span>
-                </button>
-              ) : (
-                <input
-                  aria-label={item.inputLabel ?? item.label}
-                  required={item.required}
-                  className={cn(field, "text-foreground/80 rounded-lg px-2.5 py-1.5 text-xs")}
-                  value={typeof item.value === "string" ? item.value : ""}
-                  placeholder={item.placeholder}
-                  disabled={state !== "request"}
-                  onChange={(event) => onFieldChange?.(item.name, event.target.value)}
-                />
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      <div className="flex h-8 items-center justify-end gap-2">
-        {state === "request" ? (
-          <>
-            {onDecline && (
-              <button
-                type="button"
-                onClick={onDecline}
-                className="text-foreground/55 hover:bg-foreground/[0.06] hover:text-foreground/90 h-8 rounded-full px-3.5 text-xs font-medium transition-[background-color,color,scale] duration-150 active:scale-[0.96]"
-              >
-                拒绝
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={onAccept}
-              disabled={acceptDisabled}
-              className={cn(inkButton, "flex h-8 items-center rounded-full px-3.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40")}
-            >
-              {acceptLabel}
-            </button>
-          </>
-        ) : (
-          <span className="fade-in animate-in text-foreground/55 flex items-center gap-2 text-xs duration-300">
-            {state === "accepted" ? (
-              <><CheckIcon className="size-3.5 text-primary" />{acceptedLabel}</>
-            ) : (
-              <><XIcon className="text-foreground/45 size-3.5" />已拒绝</>
-            )}
-          </span>
-        )}
-      </div>
+                  </>
+                ) : item.kind === "toggle" ? (
+                  <button type="button" role="switch" aria-label={item.label} aria-checked={item.value === 'true'} disabled={state !== "request"}
+                    onClick={() => onFieldChange?.(item.name, item.value === "true" ? "false" : "true")}
+                    className="flex w-fit items-center gap-2 text-[13px] text-fg2">
+                    <span aria-hidden className={cn("relative inline-block h-5 w-[34px] rounded-full transition-colors", item.value === "true" ? "bg-brand" : "bg-input")}>
+                      <span className={cn("absolute start-0.5 top-0.5 size-4 rounded-full bg-white shadow-[0_1px_2px_rgb(0_0_0/20%)] transition-transform motion-reduce:transition-none", item.value === "true" && "translate-x-3.5")} />
+                    </span>
+                    {item.value === "true" ? "已开启" : "已关闭"}
+                  </button>
+                ) : (
+                  <input aria-label={item.inputLabel ?? item.label} required={item.required} className={inputClass}
+                    value={typeof item.value === "string" ? item.value : ""} placeholder={item.placeholder}
+                    disabled={state !== "request"} onChange={(event) => onFieldChange?.(item.name, event.target.value)} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </ActionTicket>
       </MessageFooterContents>
     </div>
   )

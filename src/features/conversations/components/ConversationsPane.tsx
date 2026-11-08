@@ -1,19 +1,18 @@
-import { Cancel01Icon, Delete02Icon, Notification01Icon, NotificationOff01Icon, PinIcon, PinOffIcon, SearchIcon } from '@hugeicons/core-free-icons'
+import { Cancel01Icon, Delete02Icon, Logout01Icon, UserGroupIcon, Notification01Icon, NotificationOff01Icon, PinIcon, PinOffIcon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type React from 'react'
 import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
-import { Button } from '@/components/ui/button'
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group'
+import { ConversationListSkeleton } from '@/features/chat/components/ConversationSkeleton'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuShortcut, ContextMenuSub, ContextMenuSubContent, ContextMenuSubTrigger, ContextMenuTrigger } from '@/components/ui/context-menu'
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemTitle } from '@/components/ui/item'
 import { SidebarContent, SidebarHeader } from '@/components/ui/sidebar'
 import { conversationsApi } from '@/features/conversations/api'
 import { captureConversationScope, isMuted, useConversations } from '@/features/conversations/store'
 import { useWorkspace } from '@/features/knowledge/workspace'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { ConversationListItemContent, PinnedConversationContent } from '@/im/ConversationList'
+import { ConversationListItemContent, PinnedConversationContent, pinnedTint } from '@/im/ConversationList'
 import { notifyAction, toastAction } from '@/lib/actionToast'
 import { confirmSensitiveAction } from '@/lib/confirmAction'
 import { userFacingError } from '@/lib/userFacingError'
@@ -62,7 +61,7 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
         onSelect()
       }}
       className={cn(
-        'mb-1 cursor-pointer flex-nowrap gap-2.5 rounded-[10px] border-0 px-2 py-2 text-left hover:bg-accent focus-visible:ring-inset',
+        'mb-0.5 cursor-pointer flex-nowrap gap-2.5 rounded-[10px] border-0 px-2.5 py-2 text-left hover:bg-accent/70 focus-visible:ring-inset',
         selected && 'bg-accent',
         className,
       )}
@@ -74,17 +73,51 @@ const ConversationListRow = forwardRef<HTMLDivElement, {
 )
 ConversationListRow.displayName = 'ConversationListRow'
 
+/** Matches inside a search result, marked with the find highlight colour. */
+function Highlight({ text, query }: { text: string; query: string }) {
+  const needle = query.trim()
+  if (!needle) return <>{text}</>
+  const index = text.toLocaleLowerCase().indexOf(needle.toLocaleLowerCase())
+  if (index < 0) return <>{text}</>
+  return <>{text.slice(0, index)}<mark className="rounded-[2px] bg-[rgb(183_121_31/18%)] px-px text-foreground">{text.slice(index, index + needle.length)}</mark>{text.slice(index + needle.length)}</>
+}
+
+const EMPTY_TONE = {
+  neutral: { color: '#56606C', glyph: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></> },
+  brand: { color: '#3B6FD8', glyph: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /> },
+  error: { color: '#C8463B', glyph: <><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></> },
+} as const
+
+function ListEmptyState({ tone, title, detail, action, extra }: { tone: keyof typeof EMPTY_TONE; title: string; detail: string; action?: { label: string; onClick: () => void }; extra?: React.ReactNode }) {
+  const { color, glyph } = EMPTY_TONE[tone]
+  return <div role={tone === 'error' ? 'alert' : 'status'} className="ui-enter flex flex-col items-center gap-2 px-3 py-8 text-center">
+    <span aria-hidden className="grid size-9 place-items-center rounded-[11px]" style={{ background: `color-mix(in srgb, ${color} 12%, transparent)`, color }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="size-[18px]">{glyph}</svg>
+    </span>
+    <span className="text-[13.5px] font-medium text-foreground">{title}</span>
+    <span className="text-[12.5px] text-muted-foreground">{detail}</span>
+    {action && <button type="button" onClick={action.onClick}
+      className={cn('mt-1 h-7 rounded-lg px-2.5 text-[12.5px] font-medium focus-visible:outline-2 focus-visible:outline-ring', tone === 'brand' ? 'bg-brand-surface text-brand' : tone === 'error' ? 'bg-[rgb(200_70_59/10%)] text-[#C8463B]' : 'bg-card text-foreground shadow-[inset_0_0_0_1px_var(--input)] hover:bg-accent')}>{action.label}</button>}
+    {extra}
+  </div>
+}
+
 function ConversationListHeader({ context }: { context?: { header: React.ReactNode } }) {
   return context?.header ?? null
 }
 
 function ConversationMenuItems({ items }: { items: ConversationMenuItem[] }) {
+  const firstDestructive = items.findIndex(item => item.destructive)
   return items.map((item, index) => {
-    const content = <>{item.icon}<span className="flex-1">{item.label}</span>{item.hint && <ContextMenuShortcut>{item.hint}</ContextMenuShortcut>}</>
-    if (item.submenu?.length) return <ContextMenuSub key={`${item.label}:${index}`}><ContextMenuSubTrigger disabled={item.disabled}>{content}</ContextMenuSubTrigger><ContextMenuSubContent><ConversationMenuItems items={item.submenu} /></ContextMenuSubContent></ContextMenuSub>
-    return <ContextMenuItem key={`${item.label}:${index}`} disabled={item.disabled} variant={item.destructive ? 'destructive' : 'default'} onClick={item.onSelect}>{content}</ContextMenuItem>
+    const content = <><span aria-hidden className={cn('flex w-5 shrink-0 justify-center [&_svg]:size-4', item.destructive ? 'text-[#C8463B]' : 'text-fg2')}>{item.icon}</span><span className="flex-1">{item.label}</span>{item.hint && <ContextMenuShortcut>{item.hint}</ContextMenuShortcut>}</>
+    const itemClass = cn('gap-2.5 rounded-lg px-2 py-[7px] text-[13.5px]', item.destructive && 'text-[#C8463B] focus:text-[#C8463B]')
+    const separator = index === firstDestructive && index > 0 ? <ContextMenuSeparator key={`sep:${index}`} className="mx-1.5 my-1" /> : null
+    if (item.submenu?.length) return [separator, <ContextMenuSub key={`${item.label}:${index}`}><ContextMenuSubTrigger disabled={item.disabled} className={itemClass}>{content}</ContextMenuSubTrigger><ContextMenuSubContent className={menuSurface}><ConversationMenuItems items={item.submenu} /></ContextMenuSubContent></ContextMenuSub>]
+    return [separator, <ContextMenuItem key={`${item.label}:${index}`} disabled={item.disabled} variant={item.destructive ? 'destructive' : 'default'} onClick={item.onSelect} className={itemClass}>{content}</ContextMenuItem>]
   })
 }
+
+const menuSurface = 'min-w-[220px] rounded-xl border-0 p-1.5 shadow-[var(--popover-shadow)]'
 
 function ConversationRow({ conversation, selected, items, onConversationSelected, pinnedMode }: {
   conversation: Conversation
@@ -99,15 +132,16 @@ function ConversationRow({ conversation, selected, items, onConversationSelected
     <ContextMenuTrigger asChild>
       {pinnedMode ? <button type="button" data-pinned-conversation={pinnedMode} aria-current={selected ? 'page' : undefined}
         aria-label={[conversation.title, conversation.unread ? `${conversation.unread} 条未读消息` : '', isMuted(conversation) ? '已静音' : ''].filter(Boolean).join('，')} onClick={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}
-        className={cn('pinned-conversation relative flex w-full min-w-0 overflow-hidden rounded-[10px] bg-accent/60 text-start outline-offset-2 hover:bg-accent',
-          pinnedMode === 'tile' ? 'min-h-[68px] flex-col items-center gap-1 px-1 py-2' : pinnedMode === 'compact' ? 'h-[72px] flex-col p-2.5' : 'h-[84px] flex-col p-2.5',
+        style={{ backgroundColor: pinnedTint(conversation).surface }}
+        className={cn('pinned-conversation relative flex w-full min-w-0 overflow-hidden rounded-xl text-start text-foreground outline-offset-2 transition-[filter] hover:brightness-[.97] dark:hover:brightness-110',
+          pinnedMode === 'row' ? 'h-10 items-center gap-2 px-2.5' : pinnedMode === 'tile' ? 'h-16 flex-col items-center justify-center gap-1.5 px-1' : pinnedMode === 'wide' ? 'h-[76px] flex-col justify-center gap-[3px] ps-3 pe-32' : pinnedMode === 'compact' ? 'h-[72px] flex-col justify-between py-2.5 ps-[11px] pe-[70px]' : 'h-[84px] flex-col justify-between py-2.5 ps-[11px] pe-[34px]',
           selected && 'ring-1 ring-inset ring-brand')}>
         <PinnedConversationContent conversation={conversation} mode={pinnedMode} />
       </button> : <ConversationListRow selected={selected} onSelect={() => { select(conversation.id); onConversationSelected?.(conversation.id) }}>
         <ConversationListItemContent conversation={conversation} selected={selected} />
       </ConversationListRow>}
     </ContextMenuTrigger>
-    <ContextMenuContent aria-label="会话操作" className="min-w-[200px]"><ConversationMenuItems items={items} /></ContextMenuContent>
+    <ContextMenuContent aria-label="会话操作" className={menuSurface}><ConversationMenuItems items={items} /></ContextMenuContent>
     </ContextMenu>
   )
 }
@@ -158,12 +192,13 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
   const pinned = conversations.filter(conversation => conversation.pinned)
 
   const resultRows = useMemo(() => {
-    if (!results) return [] as Array<{ id: string; title: string; preview: string }>
+    type Row = { id: string; title: string; preview: string; group: 'conversation' | 'message' }
+    if (!results) return [] as Row[]
     const visibleIds = new Set(list.filter((conversation) => conversation.kind !== 'email').map((conversation) => conversation.id))
-    const unique = new Map<string, { id: string; title: string; preview: string }>()
-    for (const room of results.rooms) if (visibleIds.has(room.id)) unique.set(room.id, { id: room.id, title: room.title, preview: room.projectName ?? '私信' })
-    for (const group of results.groups) if (visibleIds.has(group.id)) unique.set(group.id, { id: group.id, title: group.title, preview: group.projectName ?? '群聊' })
-    for (const message of results.messages) if (visibleIds.has(message.conversationId)) unique.set(message.conversationId, { id: message.conversationId, title: message.conversationTitle, preview: `${message.authorName ?? '成员'}：${message.snippet}` })
+    const unique = new Map<string, Row>()
+    for (const room of results.rooms) if (visibleIds.has(room.id)) unique.set(room.id, { id: room.id, title: room.title, preview: room.projectName ?? '私信', group: 'conversation' })
+    for (const group of results.groups) if (visibleIds.has(group.id)) unique.set(group.id, { id: group.id, title: group.title, preview: group.projectName ?? '群聊', group: 'conversation' })
+    for (const message of results.messages) if (visibleIds.has(message.conversationId) && !unique.has(message.conversationId)) unique.set(message.conversationId, { id: message.conversationId, title: message.conversationTitle, preview: `${message.authorName ?? '成员'}：${message.snippet}`, group: 'message' })
     return [...unique.values()]
   }, [list, results])
 
@@ -235,9 +270,10 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
       },
     ]
     if (conversation.kind === 'group' && conversation.tag !== 'teacher') {
-      items.push({ label: '管理成员…', onSelect: () => setAddingMembers(conversation) })
+      items.push({ label: '管理成员…', icon: <HugeiconsIcon icon={UserGroupIcon} strokeWidth={2} />, onSelect: () => setAddingMembers(conversation) })
       items.push({
         label: '退出群聊',
+        icon: <HugeiconsIcon icon={Logout01Icon} strokeWidth={2} />,
         destructive: true,
         onSelect: async () => {
           if (!await confirmSensitiveAction({
@@ -265,50 +301,61 @@ export function ConversationsPane({ onConversationSelected }: { onConversationSe
   }
 
   return (
-    <aside data-slot="sidebar" className="im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-sidebar text-sidebar-foreground">
+    <aside data-slot="sidebar" aria-label="对话列表" className={cn('im-conversations-sidebar relative flex h-full min-h-0 min-w-0 flex-1 flex-col gap-1 overflow-hidden bg-background text-foreground', isMobile ? 'py-2' : 'px-2 py-2.5')}>
       <SidebarHeader className="desktop-window-toolbar select-none shrink-0 gap-0 p-0">
         {isMobile && <h1 className="h-12 shrink-0 truncate px-4 font-heading text-xl font-medium leading-[48px] text-foreground" data-mobile-workspace-title>{workspaceTitle ?? '会话'}</h1>}
-        <div className={cn('flex h-14 min-w-0 shrink-0 items-center gap-2', isMobile ? 'px-3' : 'px-2')}>
-        <InputGroup className={cn('min-w-0 flex-1 rounded-lg border-transparent bg-transparent shadow-none', isMobile ? 'h-11' : 'h-9')}>
-          <InputGroupInput ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息" className={cn('px-2 text-sm', isMobile ? 'h-11' : 'h-9')} />
-          <InputGroupAddon><HugeiconsIcon icon={SearchIcon} strokeWidth={2} className="size-4" /></InputGroupAddon>
-          {query && <InputGroupAddon align="inline-end"><Button type="button" variant="ghost" size="icon-xs" className={isMobile ? 'size-8' : undefined} onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} /></Button></InputGroupAddon>}
-        </InputGroup>
-        {companyId && projectId && <NewConversationDialog key={`${companyId}:${projectId}`} companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => {
-          setQuery(''); select(id); onConversationSelected?.(id)
-        }} />}
+        <div className={cn('flex min-w-0 shrink-0 items-center gap-1', isMobile ? 'h-12 px-3' : 'h-9 ps-0.5')}>
+          <label className={cn('flex min-w-0 flex-1 items-center gap-2 rounded-[9px] px-2.5 text-muted-foreground focus-within:bg-accent/60', isMobile ? 'h-11' : 'h-9')}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-4 shrink-0"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
+            <input ref={searchRef} value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Escape') setQuery('') }} placeholder="搜索会话" aria-label="搜索会话和消息"
+              className="min-w-0 flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none" />
+            {query && <button type="button" className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setQuery('')} aria-label="清除搜索"><HugeiconsIcon icon={Cancel01Icon} strokeWidth={2} className="size-3.5" /></button>}
+          </label>
+          {companyId && projectId && <NewConversationDialog key={`${companyId}:${projectId}`} companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => {
+            setQuery(''); select(id); onConversationSelected?.(id)
+          }} />}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className={cn('gap-0 py-0', isMobile ? 'px-3' : 'px-2')}>
+      <SidebarContent className={cn('gap-0 py-0', isMobile ? 'px-3' : 'px-0')}>
         {query.trim() ? (
           <div className="h-full overflow-y-auto">
             {searching && <ResourceSkeleton variant="list" count={4} compact label="正在搜索会话" />}
-            {!searching && resultRows.length === 0 && <div className="ui-enter px-3 py-5 text-sm text-muted-foreground"><p>没有找到匹配结果</p><Button variant="outline" size="sm" className="mt-3" onClick={() => setQuery('')}>清除搜索</Button></div>}
-            <ItemGroup className="!gap-0">
-              {resultRows.map((row) => (
-                <ContextMenu key={row.id}><ContextMenuTrigger asChild><ConversationListRow selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
-                  <ItemContent className="min-w-0">
-                    <ItemTitle className={cn('block w-full truncate text-sm font-medium', selected === row.id ? 'text-sidebar-accent-foreground' : 'text-sidebar-foreground')}>{row.title}</ItemTitle>
-                    <ItemDescription className="line-clamp-1 text-xs text-muted-foreground">{row.preview}</ItemDescription>
-                  </ItemContent>
-                </ConversationListRow></ContextMenuTrigger><ContextMenuContent aria-label="会话操作" className="min-w-[200px]">
-                  <ConversationMenuItems items={conversationMenuItems(list.find(item => item.id === row.id)!)} />
-                </ContextMenuContent></ContextMenu>
-              ))}
-            </ItemGroup>
+            {!searching && resultRows.length === 0 && <ListEmptyState tone="neutral" title={`没有找到「${query.trim()}」`} detail="换个关键词，或搜索消息内容"
+              action={{ label: '清除搜索', onClick: () => setQuery('') }} />}
+            {(['conversation', 'message'] as const).map(group => {
+              const rows = resultRows.filter(row => row.group === group)
+              if (!rows.length) return null
+              return <ItemGroup key={group} className="!gap-0" aria-label={group === 'conversation' ? '会话' : '消息'}>
+                <p className="px-2.5 pb-0.5 pt-2 text-[11.5px] text-muted-foreground">{group === 'conversation' ? '会话' : '消息'} · {rows.length}</p>
+                {rows.map((row) => (
+                  <ContextMenu key={row.id}><ContextMenuTrigger asChild><ConversationListRow selected={selected === row.id} onSelect={() => { select(row.id); onConversationSelected?.(row.id); setQuery('') }}>
+                    <ItemContent className="min-w-0 gap-0.5">
+                      <ItemTitle className="block w-full truncate text-[13.5px] font-medium">{row.title}</ItemTitle>
+                      <ItemDescription className="line-clamp-1 text-[12.5px] text-muted-foreground"><Highlight text={row.preview} query={query} /></ItemDescription>
+                    </ItemContent>
+                  </ConversationListRow></ContextMenuTrigger><ContextMenuContent aria-label="会话操作" className={menuSurface}>
+                    <ConversationMenuItems items={conversationMenuItems(list.find(item => item.id === row.id)!)} />
+                  </ContextMenuContent></ContextMenu>
+                ))}
+              </ItemGroup>
+            })}
           </div>
         ) : (
           <div className="relative min-h-0 flex-1">
-          {error && conversations.length > 0 && <div role="alert" className="absolute inset-x-2 top-2 z-10 flex items-center gap-2 rounded-xl border border-destructive/30 bg-background/95 px-3 py-2 text-xs text-destructive shadow-sm"><span className="min-w-0 flex-1 truncate">{userFacingError(error, '会话刷新失败，请稍后重试。')}</span><Button type="button" variant="ghost" size="sm" onClick={() => void useConversations.getState().reload()}>重试</Button></div>}
+          {error && conversations.length > 0 && <div role="alert" className="absolute inset-x-0 top-1 z-10 mx-0.5 flex items-center gap-2 rounded-[9px] bg-[color-mix(in_srgb,#C8463B_6%,var(--background))] px-2.5 py-2 text-[12.5px] text-[#C8463B]">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="size-3.5 shrink-0"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0M12 19h.01" /><path d="m3 3 18 18" /></svg>
+            <span className="min-w-0 flex-1 truncate">{userFacingError(error, '会话列表更新失败')}</span>
+            <button type="button" className="shrink-0 font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-ring" onClick={() => void useConversations.getState().reload()}>重试</button>
+          </div>}
           <Virtuoso
-            className="h-full"
+            className="conversation-list-scroll h-full"
             data={conversations}
-            context={{ header: <><PinnedConversations conversations={pinned} renderConversation={(conversation, mode) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} pinnedMode={mode} />} />{conversations.length > 0 && <p className="px-2 pb-2 pt-1 text-xs text-muted-foreground">最近</p>}</> }}
+            context={{ header: <><PinnedConversations conversations={pinned} renderConversation={(conversation, mode) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} pinnedMode={mode} />} />{conversations.length > 0 && <p className="px-2.5 pb-1 pt-2.5 text-xs text-muted-foreground">最近</p>}</> }}
             computeItemKey={(_, conversation) => conversation.id}
             defaultItemHeight={60}
             increaseViewportBy={{ top: 500, bottom: 500 }}
-            components={{ List: ConversationItemGroup, Header: ConversationListHeader, EmptyPlaceholder: () => error ? <div role="alert" className="px-4 py-10 text-center"><p className="text-sm font-medium text-foreground">会话加载失败</p><p className="mt-1 text-xs text-muted-foreground">{userFacingError(error, '请稍后重试。')}</p><Button type="button" size="sm" className="mt-3" onClick={() => void useConversations.getState().load()}>重试</Button></div> : loaded ? <p className="px-3 py-8 text-center text-sm text-muted-foreground">还没有会话</p> : <ResourceSkeleton variant="list" count={6} compact label="正在加载会话" />, Footer: () => <div className="h-3" /> }}
+            components={{ List: ConversationItemGroup, Header: ConversationListHeader, EmptyPlaceholder: () => error ? <ListEmptyState tone="error" title="会话加载失败" detail={userFacingError(error, '请稍后重试。')} action={{ label: '重试', onClick: () => void useConversations.getState().load() }} /> : loaded ? <ListEmptyState tone="brand" title="还没有会话" detail="和智能助教聊聊这节课，或新建一个群聊" extra={companyId && projectId ? <NewConversationDialog companyId={companyId} projectId={projectId} isMobile={isMobile} onCreated={(id) => { select(id); onConversationSelected?.(id) }} trigger={<button type="button" className="mt-1 h-7 rounded-lg bg-brand-surface px-2.5 text-[12.5px] font-medium text-brand focus-visible:outline-2 focus-visible:outline-ring">新建对话</button>} /> : undefined} /> : <ConversationListSkeleton />, Footer: () => <div className="h-3" /> }}
             itemContent={(_, conversation) => <ConversationRow conversation={conversation} selected={selected === conversation.id} items={conversationMenuItems(conversation)} onConversationSelected={onConversationSelected} />}
           />
           </div>

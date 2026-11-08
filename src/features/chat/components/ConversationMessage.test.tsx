@@ -56,7 +56,7 @@ test('connection recovery keeps reply text and exposes no diagnostic card', () =
     const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
     assert.match($.text(), /正文1/)
     assert.doesNotMatch($.text(), /连接任务失败|核对任务状态|状态待确认|已停止本地等待|权限可能已变化/)
-    assert.equal($('button').filter((_, el) => $(el).text().includes('恢复连接')).length, connection === 'released' ? 1 : 0)
+    assert.equal($('[data-slot="status-notice"][data-tone="offline"] button').filter((_, el) => $(el).text().includes('刷新进度')).length, connection === 'released' ? 1 : 0)
   }
 })
 
@@ -120,7 +120,7 @@ test('native run parts have one process disclosure while answers and current dec
   assert.equal($('[data-slot="run-activity"]').length, 1)
   assert.equal($('[data-slot="tool-group-root"]').length, 0)
   assert.equal($.text().split('公开答复').length - 1, 1)
-  assert.ok($.text().includes('等待有权限的成员审批。'))
+  assert.ok($.text().includes('等待有权限的成员审批'))
   assert.doesNotMatch($('[data-message-region="attention"]').text(), /这一步未完成/)
   assert.doesNotMatch($('[data-slot="run-activity"]').text(), /公开答复|等待有权限的成员审批|这一步未完成/)
   assert.equal($('[data-native-part="tool-call"]').length, 1, 'ordinary and failed tools stay in the initially collapsed process')
@@ -173,12 +173,14 @@ test('memory metadata does not expose summaries in conversation messages', () =>
   assert.match(load(html).text(), /正文1/)
 })
 
-test('all senders omit bubble timestamps and only outgoing messages show delivery', () => {
+test('bubbles omit timestamps, member name rows carry the time and only outgoing messages show delivery', () => {
   for (const sender of ['agent', 'human', 'me']) {
     const html = renderToStaticMarkup(<Preview messages={[message('1', sender, true), message('2', sender)]} />)
     const $ = load(html)
-    if (sender !== 'me') assert.equal((html.match(new RegExp(`class="font-medium">${participants[sender].name}`, 'g')) ?? []).length, 1)
-    assert.equal($('time').length, 0)
+    if (sender === 'agent') assert.equal($('[data-agent-header]').filter((_, el) => $(el).text().includes(participants[sender].name)).length, 1)
+    if (sender === 'human') assert.equal($('b').filter((_, el) => $(el).text() === participants[sender].name).length, 1)
+    assert.equal($('[data-message-bubble] time, [data-agent-body] time').length, 0)
+    if (sender !== 'human') assert.equal($('time').length, 0)
     assert.equal($('[data-slot="attachment-card"] time').length, 0)
     assert.equal($(sender === 'agent' ? '[data-agent-body] time' : '[data-message-bubble] time').length, 0)
     assert.equal($('[data-message-footer][data-align="end"]').length, sender === 'me' ? 2 : 0)
@@ -192,7 +194,7 @@ test('attachments retain delivery feedback without a timestamp', () => {
     attachment.metadata.custom.delivery = delivery
     const $ = load(renderToStaticMarkup(<Preview messages={[attachment]} />))
     assert.equal($('time').length, 0)
-    assert.equal($('[data-slot="attachment-card"] [role="status"]').attr('aria-label'), delivery === 'sending' ? '发送中' : delivery === 'sent' ? '已送达' : '发送失败')
+    assert.equal($('[data-slot="attachment-card"] + [data-message-footer] [role="status"]').attr('aria-label'), delivery === 'sending' ? '发送中' : delivery === 'sent' ? '已送达' : '发送失败')
   }
 })
 
@@ -251,7 +253,7 @@ test('failed streamed replies retain prose and show the official error banner wi
   const error = $('[data-slot="error-state"][role="alert"]')
   assert.match(error.text(), /回复未完成.*超时/)
   assert.equal(error.find('button').text(), '重新生成回复')
-  assert.match(error.attr('class') ?? '', /rounded-2xl.*bg-destructive/)
+  assert.equal(error.attr('data-tone'), 'error')
 })
 
 test('terminal feedback shares the run error or cancellation display and retains retry context', () => {
@@ -296,7 +298,7 @@ test('structured terminal scopes keep the answer and agree on process, failure a
       } } } as ThreadMessage
     const $ = load(renderToStaticMarkup(<Preview messages={[reply]} />))
     assert.match($.text(), /已展示的任务清单/)
-    assert.equal($('[data-slot="error-state"] p').first().text(), title)
+    assert.equal($('[data-slot="error-state"] [data-slot="status-notice-title"]').first().text(), title)
     assert.match($('[data-slot="run-activity"]').text(), new RegExp(label))
     assert.doesNotMatch($('[data-slot="run-activity"]').text(), /处理失败/)
     const retry = $('[data-slot="error-state"] button')
@@ -328,7 +330,7 @@ test('sender kind owns bubble chrome and agent avatars align at the top', () => 
     assert.equal($('[data-agent-body]').length, sender === 'agent' ? 1 : 0)
     assert.equal($('[data-message-avatar]').length, sender === 'me' ? 0 : 1)
     if (sender === 'agent') {
-      assert.match($('[data-message-avatar]').attr('class') ?? '', /self-start/)
+      assert.equal($('[data-agent-header] [data-message-avatar]').length, 1, 'agent avatar sits in the name row')
       assert.doesNotMatch($('[data-agent-body]').attr('class') ?? '', /bg-|rounded-|border-/)
       assert.match($('[data-agent-body]').attr('class') ?? '', /conversation-message-body/)
     }
@@ -429,7 +431,7 @@ test('partial and blocked replies retain delivered results and always expose one
         assert.equal($('[data-run-outcome]').attr('role'), 'status')
         assert.equal($('[data-run-outcome][data-slot="error-state"]').length, 0)
         assert.match($('[data-run-outcome]').text(), delivered === 'artifact' ? /作品修改已保存.*后续工作未完成/ : /答复尚未完成/)
-        assert.equal($('[data-run-outcome] button').text(), delivered === 'artifact' ? '继续未完成部分' : '重试')
+        assert.equal($('[data-run-outcome] button').text(), delivered === 'artifact' ? '继续生成' : '重试')
       }
     }
   }
@@ -477,7 +479,7 @@ test('knowledge results use one compact tool row while preserving source and ter
     assert.match($('[data-slot="tool-call"] button').text(), new RegExp(label))
     assert.match($.text(), /正文及引用仍保留/)
     assert.doesNotMatch($.text(), /PRIVATE_SOURCE_CANARY/)
-    if (sourceStatus === 'unavailable' || resultStatus === 'failed') assert.match($('[role="alert"]').text(), /这一步未完成/)
+    if (sourceStatus === 'unavailable' || resultStatus === 'failed') assert.match($('[data-slot="tool-call"][data-tone="failed"]').text(), /这一步未完成/)
   }
 })
 

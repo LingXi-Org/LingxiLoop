@@ -39,9 +39,26 @@ function scheduleRevoke(objectUrl: string): void {
   setTimeout(() => URL.revokeObjectURL(objectUrl), REVOKE_GRACE_MS)
 }
 
-async function fetchAndCache(participantId: string, url: string): Promise<string> {
+/** data:/blob: avatars are already local; copying them into a blob URL costs a
+ *  fetch and a render for nothing. */
+const isInlineUrl = (url: string) => /^(data|blob):/i.test(url)
+
+/** Every visible copy of one participant's avatar asks at once; share the fetch. */
+const inflight = new Map<string, Promise<string>>()
+
+function fetchAndCache(participantId: string, url: string): Promise<string> {
   const prev = cache.get(participantId)
-  if (prev && prev.fetchedFrom === url) return prev.objectUrl
+  if (prev && prev.fetchedFrom === url) return Promise.resolve(prev.objectUrl)
+  const key = `${participantId}\u0000${url}`
+  const pending = inflight.get(key)
+  if (pending) return pending
+  const request = fetchAvatar(participantId, url).finally(() => inflight.delete(key))
+  inflight.set(key, request)
+  return request
+}
+
+async function fetchAvatar(participantId: string, url: string): Promise<string> {
+  const prev = cache.get(participantId)
   try {
     const r = await fetch(url)
     if (!r.ok) {
@@ -149,6 +166,7 @@ export function useCachedAvatarSrc(
 
   useEffect(() => {
     if (!url) { setSrc(null); return }
+    if (isInlineUrl(url)) { setSrc(url); return }
     let cancelled = false
     const refresh = () => {
       void fetchAndCache(participantId, url).then((s) => {

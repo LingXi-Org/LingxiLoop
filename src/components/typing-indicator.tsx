@@ -20,8 +20,8 @@ export function TypingIndicator({
     <span
       key={delay}
       aria-hidden
-      className="bg-foreground/40 size-1.5 animate-bounce rounded-full motion-reduce:animate-none"
-      style={{ animationDelay: delay, animationDuration: "1.1s" }}
+      className="typing-dot size-[5px] rounded-full bg-[#3B6FD8] dark:bg-[#7FA3EC]"
+      style={{ animationDelay: delay }}
     />
   ));
 
@@ -32,10 +32,10 @@ export function TypingIndicator({
         data-variant="bare"
         role="status"
         aria-label="助手正在输入"
-        className={cn("flex gap-1", className)}
+        className={cn("flex items-center", className)}
         {...props}
       >
-        {dots}
+        <span className="inline-flex items-center gap-1 rounded-xl bg-formula px-2.5 py-2">{dots}</span>
       </div>
     );
   }

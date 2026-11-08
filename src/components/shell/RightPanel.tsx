@@ -24,11 +24,11 @@ export function RightPanelHeader({ eyebrow, title, actions, onClose, closeLabel 
   back?: boolean
 }) {
   return (
-    <header data-right-panel-header className="select-none flex min-h-14 shrink-0 items-center gap-2 border-b border-[var(--im-divider-weak)] bg-background px-4 text-sidebar-foreground max-md:px-2">
+    <header data-right-panel-header className="select-none flex min-h-[52px] shrink-0 items-center gap-2 border-b border-border bg-background ps-[18px] pe-2 text-sidebar-foreground max-md:px-2">
       {back && onClose ? <PanelCloseButton back label={closeLabel} onClick={onClose} /> : null}
       <div className="min-w-0 flex-1">
         {eyebrow ? <p className="truncate text-xs leading-4 text-muted-foreground">{eyebrow}</p> : null}
-        <h2 className="truncate font-heading text-sm font-semibold leading-5 text-foreground">{title}</h2>
+        <h2 className="truncate font-heading text-[13.5px] font-medium leading-5 text-foreground">{title}</h2>
       </div>
       {actions ? <div className="flex shrink-0 items-center gap-1">{actions}</div> : null}
       {!back && onClose ? <PanelCloseButton label={closeLabel} onClick={onClose} /> : null}

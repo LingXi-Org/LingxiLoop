@@ -42,8 +42,8 @@ export function NavUser({ user, compact = false }: {
     </div>
   </>
 
-  const accountButton = <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className={cn('justify-start gap-2 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground', compact ? 'size-11 justify-center p-1' : isMobile ? 'h-12 w-full px-2' : 'h-14 w-full px-2')} aria-label="打开账户菜单" title={compact ? `${user.name} · 账户与设置` : undefined}>
-    {compact ? <Avatar className="size-8 rounded-lg"><AvatarImage className="rounded-lg" src={avatarUrl} alt={user.name} /><AvatarFallback className="rounded-lg">{fallback}</AvatarFallback></Avatar> : identity}
+  const accountButton = <Button id={SETTINGS_DIALOG_TRIGGER_ID} type="button" variant="ghost" className={cn('justify-start gap-2 rounded-xl text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground aria-expanded:bg-sidebar-accent aria-expanded:text-sidebar-accent-foreground', compact ? 'size-11 justify-center rounded-full p-0' : isMobile ? 'h-12 w-full px-2' : 'h-14 w-full px-2')} aria-label="打开账户菜单" title={compact ? `${user.name} · 账户与设置` : undefined}>
+    {compact ? <Avatar className="size-[30px] rounded-full border border-input"><AvatarImage className="rounded-full" src={avatarUrl} alt={user.name} /><AvatarFallback className="rounded-full bg-accent text-xs font-semibold text-fg2">{fallback}</AvatarFallback></Avatar> : identity}
     {!compact && <HugeiconsIcon icon={UnfoldMoreIcon} strokeWidth={2} className="ms-auto size-4" />}
   </Button>
 

@@ -1,6 +1,6 @@
 import { BookOpen01Icon, BubbleChatIcon, Presentation01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { ArrowLeftRight, BookOpen, ClipboardCheck } from 'lucide-react'
+import { BookOpen, ClipboardCheck } from 'lucide-react'
 import { BrandAvatar } from '@/components/BrandAvatar'
 import { BRAND_AVATAR_BASE_EXPRESSION } from '@/components/brand-avatar-controller'
 import { NavUser } from '@/components/nav-user'
@@ -45,22 +45,21 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
         <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={item.label} data-workspace-view={item.view} data-workspace-module={item.module} aria-current={selected ? 'page' : undefined} onClick={() => {
           if (item.module === 'course' && !activeSpace) onWorkspacePickerOpenChange?.(true)
           else if (!selected) onNavigate(item.view)
-        }} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground', selected && 'bg-sidebar-accent text-sidebar-primary')}>
+        }} className={cn('size-11 shrink-0 rounded-xl text-muted-foreground hover:bg-accent hover:text-foreground', selected && 'bg-brand-surface text-brand hover:bg-brand-surface hover:text-brand')}>
           {item.module === 'cases' ? <BookOpen strokeWidth={1.5} className="size-5" /> : item.module === 'course' ? <ClipboardCheck strokeWidth={1.5} className="size-5" /> : <HugeiconsIcon icon={item.icon} strokeWidth={1.8} className="size-5" />}
         </Button>
       </TooltipTrigger>
       <TooltipContent side="right">{item.label}</TooltipContent>
     </Tooltip>
   }
-  return <nav aria-label="工作区与功能" className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] pb-2 pt-[var(--im-navigation-top)] text-foreground">
-    <div className="im-navigation-row flex w-full items-center justify-center">
+  return <nav aria-label="工作区与功能" className="server-rail flex h-full w-16 shrink-0 flex-col items-center overflow-hidden bg-[var(--workspace-chrome-surface)] py-3.5 text-foreground">
+    <div className="flex w-full shrink-0 items-center justify-center">
       <DropdownMenu open={workspacePickerOpen} onOpenChange={onWorkspacePickerOpenChange}>
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={`切换工作区${activeSpace ? `：${activeSpace.title}` : ''}`} className="relative size-11 rounded-xl p-1">
-                {activeSpace ? <CourseAvatar courseId={activeSpace.courseId ?? activeSpace.projectId} avatarUrl={activeSpace.avatarUrl} title={activeSpace.title} className="size-9 rounded-lg" /> : <BrandAvatar expression={BRAND_AVATAR_BASE_EXPRESSION} className="size-9 rounded-lg" />}
-                <span aria-hidden="true" className="pointer-events-none absolute bottom-0.5 end-0.5 grid size-4 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground ring-2 ring-[var(--workspace-chrome-surface)]"><ArrowLeftRight className="size-2.5" strokeWidth={2.5} /></span>
+              <Button type="button" variant="ghost" size="icon" disabled={pending} aria-label={`切换工作区${activeSpace ? `：${activeSpace.title}` : ''}`} className="relative size-11 rounded-xl p-0">
+                {activeSpace ? <CourseAvatar courseId={activeSpace.courseId ?? activeSpace.projectId} avatarUrl={activeSpace.avatarUrl} title={activeSpace.title} className="size-8 rounded-[9px]" /> : <BrandAvatar expression={BRAND_AVATAR_BASE_EXPRESSION} className="size-8 rounded-[9px]" />}
               </Button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
@@ -81,9 +80,10 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-    <div className="server-rail-scroll flex min-h-0 w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-2 py-2">
+    <div aria-hidden="true" className="mt-3.5 mb-4 h-px w-6 shrink-0 bg-border" />
+    <div className="server-rail-scroll scrollbar-none flex min-h-0 w-full flex-1 flex-col items-center gap-1.5 overflow-y-auto px-2">
       {menu.map(renderMenuItem)}
     </div>
-    {user ? <div className="shrink-0 px-2 pt-2"><NavUser compact user={{ id: user.id, name: user.name, email: user.email, avatar: user.avatarUrl ?? participantAvatar }} /></div> : null}
+    {user ? <div className="shrink-0 px-2 pt-1.5"><NavUser compact user={{ id: user.id, name: user.name, email: user.email, avatar: user.avatarUrl ?? participantAvatar }} /></div> : null}
   </nav>
 }

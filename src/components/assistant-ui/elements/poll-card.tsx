@@ -1,11 +1,12 @@
-import { CheckIcon, VoteIcon } from 'lucide-react'
+import { CheckIcon } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
-import { Button } from '@/components/ui/button'
 import { userFacingError } from '@/lib/userFacingError'
 import { cn } from '@/lib/utils'
-import { CardSurface, conversationCardSize } from './surfaces'
+import { ActionTicket, ticketPrimary } from './approval-card'
 
 export interface PollOption { value: string; label: string; description?: string; disabled?: boolean }
+
+const pollIcon = <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><path d="M4 20h16M6 16V8M12 16V4M18 16v-6" /></svg>
 
 export function PollCard({ title, options, multiple, value, submitted, closed, onChange, onSubmit }: {
   title: string; options: PollOption[]; multiple: boolean; value: string[]; submitted: boolean; closed: boolean
@@ -23,21 +24,27 @@ export function PollCard({ title, options, multiple, value, submitted, closed, o
     catch (cause) { setError(userFacingError(cause, '投票提交失败，请重试。')) }
     finally { submitting.current = false; setBusy(false) }
   }
-  return <CardSurface data-slot="poll-card" aria-busy={busy} className={cn(conversationCardSize.standard, 'rounded-[6px_18px_18px_6px] p-4 text-foreground')}>
-    <fieldset disabled={locked}>
-      <legend className="mb-1 flex items-center gap-2 text-sm font-medium"><VoteIcon aria-hidden className="size-4 text-muted-foreground" />{title}</legend>
-      <p className="mb-2 text-xs text-muted-foreground">{multiple ? '可选多项' : '请选择一项'}</p>
-      <div className="divide-y divide-border">
-        {options.filter(option => !submitted || value.includes(option.value)).map(option => <label key={option.value} className="flex cursor-pointer items-start gap-3 py-3 has-disabled:cursor-default">
-          <input type={multiple ? 'checkbox' : 'radio'} name={name} value={option.value} checked={value.includes(option.value)} disabled={option.disabled}
-            className="mt-0.5 size-4 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            onChange={() => onChange(multiple ? value.includes(option.value) ? value.filter(item => item !== option.value) : [...value, option.value] : [option.value])} />
-          <span className="min-w-0 text-sm"><span className="break-words">{option.label}</span>{option.description && <span className="mt-0.5 block text-xs text-muted-foreground">{option.description}</span>}</span>
-        </label>)}
-      </div>
-    </fieldset>
-    {submitted || closed ? <p role="status" className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><CheckIcon aria-hidden className="size-3.5" />{submitted ? '已提交投票' : '投票已结束'}</p>
-      : <div className="mt-3 flex justify-end"><Button type="button" size="sm" disabled={busy || !value.length} onClick={() => void submit()}>{busy ? '正在提交' : '提交投票'}</Button></div>}
-    {error && <p role="alert" className="mt-2 text-xs text-destructive">{error}</p>}
-  </CardSurface>
+  const visible = options.filter(option => !submitted || value.includes(option.value))
+  return <div data-slot="poll-card" aria-busy={busy} className="w-full max-w-[640px]">
+    <ActionTicket kind={<>{pollIcon}投票 · {multiple ? '多选' : '单选'}{closed ? ' · 已结束' : ''}</>} title={title}
+      status={submitted ? <span className="text-xs text-brand">已投</span> : undefined}
+      footer={submitted || closed
+        ? <p role="status" className="flex items-center gap-2 text-xs text-muted-foreground"><CheckIcon aria-hidden className="size-3.5" />{submitted ? '已提交投票' : '投票已结束'}</p>
+        : <><span className="flex-1">{error && <span role="alert" className="text-xs text-destructive">{error}</span>}</span>
+          <button type="button" className={ticketPrimary} disabled={busy || !value.length} onClick={() => void submit()}>{busy ? '正在提交' : '提交投票'}</button></>}>
+      <fieldset disabled={locked} className="m-0 grid min-w-0 gap-2 border-0 p-0 pb-2.5">
+        <legend className="sr-only">{title}</legend>
+        {visible.map((option, index) => {
+          const active = value.includes(option.value)
+          return <label key={option.value} className={cn('flex min-h-10 min-w-0 cursor-pointer items-center gap-2 rounded-[10px] px-2.5 py-2 has-disabled:cursor-default has-focus-visible:outline-2 has-focus-visible:outline-ring',
+            active ? 'bg-brand text-brand-foreground' : 'shadow-[inset_0_0_0_1px_var(--border)] hover:bg-accent/50')}>
+            <input type={multiple ? 'checkbox' : 'radio'} name={name} value={option.value} checked={active} disabled={option.disabled} className="sr-only"
+              onChange={() => onChange(multiple ? active ? value.filter(item => item !== option.value) : [...value, option.value] : [option.value])} />
+            <span aria-hidden="true" className={cn('grid size-5 shrink-0 place-items-center rounded-[5px] font-mono text-[11px]', active ? 'bg-white/20 text-white' : 'bg-formula text-muted-foreground')}>{String.fromCharCode(65 + index)}</span>
+            <span className="min-w-0 text-[13px]"><span className="break-words">{option.label}</span>{option.description && <span className={cn('mt-0.5 block text-xs', active ? 'text-white/75' : 'text-muted-foreground')}>{option.description}</span>}</span>
+          </label>
+        })}
+      </fieldset>
+    </ActionTicket>
+  </div>
 }

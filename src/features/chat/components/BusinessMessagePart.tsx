@@ -1,3 +1,4 @@
+import { ArchiveFields, ArchiveNote } from '@/components/assistant-ui/elements/archive-note'
 import { useAuiState, type DataMessagePartProps } from '@assistant-ui/react'
 import { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
@@ -174,7 +175,14 @@ function LegacyBusinessMessagePart({ name, data, readOnly }: Pick<DataMessagePar
       break
     }
     case 'recommendation': content = <MessageFooterContents inset={false}><RecommendationTool args={value} result={result} addResult={submit} /></MessageFooterContents>; break
-    case 'handoff': content = <p className="whitespace-pre-wrap break-words text-sm">{[value.title, value.task, value.context, value.result, value.error].filter((part): part is string => typeof part === 'string' && Boolean(part)).join('\n') || '历史协作记录'}</p>; break
+    case 'handoff': {
+      const str = (part: unknown) => typeof part === 'string' && part ? part : undefined
+      content = <ArchiveNote kind="handoff" tag="历史协作" title={str(value.title) ?? '历史协作记录'}>
+        <ArchiveFields fields={([['任务', value.task], ['上下文', value.context], ['结果', value.result], ['错误', value.error]] as const)
+          .flatMap(([label, part]) => str(part) ? [{ label, value: str(part)! }] : [])} />
+      </ArchiveNote>
+      break
+    }
     case 'artifact': content = <>
       <MessageFooterContext.Provider value={null}><ArtifactProgressTool args={{ ...value, id: value.artifactId }} /></MessageFooterContext.Provider>
       <ArtifactChatCard artifactId={String(value.artifactId)} kind={value.kind === 'slides' ? 'slides' : 'design'} title={String(value.title ?? '')} description={typeof value.goal === 'string' ? value.goal : undefined} />
@@ -183,7 +191,10 @@ function LegacyBusinessMessagePart({ name, data, readOnly }: Pick<DataMessagePar
     case 'document-reference': content = <MessageFooterContents inset={false}><DocumentReference {...documentSchema.parse(value)} activePage={-1} /></MessageFooterContents>; break
     case 'email': {
       const email = emailSchema.parse(value)
-      content = <div className="whitespace-pre-wrap text-sm"><p>{email.subject}</p><p>{email.body}</p><p className="text-muted-foreground">邮件功能已停止支持；此记录仅供查看。</p></div>
+      content = <ArchiveNote kind="email" tag="邮件 · 已停用" title={email.subject || '邮件记录'}>
+        {email.body && <p className="m-0 line-clamp-2 whitespace-pre-wrap text-[12.5px] leading-[1.6] text-fg2">{email.body}</p>}
+        <p className="m-0 text-[11.5px] text-muted-foreground">邮件功能已停止支持，此处仅保留记录</p>
+      </ArchiveNote>
       break
     }
     case 'tool-activity': {
@@ -194,7 +205,9 @@ function LegacyBusinessMessagePart({ name, data, readOnly }: Pick<DataMessagePar
         status: activityStatus[step.status] ?? 'pending', detail: step.description }))} />
       break
     }
-    case 'learning-mission': case 'teacher-briefing': return <p className="text-sm text-muted-foreground">历史学习记录已归档。</p>
+    case 'learning-mission': case 'teacher-briefing': return <ArchiveNote kind="learning" tag="学习任务" title="历史学习记录已归档">
+      <p className="m-0 text-[12.5px] text-muted-foreground">归档内容不再更新，可以在学习档案里查看</p>
+    </ArchiveNote>
     default: throw new Error('不支持的数据组件')
   }
   return <fieldset disabled={readOnly || busy} aria-busy={busy} className="grid min-w-0 gap-2">
