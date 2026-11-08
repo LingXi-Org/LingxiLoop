@@ -1,0 +1,72 @@
+{
+  "candidate": "5a9d8bc53847d771c6e97cba57cef56c53b53be9",
+  "baseline": "22cc5ac796bdb0aa3ad9af1c3134fede316f4ed3",
+  "scope": "repository-review独立detached只读局部审查：链接分组header/body及scoped CSS、核心链接回归、局部golden/PNG与证据限定；不读取root后续WIP、不改产品/推送/取私包",
+  "result": "本次局部未发现新增P1/P2，定向功能和尺寸通过；完整视觉、触摸与性能仍未通过",
+  "findings": [],
+  "verified": [
+    {
+      "check": "Chrome140/154各6核心链接流程",
+      "cases": [
+        "http",
+        "history",
+        "readonly",
+        "conflict",
+        "permission",
+        "invalid"
+      ],
+      "result": "全部通过：Enter保存重开、共享历史、只读零写入、对端修改/权限变更保留本地恢复、非法输入实际下载恢复且不执行/不写入。页面/控制台零错误。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-5a-link140",
+        "/workspace/lingxi-issue707-scratch/review-5a-link154"
+      ],
+      "logs": [
+        "/tmp/lingxi-review-5a-link140.log",
+        "/tmp/lingxi-review-5a-link154.log"
+      ]
+    },
+    {
+      "check": "154三个新增golden CLI",
+      "result": "1440细指针、390细指针、1440 hasTouch粗指针局部五尺寸和字体/行高对照通过。细指针分组81/输入24，粗指针91/输入40，全部零文档写入；不是完整触屏编辑验收。",
+      "outputs": [
+        "/workspace/lingxi-issue707-scratch/review-5a-golden1440/design-contrast-base.json",
+        "/workspace/lingxi-issue707-scratch/review-5a-golden390/design-contrast-base.json",
+        "/workspace/lingxi-issue707-scratch/review-5a-goldencoarse/design-contrast-base.json"
+      ]
+    },
+    {
+      "check": "8对已归档局部矩阵重算",
+      "result": "由source/native真实DOM rect独立重算五局部差值，与matrix逐项一致且≤1px；390两主题绝对Y=-1px明确保留。未将局部比较当所有绝对控件/全图通过。"
+    },
+    {
+      "check": "PNG完整重算及mask范围",
+      "result": "四输入hover/focus浅深原始不同470/462像素；矩形mask宽等于记录字体measureText宽向上取整、高20px行框，联合1260px，仅登记占位翻译；边框/圆角/阴影未mask、未排抗锯齿，剩余均0。再次从原始大图裁8px上下文，hover各240px、focus0与context-results一致；整图8对无mask重算2.5096%–10.1627%，全部失败，与记录一致。",
+      "evidence": "/workspace/lingxi-issue707-scratch/review-5a-pixels/checks.json",
+      "script": "/workspace/lingxi-issue707-scratch/review-5a-pixels/verify.py"
+    },
+    {
+      "check": "产品行为范围",
+      "result": "ElementLinkField return JSX之前的状态/草稿/提交/合成/blur/键盘逻辑与基线逐字相同（仅新增CSS import）；输入事件处理保留，只增加非交互header和body div。没有模型/接口/存储/服务/共享草稿更改，样式作用于本字段class。"
+    },
+    {
+      "check": "7定向单位和15CI合同",
+      "result": "文案/元素链接7项及15CI合同通过，node脚本语法、git diff --check通过。",
+      "logs": [
+        "/tmp/lingxi-review-5a-units.log",
+        "/tmp/lingxi-review-5a-contracts.log"
+      ]
+    },
+    {
+      "check": "参考入口与失败归档",
+      "result": "Reference初始退出预览为显式选项；仍执行同一严格waitForReferenceVisualDocument，失败截图/JSON后原样throw，无绕过iframe就绪。来源390触摸预览/Back后Tap to open无iframe、触摸上游-50px、滚动条240差异均登记未完成。"
+    }
+  ],
+  "unverified": [
+    "未独立再启动固定Source或重放390触摸失败入口；本次重算已归档PNG/DOM数据并核对严格ready代码，未把失败来源当编辑通过",
+    "golden粗指针检查是hasTouch媒体环境和真实页面尺寸，不等于全部touchscreen手势；未重跑完整中文系统IME或所有焦点/菜单状态",
+    "原事件逻辑逐字未改，核心保存/恢复/历史已实际重跑；没有另做完整Tab链、所有组合输入或新媒体导出/授权服务",
+    "完整8主题/容器局部矩阵是归档数据重算，实时仅执行上述3golden；整图仍0/8，不能宣称1px/0.5%完整视觉达标",
+    "未运行正式SDK全类型/build或新生产图，未执行最终10组ABBA/真实网络/冷启动/输入/PSS；旧22静态或56单组诊断不是新候选最终性能资格",
+    "原所有完整功能、视觉、服务与最终性能门槛仍未完成，本局部通过不代表全计划交付完成"
+  ]
+}

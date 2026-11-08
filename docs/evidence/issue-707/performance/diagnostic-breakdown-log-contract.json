@@ -1,0 +1,37 @@
+{
+  "problem": "实际单组诊断仍超脚本及Slides内存预算；旧stdout只有总量，已有进程角色/页面图片与脚本大小分布未输出，不能据静态图猜原因。",
+  "change": "仅诊断阶段输出已有公开投影的有限数值，测量时点/样本/通过判定/门槛不变。标准收据保留最多16个既有输入反馈值，便于后续独立复算p95。",
+  "bounds": {
+    "samples": 8,
+    "documentFramesPerStage": 12,
+    "scriptSizeBuckets": 24,
+    "inputSamples": 16,
+    "processRoles": [
+      "root",
+      "renderer",
+      "gpu",
+      "utility",
+      "other"
+    ]
+  },
+  "excludes": [
+    "原始网络表",
+    "网址",
+    "资源哈希",
+    "请求头/凭证",
+    "源码",
+    "命令行",
+    "任意字符串"
+  ],
+  "limits": [
+    "script分桶覆盖firstEditable已观察请求池，包括预热；不是增量传输量，资格继续使用原始指标。",
+    "同大小请求合并，最多24组；不能凭大小唯一认定模块或把遗漏组当零。",
+    "每帧heap不合计，避免共享进程重复；角色均值来自已有PSS观察，不新取样。"
+  ],
+  "validation": {
+    "before": "新增分解两项先红；旧收据缺少输入数组先红。",
+    "after": "17项分解/现有CI契约通过，保留旧无resourceHash和环境过滤断言；语法及git diff检查通过。",
+    "realOutput": "新候选实际CI诊断输出与独立审查待执行；当前仅契约验证。"
+  },
+  "qualified": false
+}

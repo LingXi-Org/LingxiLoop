@@ -514,3 +514,8 @@ ed7a984c普通CI42420619003和生产静态图42420615258通过，[实图](perfor
 22cc5ac7的普通CI42423533500、真实静态图42423529344、[功能只读复审](reviews/22cc5ac7.json)及[实图后验](reviews/22cc-actual-graph.json)通过限定范围。静态联合849527，仍+9.64%；唯一React、六leaf和隔离未变，不是实际性能通过。
 
 [六图标56d93aa1真实诊断](performance/diagnostic-56d93aa1.json)42412830772已完成，[独立复算](reviews/56-actual-diagnostic.json)一致。8样本6成功，基线两模式full各3导出browser_timeout保留。Design脚本+5.44%/+26.30%、PSS+2.06%/+1.45%；Slides启动+16.67%/+25.26%、脚本+5.33%/+10.08%、PSS+33.54%/+42.18%。输入p95为34.6—41.6ms。诊断流程通过，预算仍失败，qualified=false；不是新最终候选或10组p75资格。继续定位实际脚本/Slides内存成本，不调整门槛或隐去失败。
+
+
+5a9d8bc5普通CI42427216776、[真实静态图](performance/static-profile-5a9d8bc5.json)42427211959及[冻结复审](reviews/5a9d8bc5.json)通过限定范围。D40链接两个浏览器6流程、3条金标准和像素复算没有新增P1/P2；整体仍0/8，不能据局部输入0差异称完整视觉通过。
+
+实际56单组预算失败后，新增[数字分解日志契约](performance/diagnostic-breakdown-log-contract.json)：只对已采集公开数值做有限输出，含PSS角色均值、每帧DOM/图片/heap、脚本大小分组及输入反馈数组。无URL/资源哈希/源码等，测量和门槛不变。17回归通过；新候选真实输出及独立审查待执行，不以工具完成宣称性能已修复。

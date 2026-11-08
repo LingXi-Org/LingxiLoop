@@ -3,6 +3,7 @@ import {checkedServiceFailure,checkedTransportFailures,measurementFailure}from'.
  * Cookies, TLS keys, downloads and raw service output stay in RUNNER_TEMP. The
  * artifact projection below is deliberately an allowlist, not a log redactor. */
 import assert from 'node:assert/strict'
+import {diagnosticBreakdown} from './native-artifact-diagnostic-breakdown.mjs'
 import { createHash } from 'node:crypto'
 import { spawn, execFileSync } from 'node:child_process'
 import { createWriteStream } from 'node:fs'
@@ -196,6 +197,7 @@ export function compactReceipt(safe) {
     ...(safe.measurement?.setupFailure ? { setupFailure: safe.measurement.setupFailure } : {}),
     summary: safe.measurement?.summary ?? {}, gates: safe.measurement?.gates ?? [],
     samples: (safe.measurement?.samples ?? []).map(sample => ({ ...Object.fromEntries(fields.filter(key => sample[key] !== undefined).map(key => [key, sample[key]])),
+      ...(Array.isArray(sample.inputSamplesMs)?{inputSamplesMs:sample.inputSamplesMs.filter(value=>typeof value==='number'&&Number.isFinite(value)).slice(0,16)}:{}),
       ...(sample.exports ? { exports: sample.exports.map(result => Object.fromEntries(exportFields.filter(key => result[key] !== undefined).map(key => [key, result[key]]))) } : {}) })) }
 }
 
@@ -311,6 +313,11 @@ async function summarize(config) {
   // This is the same approved public projection, bounded to aggregate/sample
   // metrics so authorized log readers need no artifact download workaround.
   console.log('NATIVE_ARTIFACT_PUBLIC_RECEIPT ' + JSON.stringify(compactReceipt(safe)))
+  if(config.phase==='diagnostic'){
+    const detail=diagnosticBreakdown(safe)
+    for(const sample of detail.samples)await new Promise((resolve,reject)=>process.stdout.write('NATIVE_ARTIFACT_PUBLIC_BREAKDOWN '+JSON.stringify({schemaVersion:1,baselineCommit:safe.baselineCommit,candidateCommit:safe.candidateCommit,sampleCount:detail.sampleCount,omittedSamples:detail.omittedSamples,...sample})+'\n',error=>error?reject(error):resolve()))
+  }
+
   // Only runner-created document screenshots. Never upload directory trees,
   // private arm state, TLS material, browser profiles, service logs or exports.
   for (const file of await readdir(join(config.privateRoot, 'measurement')).catch(() => [])) {

@@ -91,11 +91,12 @@ test('exact browser and platform metadata use strict formats and compact logs ex
   assert.deepEqual(publicEvidence({ browser: 'https://secret.example/154', platform: 'Linux-secret-token-x86_64' }), {})
   assert.deepEqual(publicEvidence({ browser: '154.0-token', platform: 'Linux-6.11.0-secret-x86_64-with-glibc2.39' }), {})
   const safe = { phase: 'diagnostic', diagnosticPassed: true, qualified: false, executionEnvironment: { node: 'v22.21.0' }, measurement: { environment,
-    samples: [{ arm: 'candidate', kind: 'slides', mode: 'fullNavigation', status: 'passed', editableMs: 123, requestsAtEditable: [{ resourceHash: 'a'.repeat(64), transferredBytes: 200 }] }], summary: { observed: 123 }, gates: [] } }
+    samples: [{ arm: 'candidate', kind: 'slides', mode: 'fullNavigation', status: 'passed', editableMs: 123, inputSamplesMs:[12,23], requestsAtEditable: [{ resourceHash: 'a'.repeat(64), transferredBytes: 200 }] }], summary: { observed: 123 }, gates: [] } }
   const receipt = compactReceipt(safe)
   assert.equal(receipt.environment.browser, '154.0.8037.57')
   assert.equal(receipt.environment.node, 'v22.21.0')
   assert.equal(receipt.samples[0].editableMs, 123)
+  assert.deepEqual(receipt.samples[0].inputSamplesMs,[12,23])
   assert.doesNotMatch(JSON.stringify(receipt), /requestsAtEditable|resourceHash/)
 })
 
