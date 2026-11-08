@@ -12,7 +12,7 @@ import ElementAlignmentControls from './ElementAlignmentControls'
 import ElementLinkField from './ElementLinkField'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject, type ComponentProps } from 'react'
 import type { ArtifactDocument, ArtifactNode, ArtifactPage } from '../../../../shared/artifact-document'
-import type { ArtifactOperation } from '../../../../shared/artifact-operations'
+import {artifactVersionKey,type ArtifactOperation} from '../../../../shared/artifact-operations'
 import { artifactPageBackground, artifactResolvedStyle } from '../../../../shared/artifact-themes'
 import Field from './InspectorField'
 import DesignArtboardProperties from './DesignArtboardProperties'
@@ -86,10 +86,12 @@ export default function NativeInspector({measureArtboardHeight,panelWidth,setPan
     const base=inspectorBase.current??getBase(),page=current&&base?.pages[current.id]
     if(!base||!page)return
     try{
-      const operations:ArtifactOperation[]=selected.flatMap(id=>{const node=page.nodes[id];if(!node)return[];const result=elementFontFamilyPatch(node,page,font);return Object.keys(result.patch).length||result.unset.length?[{type:'node.patch' as const,pageId:page.id,nodeId:id,...result}]:[]})
       const latest=getBase()?.pages[page.id]
-      if(!writable||selected.some(id=>!latest?.nodes[id]||latest.nodes[id].locked)){retainDraft(operations);return}
-      if(operations.length)inspectDispatch(operations)
+      if(!latest)return
+      // 依据当前显示决定是否需要修改；提交仍使用打开时捕获的版本，原值选择也不能丢失协作意图。
+      const operations:ArtifactOperation[]=selected.flatMap(id=>{const node=latest.nodes[id];if(!node)return[];const result=elementFontFamilyPatch(node,latest,font);return Object.keys(result.patch).length||result.unset.length?[{type:'node.patch' as const,pageId:page.id,nodeId:id,...result}]:[]})
+      if(!writable||selected.some(id=>!latest.nodes[id]||latest.nodes[id].locked)){retainDraft(operations);return}
+      if(operations.length)commitCode(operations,base,selected.flatMap(id=>['css','style.fontFamily','style.themeFont','style.themeFontFallback','locked'].map(field=>artifactVersionKey.node(page.id,id,`field/${field}`))))
     }catch{onNotice('字体未能修改，请重试。')}
   }
   const changeFont = (font: EditorFont) => {

@@ -1,0 +1,108 @@
+{
+  "候选提交": "42a5db1055186aa2b64a920b26b5d8c6817046c1",
+  "比较提交": "6e858c7b1294f94c5f280dbee8a16f955a1459c2",
+  "审查方式": "独立只读生产脱敏静态图后验；无浏览器/构建产物/SDK下载，无产品修改。",
+  "结论": "本轮图完整性、隔离和算数通过核对；基线存在已定位但原因未证实的输出漂移，跨运行gzip差值不具备性能收益结论。未发现新增P1/P2，整体性能仍unqualified。",
+  "findings": [],
+  "证据": {
+    "输入": "/workspace/LingxiLoop/docs/evidence/issue-707/performance/static-profile-42a5db10.json",
+    "历史输入": "/workspace/lingxi-issue707-scratch/review-42a5db10/docs/evidence/issue-707/performance/static-profile-6e858c7b.json",
+    "运行": 42453993923,
+    "任务": 128648995956,
+    "ciRun字段": 42453998419,
+    "独立闭包校验脚本": "/workspace/lingxi-issue707-scratch/review-42a-actual/verify.py",
+    "独立闭包结果": "/workspace/lingxi-issue707-scratch/review-42a-actual/checks.json",
+    "独立漂移脚本": "/workspace/lingxi-issue707-scratch/review-42a-actual/drift.py",
+    "逐chunk漂移": "/workspace/lingxi-issue707-scratch/review-42a-actual/chunk-drift.json",
+    "漂移汇总": "/workspace/lingxi-issue707-scratch/review-42a-actual/baseline-drift-summary.json"
+  },
+  "完整性及隔离": [
+    "collectorCommit与候选一致；两条完整profile的openingIsolationPassed/buildCompleted/sourceInputsUnchanged均true，uncommittedInputsPossible=false，qualified=false。没有强制基线profile深相等。",
+    "两个profile均递归复算application/native两根imports闭包，application与nativeIncremental互斥，chunk/raw/gzip合计完全一致。",
+    "候选两个原生根均无Thread/CodeBlock/parse5/streamdown/高亮器/Query重型静态路径。",
+    "候选共享图标仅七个公开lucide leaf：Bot、Image、ChevronDown、Ellipsis、ChevronLeft、ChevronRight、X；2286原始字节、647gzip，无第一方模块或React；工厂模块仍独立正常归属。",
+    "React和ReactDOM唯一应用预热块，各8模块且原始/渲染码元与基线一致，无React副本进入原生共享图标。",
+    "FontField/FontPopover/NativeInspector、ElementFontMenu及element-font-display/element-font-picker/artifact-font-families不进入application∪native静态根闭包，按需边界保留。"
+  ],
+  "字节复算": {
+    "单位": "生产chunk gzip字节的静态本地估算，不是网络传输",
+    "本轮基线": {
+      "application": 619244,
+      "nativeIncremental": 155918,
+      "union": 775162
+    },
+    "本轮候选": {
+      "application": 621243,
+      "nativeIncremental": 217831,
+      "union": 839074
+    },
+    "本轮相对基线": {
+      "application增加": 1999,
+      "nativeIncremental增加": 61913,
+      "union增加": 63912,
+      "union增长百分比": 8.244986209334314,
+      "native增长百分比": 39.70869303095217
+    },
+    "跨运行相对6e候选": {
+      "application": -16,
+      "nativeIncremental": -5,
+      "union": -21,
+      "application原始字节变化": 0,
+      "native原始字节变化": 0,
+      "可判实际收益": false
+    }
+  },
+  "基线漂移": {
+    "固定提交": "72162f582fe49e9cbdb03f760e29e3683f9c5c99",
+    "两轮同sourceInputsSha256": "66d9f949341b96b852a2c04862751cbf28648db8e6787e79beb3348a5213202f",
+    "application模块数量两轮均为": 998,
+    "native模块数量两轮均为": 59,
+    "旧值": {
+      "applicationRaw": 2038926,
+      "applicationGzip": 618927,
+      "nativeRaw": 481852,
+      "nativeGzip": 155935,
+      "unionGzip": 774862
+    },
+    "新值": {
+      "applicationRaw": 2039122,
+      "applicationGzip": 619244,
+      "nativeRaw": 481852,
+      "nativeGzip": 155918,
+      "unionGzip": 775162
+    },
+    "已证实局部": {
+      "chunk旧名": "assets/DesktopApp-poM4EgUt.js",
+      "chunk新名": "assets/DesktopApp-QyzXcqg4.js",
+      "chunkRaw": {
+        "before": 381801,
+        "after": 381997,
+        "delta": 196
+      },
+      "chunkGzip": {
+        "before": 121249,
+        "after": 121606,
+        "delta": 357
+      },
+      "唯一包聚合变化": {
+        "package": "dependency:@bible-strong/avatar-core",
+        "moduleCountBeforeAndAfter": 162,
+        "originalCodeUnitsBeforeAndAfter": 294963,
+        "renderedCodeUnits": {
+          "before": 271863,
+          "after": 273117,
+          "delta": 1254
+        }
+      }
+    },
+    "归属检查": "逐块按第一方模块集合、包名+模块数量、已公开依赖模块集合及去hash逻辑名唯一配对；两轮baseline和candidate归属均一致。忽略chunk哈希后，静态/动态边及importedBindingCount均完全一致。基线仅此一块raw变化；其他块raw不变但gzip微变。",
+    "未证实原因": "同源码输入摘要和包聚合原始码元不足以证明整个构建环境及输出完全相同。现有数据无法确定具体依赖子模块、优化/环境因素或输出生成原因；不把hash变化、并发或SDK版本作为已证实原因。"
+  },
+  "边界": [
+    "本轮candidate与6e的所有配对chunk原始长度、第一方归属、依赖聚合/公开模块元数据及去hash依赖图相同；gzip-21是跨运行小差值，不能声称优化收益。",
+    "应用预热与原生增量均计入union，没有把成本前移到应用块后扣掉；本轮同构建union仍高于基线8.244986%。",
+    "模块长度为UTF16码元，包/绑定计数及chunk本地gzip都不是实际执行/网络/唯一因果证据；动态路由预热、Worker和按需资源不在本结论内。",
+    "未运行至少10对AB/BA、冷启动p75、实际脚本传输/PSS或输入计量；qualified=false不能被passed静态标志替代。",
+    "只补实际静态图后验，不重开42已完成的限定功能报告；下一候选原字体CAS新反例未纳入本无浏览器任务。"
+  ]
+}

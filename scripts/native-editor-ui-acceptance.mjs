@@ -3325,18 +3325,20 @@ async function verifyMode(kind, browser, baseUrl, editorCase) {
     }
     if(options.checks==='font-cas'){
       await page.locator('[data-node-id="page-1-heading"]').click();await page.getByRole('button',{name:'显示属性',exact:true}).click();await page.getByRole('button',{name:'字体',exact:true}).click()
-      const search=page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true});await search.fill('拉托')
-      const versionKey='node/page-1/page-1-heading/field/style.fontFamily',capturedVersion=document.versions[versionKey]??0
-      document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-heading',patch:{style:{fontFamily:'Tahoma'}}}])).document
+      const localFamily=options['font-cas-target']==='original'?'Arial':'Lato',localQuery=localFamily==='Arial'?'阿里亚尔':'拉托'
+      const search=page.getByRole(kind==='design'?'textbox':'combobox',{name:'搜索字体',exact:true});await search.fill(localQuery)
+      const cssAlias=options['font-cas-field']==='css',sameTarget=options['font-cas-same']==='true',remoteFamily=sameTarget?localFamily:'Tahoma',versionKey='node/page-1/page-1-heading/field/'+(cssAlias?'css':'style.fontFamily'),capturedVersion=document.versions[versionKey]??0
+      document=applyOperations(document,prepareBatch(document,[{type:'node.patch',pageId:'page-1',nodeId:'page-1-heading',patch:cssAlias?{css:{'font-family':remoteFamily}}:{style:{fontFamily:remoteFamily}}}])).document
       const remoteSeq=String(document.seq)
       await page.waitForRequest(request=>request.method()==='PUT'&&request.url().includes('/editor-context')&&request.postDataJSON()?.version===remoteSeq)
-      assert.equal(await search.inputValue(),'拉托','a remote font update must not replace the active search')
+      assert.equal(await search.inputValue(),localQuery,'a remote font update must not replace the active search')
       await search.press('ArrowDown');await search.press('Enter')
+      if(sameTarget){await page.waitForFunction(()=>!document.querySelector('.native-font-popup'));assert.equal(receipts.length,0);assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,localFamily);assert.deepEqual(errors,[]);return{mode:kind,localFamily,remoteAlreadyMatches:true,noWrites:true,consoleOrPageErrors:errors}}
       await page.waitForFunction(()=>document.querySelector('[data-save-state]')?.getAttribute('data-save-state')==='conflict')
-      assert.equal(document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,'Tahoma');assert.equal(receipts.length,0)
+      assert.equal(cssAlias?document.pages['page-1'].nodes['page-1-heading'].css?.['font-family']:document.pages['page-1'].nodes['page-1-heading'].style.fontFamily,remoteFamily);assert.equal(receipts.length,0)
       const pending=page.waitForEvent('download');await page.getByRole('button',{name:'下载本地副本',exact:true}).click()
       const path=join(workspace,`${kind}-font-recovery.json`);await(await pending).saveAs(path);const recovery=JSON.parse(await readFile(path,'utf8'))
-      assert.ok(recovery.operations.some(batch=>batch.operations.some(op=>op.patch?.style?.fontFamily==='Lato')&&batch.expectedVersions[versionKey]===capturedVersion))
+      assert.ok(recovery.operations.some(batch=>batch.operations.some(op=>op.patch?.style?.fontFamily===localFamily||cssAlias&&localFamily==='Arial'&&op.patch?.css&&!Object.hasOwn(op.patch.css,'font-family'))&&batch.expectedVersions[versionKey]===capturedVersion))
       assert.deepEqual(errors,[])
       return{kind:'isolated-font-cas-diagnostic',mode:kind,searchSurvivesRemoteChange:true,remoteFamilyPreserved:true,localSelectionRecoverable:true,saveState:'conflict',scope:'actual React and shared CAS reducer; controlled HTTP fixture',consoleOrPageErrors:errors}
     }

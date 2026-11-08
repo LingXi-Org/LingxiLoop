@@ -576,3 +576,6 @@ D46增加[字体菜单与声明摘要](functional/element-font-menu.json)，清�
 
 
 6e858c7b普通CI42452115561和[真实静态图](performance/static-profile-6e858c7b.json)42452111885成功，[图后验](reviews/6e858c7b-actual-graph.json)限定通过，联合839095（比577+57、比基线+8.2896%），实际性能未资格。但[功能冻结审查](reviews/6e858c7b.json)发现3个P2：按钮名/勾选不一致、宋体行高多4px、长已用字体组键盘焦点不可见，候选未通过。generic-first零写入经固定Source实测同态，撤回数据P2，不修改来源语义。[三个修复及前后证据](functional/element-font-menu-review-fixes.json)已补：两版各12菜单、47单位及lint通过；新候选正式CI/冻结复审待提交执行。整体验收仍未完成。
+
+
+42a5db10普通CI42453998419、[真实静态图](performance/static-profile-42a5db10.json)42453993923及[功能复审](reviews/42a5db10.json)限定通过，原3P2独立闭合。[图后验](reviews/42a5db10-actual-graph.json)隔离核对通过，但本轮baseline漂移：同Source输入哈希，DesktopApp raw+196，唯一包聚合变化avatar-core rendered+1254，模块/归属/边不变，具体环境原因未证实。仅本轮union839074/775162=+8.244986%，跨轮gzip-21不当收益，最终性能未资格。随后[新增真实字体协作反例与修复](functional/element-font-family-conflicts.json)：对端改字体后选择原值原先被静默丢弃，已改当前差异判断+捕获版本/readKeys提交，两版四协作场景及各12菜单、47单位通过。新候选CI/独立审查待提交；其余计划仍未完成。
