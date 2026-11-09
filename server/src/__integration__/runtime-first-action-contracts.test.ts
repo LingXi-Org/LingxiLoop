@@ -293,6 +293,12 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
     assert.equal(failedModelAttempts.length, recoveredLength ? 1 : 0); assert.equal(wireContractFailures.length, 0)
     assert.equal(evidence.accepted, !recoveredLength && !repairSkill)
     assert.equal(failedSkillLoads.length,repairSkill?1:0)
+    if(repairSkill){
+      const rejected=JSON.parse(failedSkillLoads[0].output!).receipts.find((receipt:{action?:string})=>receipt.action==='skills.load').result
+      assert.equal(rejected.code,'authorization_unavailable');assert.equal(rejected.executionState,'rejected')
+      assert.equal(decisions[2].requiredTool,'skills__load');assert.equal(decisions[2].fullGuidance,false)
+      assert.equal(decisions[3].fullGuidance,true,'原生加载成功后才提供完整指导')
+    }
     if (!live) assert.equal(calls, recoveredLength || repairSkill ? 10 : 9)
     assert.equal(receipts.filter(row => row.action === 'design.plan_explanation').length, 1)
     if (!expectsCanvas) assert.equal(receipts.find(row => row.action === 'design.plan_explanation')?.args.delivery, 'text')

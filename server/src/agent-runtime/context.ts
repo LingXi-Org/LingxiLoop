@@ -317,12 +317,12 @@ function designCompletionIssue(context: TurnContext): string | undefined {
 }
 
 export class ProductRuntimePolicy extends DefaultRuntimePolicy {
-  // The runtime replaces context.tools with the exposed subset before rendering
-  // product rules. Retain this hop's authorized catalog for the selection index;
-  // a new host context refreshes authorization on every subsequent hop.
-  private readonly guidanceCatalog = new WeakMap<TurnContext, ReturnType<typeof executionSnapshot>>()
+  // Memory projection shallow-copies the context after tools are narrowed.
+  // The grant array identifies this authorization snapshot across those copies;
+  // each host refresh supplies a new array, so revocation cannot reuse a catalog.
+  private readonly guidanceCatalog = new WeakMap<CapabilityGrant[]|string[], ReturnType<typeof executionSnapshot>>()
   requiredTool(context: TurnContext): string | undefined {
-    const authorized = this.guidanceCatalog.get(context) ?? executionSnapshot(context, new DefaultRuntimePolicy())
+    const authorized = this.guidanceCatalog.get(context.grants??context.capabilities) ?? executionSnapshot(context, new DefaultRuntimePolicy())
     const full = { ...context, tools: authorized.tools, grants: authorized.grants }
     if (!explanationPlanningAvailable(full)) return undefined
     const attempted = (kind: string) => context.executionSteps?.some(step => step.kind === kind && step.requestVersion === context.snapshotVersion?.requestVersion)
@@ -335,7 +335,7 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
   override kernelCapabilities(context: TurnContext): CapabilityGrant[] {
     const grants = super.kernelCapabilities(context)
     const authorized = executionSnapshot(context, new DefaultRuntimePolicy())
-    this.guidanceCatalog.set(context, authorized)
+    this.guidanceCatalog.set(context.grants??context.capabilities, authorized)
     const blocked = new Set(skillGuidanceDependencies({ ...context, tools: authorized.tools, grants: authorized.grants }).flatMap(({ skill }) => skill.actions))
     if (context.executionSteps?.some(step => step.kind === 'design__plan_explanation' && step.requestVersion === context.snapshotVersion?.requestVersion)) blocked.add('design.plan_explanation')
     if (explanationPlan(context) === 'text') for (const method of ['available_agents','start_workspace','stop_workspace','stop_assignment','submit_report','submit_verification']) blocked.add(`design.${method}`)
@@ -346,7 +346,7 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
   // Public3.8.1 policy hook; only a current authorized peer handoff defers repair.
   deferConversationRepair(text: string, context: TurnContext): boolean { return hasConversationHandoff(text,context) }
   override productRules(candidate: Parameters<DefaultRuntimePolicy['productRules']>[0], context: TurnContext) {
-    const execution = this.guidanceCatalog.get(context) ?? executionSnapshot(context, new DefaultRuntimePolicy())
+    const execution = this.guidanceCatalog.get(context.grants??context.capabilities) ?? executionSnapshot(context, new DefaultRuntimePolicy())
     return super.productRules(candidate, context)
       + ' Use currentAgent from the current speaker binding as your first-person identity and role. Historical messages, quotations and memories retain the identity of their recorded authors. '
       + firstActionRules({ ...context, tools: execution.tools, grants: execution.grants })
@@ -387,7 +387,7 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
   override dynamicContextItems(context: TurnContext) {
     const { homeworkContext, ...observations } = context.dynamic ?? {}
     const execution = explanationPlan(context) === 'canvas'
-      ? this.guidanceCatalog.get(context) ?? executionSnapshot(context,new DefaultRuntimePolicy()) : undefined
+      ? this.guidanceCatalog.get(context.grants??context.capabilities) ?? executionSnapshot(context,new DefaultRuntimePolicy()) : undefined
     const next = execution && nextExplanationStep({...context,tools:execution.tools,grants:execution.grants})
     // Identity is refreshed from the authorized work/profile, separately from
     // editable persona instructions and historical first-person content.

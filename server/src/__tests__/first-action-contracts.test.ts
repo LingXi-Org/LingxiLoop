@@ -57,9 +57,15 @@ test('技能加载前直接提供当前注册表参数，工具名与技能名�
   const snapshot=executionSnapshot(ctx,policy)
   assert.equal(snapshot.tools.some(tool=>tool.action==='design.apply_ops'),false,'参数目标不会授予编辑权限')
   ctx.tools=snapshot.tools
-  const content=policy.dynamicContextItems(ctx).flatMap(item=>'content'in item&&typeof item.content==='string'?[item.content]:[]).find(value=>value.startsWith('Current scoped Design prerequisite target'))
+  // The SDK projects memory into a shallow context copy after narrowing tools.
+  const projected={...ctx}
+  const content=policy.dynamicContextItems(projected).flatMap(item=>'content'in item&&typeof item.content==='string'?[item.content]:[]).find(value=>value.startsWith('Current scoped Design prerequisite target'))
   assert.ok(content)
   assert.deepEqual(JSON.parse(content.slice(content.indexOf('\n')+1)),target)
+  assert.ok(policy.productRules({} as never,projected).includes(target.args.hash))
+  const revoked={...projected,grants:projected.grants!.filter(grant=>grant.name!=='design')}
+  assert.equal(policy.requiredTool(revoked),undefined)
+  assert.equal(policy.dynamicContextItems(revoked).some(item=>'content'in item&&typeof item.content==='string'&&item.content.startsWith('Current scoped Design prerequisite target')),false,'新的授权快照不能复用旧目录')
 })
 
 test('实际错位技能引用失败后仅允许一次不同参数的原生加载',()=>{
