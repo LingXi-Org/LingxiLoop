@@ -7,7 +7,7 @@ import { productSkills } from '../agent-runtime/system-skills.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 import { artifactReferencePages, readArtifactReference } from '../modules/artifacts/skills.js'
 import { runtimeModelConfiguration } from '../agent-runtime/runtime.js'
-import { designExplanationRules } from '../agent-runtime/skill-context.js'
+import { designExplanationRules, nextExplanationStep } from '../agent-runtime/skill-context.js'
 import { decideScaffold } from '../modules/learning/teaching-scaffold.js'
 import { createDocument, createNode, createPage, type ArtifactDocument } from '../../../shared/artifact-document.js'
 import { applyOperations, prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
@@ -41,6 +41,51 @@ function selected(ctx: TurnContext, ok: boolean, overrides = {}) {
     output: JSON.stringify({ receipts: [{ action: 'skills.load', result: { ok, ...(ok ? { value: index } : { code: 'forbidden' }) } }] }) }] as TurnContext['executionSteps']
 }
 const permits = (ctx: TurnContext, action: string) => policy.kernelCapabilities(ctx).some(grant => grant.name === action.split('.')[0] && (!grant.methods || grant.methods.includes(action.split('.')[1])))
+
+function plannedSkillContext() {
+  const ctx=context(), index=skillIndex(productSkills.find(skill=>skill.name==='claude-design')!)
+  ctx.executionSteps=[{id:'plan',kind:'design__plan_explanation',requestVersion:1,artifacts:[],input:{arguments:JSON.stringify({delivery:'canvas'})},output:JSON.stringify({receipts:[{action:'design.plan_explanation',result:{ok:true,value:{delivery:'canvas'}}}]})}]
+  return {ctx,index,target:{action:'skills.load',args:{name:index.name,version:index.version,hash:index.hash}}}
+}
+function rejectedSelection(ctx:TurnContext,args:Record<string,unknown>,state='rejected') {
+  ctx.executionSteps!.push({id:`load-${ctx.executionSteps!.length}`,kind:'skills__load',requestVersion:1,artifacts:[],input:{arguments:JSON.stringify(args)},output:JSON.stringify({receipts:[{action:'skills.load',result:{ok:false,code:'authorization_unavailable',executionState:state,diagnostics:{category:'unknown',retryable:false}}}]})})
+}
+
+test('技能加载前直接提供当前注册表参数，工具名与技能名不混用',()=>{
+  const {ctx,target}=plannedSkillContext()
+  assert.deepEqual(nextExplanationStep(ctx),target)
+  const snapshot=executionSnapshot(ctx,policy)
+  ctx.tools=snapshot.tools
+  const item=policy.dynamicContextItems(ctx).find(item=>typeof item.content==='string'&&item.content.startsWith('Current scoped Design prerequisite target'))
+  assert.ok(item&&typeof item.content==='string')
+  assert.deepEqual(JSON.parse(item.content.slice(item.content.indexOf('\n')+1)),target)
+  assert.equal(permits(ctx,'design.apply_ops'),false,'参数目标不会授予编辑权限')
+})
+
+test('实际错位技能引用失败后仅允许一次不同参数的原生加载',()=>{
+  const {ctx,index,target}=plannedSkillContext(),bad={name:'skills__load',version:index.name,hash:index.hash}
+  rejectedSelection(ctx,bad)
+  const original=ctx.executionSteps![1].input.arguments
+  assert.deepEqual(nextExplanationStep(ctx),target)
+  assert.equal(policy.requiredTool(ctx),'skills__load')
+  assert.equal(ctx.executionSteps![1].input.arguments,original,'不改写失败记录或模型参数')
+  assert.equal(permits(ctx,'design.read_reference'),false)
+  rejectedSelection(ctx,bad)
+  assert.equal(nextExplanationStep(ctx),undefined,'连续错误不会强制重复调用')
+  assert.equal(policy.requiredTool(ctx),undefined)
+})
+
+test('相同参数、未知结果和撤销权限均不自动重试技能加载',()=>{
+  for(const state of ['rejected','unknown']){
+    const {ctx,target}=plannedSkillContext();rejectedSelection(ctx,target.args,state)
+    assert.equal(nextExplanationStep(ctx),undefined)
+    assert.equal(policy.requiredTool(ctx),undefined)
+  }
+  const {ctx,index}=plannedSkillContext();rejectedSelection(ctx,{name:'skills__load',version:index.name,hash:index.hash},'unknown')
+  assert.equal(nextExplanationStep(ctx),undefined)
+  const revoked=plannedSkillContext().ctx;revoked.grants=revoked.grants!.filter(grant=>grant.name!=='design')
+  assert.equal(nextExplanationStep(revoked),undefined)
+})
 
 test('first decision contains current skill routes and exact dependent schemas before guidance is loaded', () => {
   const ctx = context(), rules = policy.productRules({} as never, ctx)
