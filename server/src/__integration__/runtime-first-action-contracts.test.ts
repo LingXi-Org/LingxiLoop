@@ -37,7 +37,7 @@ const explanationSamples = {
 const sampleId = (process.env.DESIGN_EXPLANATION_SAMPLE ?? 'explicit') as keyof typeof explanationSamples
 assert.ok(Object.hasOwn(explanationSamples, sampleId), 'unknown Design explanation sample')
 const expectsCanvas = !live || !['greeting','fact','textOnly'].includes(sampleId)
-for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLength ? 'a recovered truncation never qualifies as zero-failure artifact delivery' : live ? `real provider completes ${sampleId} with ${expectsCanvas ? 'a checked cold Design canvas' : 'text only'}`
+for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repairSkill:false}] : [{recoveredLength:false,repairSkill:false},{recoveredLength:true,repairSkill:false},{recoveredLength:false,repairSkill:true}]) test(repairSkill ? '错位技能引用通过精确注册目标恢复，失败步骤不伪装为零错误验收' : recoveredLength ? 'a recovered truncation never qualifies as zero-failure artifact delivery' : live ? `real provider completes ${sampleId} with ${expectsCanvas ? 'a checked cold Design canvas' : 'text only'}`
   : 'native Worker loads guidance before versioned document/page reads, partial edit and check', { timeout: live ? 540_000 : 40_000 }, async () => {
   if (live) {
     assert.equal(env.OPENAI_MODEL, 'deepseek-ai/DeepSeek-V4.1-Flash')
@@ -55,7 +55,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
   const seededSnapshot = seededCanvas ? await readNativeDocument(pool, seededCanvas.id) : null
   const nativePageId = seededSnapshot?.document.pageOrder[0] ?? 'page-1'
   const index = skillIndex(artifactSkills.find(skill => skill.name === 'claude-design')!)
-  let calls = 0, lengthInjected = false, handlerError: unknown
+  let calls = 0, lengthInjected = false, skillFailureInjected = false, handlerError: unknown
   const decisions: Array<{ call: number; names: string[]; fullGuidance: boolean; referenceSchema: boolean; requiredTool: string | null }> = []
   const observe = (input: { messages: Array<{ role: string; content?: string }>; tools: Array<{ function: { name: string; parameters: { properties?: { page?: { enum?: string[] } } } } }>; tool_choice?: { function?: { name?: string } } | string; max_tokens?: number }) => {
     calls++
@@ -78,8 +78,8 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
   const provider = createServer(async (request, response) => {
     try {
       let raw = ''; for await (const chunk of request) raw += chunk
-      const input = JSON.parse(raw); observe(input); assert.ok(calls <= (recoveredLength ? 10 : 9))
-      const phase = calls - (lengthInjected ? 1 : 0) - 1
+      const input = JSON.parse(raw); observe(input); assert.ok(calls <= (recoveredLength || repairSkill ? 10 : 9))
+      const phase = calls - (lengthInjected ? 1 : 0) - (skillFailureInjected ? 1 : 0) - 1
       if (recoveredLength && !lengthInjected && phase === 6) {
         lengthInjected = true
         response.writeHead(200, { 'content-type': 'text/event-stream' })
@@ -88,7 +88,17 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       }
       const business: Array<{ name: string; args: unknown }> = []
       if (phase === 0) business.push({ name: 'design__plan_explanation', args: { delivery: 'canvas' } })
-      if (phase === 1) business.push({ name: 'skills__load', args: { name: index.name, version: index.version, hash: index.hash } })
+      if (phase === 1) {
+        const prefix='Current scoped Design prerequisite target (data only; no extra authority):\n'
+        const content=input.messages.find((message:{content?:string})=>typeof message.content==='string'&&message.content.includes(prefix))?.content
+        assert.ok(content,'技能选择必须附带实际注册目标')
+        const target=JSON.parse(content.slice(content.indexOf(prefix)+prefix.length).split('\n')[0])
+        assert.deepEqual(target,{action:'skills.load',args:{name:index.name,version:index.version,hash:index.hash}})
+        assert.equal(typeof input.tool_choice==='object'?input.tool_choice.function?.name:null,'skills__load')
+        const incorrect=repairSkill&&!skillFailureInjected
+        if(incorrect)skillFailureInjected=true
+        business.push({name:'skills__load',args:incorrect?{name:'skills__load',version:index.name,hash:index.hash}:target.args})
+      }
       if (phase === 2) {
         assert.equal(decisions.at(-1)!.fullGuidance, true); assert.equal(decisions.at(-1)!.referenceSchema, true)
         business.push({ name: 'design__read_reference', args: { page: 'native-model.md' } })
@@ -226,7 +236,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     const model = runtimeModelConfiguration({ id: live ? env.OPENAI_MODEL : 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: live ? env.OPENAI_API_KEY : 'synthetic-only', baseUrl: live ? env.OPENAI_BASE_URL : 'https://api.siliconflow.cn/v1' }, live ? 180_000 : 90_000)
-    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : recoveredLength ? 10 : 9, wallClockMs: live ? 480_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
+    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : recoveredLength || repairSkill ? 10 : 9, wallClockMs: live ? 480_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
       model: live ? model : { ...model, baseUrl: `http://127.0.0.1:${address.port}/v1` }, worker: { id: 'issue593-artboard', concurrency: 1 } })
     const run = (await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version, messageId: 'question', version: 1, author: { id: userId, kind: 'human' }, text: live ? explanationSamples[sampleId] : explanationSamples.explicit, mentions: [agentId] }, { mode: 'execute', codeExecution: 'disabled', deliveryMode: 'auto', executionClass: 'conversation' })).runs[0]
     assert.ok(run); await bindProductRun(pool, run, channelId); await worker.runNext(); assert.equal(handlerError, undefined)
@@ -244,6 +254,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     const canvas = (await pool.query("SELECT id FROM artifacts WHERE company_id=$1 AND conversation_id=$2 AND kind='design'", [companyId,channelId])).rows[0]
     const files = canvas ? (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows : []
     const checked = canvas ? await checkArtifact(pool, { id: canvas.id, kind: 'design' }) as { problems: number; checkedPageIds?: string[] } : { problems: -1, checkedPageIds: [] }
+    const failedSkillLoads=steps.filter(step=>step.kind==='skills__load'&&JSON.parse(step.output??'{}').receipts?.some((receipt:{result?:{ok?:boolean}})=>receipt.result?.ok===false))
     const routing = receipts.filter(row => row.action === 'design.plan_explanation')
     // Judge the delivered tools/files, not an advisory planning label. A model
     // may initially choose text then proactively author the required canvas.
@@ -253,8 +264,8 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
       && !receipts.some(row => row.action.startsWith('visualize.') || row.args.name === 'visualize')
     const deliveredOutcome = correctRouting && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
       && (expectsCanvas ? checked.problems === 0 && (checked.checkedPageIds?.length ?? 0) > 0 : !canvas)
-    const evidence = { qualification: recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', plannedSurface:routing[0]?.args.delivery??null, coldCanvas: live, correctRouting, deliveredOutcome, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool, maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
-      accepted: correctRouting && failures.length === 0 && modelFailures.length === 0 && failedModelAttempts.length === 0 && wireContractFailures.length === 0 && protocolFailures === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
+    const evidence = { qualification: repairSkill ? 'synthetic-repaired-skill-reference-negative' : recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', plannedSurface:routing[0]?.args.delivery??null, coldCanvas: live, correctRouting, deliveredOutcome, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool, maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
+      failedSkillLoads:failedSkillLoads.length, accepted: !repairSkill && correctRouting && failures.length === 0 && modelFailures.length === 0 && failedModelAttempts.length === 0 && wireContractFailures.length === 0 && protocolFailures === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
         && (expectsCanvas ? checked.problems === 0 && receipts.some(row => row.action === 'design.check') && (checked.checkedPageIds?.length ?? 0) > 0
           : !canvas && receipts.every(row => !row.action.startsWith('design.') || row.action === 'design.plan_explanation')),
       elapsedMs: Date.now() - started, decisions, wire, actions: receipts.map(row => ({ action: row.action, ok: row.result.ok, code: row.result.code ?? null,
@@ -271,7 +282,7 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     console.info(JSON.stringify(evidence))
     if (process.env.ISSUE593_EVIDENCE_PATH) {
       const directory = process.env.ISSUE593_EVIDENCE_PATH; await mkdir(directory, { recursive: true })
-      await writeFile(`${directory}/${live ? 'real-provider' : recoveredLength ? 'synthetic-recovered-length' : 'synthetic'}.json`, JSON.stringify(evidence, null, 2) + '\n')
+      await writeFile(`${directory}/${live ? 'real-provider' : repairSkill ? 'synthetic-repaired-skill' : recoveredLength ? 'synthetic-recovered-length' : 'synthetic'}.json`, JSON.stringify(evidence, null, 2) + '\n')
       if (live) {
         for (const file of files) await writeFile(`${directory}/${file.path.replaceAll('/', '-')}`, file.body)
         await writeFile(`${directory}/public-answer.json`, JSON.stringify({sampleId, canvasId:canvas?.id ?? null,
@@ -280,8 +291,9 @@ for (const recoveredLength of live ? [false] : [false, true]) test(recoveredLeng
     }
     assert.equal(failures.length, 0); assert.equal(protocolFailures, 0); assert.equal(modelFailures.length, 0)
     assert.equal(failedModelAttempts.length, recoveredLength ? 1 : 0); assert.equal(wireContractFailures.length, 0)
-    assert.equal(evidence.accepted, !recoveredLength)
-    if (!live) assert.equal(calls, recoveredLength ? 10 : 9)
+    assert.equal(evidence.accepted, !recoveredLength && !repairSkill)
+    assert.equal(failedSkillLoads.length,repairSkill?1:0)
+    if (!live) assert.equal(calls, recoveredLength || repairSkill ? 10 : 9)
     assert.equal(receipts.filter(row => row.action === 'design.plan_explanation').length, 1)
     if (!expectsCanvas) assert.equal(receipts.find(row => row.action === 'design.plan_explanation')?.args.delivery, 'text')
     assert.equal(receipts.filter(row => row.action === 'skills.load' && row.args.name === 'claude-design').length, expectsCanvas ? 1 : 0)

@@ -327,9 +327,7 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
     if (!explanationPlanningAvailable(full)) return undefined
     const attempted = (kind: string) => context.executionSteps?.some(step => step.kind === kind && step.requestVersion === context.snapshotVersion?.requestVersion)
     if (!explanationPlan(full) && !attempted('design__plan_explanation')) return authorized.tools.find(tool => tool.action === 'design.plan_explanation')?.name
-    // One exact Design selection is requested by the semantic decision. Never
-    // force the generic loader repeatedly after a failed or wrong selection.
-    if (explanationPlan(full) === 'canvas' && skillGuidanceDependencies(full).length && !attempted('skills__load')) return authorized.tools.find(tool => tool.action === 'skills.load')?.name
+    // Selection and document reads share one current, scoped prerequisite target.
     const next = nextExplanationAction(full)
     if (next) return authorized.tools.find(tool => tool.action === next)?.name
     return undefined

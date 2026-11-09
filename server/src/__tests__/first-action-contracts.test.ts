@@ -55,11 +55,11 @@ test('技能加载前直接提供当前注册表参数，工具名与技能名�
   const {ctx,target}=plannedSkillContext()
   assert.deepEqual(nextExplanationStep(ctx),target)
   const snapshot=executionSnapshot(ctx,policy)
+  assert.equal(snapshot.tools.some(tool=>tool.action==='design.apply_ops'),false,'参数目标不会授予编辑权限')
   ctx.tools=snapshot.tools
-  const item=policy.dynamicContextItems(ctx).find(item=>typeof item.content==='string'&&item.content.startsWith('Current scoped Design prerequisite target'))
-  assert.ok(item&&typeof item.content==='string')
-  assert.deepEqual(JSON.parse(item.content.slice(item.content.indexOf('\n')+1)),target)
-  assert.equal(permits(ctx,'design.apply_ops'),false,'参数目标不会授予编辑权限')
+  const content=policy.dynamicContextItems(ctx).flatMap(item=>'content'in item&&typeof item.content==='string'?[item.content]:[]).find(value=>value.startsWith('Current scoped Design prerequisite target'))
+  assert.ok(content)
+  assert.deepEqual(JSON.parse(content.slice(content.indexOf('\n')+1)),target)
 })
 
 test('实际错位技能引用失败后仅允许一次不同参数的原生加载',()=>{
