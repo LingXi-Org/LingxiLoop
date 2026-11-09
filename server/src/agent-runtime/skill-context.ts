@@ -167,8 +167,29 @@ export function authoredDesignPaths(context:TurnContext):string[] {
 /** Follow the semantic canvas decision through observable native prerequisites.
  * Each failed stage remains bounded and leaves truthful fallback available. */
 export function nextExplanationStep(context: TurnContext): {action:string;args?:Record<string,unknown>} | undefined {
-  if (explanationPlan(context) !== 'canvas' || skillGuidanceDependencies(context).length) return undefined
+  if (explanationPlan(context) !== 'canvas') return undefined
+  if (!availableSystemSkills(context).some(({skill})=>skill.actions.includes('design.apply_ops'))) return undefined
   const steps = (context.executionSteps ?? []).filter(step => step.requestVersion === context.snapshotVersion?.requestVersion)
+  const pending = skillGuidanceDependencies(context)
+  if (pending.length) {
+    const selection = pending.find(({skill}) => skill.actions.includes('design.apply_ops'))
+    if (!selection) return undefined
+    const {name,version,hash}=selection.index
+    const target={action:'skills.load',args:{name,version,hash}}
+    const loads=steps.filter(step=>step.kind==='skills__load')
+    if (!loads.length) return target
+    // A corrected reference is a new native read, never a rewrite or a replay
+    // of an identical failed call. Unknown effects and denied grants stay closed.
+    if (loads.length!==1 || matchesSystemSkillSelection(loads[0],selection.index,context.snapshotVersion?.requestVersion)) return undefined
+    try {
+      const output=JSON.parse(loads[0].output??'{}')
+      if (output.receipts?.some((receipt:{action?:string;result?:{ok?:boolean;code?:string;executionState?:string;approval?:unknown;directive?:unknown}})=>
+        receipt.action==='skills.load'&&receipt.result?.ok===false&&receipt.result.executionState==='rejected'
+        &&['invalid_arguments','authorization_unavailable'].includes(receipt.result.code??'')
+        &&receipt.result.approval===undefined&&receipt.result.directive===undefined)) return target
+    } catch { /* Unreadable outcomes do not authorize another selection. */ }
+    return undefined
+  }
   const matches = (action: string, predicate: (args: Record<string, unknown>) => boolean = () => true) => steps.filter(step => {
     if (step.kind !== action.replace('.', '__')) return false
     try { return predicate(JSON.parse(String(step.input.arguments))) } catch { return false }
@@ -235,6 +256,7 @@ export function firstActionRules(context: TurnContext): string {
     explanation: index.workflow?.explanationBeforeAuthoring ? 'optional; only for the requested explanation-before-authoring workflow with directly supplied facts' : 'not supported',
   })))
     + '\nFor a skill with no delivery, use skills.load even when creating work. Copy name/version/hash exactly. Complete the load or activation in an earlier decision; its full guidance appears next. A missing delivery is not a missing explanation. '
+    + 'The name argument is the registered skill name, never the function name skills__load. The version argument is that same entry’s version, never the skill name. For a scoped prerequisite target, action identifies the tool and args is its complete business argument object; copy args without shifting or renaming its fields. '
     + designExplanationRules(context)
     + 'Read only existing business files from the current authorized product file listing (or refresh with the corresponding current/list tool); never guess a path or resource ID. After guidance, read its real format entry before authoring, then write and check the actual result. '
     + 'After a Design write, finish every artboard referenced by the index and run design.check. A satisfied result requires the latest check after the latest write to report problems:0; a plan or a partially written index is not delivery. '
