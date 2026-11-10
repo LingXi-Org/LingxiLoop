@@ -13,7 +13,7 @@ import { audit } from '../identity/public.js'
 import { companiesRouter } from '../companies/router.js'
 import { projectsRouter } from '../projects/router.js'
 import { learningApplication } from '../learning/facade.js'
-import { addInstitutionalCourseMemberRequestSchema } from '../learning/contracts.js'
+import { addInstitutionalCourseMemberRequestSchema, createCourseRequestSchema } from '../learning/contracts.js'
 import { parseLearningRequest, respondWithLearning } from '../learning/http-adapter.js'
 import type { PermissionAction } from '../access/public.js'
 import { requirePlatformAdmin } from './authorization.js'
@@ -47,8 +47,13 @@ companyAdminRouter.use('/business', (req, res, next) => {
 companyAdminRouter.get('/session', safe(async (_req, res) => { res.json(await companyManagementSession(identity(res))) }))
 companyAdminRouter.get('/resources', (_req, res) => res.json({ data: adminResourceCatalog().filter(item => COMPANY_RESOURCES.includes(item.name)) }))
 
-// Organization identity does not enroll a teacher. Expose only the existing,
-// explicit per-course command here; all other learning mutations stay separate.
+// Organization identity does not enroll a teacher. Creating a course enrolls
+// its creator; other teachers require an explicit per-course assignment.
+companyAdminRouter.post('/courses', safe(async (req, res) => {
+  const admin = identity(res)
+  const input = parseLearningRequest(createCourseRequestSchema.safeParse(req.body ?? {}))
+  res.status(201).json(await respondWithLearning(() => learningApplication.createCourse({ userId: admin.user.id, companyId: admin.companyId }, input)))
+}))
 companyAdminRouter.get('/courses', safe(async (_req, res) => {
   const admin = identity(res)
   const courses = await learningApplication.courses({ userId: admin.user.id, companyId: admin.companyId })

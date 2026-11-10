@@ -1,6 +1,6 @@
 import { BookOpen01Icon, BubbleChatIcon, Presentation01Icon, Tick02Icon } from '@hugeicons/core-free-icons'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { BookOpen, ClipboardCheck } from 'lucide-react'
+import { BookOpen, ClipboardCheck, Plus } from 'lucide-react'
 import { BrandAvatar } from '@/components/BrandAvatar'
 import { BRAND_AVATAR_BASE_EXPRESSION } from '@/components/brand-avatar-controller'
 import { NavUser } from '@/components/nav-user'
@@ -16,7 +16,7 @@ import { useApp } from '@/stores/app'
 import { useAuth } from '@/stores/auth'
 import type { ViewKey } from '@/types'
 
-export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, onSelect, onReload, onNavigate, workspacePickerOpen, onWorkspacePickerOpenChange }: {
+export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, onSelect, onReload, onNavigate, workspacePickerOpen, onWorkspacePickerOpenChange, onCreateCourse }: {
   spaces: LearningSpace[]
   activeSpace?: LearningSpace
   loading: boolean
@@ -27,6 +27,7 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
   onNavigate(view: ViewKey['view']): void
   workspacePickerOpen?: boolean
   onWorkspacePickerOpenChange?(open: boolean): void
+  onCreateCourse?(): void
 }) {
   const view = useApp((state) => state.view)
   const user = useAuth((state) => state.user)
@@ -77,6 +78,7 @@ export function WorkspaceRail({ spaces, activeSpace, loading, error, pending, on
               {activeSpace?.projectId === space.projectId ? <HugeiconsIcon icon={Tick02Icon} className="size-4 text-primary" aria-label="当前工作区" /> : null}
             </DropdownMenuItem>)}
           </div>
+          {onCreateCourse && <DropdownMenuItem onSelect={onCreateCourse}><Plus className="size-4" />新建课程</DropdownMenuItem>}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

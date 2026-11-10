@@ -26,7 +26,7 @@ const OWNERS = [
   [/^server\/src\/(?:agent-runtime\/|runtime\/|worker\.ts|bin\/worker\.ts)/, ['runtime-chat-recovery.test.ts', 'native-authorization-faults.test.ts']],
   [/^server\/src\/(?:im\/|modules\/(?:messages|conversations|context-threads)\/)|^src\/lib\/(?:nativeMessage|answerSegment)\.ts$/, ['im-send-reconciliation.test.ts', 'conversations.test.ts']],
   [/^server\/src\/(?:agents\/|modules\/agents\/)/, ['agents-vertical-slice.test.ts']],
-  [/^server\/src\/(?:learning\/|domain\/education\/|modules\/(?:learning|education)\/)/, ['homework.test.ts', 'course-teacher-assignment.test.ts']],
+  [/^server\/src\/(?:learning\/|domain\/education\/|modules\/(?:learning|education)\/)/, ['homework.test.ts', 'course-creation.test.ts', 'course-teacher-assignment.test.ts']],
   [/^server\/src\/(?:domain\/(?:project|transfer)\/|modules\/(?:projects|platform|platform-operations)\/)/, ['project-lifecycle-concurrency.test.ts', 'platform-lifecycle.test.ts']],
   [/^server\/src\/modules\/(?:companies|enterprise)\//, ['companies-vertical-slice.test.ts', 'enterprise-governance.test.ts']],
   [/^server\/src\/(?:modules\/(?:knowledge|research|evidence)\/|knowledge)/, ['knowledge-vertical-slice.test.ts']],

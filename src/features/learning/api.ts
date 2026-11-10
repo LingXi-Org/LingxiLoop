@@ -2,6 +2,8 @@ import type { ApiCourse, ApiCourseMember, ApiProjectInvitation, ApiProjectInvita
 import { http } from '@/api/core/http'
 import type { ApiProjectInvitationPreview, ApiProjectInvitationAccept, LearningSpace, CursorPage, LearningNotificationPreferences, LearningDelivery } from './contracts'
 export const learningApi = {
+  createCourse: (input: { name: string; description?: string; color?: string }, companyId: string) =>
+    http<ApiCourse>('/courses', { method: 'POST', headers: { 'x-company-id': companyId }, body: JSON.stringify(input) }),
   getCourse: (courseId: string) => http<ApiCourse>(`/courses/${encodeURIComponent(courseId)}`),
   updateCourse: (courseId: string, input: { name?: string; description?: string; color?: string; avatar?: { seed: string } | { key: string } }) =>
     http<{ ok: true; avatarUrl?: string; avatarSeed?: string | null }>(`/courses/${encodeURIComponent(courseId)}`, { method: 'PATCH', body: JSON.stringify(input) }),

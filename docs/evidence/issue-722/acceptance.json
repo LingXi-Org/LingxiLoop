@@ -1,0 +1,45 @@
+{
+  "productCommit": "152f2102",
+  "syntheticDataOnly": true,
+  "productionDataChanges": 0,
+  "modelCalls": 0,
+  "checks": {
+    "webTests": 429,
+    "adminTests": 11,
+    "serverTests": 243,
+    "creationAndAssignmentIntegrationTests": 10,
+    "ciScopeTests": 13,
+    "typecheck": [
+      "web",
+      "admin",
+      "server"
+    ],
+    "lint": [
+      "web (existing warnings)",
+      "admin (existing infos)",
+      "server"
+    ],
+    "build": [
+      "web",
+      "admin"
+    ]
+  },
+  "browserCommand": "NODE_ENV=test DATABASE_URL=<isolated local test database> INTEGRATION_DATABASE_URL=<same database> REDIS_URL=<dedicated local Redis> OPENAI_API_KEY=integration-test-key PLAYWRIGHT_MODULE=<installed playwright module> node --import tsx scripts/check-course-onboarding.mjs",
+  "integrationCommand": "node server/run-integration-tests.mjs --file course-creation.test.ts --file course-teacher-assignment.test.ts",
+  "review": {
+    "scope": "Read-only second pass over candidate product changes and their call sites after implementation",
+    "findings": [],
+    "verified": [
+      "Creation permission rechecked inside initialization transaction",
+      "Company management binds writes to authoritative administrator company",
+      "Creation atomically persists membership, rooms, domain events and initialization effects",
+      "Existing administrators are guided from current course availability without a stored first-login flag",
+      "Successful creation retained across a failed navigation retry without duplicate courses",
+      "Original teacher creation policy preserved; students have no entry and API creation is denied"
+    ],
+    "limits": [
+      "Browser fixture injects synthetic identity and fake IM; does not exercise production login or a model call",
+      "Existing user production data was not modified; dynamic guidance requires the updated page to load"
+    ]
+  }
+}

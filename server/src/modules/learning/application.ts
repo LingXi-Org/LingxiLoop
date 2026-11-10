@@ -1,16 +1,18 @@
+import { randomUUID } from 'node:crypto'
+import type { ProjectKind } from '../../domain/public.js'
 import { prepareAvatar } from '../identity/public.js'
 import type { UpdateCourseInput } from './contracts.js'
 import { updateCourseMetadata } from './courses-repository.js'
 import type { Queryable } from '../../db/queryable.js'
 import { createPermissionService, type PermissionAction } from '../access/public.js'
 import { appendDomainEventInTransaction } from '../events/public.js'
-import type { AddInstitutionalCourseMemberInput, CreateProjectInvitationInput, LearningScope, LearningSpacesQuery } from './contracts.js'
+import type { AddInstitutionalCourseMemberInput, CreateCourseInput, CreateProjectInvitationInput, LearningScope, LearningSpacesQuery } from './contracts.js'
 import { listLearningSpaces } from './dashboard-application.js'
 import { runLearningEffect } from './effect-application.js'
 import { enqueueLearningEffect, type LearningEffect } from './effects-repository.js'
 import { LearningApplicationError } from './errors.js'
 import { LearningInvitationApplication } from './invitation-application.js'
-import { addInstitutionalCourseMember, changeCourseMember, courseManager, findCourse, listCourseMembers, listCourses, removeMemberFromProjectChannels } from './courses-repository.js'
+import { addInstitutionalCourseMember, changeCourseMember, courseManager, findCourse, insertCourse, listCourseMembers, listCourses, removeMemberFromProjectChannels } from './courses-repository.js'
 import { studyRoomState, syncStudyRoomMembers } from './reporting-repository.js'
 import type { CourseMemberChangeOutcome } from './types.js'
 export { LearningApplicationError } from './errors.js'
@@ -83,6 +85,46 @@ export class LearningApplication {
       ...this.infrastructure,
       syncStudyRoom: (companyId, courseId) => this.syncStudyRoom(companyId, courseId),
     }, effect)
+  }
+
+  async createCourse(scope: LearningScope, input: CreateCourseInput, projectKind: Extract<ProjectKind, 'TEACHING' | 'INSTITUTIONAL_COURSE'> = 'TEACHING') {
+    const projectId = `p-${randomUUID()}`, courseId = `course-${randomUUID()}`, roomId = `course-room-${randomUUID()}`
+    await this.infrastructure.transaction(async db => {
+      await createPermissionService(db, { lockDependencies: true }).assertCan({
+        actorUserId: scope.userId, action: 'course:create', companyId: scope.companyId,
+      })
+      await insertCourse(db, { ...scope, projectId, courseId, roomId, kind: projectKind, planId: null, input })
+      const creationKey = `project-created:${projectId}`
+      await appendDomainEventInTransaction(db, {
+        companyId: scope.companyId, projectId, aggregateType: 'PROJECT', aggregateId: projectId,
+        idempotencyKey: creationKey, actor: { type: 'USER', id: scope.userId },
+        event: { eventType: 'PROJECT.CREATED', schemaVersion: 1, payload: { courseId, kind: projectKind, status: 'ACTIVE' } },
+      })
+      await appendDomainEventInTransaction(db, {
+        companyId: scope.companyId, projectId, aggregateType: 'PROJECT_MEMBERSHIP', aggregateId: `${projectId}:${scope.userId}`,
+        idempotencyKey: `${creationKey}:owner`, actor: { type: 'USER', id: scope.userId },
+        event: { eventType: 'PROJECT_MEMBERSHIP.ASSIGNED', schemaVersion: 1, payload: { userId: scope.userId, role: 'TEACHER', source: 'COURSE_CREATION' } },
+      })
+      const teacher = await this.infrastructure.ensureTeacherAgent(scope.companyId, courseId, db)
+      await this.infrastructure.bindTeacherOperationsContext(db, {
+        companyId: scope.companyId, projectId, teacherId: scope.userId, agentId: teacher.agentId, channelId: teacher.roomId,
+      })
+      const effects = [
+        { kind: 'study_room.sync' as const }, { kind: 'teacher_room.sync' as const },
+        ...(teacher.created ? [{ kind: 'teacher_agent.welcome' as const }] : []),
+        { kind: 'notebook.ensure' as const, payload: { projectId } },
+      ]
+      for (const effect of effects) await enqueueLearningEffect(db, { companyId: scope.companyId, courseId, ...effect })
+      await this.infrastructure.auditInTransaction(db, {
+        kind: 'course_create', companyId: scope.companyId, userId: scope.userId,
+        detail: { courseId, projectId, projectKind, name: input.name },
+      })
+    })
+    return {
+      id: courseId, companyId: scope.companyId, projectId, projectKind, name: input.name,
+      description: input.description, color: input.color, status: 'ACTIVE' as const,
+      createdBy: scope.userId, studyRoomId: roomId, courseRole: 'teacher' as const, memberCount: 1, canManage: true,
+    }
   }
 
 

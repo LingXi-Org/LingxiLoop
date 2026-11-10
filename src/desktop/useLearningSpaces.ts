@@ -35,7 +35,9 @@ export function useLearningSpaces() {
         cursor = page.nextCursor
       }
       if (cursor) throw new Error('learning spaces page limit exceeded')
-      setSpaces(getLearningSpaceScopes([...byProjectId.values()]).visible.filter((space) => space.companyId === companyId))
+      const visible = getLearningSpaceScopes([...byProjectId.values()]).visible.filter((space) => space.companyId === companyId)
+      setSpaces(visible)
+      return visible
     } catch (reason) {
       if (epoch === requestEpoch.current) setError(userFacingError(reason, '学习区暂时无法加载，请稍后重试。'))
     } finally {

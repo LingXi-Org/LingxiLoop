@@ -15,6 +15,7 @@ import { userFacingError } from '@/lib/userFacingError'
 import { CourseTeacherAssignmentDialog } from '@/features/learning/components/CourseTeacherAssignmentDialog'
 import type { ApiCourse } from '@/features/learning/contracts'
 import { notifyAction } from '@/lib/actionToast'
+import { CourseCreateForm } from '@/features/learning/components/CourseCreateForm'
 
 export function CompanyDashboard() {
   const session = useManagementSession()
@@ -22,6 +23,17 @@ export function CompanyDashboard() {
   return <section className="ui-enter space-y-6" aria-busy={result.query.isFetching}><h1 className="text-2xl font-semibold">{session?.companyName} · 本公司概览</h1>
     {result.query.isError && <ErrorPanel message="概览刷新失败" retry={() => void result.query.refetch()} />}{!result.query.data ? (result.query.isError ? null : <AdminMetricsSkeleton />) : <div className="ui-stagger admin-kpi-grid">{result.query.data.data.metrics.map(metric => <Card key={metric.resource}><CardContent className="py-6"><Link to={recordPath(metric.resource)}><p>{metric.label}</p><strong className="text-3xl">{metric.value}</strong></Link></CardContent></Card>)}</div>}
     {session?.companyId && <Button asChild variant="outline"><Link to={recordPath('companies', session.companyId)}>查看公司资料</Link></Button>}
+    <div className="flex flex-wrap gap-3">{session?.capabilities.createCourse && <Button asChild><Link to="/courses/new">新建课程</Link></Button>}<Button asChild variant="outline"><Link to="/members">管理成员与课程授权</Link></Button></div>
+  </section>
+}
+
+export function CompanyCourseCreate() {
+  const session = useManagementSession(), invalidate = useInvalidate()
+  const [created, setCreated] = useState<ApiCourse | null>(null)
+  if (session?.mode !== 'company' || !session.capabilities.createCourse) return <Navigate to="/" replace />
+  return <section className="mx-auto w-full max-w-2xl space-y-6"><h1 className="text-2xl font-semibold">新建课程</h1>
+    {created ? <div className="space-y-4"><p>“{created.name}”已创建。你已加入该课程，可在公司成员中为其他教师添加课程授权。</p><div className="flex flex-wrap gap-3"><Button asChild><Link to="/members">分配课程教师</Link></Button><Button variant="outline" onClick={() => setCreated(null)}>继续创建课程</Button></div></div>
+      : <><p className="text-sm text-muted-foreground">填写课程信息，创建后为教师分别添加课程授权。</p><CourseCreateForm key={session.companyId} create={input => adminFetch<ApiCourse>('/control/company/courses', { method: 'POST', body: JSON.stringify(input) })} onCreated={async course => { await invalidate({ invalidates: ['all'] }); setCreated(course) }} /></>}
   </section>
 }
 
@@ -59,6 +71,7 @@ export function CompanyMembers() {
     finally { setBusy(false) }
   }
   return <section className="ui-enter space-y-6" aria-busy={result.query.isFetching}><h1 className="text-2xl font-semibold">公司成员</h1>
+    {session.capabilities.createCourse && <Button asChild><Link to="/courses/new">新建课程</Link></Button>}
     <p className="text-sm text-muted-foreground">组织教师身份不代表课程成员资格；普通教师须明确加入指定课程。公司管理权限与课程成员分别显示，不会自动建立课程成员资格。</p>
     {session.capabilities.invite && <form className="flex flex-wrap items-end gap-3" onSubmit={event => {
       event.preventDefault(); const email = new FormData(event.currentTarget).get('email')
