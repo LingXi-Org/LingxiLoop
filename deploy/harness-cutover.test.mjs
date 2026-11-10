@@ -10,7 +10,7 @@ const run = async (failure, options = {}) => {
   for (const name of ['inspect', 'preflight', 'snapshotSource', 'stopWorkers', 'stopIngress', 'barrier', 'restoreSource', 'convergeTarget']) actions[name] = async () => {
     calls.push(name)
     if (name === failure) throw Object.assign(Error(name), { uncertain: options.uncertain })
-    if (name === 'inspect') return { target, sources: Array(4).fill(options.same ? target : source) }
+    if (name === 'inspect') return options.inspection ?? { target, sources: Array(4).fill(options.same ? target : source) }
   }
   let error
   try { await convergeHarnessCutover(actions) } catch (caught) { error = caught }
@@ -32,6 +32,25 @@ test('retained queued or waiting work refuses before any source instance is stop
   const result = await run('preflight')
   assert.ok(result.error)
   assert.deepEqual(result.calls, ['inspect', 'preflight'])
+})
+test('reviewed native agent revisions share document writes but still require the full hash cutover', async () => {
+  const next = { ...target, version: '4.0.0-native-artifacts-2', hash: 'c'.repeat(64) }
+  const inspection = { target: next, sources: [target, next, target, next], nativeWritesEnabled: true }
+  assert.equal(harnessCutoverRequired(next, inspection.sources, true), true)
+  assert.equal(harnessCutoverRequired(next, Array(4).fill(next), true), false)
+  assert.deepEqual(await run(undefined, { inspection }), { error: undefined,
+    calls: ['inspect', 'preflight', 'snapshotSource', 'stopWorkers', 'stopIngress', 'barrier', 'convergeTarget'] })
+  assert.deepEqual((await run('preflight', { inspection })).calls, ['inspect', 'preflight'])
+  assert.deepEqual((await run('barrier', { inspection })).calls,
+    ['inspect', 'preflight', 'snapshotSource', 'stopWorkers', 'stopIngress', 'barrier', 'restoreSource'])
+})
+test('enabled native writes reject legacy, absent or unreviewed contracts', () => {
+  const next = { ...target, version: '4.0.0-native-artifacts-2', hash: 'c'.repeat(64) }
+  for (const receipt of [source, null, { ...next, version: '4.0.0-native-artifacts-3' }, { ...next, runtime: '3.8.25' }]) {
+    assert.throws(() => harnessCutoverRequired(next, [next, next, next, receipt], true), /keep native writes disabled/)
+  }
+  const unknown = { ...next, version: '4.0.0-native-artifacts-3' }
+  assert.throws(() => harnessCutoverRequired(unknown, Array(4).fill(unknown), true), /keep native writes disabled/)
 })
 test('a changed harness drains source workers with their APIs, stops admission, then rechecks before target start', async () => {
   assert.deepEqual(await run(), { error: undefined, calls: ['inspect', 'preflight', 'snapshotSource', 'stopWorkers', 'stopIngress', 'barrier', 'convergeTarget'] })

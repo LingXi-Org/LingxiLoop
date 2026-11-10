@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict'
 
+// Both reviewed Agent revisions use the same schema63 native document writer.
+// Agent API changes still require the hash-based all-work cutover below.
+const nativeDocumentContracts = new Set(['4.0.0-native-artifacts-1', '4.0.0-native-artifacts-2'])
+
 /** Compare the actual SDK assembly, never a version label or an edited baseline. */
 export function harnessCutoverRequired(target, sources, nativeWritesEnabled = false) {
   // An absent container is an inert slot after failed recreation, not evidence
@@ -12,7 +16,8 @@ export function harnessCutoverRequired(target, sources, nativeWritesEnabled = fa
   }
   assert.equal(sources.length, 4, 'inspect both Web and Worker slots before changing a harness')
   assert.equal(target.runtime, '4.0.0', 'native artifact target requires exact formal4.0.0')
-  if (nativeWritesEnabled) assert.ok(sources.every(source => source?.version === target.version && source.runtime === target.runtime),
+  if (nativeWritesEnabled) assert.ok(nativeDocumentContracts.has(target.version)
+    && sources.every(source => source?.runtime === '4.0.0' && nativeDocumentContracts.has(source.version)),
     'keep native writes disabled until every instance supports the native artifact contract')
   return sources.some(source => source?.hash !== target.hash || source?.runtime !== target.runtime)
 }
