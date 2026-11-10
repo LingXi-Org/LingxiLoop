@@ -47,7 +47,7 @@ for (const scenario of [
       return
     }
     assert.equal((input.tools ?? []).some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'), false)
-    assert.equal(input.tool_choice, 'auto')
+    assert.equal(input.tool_choice, input.tools?.length ? 'auto' : undefined)
     const content = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '',
       answer: 'Flow control protects a receiver; congestion control protects a network.', outcome: { status: 'satisfied', gaps: [] } })
     const usage = { prompt_tokens: 10, completion_tokens: 12 }
