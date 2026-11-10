@@ -76,6 +76,10 @@ test('failed native Design save rejects false partial completion before publicat
       // the model can select native tools or return strict structured content.
       if (calls === 6 || calls === 7) assert.equal(input.tool_choice, 'auto', 'bounded document observations leave the next native tool selection to the model')
       if (calls === 8) {
+        const outputs = input.messages.filter((message: { role: string }) => message.role === 'tool').map((message: { content: string }) => JSON.parse(message.content))
+        const rejected = outputs.find((output: { receipt?: { action?: string }; ok?: boolean }) => output.receipt?.action === 'design.apply_ops' && output.ok === false)
+        assert.deepEqual(rejected?.value?.conflicts, [{ key: titleVersion, expected: 1, actual: 0 }], 'the SDK must receive structured conflict fields after sanitizing exception text')
+        assert.equal(rejected.diagnostics?.recovery, 'refresh')
         assert.ok(JSON.stringify(input.messages).includes('version_conflict'),'model must receive the supported conflict code')
         assert.ok(JSON.stringify(input.messages).includes('refresh'),'model must receive refresh recovery guidance')
         assert.equal(input.tool_choice, 'auto', 'a failed write stops forcing prerequisite actions while preserving native business tools'); business.push({ name: 'design__check', args: {} }) }
