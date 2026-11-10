@@ -107,6 +107,10 @@ for (const scenario of ['partial-retry', 'ordered', 'cancel'] as const) test(`#6
       }
     }
     assert.equal(await running, true)
+    if (providerError) {
+      const failures = (await pool.query("SELECT data->'modelDiagnostics'->>'protocolCode' AS code,data->'modelDiagnostics'->>'protocolDetail' AS detail FROM lingxios.agent_run_events WHERE run_id=$1 AND kind='model.failed' ORDER BY seq", [run.runId])).rows
+      console.info(JSON.stringify({ qualification: 'synthetic-tool-batch-protocol', failures }))
+    }
     assert.equal(providerError, undefined)
     assert.equal((await api.readRun(run))?.status, scenario === 'cancel' ? 'cancelled' : 'succeeded')
     if (scenario !== 'cancel') await until(async () => (await api.readRunState(run))?.delivery === 'delivered')
