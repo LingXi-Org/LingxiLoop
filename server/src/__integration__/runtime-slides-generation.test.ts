@@ -104,7 +104,7 @@ test(`real-provider Slides ${strategy} generation and measured native delivery`,
     const operationEvent=events.find(row=>row.kind==='public.text.operation'&&row.data.purpose==='answer')
     const assistantText=im.messages.filter(message=>message.payload.role==='assistant').map(message=>nativeText(message.payload)).filter(Boolean)
     const evidence={sampleId:process.env.SLIDES_SAMPLE_ID??'pilot',strategy,runtime:releaseVersions.runtime,model:env.OPENAI_MODEL,
-      provider:new URL(env.OPENAI_BASE_URL).hostname,binding:model.publicAnswerTool,maxOutputTokens:model.maxOutputTokens,
+      provider:new URL(env.OPENAI_BASE_URL).hostname,binding:model.publicAnswerTool??'purpose-json-v3-content',maxOutputTokens:model.maxOutputTokens,
       budget,canonicalModelCalls:budgetCalls.length,modelLedgerComplete:calls.length===budgetCalls.length,
       requestSha256:createHash('sha256').update(request).digest('hex'),contentRequest:content,savePolicy:policy,
       measurement:'first saved revision matched to post-write tool.completed event; not browser first paint',createdAt:work.created_at,

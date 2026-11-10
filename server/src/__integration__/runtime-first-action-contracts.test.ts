@@ -120,12 +120,12 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
         ], `flashattention-${calls}`) })
       }
       if (phase === 7) business.push({ name: 'design__check', args: { paths: [`project/pages/${nativePageId}.json`] } })
-      const output = { index: 0, id: `answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: phase === 8 ? 'FlashAttention 讲解已写入画板，格式检查通过。' : '', commentary: '', outcome: phase === 8 ? { status: 'satisfied', gaps: [] } : null }) } }
-      const selecting = phase !== 8
-      const toolCalls = [...(selecting ? [] : [output]), ...business.map((item, index) => ({ index: index + (selecting ? 0 : 1), id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))]
+      const content = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, answer: 'FlashAttention 讲解已写入画板，格式检查通过。', commentary: '', outcome: { status: 'satisfied', gaps: [] } })
+      const toolCalls = business.map((item, index) => ({ index, id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
+      assert.equal(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'), false)
       response.writeHead(200, { 'content-type': 'text/event-stream' })
-      response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: toolCalls }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
+      response.end(`data: ${JSON.stringify({ choices: [{ delta: phase === 8 ? { content } : { tool_calls: toolCalls }, finish_reason: phase === 8 ? 'stop' : 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
     } catch (error) { handlerError ??= error; console.info({ fixtureFailure: error instanceof Error ? error.message : String(error) }); response.writeHead(500); response.end('{}') }
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
@@ -145,7 +145,7 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
     }
     if (url.startsWith(env.OPENAI_BASE_URL) && url.endsWith('/chat/completions') && init?.body) {
       const request = JSON.parse(String(init.body))
-      if (request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer')) {
+      if (request.tools?.some((tool: { function: { name: string } }) => tool.function.name === 'skills__load')) {
         observe(request)
         schema = new Map(request.tools.map((tool: { function: { name: string; parameters: { properties: object } } }) =>
           [tool.function.name, new Set(Object.keys(tool.function.parameters.properties))]))
@@ -264,7 +264,7 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
       && !receipts.some(row => row.action.startsWith('visualize.') || row.args.name === 'visualize')
     const deliveredOutcome = correctRouting && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
       && (expectsCanvas ? checked.problems === 0 && (checked.checkedPageIds?.length ?? 0) > 0 : !canvas)
-    const evidence = { qualification: repairSkill ? 'synthetic-repaired-skill-reference-negative' : recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', plannedSurface:routing[0]?.args.delivery??null, coldCanvas: live, correctRouting, deliveredOutcome, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool, maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
+    const evidence = { qualification: repairSkill ? 'synthetic-repaired-skill-reference-negative' : recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', plannedSurface:routing[0]?.args.delivery??null, coldCanvas: live, correctRouting, deliveredOutcome, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool ?? 'purpose-json-v3-content', maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
       failedSkillLoads:failedSkillLoads.length, accepted: !repairSkill && correctRouting && failures.length === 0 && modelFailures.length === 0 && failedModelAttempts.length === 0 && wireContractFailures.length === 0 && protocolFailures === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
         && (expectsCanvas ? checked.problems === 0 && receipts.some(row => row.action === 'design.check') && (checked.checkedPageIds?.length ?? 0) > 0
           : !canvas && receipts.every(row => !row.action.startsWith('design.') || row.action === 'design.plan_explanation')),

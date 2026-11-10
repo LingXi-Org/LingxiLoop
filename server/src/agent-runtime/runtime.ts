@@ -72,8 +72,10 @@ export function runtimeModelConfiguration(model: { id: string; apiKey: string; b
     ...publicTextModelOptions(),
     publicTextContinuation: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
       ? 'typed-message-v1' : undefined,
-    publicAnswerTool: nativeDeepSeekTools && publicTextDeployment.producer === 'purpose-json-v3'
-      ? 'native-v3' : undefined,
+    // DeepSeek can finish with structured content after native tool reads.
+    // Use the SDK's strict purpose-v3 producer for that content and keep
+    // business tools native; requiring public_answer rejects valid finishes.
+    publicAnswerTool: undefined,
     // A normal artboard can exceed the SDK's generic8K default. Keep its
     // original JSON arguments complete rather than relying on length recovery.
     ...(nativeDeepSeekTools ? { maxOutputTokens: 16_384 } : {}),

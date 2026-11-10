@@ -336,7 +336,7 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
     { name: 'slides__current', args: { artifactId: deck.id } },
     ...(commentId ? [{name:'slides__comment_reply',args:{artifactId:deck.id,commentId,text:'已保存并重新读取标题。',resolve:false}}] : []),
     { name: 'task__check_resource', args: { action: 'slides.current', args: { artifactId: deck.id }, expected: { title: 'Model flow', slideCount: chained ? 13 : 1 } } },
-    { name: 'public_answer', args: { operation: { kind: 'append', supersedes: [] }, commentary: '',
+    { name: 'public-content', args: { operation: { kind: 'append', supersedes: [] }, commentary: '',
       answer: '已保存并重新读取选中页面的标题。', outcome: { status: 'satisfied', gaps: [] } } },
   ]
   let issued = 0
@@ -347,7 +347,7 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
       const input = JSON.parse(raw), step = calls[issued++]
       assert.ok(step, 'worker must stop after the verified public answer')
       if (issued === 1) assert.equal(input.tool_choice?.function?.name, 'design__plan_explanation', 'the explicit Slides operation chooses another deliverable through the semantic decision')
-      assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === step.name), `missing tool ${step.name}`)
+      if (step.name !== 'public-content') assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === step.name), `missing tool ${step.name}`)
       const prompt = JSON.stringify(input.messages)
       assert.ok(prompt.includes('Original title'), 'persisted editor selection/source must reach the actual model request')
       if (step.name === 'slides__apply_ops') assert.ok(prompt.includes(hash), 'the model must receive the pinned page read receipt')
@@ -359,10 +359,13 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
       }
       if (step.name === 'slides__current') assert.ok(prompt.includes(revised), 'read-back must reach the model before completion')
       const call = { id: `slides-model-${issued}`, type: 'function', function: { name: step.name, arguments: JSON.stringify(step.args) } }
+      const message = step.name === 'public-content' ? { content: JSON.stringify(step.args) } : { tool_calls: [call] }
+      const delta = step.name === 'public-content' ? message : { tool_calls: [{ index: 0, ...call }] }
+      const finish = step.name === 'public-content' ? 'stop' : 'tool_calls'
       const usage = { prompt_tokens: 10, completion_tokens: 12 }
       res.writeHead(200, { 'content-type': input.stream ? 'text/event-stream' : 'application/json' })
-      res.end(input.stream ? `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', tool_calls: [{ index: 0, ...call }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`
-        : JSON.stringify({ choices: [{ message: { role: 'assistant', tool_calls: [call] }, finish_reason: 'tool_calls' }], usage }))
+      res.end(input.stream ? `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', ...delta }, finish_reason: finish }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`
+        : JSON.stringify({ choices: [{ message: { role: 'assistant', ...message }, finish_reason: finish }], usage }))
     } catch (error) { providerErrors.push(error instanceof Error ? error.message : 'provider fixture failed'); res.writeHead(500); res.end('{}') }
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))

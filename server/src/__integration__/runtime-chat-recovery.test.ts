@@ -46,17 +46,15 @@ for (const scenario of [
       response.end(JSON.stringify({ error: { message: 'PRIVATE_SYNTHETIC_BODY', ...(scenario.status === 402 ? { code: 'insufficient_quota' } : {}) } }))
       return
     }
-    // The production model exposes public_answer; ordinary content is private.
-    assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'))
-    assert.equal(input.tool_choice, ['3.8.22','3.8.23','3.8.24','3.8.25','4.0.0'].includes(String(releaseVersions.runtime)) ? 'required' : 'auto')
-    const call = { id: `recovery-answer-${scenario.name}-${issued.length}`, type: 'function',
-      function: { name: 'public_answer', arguments: JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '',
-        answer: 'Flow control protects a receiver; congestion control protects a network.', outcome: { status: 'satisfied', gaps: [] } }) } }
+    assert.equal(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'), false)
+    assert.equal(input.tool_choice, 'auto')
+    const content = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '',
+      answer: 'Flow control protects a receiver; congestion control protects a network.', outcome: { status: 'satisfied', gaps: [] } })
     const usage = { prompt_tokens: 10, completion_tokens: 12 }
     response.writeHead(200, { 'content-type': input.stream ? 'text/event-stream' : 'application/json' })
     response.end(input.stream
-      ? `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', tool_calls: [{ index: 0, ...call }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`
-      : JSON.stringify({ choices: [{ message: { role: 'assistant', tool_calls: [call] }, finish_reason: 'tool_calls' }], usage }))
+      ? `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', content }, finish_reason: 'stop' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`
+      : JSON.stringify({ choices: [{ message: { role: 'assistant', content }, finish_reason: 'stop' }], usage }))
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
   let worker: ReturnType<typeof createWorker> | undefined
@@ -153,7 +151,7 @@ for (const scenario of [
 
 // #515/#518: a complete answer must stop, a correction must not retain its
 // failed draft, and a null final answer must reuse the sealed source. Exercise
-// all published bindings: production native-v3 plus native-v1/v2
+// all published native bindings, explicitly selected independently of the product producer
 // compatibility, with the real worker, ledger, IM delivery and replay reader.
 for (const binding of ['native-v1', 'native-v2', 'native-v3'] as const) for (const scenario of ['complete', 'correction', 'finalize', 'fail-all'] as const) test(`public answer ${binding} ${scenario}: one effective body after native worker and replay`, { timeout: 30000 }, async () => {
   const body = 'Flow control protects the receiver.'

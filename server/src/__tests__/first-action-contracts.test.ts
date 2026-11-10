@@ -270,9 +270,9 @@ test('native metadata edits and subsequently deleted pages cannot deliver an exp
   assert.equal(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx), null)
 })
 
-test('DeepSeek uses the explicitly qualified formal20 native-v3 binding', () => {
+test('DeepSeek uses strict purpose-v3 content with native business tools', () => {
   const model = runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', baseUrl: 'https://api.siliconflow.cn/v1', apiKey: 'unit-only' }, 90_000)
-  assert.equal(model.publicAnswerTool, 'native-v3')
+  assert.equal(model.publicAnswerTool, undefined)
   assert.equal(model.maxOutputTokens, 16_384)
   assert.equal(model.capabilities.parallelTools, true)
   assert.equal(model.publicTextProtocol, 'purpose-json-v3')

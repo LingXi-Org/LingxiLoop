@@ -73,13 +73,14 @@ test('failed native Design save rejects false partial completion before publicat
       if (calls <= 5) assert.equal(input.tool_choice?.function?.name, business[0]?.name, 'initial native prerequisites use their published required tool selections')
       // The theme-bearing document read is represented by a bounded observation.
       // Policy must not derive a forced page target from its truncated preview;
-      // native-v3 still requires a tool call while the model chooses the next one.
-      if (calls === 6 || calls === 7) assert.equal(input.tool_choice, 'required', 'bounded document observations leave the next native tool selection to the model')
+      // the model can select native tools or return strict structured content.
+      if (calls === 6 || calls === 7) assert.equal(input.tool_choice, 'auto', 'bounded document observations leave the next native tool selection to the model')
       if (calls === 8) {
         assert.ok(JSON.stringify(input.messages).includes('version_conflict'),'model must receive the supported conflict code')
         assert.ok(JSON.stringify(input.messages).includes('refresh'),'model must receive refresh recovery guidance')
-        assert.equal(input.tool_choice, 'required', 'a failed write stops forcing prerequisite actions while preserving the native tool protocol'); business.push({ name: 'design__check', args: {} }) }
+        assert.equal(input.tool_choice, 'auto', 'a failed write stops forcing prerequisite actions while preserving native business tools'); business.push({ name: 'design__check', args: {} }) }
       const toolCalls = business.map((tool, position) => ({ index: position, id: `design-failure-business-${calls}`, type: 'function', function: { name: tool.name, arguments: JSON.stringify(tool.args) } }))
+      let content: string | undefined
       if (calls >= 9) {
         const operation = { kind: 'append', supersedes: [] }
         if (calls === 10) {
@@ -89,21 +90,21 @@ test('failed native Design save rejects false partial completion before publicat
           // was acknowledged. This candidate fails its first safety assessment,
           // so there is no published part to replace; the truthful answer appends.
         }
-        toolCalls.push({ index: 0, id: `design-failure-answer-${calls}`, type: 'function', function: { name: 'public_answer', arguments: JSON.stringify({ operation,
-          answer: calls === 9 ? falseClaim : fallback, commentary: '', outcome: { status: 'partial', gaps: ['Requested new canvas was not saved because its version changed.'] } }) } })
+        content = JSON.stringify({ operation,
+          answer: calls === 9 ? falseClaim : fallback, commentary: '', outcome: { status: 'partial', gaps: ['Requested new canvas was not saved because its version changed.'] } })
       }
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       if (calls === 10) {
         // Split the required notice itself. A partial valid prefix must be
         // held until its remainder arrives, not rejected as unsupported text.
-        const call = toolCalls[0], args = call.function.arguments, cut = args.indexOf(DESIGN_INCOMPLETE_NOTICE) + 4
-        response.write(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ ...call, function: { name: call.function.name, arguments: args.slice(0, cut) } }] }, finish_reason: null }] })}\n\n`)
+        const args = content!, cut = args.indexOf(DESIGN_INCOMPLETE_NOTICE) + 4
+        response.write(`data: ${JSON.stringify({ choices: [{ delta: { content: args.slice(0, cut) }, finish_reason: null }] })}\n\n`)
         await delay(70)
-        response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: args.slice(cut) } }] }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
+        response.end(`data: ${JSON.stringify({ choices: [{ delta: { content: args.slice(cut) }, finish_reason: 'stop' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
         return
       }
-      response.end(`data: ${JSON.stringify({ choices: [{ delta: { tool_calls: toolCalls }, finish_reason: 'tool_calls' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
+      response.end(`data: ${JSON.stringify({ choices: [{ delta: content === undefined ? { tool_calls: toolCalls } : { content }, finish_reason: content === undefined ? 'tool_calls' : 'stop' }], usage: { prompt_tokens: 10, completion_tokens: 20 } })}\n\ndata: [DONE]\n\n`)
     } catch (error) { providerError ??= error; annotateFixtureFailure(error, calls); response.writeHead(500); response.end('{}') }
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
