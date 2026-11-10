@@ -38,7 +38,7 @@ const explanationSamples = {
 const sampleId = (process.env.DESIGN_EXPLANATION_SAMPLE ?? 'explicit') as keyof typeof explanationSamples
 assert.ok(Object.hasOwn(explanationSamples, sampleId), 'unknown Design explanation sample')
 const expectsCanvas = !live || !['greeting','fact','textOnly'].includes(sampleId)
-for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repairSkill:false}] : [{recoveredLength:false,repairSkill:false},{recoveredLength:true,repairSkill:false},{recoveredLength:false,repairSkill:true}]) test(repairSkill ? '错位技能引用通过精确注册目标恢复，失败步骤不伪装为零错误验收' : recoveredLength ? 'a recovered truncation never qualifies as zero-failure artifact delivery' : live ? `real provider completes ${sampleId} with ${expectsCanvas ? 'a checked cold Design canvas' : 'text only'}`
+for (const {recoveredLength,repairSkill,largeReceipt} of live ? [{recoveredLength:false,repairSkill:false,largeReceipt:false}] : [{recoveredLength:false,repairSkill:false,largeReceipt:false},{recoveredLength:true,repairSkill:false,largeReceipt:false},{recoveredLength:false,repairSkill:true,largeReceipt:false},{recoveredLength:false,repairSkill:false,largeReceipt:true}]) test(largeReceipt ? '大画板经SDK截断成功回执后仍能检查并正常交付' : repairSkill ? '错位技能引用通过精确注册目标恢复，失败步骤不伪装为零错误验收' : recoveredLength ? 'a recovered truncation never qualifies as zero-failure artifact delivery' : live ? `real provider completes ${sampleId} with ${expectsCanvas ? 'a checked cold Design canvas' : 'text only'}`
   : 'native Worker loads guidance before versioned document/page reads, partial edit and check', { timeout: live ? 540_000 : 40_000 }, async () => {
   if (live) {
     assert.equal(env.OPENAI_MODEL, 'deepseek-ai/DeepSeek-V4.1-Flash')
@@ -115,16 +115,20 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
         const title = { ...createNode('text', 'flash-title'), text: 'FlashAttention：让注意力计算少搬运数据', x: 60, y: 60, width: 1120, height: 80, style: { fontSize: 36 } }
         const body = { ...createNode('text', 'flash-body'), text: '把 Q、K、V 分块放入高速缓存，逐块计算并更新结果；避免把完整注意力矩阵反复写入显存。计算结果保持精确，节省的是内存读写。', x: 60, y: 180, width: 1120, height: 180, style: { fontSize: 24 } }
         const formula = { ...createNode('math', 'flash-formula'), source: String.raw`\operatorname{softmax}(QK^T/\sqrt{d})V`, x: 60, y: 420, width: 1120, height: 160 }
+        const extra = largeReceipt ? Array.from({ length: 48 }, (_, index) => ({ ...createNode('text', `receipt-${index}`), text: '保存回执验证', x: 60 + index % 7 * 145, y: 600 + Math.floor(index / 7) * 14, width: 130, height: 12, style: { fontSize: 8 } })) : []
         business.push({ name: 'design__apply_ops', args: prepareBatch(snapshot.document, [
           { type: 'page.patch', pageId: nativePageId, patch: { title: 'FlashAttention' } },
-          ...[title, body, formula].map(node => ({ type: 'node.insert' as const, pageId: nativePageId, node })),
+          ...[title, body, formula, ...extra].map(node => ({ type: 'node.insert' as const, pageId: nativePageId, node })),
         ], `flashattention-${calls}`) })
       }
       if (phase === 7) {
         const outputs = input.messages.filter((message: { role: string }) => message.role === 'tool').map((message: { content: string }) => JSON.parse(message.content))
-        const saved = outputs.findLast((output: { receipt?: { action?: string }; ok?: boolean }) => output.receipt?.action === 'design.apply_ops' && output.ok === true)
+        const saved = outputs.findLast((output: { receipt?: { action?: string }; ok?: boolean }) => output.receipt?.action === 'design.apply_ops')
         const current = await readNativeDocument(pool, seededCanvas!.id); assert.ok(current)
-        assert.equal(saved?.value?.result?.pageVersions?.[nativePageId], current.pageVersions[nativePageId], 'the next pinned read must receive the hash from the committed revision')
+        if (largeReceipt) {
+          assert.equal(saved?.truncated, true, 'the formal SDK must actually bound this successful write')
+          assert.equal(input.tool_choice?.function?.name, 'design__check', 'native success references must advance the same operation chain')
+        } else assert.equal(saved?.value?.result?.pageVersions?.[nativePageId], current.pageVersions[nativePageId], 'the next pinned read must receive the hash from the committed revision')
         business.push({ name: 'design__check', args: { paths: [`project/pages/${nativePageId}.json`] } })
       }
       const content = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: 'FlashAttention 讲解已写入画板，格式检查通过。', outcome: { status: 'satisfied', gaps: [] } })
@@ -258,6 +262,10 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
     const wireContractFailures = wire.flatMap(record => record.tools.filter(tool => record.finish.includes('length') || !tool.jsonValid || tool.parserValid === false).map(tool => ({ call: record.call, name: tool.name, truncated: record.finish.includes('length'), jsonValid: tool.jsonValid, issues: tool.issues })))
     const protocolFailures = steps.filter(step => step.output && (() => { try { return JSON.parse(step.output).protocolError === true } catch { return false } })())
       .length + modelFailures.filter(row => row.diagnostics?.kind === 'protocol').length
+    if (largeReceipt) {
+      const output = JSON.parse(steps.find(step => step.kind === 'design__apply_ops')!.output!)
+      assert.equal(output.truncated, true); assert.equal(output.observations.length, 1)
+    }
     const canvas = (await pool.query("SELECT id FROM artifacts WHERE company_id=$1 AND conversation_id=$2 AND kind='design'", [companyId,channelId])).rows[0]
     const files = canvas ? (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows : []
     const checked = canvas ? await checkArtifact(pool, { id: canvas.id, kind: 'design' }) as { problems: number; checkedPageIds?: string[] } : { problems: -1, checkedPageIds: [] }
@@ -271,7 +279,7 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
       && !receipts.some(row => row.action.startsWith('visualize.') || row.args.name === 'visualize')
     const deliveredOutcome = correctRouting && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
       && (expectsCanvas ? checked.problems === 0 && (checked.checkedPageIds?.length ?? 0) > 0 : !canvas)
-    const evidence = { qualification: repairSkill ? 'synthetic-repaired-skill-reference-negative' : recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', plannedSurface:routing[0]?.args.delivery??null, coldCanvas: live, correctRouting, deliveredOutcome, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool ?? 'purpose-json-v3-content', maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
+    const evidence = { qualification: repairSkill ? 'synthetic-repaired-skill-reference-negative' : recoveredLength ? 'synthetic-recovered-truncation-negative' : live ? 'real-provider-native-product' : largeReceipt ? 'synthetic-large-native-receipt' : 'synthetic-provider-native-product', sampleId: live ? sampleId : 'explicit', plannedSurface:routing[0]?.args.delivery??null, coldCanvas: live, correctRouting, deliveredOutcome, measurementComplete: true, runtime: releaseVersions.runtime, binding: model.publicAnswerTool ?? 'purpose-json-v3-content', maxOutputTokens: model.maxOutputTokens, model: live ? env.OPENAI_MODEL : 'scripted', runId: run.runId,
       failedSkillLoads:failedSkillLoads.length, accepted: !repairSkill && correctRouting && failures.length === 0 && modelFailures.length === 0 && failedModelAttempts.length === 0 && wireContractFailures.length === 0 && protocolFailures === 0 && state?.run.status === 'succeeded' && state?.delivery === 'delivered'
         && (expectsCanvas ? checked.problems === 0 && receipts.some(row => row.action === 'design.check') && (checked.checkedPageIds?.length ?? 0) > 0
           : !canvas && receipts.every(row => !row.action.startsWith('design.') || row.action === 'design.plan_explanation')),
