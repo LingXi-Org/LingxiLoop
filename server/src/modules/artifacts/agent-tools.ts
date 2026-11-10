@@ -227,6 +227,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         }])
         return { ok: true, value: { artifactId: artifact.id, result: { operationId: committed.operationId,
           seq: committed.seq, committedSeq: committed.committedSeq, changedPageIds: committed.changedPageIds,
+          pageVersions: Object.fromEntries(committed.changedPageIds.flatMap(id => committed.pageVersions[id] ? [[id, committed.pageVersions[id]]] : [])),
           versions: committed.document.versions, history: committed.history, deduplicated: committed.deduplicated } } }
       },
     }, { reused: 'ref' }),

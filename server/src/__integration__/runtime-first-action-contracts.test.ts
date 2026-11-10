@@ -120,7 +120,13 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
           ...[title, body, formula].map(node => ({ type: 'node.insert' as const, pageId: nativePageId, node })),
         ], `flashattention-${calls}`) })
       }
-      if (phase === 7) business.push({ name: 'design__check', args: { paths: [`project/pages/${nativePageId}.json`] } })
+      if (phase === 7) {
+        const outputs = input.messages.filter((message: { role: string }) => message.role === 'tool').map((message: { content: string }) => JSON.parse(message.content))
+        const saved = outputs.findLast((output: { receipt?: { action?: string }; ok?: boolean }) => output.receipt?.action === 'design.apply_ops' && output.ok === true)
+        const current = await readNativeDocument(pool, seededCanvas!.id); assert.ok(current)
+        assert.equal(saved?.value?.result?.pageVersions?.[nativePageId], current.pageVersions[nativePageId], 'the next pinned read must receive the hash from the committed revision')
+        business.push({ name: 'design__check', args: { paths: [`project/pages/${nativePageId}.json`] } })
+      }
       const content = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '', answer: 'FlashAttention 讲解已写入画板，格式检查通过。', outcome: { status: 'satisfied', gaps: [] } })
       const toolCalls = business.map((item, index) => ({ index, id: `business-${calls}-${index}`, type: 'function', function: { name: item.name, arguments: JSON.stringify(item.args) } }))
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
