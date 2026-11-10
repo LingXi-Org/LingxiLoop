@@ -25,11 +25,12 @@ import { slideEditingContext } from './slides-workspace.js'
 import { ensureNativeDocument, NativeDocumentError, nativeOperationReceipt, readNativeDocument, readNativePageSnapshot, submitNativeOperations } from './native-document.js'
 import { prepareBatch } from '../../../../shared/artifact-operations.js'
 import { agentDocumentSummary, agentPageSummary } from './agent-summary.js'
+import { prepareNativeAgentPlan, readNativeAgentPlan } from './native-agent-plan.js'
 
 type Control = Parameters<typeof createArtifactExecution>[0]
 const reportMethods = { submit_report: 'specialist', submit_verification: 'verifier' } as const
 /** Tools that read, or only change the files and comments any member may edit. */
-const READ_METHODS = new Set(['plan_explanation', 'current', 'available_agents', 'read_document', 'read_page', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
+const READ_METHODS = new Set(['plan_explanation', 'current', 'available_agents', 'read_document', 'read_page', 'prepare_ops', 'read_file', 'check', 'read_reference', 'comments', 'design_systems'])
 const WORKSPACE_METHODS = new Set(['stop_workspace', 'stop_assignment', 'submit_report', 'submit_verification'])
 export function createArtifactTools(kind: ArtifactKind, control: Control): ToolDefinition[] {
   const definition = artifactKind(kind)
@@ -128,6 +129,13 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
     }
   }
 
+  const preparedPlan = (context: ActionContext, input: z.output<typeof agentArtifactSchemas.apply_ops>) =>
+    readNativeAgentPlan(context, kind, tools.find(tool => tool.action === `${kind}.prepare_ops`)!, input)
+  const authorizePrepared = async (context: ActionContext, input: z.output<typeof agentArtifactSchemas.apply_ops>) => {
+    const plan = await preparedPlan(context, input)
+    await scope(context, { artifactId: plan.artifactId })
+  }
+
   const verify: ToolDefinition['verify'] = async (context, _input, value) => {
     const receipt = value as { artifactId: string; result: Record<string, unknown> & { id?: string; thread?: { id: string; messages: unknown[] } } }
     const db = context.database as Queryable, name = method(context)
@@ -183,7 +191,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
       },
     }),
     nativeTool(`${kind}.read_page`, agentArtifactSchemas.read_page, {
-      description: `Read one page, its nodes and scoped field versions. For native documents supply version=pageVersions[pageId] and atSeq=document.seq from read_document. For an unconverted legacy document supply sourceVersion from read_document instead. Use returned field versions as operation preconditions. 初始对象的版本计数也是0；不要根据对象存在或schemaVersion=1推断版本为1。`,
+      description: `Read one page, its nodes and scoped field versions. For native documents supply version=pageVersions[pageId] and atSeq=document.seq from read_document. For an unconverted legacy document supply sourceVersion from read_document instead. Use the observed baseSeq and page content with prepare_ops; the server computes field preconditions from that fixed snapshot.`,
       effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await required(context, input), db = context.database as Queryable
@@ -208,17 +216,24 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         return { ok: true, value: { ...agentPageSummary(pageSnapshot), ...(sourceVersion ? { sourceVersion } : {}) } }
       },
     }),
-    nativeTool(`${kind}.apply_ops`, agentArtifactSchemas.apply_ops, {
-      description: `Apply an atomic native document operation batch shared with manual editing and undo. Read the document/pages first; include operationId, baseSeq and expectedVersions for touched targets. Independent fields merge; stale targets reject the entire batch. Retry an uncertain result with the same operationId and identical payload.`,
-      effect: 'transaction', approval: false, authorize, verify,
+    nativeTool(`${kind}.prepare_ops`, agentArtifactSchemas.prepare_ops, {
+      description: '基于read_document观察到的baseSeq及read_page目标内容准备原生操作。只读，不创建画板或保存修改。服务端从固定快照生成全部字段前置条件；返回planId，下一步apply_ops只传这个planId，不抄写或更改批次。冲突后先重新读取目标，再准备新计划。',
+      effect: 'read', approval: false, authorize,
       async execute(context, input) {
-        const artifact = await required(context, input), db = context.database as Queryable
-        if (!input.sourceVersion && !await readNativeDocument(db, artifact.id)) throw new NoEffectError('Read the legacy sourceVersion with read_document before applying operations.', 'version_required')
+        const artifact = await required(context, input)
+        return { ok: true, value: await prepareNativeAgentPlan(context, artifact, input) }
+      },
+    }, { reused: 'ref' }),
+    nativeTool(`${kind}.apply_ops`, agentArtifactSchemas.apply_ops, {
+      description: '提交prepare_ops成功返回的planId。只执行已准备的不可变批次，仍检查当前写权限及字段版本；无自动重基。结果不确定时用相同planId重试，不能重新准备以重复未知副作用。真实冲突后重新读取目标、决定修改仍适用，再准备新计划。',
+      effect: 'transaction', approval: false, authorize: authorizePrepared, verify,
+      async execute(context, input) {
+        const plan = await preparedPlan(context, input)
+        const artifact = await required(context, { artifactId: plan.artifactId }), db = context.database as Queryable
         await ensureNativeDocument({ db, transaction: run => run(db) }, {
-          artifactId: artifact.id, companyId: context.work.tenantId, actorId: context.work.agentId, write: true, expectedSourceVersion: input.sourceVersion,
+          artifactId: artifact.id, companyId: context.work.tenantId, actorId: context.work.agentId, write: true, expectedSourceVersion: plan.sourceVersion,
         })
-        const { artifactId: _target, sourceVersion: _source, ...request } = input
-        const applied = await applyNative(context, artifact, request)
+        const applied = await applyNative(context, artifact, plan.batch)
         if (!applied.ok) return applied
         const committed = applied.value
         if (!committed.deduplicated) await queueNativeEvents(context, [{ type: 'artifact.changed', kind: 'files.changed',
@@ -228,7 +243,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         return { ok: true, value: { artifactId: artifact.id, result: { operationId: committed.operationId,
           seq: committed.seq, committedSeq: committed.committedSeq, changedPageIds: committed.changedPageIds,
           pageVersions: Object.fromEntries(committed.changedPageIds.flatMap(id => committed.pageVersions[id] ? [[id, committed.pageVersions[id]]] : [])),
-          versions: committed.document.versions, history: committed.history, deduplicated: committed.deduplicated } } }
+          history: committed.history, deduplicated: committed.deduplicated } } }
       },
     }, { reused: 'ref' }),
     ...(kind === 'design' ? [nativeTool('design.plan_explanation', z.object({ delivery: z.enum(['canvas', 'text', 'other']) }).strict(), {

@@ -15,7 +15,7 @@ test('50-page Agent overview excludes embedded assets, original themes and node 
   }
   const summary = agentDocumentSummary({ document, history: { version: 0, undo: null, redo: null }, pageVersions: {} })
   assert.equal(Object.keys(summary.document.pages).length, 50)
-  assert.deepEqual(summary.document.versions, { 'document/themeId': 0, 'document/pageOrder': 0, 'document/title': 1, 'theme/large': 2, 'asset/image': 3, 'asset/image/references': 4 })
+  assert.deepEqual(summary.document.versions, { 'document/title': 1, 'theme/large': 2, 'asset/image': 3, 'asset/image/references': 4 })
   assert.equal(summary.document.themes.large.tokenCount, 1)
   assert.equal(summary.document.assets.image.contentType, 'image/png')
   assert.ok(JSON.stringify(summary).length < 16_000)
@@ -40,24 +40,12 @@ test('canvas metadata and membership CAS tokens remain available without reading
   assert.equal(summary.document.versions['page/board/field/canvasPageId'],undefined)
 })
 
-test('initial native documents expose zero CAS counters without rewriting stored versions', () => {
-  const document = createDocument('design', 'initial-cas')
-  const summary = agentDocumentSummary({ document, history: { version: 0, undo: null, redo: null }, pageVersions: {} })
-  for (const key of ['document/title', 'document/themeId', 'document/pageOrder', 'document/canvasPages']) assert.equal(summary.document.versions[key], 0, key)
-  assert.deepEqual(document.versions, {}, 'reading must not materialize counters in durable content')
-})
 
-
-test('page reads expose initial counters before content and retain observed nonzero versions', () => {
-  const page = createPage('initial-page')
-  page.notes = 'x'.repeat(20_000)
-  const snapshot = { page, seq: 7, version: 'a'.repeat(64), versions: { 'page/initial-page/field/title': 7 } }
+test('page reads keep pinned identity before content without changing counters', () => {
+  const page = createPage('p'); page.notes = 'x'.repeat(20_000)
+  const snapshot = { page, seq: 7, version: 'a'.repeat(64), versions: { 'page/p/field/title': 7 } }
   const summary = agentPageSummary(snapshot)
-  assert.equal(summary.versions['page/initial-page/exists'], 0)
-  assert.equal(summary.versions['page/initial-page/nodeOrder'], 0)
-  assert.equal(summary.versions['page/initial-page/field/width'], 0)
-  assert.equal(summary.versions['page/initial-page/field/title'], 7)
-  assert.equal(summary.seq, snapshot.seq); assert.equal(summary.version, snapshot.version)
-  assert.ok(JSON.stringify(summary).indexOf('page/initial-page/exists') < JSON.stringify(summary).indexOf(page.notes))
-  assert.deepEqual(snapshot.versions, { 'page/initial-page/field/title': 7 })
+  assert.equal(summary.seq, 7); assert.equal(summary.version, snapshot.version)
+  assert.deepEqual(summary.versions, { 'page/p/field/title': 7 })
+  assert.ok(JSON.stringify(summary).indexOf('page/p/field/title') < JSON.stringify(summary).indexOf(page.notes))
 })
