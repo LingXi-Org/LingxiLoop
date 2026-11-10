@@ -3,14 +3,15 @@ import type { NativeDocumentSnapshot, readNativePageSnapshot } from './native-do
 /** Keep the overview bounded: page content and its CAS tokens are read at a fixed sequence separately. */
 export function agentDocumentSummary(snapshot: NativeDocumentSnapshot) {
   const { pages, themes, assets, versions, ...metadata } = snapshot.document
+  const globalVersions: Record<string, number> = { 'document/title': 0, 'document/themeId': 0, 'document/pageOrder': 0,
+    ...(snapshot.document.kind === 'design' ? { 'document/canvasPages': 0 } : {}),
+    ...Object.fromEntries(Object.entries(versions).filter(([key]) => /^(document|theme|asset|canvasPage)\//.test(key))),
+  }
   return {
     history: snapshot.history, pageVersions: snapshot.pageVersions,
     ...(snapshot.original && !Object.keys(snapshot.pageVersions).length ? { sourceVersion: snapshot.original.version } : {}),
     document: {
-      versions: { 'document/title': 0, 'document/themeId': 0, 'document/pageOrder': 0,
-        ...(snapshot.document.kind === 'design' ? { 'document/canvasPages': 0 } : {}),
-        ...Object.fromEntries(Object.entries(versions).filter(([key]) => /^(document|theme|asset|canvasPage)\//.test(key))),
-      },
+      versions: globalVersions,
       ...metadata,
       themes: Object.fromEntries(Object.entries(themes).map(([id, theme]) => [id, {
         id, name: theme.name, source: theme.source, tokenCount: Object.keys(theme.tokens).length,
