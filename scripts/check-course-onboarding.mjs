@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
-import { createServer } from 'vite'
+import { createServer, transformWithEsbuild } from 'vite'
 import { pool } from '../server/src/db/pool.ts'
 import { buildApiTestApp, ensureSchemaOnce, installFakeWukong, resetAllTables, seedUserMembership, teardownAll } from '../server/src/__integration__/_helpers.ts'
 const target = new URL(process.env.DATABASE_URL)
@@ -39,7 +39,7 @@ createRoot(document.getElementById('root')).render(<Fixture/>);`
 const vite = await createServer({ server:{host:'127.0.0.1',port:5199,strictPort:true}, plugins:[{
   name:'focused-course-onboarding-acceptance',
   resolveId(id){if(id==='/__course-check.tsx')return '\0course-check.tsx'},
-  load(id){if(id==='\0course-check.tsx')return entry},
+  async load(id){if(id==='\0course-check.tsx')return (await transformWithEsbuild(entry,'course-check.tsx',{loader:'tsx',jsx:'automatic'})).code},
   configureServer(server){
     server.middlewares.use(app)
     server.middlewares.use(async(req,res,next)=>{
@@ -66,9 +66,23 @@ try {
     await page.reload() // Existing administrator returning later receives the same guide.
     await page.getByRole('heading',{name:'先创建一门课程'}).waitFor()
     await page.screenshot({path:`${output}/${label}-setup.png`,fullPage:true})
+    let failNextReload = false, failOnce = label === 'desktop'
+    await page.route('**/api/courses', async route => {
+      if (route.request().method() === 'POST' && failOnce) { failNextReload = true; failOnce = false }
+      await route.continue()
+    })
+    await page.route('**/api/learning/spaces*', async route => {
+      if (failNextReload) { failNextReload = false; await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'temporary fixture failure'})}) }
+      else await route.continue()
+    })
     await page.getByLabel('课程名称',{exact:true}).fill(`${label} 第一门课程`)
     await page.getByLabel('课程简介（选填）').fill('真实数据库课程创建与教师分配验收')
     await page.getByRole('button',{name:'创建课程',exact:true}).click()
+    if (label === 'desktop') {
+      await page.getByRole('button',{name:'继续进入课程',exact:true}).waitFor()
+      assert.equal((await pool.query('SELECT count(*)::int n FROM courses')).rows[0].n,1)
+      await page.getByRole('button',{name:'继续进入课程',exact:true}).click()
+    }
     await page.getByRole('button',{name:'添加课程教师',exact:true}).waitFor({timeout:30000})
     await page.getByRole('button',{name:'添加课程教师',exact:true}).click()
     await page.getByRole('combobox').click()
@@ -90,7 +104,7 @@ try {
     await page.getByRole('button',{name:/切换工作区/}).waitFor()
     assert.equal(await page.getByRole('heading',{name:'先创建一门课程'}).count(),0)
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))
-    receipts.push({label,viewport,dark,reloadGuide:true,createdCourses:2,teacherGrants:granted,realProductRouters:true})
+    receipts.push({label,viewport,dark,reloadGuide:true,createdCourses:2,teacherGrants:granted,retryWithoutDuplicate:label==='desktop',realProductRouters:true})
     await context.close()
   }
   await seed()

@@ -1,0 +1,37 @@
+{
+  "passed": true,
+  "syntheticOnly": true,
+  "modelCalls": 0,
+  "receipts": [
+    {
+      "label": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "dark": false,
+      "reloadGuide": true,
+      "createdCourses": 2,
+      "teacherGrants": 1,
+      "retryWithoutDuplicate": true,
+      "realProductRouters": true
+    },
+    {
+      "label": "mobile",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "dark": true,
+      "reloadGuide": true,
+      "createdCourses": 2,
+      "teacherGrants": 1,
+      "retryWithoutDuplicate": false,
+      "realProductRouters": true
+    },
+    {
+      "studentGuide": false,
+      "studentCreateEntry": false
+    }
+  ]
+}
