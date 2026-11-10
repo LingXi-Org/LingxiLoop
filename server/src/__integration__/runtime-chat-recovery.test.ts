@@ -46,7 +46,7 @@ for (const scenario of [
       response.end(JSON.stringify({ error: { message: 'PRIVATE_SYNTHETIC_BODY', ...(scenario.status === 402 ? { code: 'insufficient_quota' } : {}) } }))
       return
     }
-    assert.equal(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'), false)
+    assert.equal((input.tools ?? []).some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'), false)
     assert.equal(input.tool_choice, 'auto')
     const content = JSON.stringify({ operation: { kind: 'append', supersedes: [] }, commentary: '',
       answer: 'Flow control protects a receiver; congestion control protects a network.', outcome: { status: 'satisfied', gaps: [] } })
@@ -162,7 +162,7 @@ for (const binding of ['native-v1', 'native-v2', 'native-v3'] as const) for (con
     const input = JSON.parse(raw)
     assert.equal(input.stream, true)
     assert.equal(input.enable_thinking, false)
-    assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'))
+    assert.ok((input.tools ?? []).some((tool: { function: { name: string } }) => tool.function.name === 'public_answer'))
     calls++
     assert.ok(calls <= (scenario === 'complete' ? 1 : scenario === 'fail-all' ? 3 : 2), 'no unrequested third generation')
     let operation = { kind: 'append', supersedes: [] as string[] }

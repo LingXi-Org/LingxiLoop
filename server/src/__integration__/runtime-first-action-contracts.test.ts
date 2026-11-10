@@ -274,6 +274,15 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
         ...(row.action === 'design.read_page' ? { pageId: row.args.pageId, version: row.args.version } : {}),
         ...(row.action === 'design.apply_ops' ? { operationId: row.args.operationId, operationCount: row.args.operations?.length } : {}),
         ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
+      preconditionFailures: failures.filter(row => row.result.code === 'version_conflict').map(row => {
+        let conflicts: Array<{ key: string; expected: number | null; actual: number }> = []
+        try { conflicts = JSON.parse(String(row.result.error).split(' Conflicting targets: ')[1]) } catch { /* no structured conflicts */ }
+        return { action: row.action, conflicts: conflicts.slice(0, 64).map(item => ({
+          keyKind: String(item.key).replace(/^(page|theme|asset|canvasPage)\/[^/]+/, '$1/[id]').replace(/^node\/[^/]+\/[^/]+/, 'node/[page]/[id]'),
+          missing: item.expected === null, expected: item.expected, actual: item.actual,
+        })) }
+      }),
+      modelProtocolFailures: modelFailures.map(row => ({ code: row.diagnostics?.protocolCode, detail: row.diagnostics?.protocolDetail, finish: row.diagnostics?.finishReasons })),
       contractFailures: failures.map(row => ({ action: row.action, code: row.result.code })), protocolFailures, providerFailures: modelFailures.filter(row => !row.budget && row.diagnostics?.kind !== 'protocol').length,
       budgetFailures: modelFailures.filter(row => row.budget).map(row => row.budget),
       modelAttempts, failedModelAttempts, wireContractFailures,

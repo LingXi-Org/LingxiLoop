@@ -36,7 +36,7 @@ for(const {delayedAck,rejectSeal,invalidReplacement} of [{delayedAck:false,rejec
   const provider=createServer(async(req,res)=>{
     try{
       let raw='';for await(const chunk of req)raw+=chunk
-      const input=JSON.parse(raw);assert.equal(input.tools.some((tool:{function:{name:string}})=>tool.function.name==='public_answer'),false);calls++;assert.equal(calls,1)
+      const input=JSON.parse(raw);assert.equal((input.tools ?? []).some((tool:{function:{name:string}})=>tool.function.name==='public_answer'),false);calls++;assert.equal(calls,1)
       const args=JSON.stringify({operation:invalidReplacement?{kind:'replace',supersedes:['synthetic-nonexistent-source']}:{kind:'append',supersedes:[]},answer:body,commentary:'',outcome:{status:'satisfied',gaps:[]}})
       const cut=args.indexOf(body)+body.length
       res.writeHead(200,{'content-type':'text/event-stream'})
