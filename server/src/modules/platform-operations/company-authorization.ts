@@ -34,6 +34,7 @@ export type CompanyAdmin = Awaited<ReturnType<typeof requireCompanyAdmin>>
 
 export async function companyManagementSession(admin: CompanyAdmin) {
   const commands: Record<string, PermissionAction> = {
+    createCourse: 'course:create',
     invite: 'company_invitation:create', updateMember: 'company_member:update', removeMember: 'company_member:remove',
     updateCompany: 'company:update', activateCompany: 'company:activate', readOnlyCompany: 'company:enter_read_only', archiveCompany: 'company:archive',
   }

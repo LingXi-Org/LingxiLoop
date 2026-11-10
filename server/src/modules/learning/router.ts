@@ -7,6 +7,7 @@ import { forumRouter } from './forum-router.js'
 import { homeworkRouter } from './homework-router.js'
 import {
   addInstitutionalCourseMemberRequestSchema,
+  createCourseRequestSchema,
   createProjectInvitationRequestSchema,
   updateCourseMemberRequestSchema,
   updateCourseRequestSchema,
@@ -39,6 +40,14 @@ learningRouter.get('/courses', safe(async (req, res) => {
   const scope = await requireCompany(req)
   res.json(await learningApplication.courses(scope))
 }))
+
+for (const [path, kind] of [['/courses', 'TEACHING'], ['/institutional-courses', 'INSTITUTIONAL_COURSE']] as const) {
+  learningRouter.post(path, safe(async (req, res) => {
+    const scope = await requireCompany(req)
+    const input = parse(createCourseRequestSchema.safeParse(req.body ?? {}))
+    res.status(201).json(await respond(() => learningApplication.createCourse(scope, input, kind)))
+  }))
+}
 
 
 

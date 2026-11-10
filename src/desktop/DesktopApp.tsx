@@ -3,6 +3,12 @@ import { CommandPalette } from '@/components/CommandPalette'
 import { ResourceSkeleton } from '@/components/ResourceSkeleton'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { learningApi } from '@/features/learning/api'
+import type { ApiCourse } from '@/features/learning/contracts'
+import { CourseCreateForm } from '@/features/learning/components/CourseCreateForm'
+import { switchLearningWorkspace } from './dashboardScope'
+import { CompanyCourseSetup } from './CompanyCourseSetup'
 import '@/features/design/design-workspace.css'
 import {
   Drawer,
@@ -56,6 +62,11 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   const userId = useAuth(state => state.user?.id)
   const companyId = useAuth((state) => state.activeCompanyId)
   const companyRole = useAuth((state) => state.companies.find(company => company.id === state.activeCompanyId)?.role)
+  const company = useAuth(state => state.companies.find(company => company.id === state.activeCompanyId))
+  const canCreateCourse = Boolean(company?.role === 'teacher' && (company.status === 'ACTIVE' || company.status === 'TRIAL'))
+  const [createCourseOpen, setCreateCourseOpen] = useState(false)
+  const [creatingCourse, setCreatingCourse] = useState(false)
+  const [courseSetupActive, setCourseSetupActive] = useState(false)
   const isMobile = useIsMobile()
   const selectedWorkspaceId = useWorkspace((state) => state.selectedId)
   const view = useApp((state) => state.view)
@@ -76,6 +87,21 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
   const [sidebarOpen, setSidebarOpen] = useState(!designOpen)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const pageRef = useEntrance(`${selectedWorkspaceId}:${view}`)
+
+  useEffect(() => { setCourseSetupActive(false); setCreateCourseOpen(false) }, [userId, companyId])
+  const needsCourseSetup = canCreateCourse && company?.isAdmin && !learningSpaces.loading && !learningSpaces.error && learningSpaces.spaces.length === 0
+  const openCreatedCourse = async (course: ApiCourse) => {
+    const current = () => useAuth.getState().user?.id === userId && useAuth.getState().activeCompanyId === companyId
+    if (!current()) return
+    if (needsCourseSetup) setCourseSetupActive(true)
+    const spaces = await learningSpaces.reload()
+    if (!current()) return
+    const target = spaces?.find(space => space.projectId === course.projectId)
+    if (!target) throw new Error('课程已创建，暂时未能打开，请重试。')
+    await switchLearningWorkspace(target, 'course-members')
+    if (!current()) return
+    setCourseSetupActive(false); setCreateCourseOpen(false)
+  }
 
   useEffect(() => {
     useKnowledgeSources.getState().close()
@@ -182,6 +208,10 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
       : openThread ? ' w-[min(92vw,400px)] rounded-s-2xl sm:[--drawer-content-width:min(92vw,400px)]'
         : ' w-[min(92vw,72rem)] sm:[--drawer-content-width:min(92vw,72rem)]'
 
+  if (canCreateCourse && companyId && (needsCourseSetup || courseSetupActive)) {
+    return <CompanyCourseSetup key={`${userId}:${companyId}`} companyName={company?.name ?? ''} companyId={companyId} onCreated={openCreatedCourse} />
+  }
+
   return (
     <div className="desktop-openmaus relative flex h-dvh w-full min-h-0 flex-row overflow-hidden bg-[var(--workspace-chrome-surface)]" data-cases-shell={shellModule === 'cases' || undefined} data-mobile={isMobile ? 'true' : 'false'} style={isMobile ? { paddingBlock: 'env(safe-area-inset-top) env(safe-area-inset-bottom)' } : undefined}>
       {!mobileChatOpen && <WorkspaceRail
@@ -191,6 +221,7 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
           onNavigate={(next) => useApp.getState().setView(next)}
           workspacePickerOpen={workspacePickerOpen}
           onWorkspacePickerOpenChange={setWorkspacePickerOpen}
+          onCreateCourse={canCreateCourse ? () => { setWorkspacePickerOpen(false); setCreateCourseOpen(true) } : undefined}
         />}
       <div className={`flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--workspace-chrome-surface)] ${isMobile ? '' : 'pe-2 pt-2'}`}>
         {navigationError && <Alert variant="destructive" className="mb-2 w-auto shrink-0"><AlertDescription className="flex items-center justify-between gap-3"><span>{navigationError}</span><Button variant="outline" size="sm" onClick={() => void retryWebNavigation()}>重试</Button></AlertDescription></Alert>}
@@ -254,6 +285,11 @@ export function DesktopApp({ learningSpaces }: { learningSpaces: ReturnType<type
       </Drawer>
 
       <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+      {canCreateCourse && companyId && <Dialog open={createCourseOpen} onOpenChange={open => { if (!creatingCourse) setCreateCourseOpen(open) }}>
+        <DialogContent><DialogHeader><DialogTitle>新建课程</DialogTitle><DialogDescription>创建后可添加课程教师，并邀请学生加入。</DialogDescription></DialogHeader>
+          {createCourseOpen && <CourseCreateForm key={`${userId}:${companyId}`} create={input => learningApi.createCourse(input, companyId)} onCreated={openCreatedCourse} onBusyChange={setCreatingCourse} />}
+        </DialogContent>
+      </Dialog>}
       {settingsOpen && <SettingsDialog />}
       <SourceDetailOverlay />
     </div>

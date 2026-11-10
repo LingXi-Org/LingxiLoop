@@ -6,7 +6,7 @@ import routerProvider, { CatchAllNavigate } from '@refinedev/react-router'
 import { lazy, type ReactNode, Suspense } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router'
 import { accessControlProvider, adminQueryClient, authProvider, dataProvider, useManagementSession } from './api'
-import { CompanyDashboard, CompanyMembers } from './company-pages'
+import { CompanyCourseCreate, CompanyDashboard, CompanyMembers } from './company-pages'
 import { AdminLayout, ForbiddenPage, LoginPage, ResourceDetailPage, SearchPage } from './pages'
 import { ADMIN_RESOURCES } from './resources'
 import { AdminDashboardSkeleton, AdminShellSkeleton } from './loading'
@@ -34,6 +34,7 @@ export function AdminApp() {
       <Route element={<AdminLayout />}>
         <Route index element={<ManagementHome />} />
         <Route path="members" element={<CompanyMembers />} />
+        <Route path="courses/new" element={<CompanyCourseCreate />} />
         <Route path="search" element={<SearchPage />} />
         <Route path="organizations/new" element={<EducationPage />} />
         <Route path="education" element={<Navigate replace to="/organizations/new" />} />
