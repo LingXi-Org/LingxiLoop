@@ -81,3 +81,9 @@ test('the caller cannot replace a prepared artifact or batch', async () => {
   f.row.result.value.batch.operations[0] = { type: 'document.patch', patch: { title: 'replaced' } }
   await assert.rejects(readNativeAgentPlan(f.context, 'design', sourceTool, { planId: f.plan.planId }), /不一致/)
 })
+
+test('invalid operations against a pinned snapshot are a known no-effect input failure', async () => {
+  const f = fixture()
+  await assert.rejects(prepareNativeAgentPlan(f.context, f.artifact, { ...f.input, operations: [{ type: 'node.patch', pageId: 'p', nodeId: 'missing', patch: { text: 'invalid' } }] }), error => (error as { code: string }).code === 'invalid_input')
+  assert.ok(f.queries.every(sql => /^SELECT /.test(sql)))
+})

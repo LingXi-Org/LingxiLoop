@@ -12,7 +12,7 @@ import { sha256 } from './store.js'
 const planSchema = z.object({ planId: z.string().min(1).max(512), artifactId: artifactIdSchema,
   batch: artifactOperationBatchSchema, sourceVersion: z.string().min(1).max(200).optional() }).strict()
 type PlanIntent = { tenantId: string; workId: string; principalId: string | null; agentId: string; sessionId: string;
-  threadId: string | null; requestVersion: number; toolContractHash: string;
+  threadId: string | null; requestVersion: number | null; toolContractHash: string;
   action: { action: string; idempotencyKey: string; args: unknown } }
 
 /** Preparation is read-only and uses exactly the revision the author observed. */
@@ -27,8 +27,10 @@ export async function prepareNativeAgentPlan(context: ActionContext, artifact: A
   }
   if (!document) throw new NoEffectError('固定版本不存在，请重新读取文档及目标页面后再准备修改。', 'not_found')
   const planId = context.action.idempotencyKey
-  return { planId, artifactId: artifact.id, batch: prepareBatch(document, input.operations, sha256(Buffer.from(planId))),
-    ...(input.sourceVersion ? { sourceVersion: input.sourceVersion } : {}) }
+  let batch: z.output<typeof artifactOperationBatchSchema>
+  try { batch = prepareBatch(document, input.operations, sha256(Buffer.from(planId))) }
+  catch { throw new NoEffectError('操作与固定快照不匹配，请读取目标并修正操作后再准备。', 'invalid_input') }
+  return { planId, artifactId: artifact.id, batch, ...(input.sourceVersion ? { sourceVersion: input.sourceVersion } : {}) }
 }
 
 /** The SDK ledger owns the immutable plan. No caller can replace its batch or target. */
