@@ -9,7 +9,7 @@ import { authApi } from '@/auth/api'
 export function CompanyCourseSetup({ companyName, companyId, onCreated }: {
   companyName: string; companyId: string; onCreated(course: ApiCourse): Promise<void>
 }) {
-  return <main className="min-h-dvh overflow-y-auto bg-background px-5 py-8 text-foreground sm:px-8 sm:py-14">
+  return <main className="h-dvh overflow-y-auto bg-background px-5 py-8 text-foreground sm:px-8 sm:py-14">
     <div className="mx-auto w-full max-w-2xl space-y-8">
       <header className="flex items-center justify-between gap-4"><p className="min-w-0 break-words font-medium">{companyName}</p><Button variant="ghost" onClick={() => { useAuth.getState().clear(); void authApi.signOut().catch(() => undefined) }}><LogOut className="size-4" />退出登录</Button></header>
       <section className="space-y-6 rounded-2xl border bg-card p-5 sm:p-8">

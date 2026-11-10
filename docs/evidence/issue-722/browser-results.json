@@ -30,6 +30,19 @@
       "realProductRouters": true
     },
     {
+      "label": "short-mobile",
+      "viewport": {
+        "width": 390,
+        "height": 568
+      },
+      "dark": true,
+      "reloadGuide": true,
+      "createdCourses": 2,
+      "teacherGrants": 1,
+      "retryWithoutDuplicate": false,
+      "realProductRouters": true
+    },
+    {
       "studentGuide": false,
       "studentCreateEntry": false
     }
