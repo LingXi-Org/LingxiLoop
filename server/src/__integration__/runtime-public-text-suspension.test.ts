@@ -91,19 +91,19 @@ for(const {delayedAck,rejectSeal,invalidReplacement} of [{delayedAck:false,rejec
       while(!modelStages.calls.length&&Date.now()<deadline){await delay(25);modelStages=await readAdminModelStageCalls(pool,run,1)}
       assert.equal(modelStages.calls.length,1,'actual model callback must reach the shared ledger')
       const stages=modelStages.calls[0].stages
-      assert.equal(stages.providerTime,'unavailable');assert.equal(stages.httpToFirstContentMs,undefined,'tool-only HTTP has no content-first zero')
+      assert.equal(stages.providerTime,'unavailable');assert.ok(typeof stages.httpToFirstContentMs==='number'&&stages.httpToFirstContentMs>=0,'structured content records its first content frame');assert.equal(stages.httpToFirstCompleteToolCallMs,undefined,'content-only response has no native call completion')
       if(invalidReplacement){
         assert.equal(stages.streamCompleted,false);assert.equal(stages.outputCallbackCount,1)
         if(['3.8.24','3.8.25','4.0.0'].includes(actual))assert.deepEqual(modelStages.calls[0].failureAttribution,{kind:'output',outputCallback:'operation'})
       }
-      else{assert.ok((stages.observedStreamMs??0)>=1000);assert.ok((stages.httpToFirstCompleteToolCallMs??0)>=1000)}
+      else{assert.ok((stages.observedStreamMs??0)>=1000);assert.equal(wire.records[0].response.toolCallParts,0)}
       const diagnostics=await api.readDiagnostics(run),projected=runStageTiming(run,1,modelStages,diagnostics)
       assert.ok(projected.publicationTimings.length>0,'use the formal authorized public diagnostic reader')
       assert.ok(projected.publicationTimings.every(value=>value.requestVersion===1&&value.callId===modelStages.calls[0].callId))
       if(invalidReplacement){
         assert.ok(projected.publicationTimings.every(value=>value.publicationCount===0&&value.acknowledgedCount===0))
         assert.equal(wire.records[0].response.streamEnd,'consumer-cancelled')
-        assert.ok(wire.records[0].response.toolCallParts>0);assert.equal(wire.records[0].response.finishTools,0);assert.equal(wire.records[0].response.doneFrames,0)
+        assert.ok(wire.records[0].response.contentBytes>0);assert.equal(wire.records[0].response.finishTools,0);assert.equal(wire.records[0].response.doneFrames,0)
       }
       if(delayedAck)assert.ok(projected.publicationTimings.some(value=>value.publicationWaitMs>=1000))
       if(rejectSeal)assert.ok(projected.publicationTimings.some(value=>value.failure?.stage==='seal'&&value.failure.code==='persistence_rejected'))
