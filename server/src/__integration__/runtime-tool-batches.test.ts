@@ -71,7 +71,11 @@ for (const scenario of ['partial-retry', 'ordered', 'cancel'] as const) test(`#6
       if (!first) assert.ok(intervals.slice(0, 2).every(interval => interval.completedAt !== undefined), 'dependent generation waits for all observations')
       const answer = first ? '我会检查本次请求的附件。' : retry ? '\n首次一项检查未完成，另一项已完成；现在重试未完成项。'
         : scenario === 'partial-retry' ? '\n后续检查已完成，未发现附件。首次失败记录保留。' : '\n附件和对话检查已完成。'
-      const content = JSON.stringify({ operation: { kind: 'append',supersedes: [] },commentary: '',answer,outcome: business.length ? null : { status: 'satisfied',gaps: [] } })
+      const correctionPrefix = 'using exactly this operation: '
+      const correction = input.messages.find((message: { content?: unknown }) => typeof message.content === 'string' && message.content.includes(correctionPrefix))?.content as string | undefined
+      const operation = correction ? JSON.parse(correction.slice(correction.indexOf(correctionPrefix) + correctionPrefix.length).split('. Do not append')[0]) : { kind: 'append', supersedes: [] }
+      if (retry) { assert.equal(operation.kind, 'replace'); assert.ok(operation.supersedes.length > 0, 'repair only the source identities selected by the SDK') }
+      const content = JSON.stringify({ operation,commentary: '',answer,outcome: business.length ? null : { status: 'satisfied',gaps: [] } })
       const toolCalls = business.map((call, index) => ({ index,id: `tool-${generations}-${index}`,type: 'function',function: { name: call.name,arguments: JSON.stringify(call.args) } }))
       response.writeHead(200, { 'content-type': 'text/event-stream' })
       response.end(`data: ${JSON.stringify({ choices: [{ delta: { content, ...(toolCalls.length ? { tool_calls: toolCalls } : {}) },finish_reason: toolCalls.length ? 'tool_calls' : 'stop' }],usage: { prompt_tokens: 50,completion_tokens: 50 } })}\n\ndata: [DONE]\n\n`)
