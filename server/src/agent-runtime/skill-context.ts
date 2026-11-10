@@ -141,16 +141,28 @@ export function explanationPlanningAvailable(context: TurnContext): boolean {
       && (!grant.methods || grant.methods.includes('plan_explanation')))
 }
 
+/** Atomic Design writes have one successful SDK receipt. Large receipts use
+ * its ledger-derived observation reference; preview text never proves a save. */
+export function confirmedDesignWrite(step: NonNullable<TurnContext['executionSteps']>[number] | undefined, requestVersion: number | undefined): boolean {
+  if (!step || step.kind !== 'design__apply_ops' || step.requestVersion !== requestVersion) return false
+  try {
+    const output = JSON.parse(step.output ?? '{}')
+    if (Array.isArray(output.receipts)) return output.receipts.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string } }) =>
+      receipt.action === 'design.apply_ops' && receipt.result?.ok === true && receipt.result.approval === undefined
+      && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown')
+    const references = output.observations
+    return output.truncated === true && (output.omittedReferences ?? 0) === 0 && Array.isArray(references) && references.length === 1
+      && typeof references[0]?.actionKey === 'string' && references[0].actionKey.trim().length > 0 && typeof references[0].sha256 === 'string' && /^[a-f0-9]{64}$/.test(references[0].sha256)
+  } catch { return false }
+}
+
 /** Successful authored files still present after this request's later deletes. */
 export function authoredDesignPaths(context:TurnContext):string[] {
   const paths = new Set<string>()
   for (const step of context.executionSteps ?? []) {
-    if (step.requestVersion !== context.snapshotVersion?.requestVersion || step.kind !== 'design__apply_ops') continue
+    if (!confirmedDesignWrite(step, context.snapshotVersion?.requestVersion)) continue
     try {
-      const output = JSON.parse(step.output ?? '{}'), args = JSON.parse(String(step.input.arguments))
-      if (!output.receipts?.some((receipt:{action?:string;result?:{ok?:boolean;approval?:unknown;directive?:unknown;executionState?:string}}) =>
-        receipt.action === step.kind.replace('__','.') && receipt.result?.ok === true && receipt.result.approval === undefined
-        && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown')) continue
+      const args = JSON.parse(String(step.input.arguments))
       for (const operation of args.operations ?? []) {
         const pageId = operation.type === 'page.insert' ? operation.page?.id : operation.pageId
         if (typeof pageId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(pageId)) continue
@@ -195,6 +207,7 @@ export function nextExplanationStep(context: TurnContext): {action:string;args?:
     try { return predicate(JSON.parse(String(step.input.arguments))) } catch { return false }
   })
   const confirmed = (step: typeof steps[number] | undefined, action: string) => {
+    if (action === 'design.apply_ops') return confirmedDesignWrite(step, context.snapshotVersion?.requestVersion) ? { ok: true } : undefined
     try {
       const output = JSON.parse(step?.output ?? '{}')
       const result = output.receipts?.find((receipt: {action?:string;result?:{ok?:boolean;approval?:unknown;directive?:unknown;executionState?:string}}) =>

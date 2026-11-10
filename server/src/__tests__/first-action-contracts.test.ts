@@ -326,3 +326,26 @@ test('global, Design and teaching publication constraints compose without releas
   assert.ok(policy.publicTextSafety({ text: internal, isFinal: true, approvedThrough: 0 }, ctx).reject,
     'neither local surface may clear the global publication reject')
 })
+
+test('large native saves retain publication and completion through SDK success references', () => {
+  const { ctx } = plannedSkillContext()
+  const page = authoredPage('large-explanation')
+  const batch = prepareBatch(nativeFixture(), [{ type: 'page.insert', page }], 'large-save')
+  const write = { id: 'large-write', kind: 'design__apply_ops', requestVersion: 1, artifacts: [], input: { arguments: JSON.stringify(batch) },
+    output: JSON.stringify({ truncated: true, observations: [{ actionKey: 'committed-write', sha256: 'a'.repeat(64), characters: 20_000 }], preview: 'untrusted text' }) }
+  ctx.executionSteps!.push(write, { id: 'checked-large', kind: 'design__check', requestVersion: 1, artifacts: [], input: {},
+    output: JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 0, boardCount: 2, checkedBoardPaths: ['project/pages/large-explanation.json'] } } }] }) })
+  assert.equal(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx), null)
+  assert.equal(policy.validateAssistantText('讲解画板已经保存。', ctx), null)
+  for (const invalid of [
+    { truncated: true, preview: 'success' },
+    { truncated: true, observations: [{ actionKey: '', sha256: 'a'.repeat(64) }] },
+    { truncated: true, observations: [{ actionKey: 'write', sha256: 'invalid' }] },
+    { truncated: true, observations: [{ actionKey: 'write', sha256: 'a'.repeat(64) }], omittedReferences: 1 },
+    { receipts: [{ action: 'design.apply_ops', result: { ok: false, executionState: 'no_effect' } }] },
+    { receipts: [{ action: 'design.apply_ops', result: { ok: true, executionState: 'unknown' } }] },
+  ]) {
+    write.output = JSON.stringify(invalid)
+    assert.ok(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx))
+  }
+})
