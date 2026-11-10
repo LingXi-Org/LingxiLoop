@@ -56,6 +56,17 @@ for (const {recoveredLength,repairSkill,largeReceipt} of live ? [{recoveredLengt
   const seededSnapshot = seededCanvas ? await readNativeDocument(pool, seededCanvas.id) : null
   const nativePageId = seededSnapshot?.document.pageOrder[0] ?? 'page-1'
   const index = skillIndex(artifactSkills.find(skill => skill.name === 'claude-design')!)
+  const publicationRejections: Array<{ reason: string; design: string; isFinal: boolean; characters: number }> = []
+  const qualificationPolicy = new class extends ProductRuntimePolicy {
+    override publicTextSafety(input: Parameters<ProductRuntimePolicy['publicTextSafety']>[0], context?: Parameters<ProductRuntimePolicy['publicTextSafety']>[1]) {
+      const decision = super.publicTextSafety(input, context)
+      if (decision.reject && publicationRejections.length < 32) {
+        const issue = context ? this.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, context) : null
+        publicationRejections.push({ reason: decision.reject, design: issue?.includes('latest Design save') ? 'save' : issue?.includes('artboard content') ? 'content' : issue?.includes('run design.check') ? 'check' : issue ? 'other' : 'none', isFinal: input.isFinal, characters: input.text.length })
+      }
+      return decision
+    }
+  }()
   let calls = 0, lengthInjected = false, skillFailureInjected = false, handlerError: unknown
   const decisions: Array<{ call: number; names: string[]; fullGuidance: boolean; referenceSchema: boolean; requiredTool: string | null }> = []
   const observe = (input: { messages: Array<{ role: string; content?: string }>; tools: Array<{ function: { name: string; parameters: { properties?: { page?: { enum?: string[] } } } } }>; tool_choice?: { function?: { name?: string } } | string; max_tokens?: number }) => {
@@ -246,7 +257,7 @@ for (const {recoveredLength,repairSkill,largeReceipt} of live ? [{recoveredLengt
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     const model = runtimeModelConfiguration({ id: live ? env.OPENAI_MODEL : 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: live ? env.OPENAI_API_KEY : 'synthetic-only', baseUrl: live ? env.OPENAI_BASE_URL : 'https://api.siliconflow.cn/v1' }, live ? 180_000 : 90_000)
-    worker = createWorker({ modelBudget: live ? { ...runtimeExecutionBudget(), wallClockMs: 480_000 } : { maxModelCalls: recoveredLength || repairSkill ? 10 : 9, wallClockMs: 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
+    worker = createWorker({ modelBudget: live ? { ...runtimeExecutionBudget(), wallClockMs: 480_000 } : { maxModelCalls: recoveredLength || repairSkill ? 10 : 9, wallClockMs: 30_000 }, controlPlane: api, policy: qualificationPolicy,
       model: live ? model : { ...model, baseUrl: `http://127.0.0.1:${address.port}/v1` }, worker: { id: 'issue593-artboard', concurrency: 1 } })
     const run = (await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version, messageId: 'question', version: 1, author: { id: userId, kind: 'human' }, text: live ? explanationSamples[sampleId] : explanationSamples.explicit, mentions: [agentId] }, { mode: 'execute', codeExecution: 'disabled', deliveryMode: 'auto', executionClass: 'conversation' })).runs[0]
     assert.ok(run); await bindProductRun(pool, run, channelId); await worker.runNext(); assert.equal(handlerError, undefined)
@@ -305,6 +316,7 @@ for (const {recoveredLength,repairSkill,largeReceipt} of live ? [{recoveredLengt
           missing: item.expected === null, expected: item.expected, actual: item.actual,
         })) }
       }),
+      publicationRejections,
       modelProtocolFailures: modelFailures.map(row => ({ code: row.diagnostics?.protocolCode, detail: row.diagnostics?.protocolDetail, finish: row.diagnostics?.finishReasons })),
       contractFailures: failures.map(row => ({ action: row.action, code: row.result.code })), protocolFailures, providerFailures: modelFailures.filter(row => !row.budget && row.diagnostics?.kind !== 'protocol').length,
       budgetFailures: modelFailures.filter(row => row.budget).map(row => row.budget),
