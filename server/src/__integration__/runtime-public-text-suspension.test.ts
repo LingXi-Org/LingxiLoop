@@ -37,7 +37,7 @@ for(const {delayedAck,rejectSeal,invalidReplacement} of [{delayedAck:false,rejec
     try{
       let raw='';for await(const chunk of req)raw+=chunk
       const input=JSON.parse(raw);assert.equal((input.tools ?? []).some((tool:{function:{name:string}})=>tool.function.name==='public_answer'),false);calls++;assert.equal(calls,1)
-      const args=JSON.stringify({operation:invalidReplacement?{kind:'replace',supersedes:['synthetic-nonexistent-source']}:{kind:'append',supersedes:[]},answer:body,commentary:'',outcome:{status:'satisfied',gaps:[]}})
+      const args=JSON.stringify({operation:invalidReplacement?{kind:'replace',supersedes:['synthetic-nonexistent-source']}:{kind:'append',supersedes:[]},commentary:'',answer:body,outcome:{status:'satisfied',gaps:[]}})
       const cut=args.indexOf(body)+body.length
       res.writeHead(200,{'content-type':'text/event-stream'})
       res.write(`data: ${JSON.stringify({choices:[{delta:{content:args.slice(0,cut)},finish_reason:null}],...(invalidReplacement?{usage:{prompt_tokens:10,completion_tokens:20}}:{})})}\n\n`)

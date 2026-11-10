@@ -91,7 +91,7 @@ test('failed native Design save rejects false partial completion before publicat
           // so there is no published part to replace; the truthful answer appends.
         }
         content = JSON.stringify({ operation,
-          answer: calls === 9 ? falseClaim : fallback, commentary: '', outcome: { status: 'partial', gaps: ['Requested new canvas was not saved because its version changed.'] } })
+          commentary: '', answer: calls === 9 ? falseClaim : fallback, outcome: { status: 'partial', gaps: ['Requested new canvas was not saved because its version changed.'] } })
       }
       for (const call of toolCalls) assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === call.function.name), call.function.name)
       response.writeHead(200, { 'content-type': 'text/event-stream' })
