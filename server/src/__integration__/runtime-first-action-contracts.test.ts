@@ -278,7 +278,16 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
         let conflicts: Array<{ key: string; expected: number | null; actual: number }> = []
         try { conflicts = JSON.parse(String(row.result.error).split(' Conflicting targets: ')[1]) } catch { /* no structured conflicts */ }
         return { action: row.action, conflicts: conflicts.slice(0, 64).map(item => ({
-          keyKind: String(item.key).replace(/^(page|theme|asset|canvasPage)\/[^/]+/, '$1/[id]').replace(/^node\/[^/]+\/[^/]+/, 'node/[page]/[id]'),
+          keyKind: /^(document)\/(pageOrder|canvasPages|title|themeId|seq)$/.test(item.key) ? `document.${item.key.split('/')[1]}`
+            : /^page\/[^/]+\/(exists|nodeOrder)$/.test(item.key) ? `page.${item.key.split('/')[2]}`
+            : /^page\/[^/]+\/field\/[^/]+$/.test(item.key) ? 'page.field'
+            : /^page\/[^/]+$/.test(item.key) ? 'page.aggregate'
+            : /^node\/[^/]+\/[^/]+\/exists$/.test(item.key) ? 'node.exists'
+            : /^node\/[^/]+\/[^/]+\/field\/[^/]+$/.test(item.key) ? 'node.field'
+            : /^node\/[^/]+\/[^/]+$/.test(item.key) ? 'node.aggregate'
+            : /^canvasPage\/[^/]+\/members$/.test(item.key) ? 'canvasPage.members'
+            : /^theme\/[^/]+$/.test(item.key) ? 'theme'
+            : /^asset\/[^/]+(?:\/references)?$/.test(item.key) ? 'asset' : 'other',
           missing: item.expected === null, expected: item.expected, actual: item.actual,
         })) }
       }),
