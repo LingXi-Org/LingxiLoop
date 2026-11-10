@@ -12,6 +12,7 @@ import { lingxiOSControl, runtimeModelConfiguration, stopLingxiOSControl } from 
 import { bindProductRun } from '../agent-runtime/identity.js'
 import { syncConversationPolicy } from '../agent-runtime/conversations.js'
 import { ProductRuntimePolicy } from '../agent-runtime/context.js'
+import { runtimeExecutionBudget } from '../agent-runtime/model-budget.js'
 import { artifactSkills } from '../modules/artifacts/skills.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 import { ensureConversationDesign } from '../modules/artifacts/facade.js'
@@ -236,7 +237,7 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
     const api = await lingxiOSControl(), policy = await syncConversationPolicy(api, companyId, channelId)
     const address = provider.address(); assert.ok(address && typeof address !== 'string')
     const model = runtimeModelConfiguration({ id: live ? env.OPENAI_MODEL : 'deepseek-ai/DeepSeek-V4.1-Flash', apiKey: live ? env.OPENAI_API_KEY : 'synthetic-only', baseUrl: live ? env.OPENAI_BASE_URL : 'https://api.siliconflow.cn/v1' }, live ? 180_000 : 90_000)
-    worker = createWorker({ modelBudget: { maxModelCalls: live ? 24 : recoveredLength || repairSkill ? 10 : 9, wallClockMs: live ? 480_000 : 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
+    worker = createWorker({ modelBudget: live ? { ...runtimeExecutionBudget(), wallClockMs: 480_000 } : { maxModelCalls: recoveredLength || repairSkill ? 10 : 9, wallClockMs: 30_000 }, controlPlane: api, policy: new ProductRuntimePolicy(),
       model: live ? model : { ...model, baseUrl: `http://127.0.0.1:${address.port}/v1` }, worker: { id: 'issue593-artboard', concurrency: 1 } })
     const run = (await api.conversations.ingest({ tenantId: companyId, conversationId: channelId, policyVersion: policy.version, messageId: 'question', version: 1, author: { id: userId, kind: 'human' }, text: live ? explanationSamples[sampleId] : explanationSamples.explicit, mentions: [agentId] }, { mode: 'execute', codeExecution: 'disabled', deliveryMode: 'auto', executionClass: 'conversation' })).runs[0]
     assert.ok(run); await bindProductRun(pool, run, channelId); await worker.runNext(); assert.equal(handlerError, undefined)
