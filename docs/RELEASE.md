@@ -417,3 +417,16 @@ Archive download, checksum validation, actual package execution, PostgreSQL
 bridge tests and final image qualification remain mandatory release evidence.
 The SDK no longer installs PDF/DOCX parsers automatically; this host explicitly
 pins `pdfjs-dist@6.3.289` and `mammoth@1.12.2` to preserve document extraction.
+
+
+## 原生 Agent 契约更新（#718 / #719）
+
+`4.0.0-native-artifacts-2` 将 Agent 操作改为先准备、后按计划提交。
+它与 `4.0.0-native-artifacts-1` 使用相同的 schema63 原生文档、浏览器
+操作及正式 SDK 4.0.0；这两个经过审查的契约支持相同的原生文档写入。
+在二者之间升级，无须关闭已启用的原生文档写入。缺失实例、旧文件写入
+契约或未审查的新版本仍拒绝在写入启用时更新。
+
+文档写入兼容不表示 Agent 任务兼容。实际程序集 hash 不同仍执行完整的
+任务预检、源 Worker 排空、入口停止及独占数据库屏障。保留所有历史任务
+的固定绑定，不取消任务、不重写队列，也不自动重放旧失败任务。
