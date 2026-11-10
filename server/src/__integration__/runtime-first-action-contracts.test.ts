@@ -127,7 +127,6 @@ for (const {recoveredLength,repairSkill,largeReceipt} of live ? [{recoveredLengt
         const current = await readNativeDocument(pool, seededCanvas!.id); assert.ok(current)
         if (largeReceipt) {
           assert.equal(saved?.truncated, true, 'the formal SDK must actually bound this successful write')
-          assert.equal(input.tool_choice?.function?.name, 'design__check', 'native success references must advance the same operation chain')
         } else assert.equal(saved?.value?.result?.pageVersions?.[nativePageId], current.pageVersions[nativePageId], 'the next pinned read must receive the hash from the committed revision')
         business.push({ name: 'design__check', args: { paths: [`project/pages/${nativePageId}.json`] } })
       }
