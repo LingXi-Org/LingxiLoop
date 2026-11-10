@@ -139,7 +139,10 @@ test('managed teacher Design authorizes only current conversation edits under ex
       meta: { conversationId: teacher.roomId }, ...change },
     action: { action }, database: db, signal: AbortSignal.timeout(5000),
   } as unknown as ActionContext))
+  assert.ok(TEACHER_DESIGN_ACTIONS.has('design.prepare_ops'))
   for (const action of TEACHER_DESIGN_ACTIONS) await invoke(action)
+  await assert.rejects(invoke('design.prepare_ops', { kind: 'routine' }), /revoked/)
+  await assert.rejects(invoke('design.prepare_ops', { conversation: { conversationId: teacher.roomId, internal: true } }), /revoked/)
   for (const action of ['visualize.save', 'design.start_workspace', 'design.available_agents', 'design.submit_report', 'slides.current']) {
     await assert.rejects(invoke(action), /retired|revoked/)
   }

@@ -69,18 +69,36 @@ export async function readNativeDocument(db: Queryable, artifactId: string): Pro
     JOIN artifact_files file ON file.artifact_id=state.artifact_id AND file.path=$2 WHERE state.artifact_id=$1`, [artifactId, NATIVE_DOCUMENT_PATH])).rows[0]
   if (!row) return null
   if (row.schema_version !== 1) throw new NativeDocumentError(422, 'unsupported_schema', 'This document requires a newer editor. Download the original document to preserve it.')
-  const manifest = JSON.parse(row.body.toString('utf8')) as Manifest
+  const { document, pageVersions } = await decodeNativeDocument(db, artifactId, row.body)
+  if (document.seq !== Number(row.revision)) throw new NativeDocumentError(500, 'invalid_revision', 'Saved document revision is inconsistent')
+  return { document, history: historyView(stateHistory(row)), pageVersions, ...(row.original_manifest ? { original: row.original_manifest } : {}) }
+}
+
+
+async function decodeNativeDocument(db: Queryable, artifactId: string, body: Buffer) {
+  const manifest = JSON.parse(body.toString('utf8')) as Manifest
+  if (manifest.schemaVersion !== 1) throw new NativeDocumentError(422, 'unsupported_schema', '此快照需要更新版本的编辑器。')
   const { pageFiles, ...metadata } = manifest
   const contents = await versionContents(db, artifactId, Object.values(pageFiles))
   const pages: Record<string, ArtifactPage> = {}
   for (const pageId of artifactPageIds(manifest)) {
     const bytes = contents.get(pageFiles[pageId])
-    if (!bytes) throw new NativeDocumentError(500, 'missing_page', `Saved page ${pageId} is unavailable`)
+    if (!bytes) throw new NativeDocumentError(500, 'missing_page', '快照页面暂时无法读取。')
     pages[pageId] = artifactPageSchema.parse(JSON.parse(bytes.toString('utf8')))
   }
-  const document = validateArtifactDocument({ ...metadata, pages })
-  if (document.seq !== Number(row.revision)) throw new NativeDocumentError(500, 'invalid_revision', 'Saved document revision is inconsistent')
-  return { document, history: historyView(stateHistory(row)), pageVersions: pageFiles, ...(row.original_manifest ? { original: row.original_manifest } : {}) }
+  return { document: validateArtifactDocument({ ...metadata, pages }), pageVersions: pageFiles }
+}
+
+/** Read exactly the observed immutable revision; missing history is never current state. */
+export async function readNativeDocumentRevision(db: Queryable, artifactId: string, seq: number): Promise<ArtifactDocument | null> {
+  const row = (await db.query<{ files: Record<string, ListedFile> }>('SELECT files FROM artifact_revisions WHERE artifact_id=$1 AND seq=$2', [artifactId, seq])).rows[0]
+  const hash = row?.files[NATIVE_DOCUMENT_PATH]?.sha256
+  if (!hash) return null
+  const bytes = (await versionContents(db, artifactId, [hash])).get(hash)
+  if (!bytes) throw new NativeDocumentError(500, 'missing_revision', '固定版本的文档快照暂时无法读取。')
+  const { document } = await decodeNativeDocument(db, artifactId, bytes)
+  if (document.seq !== seq || document.id !== artifactId) throw new NativeDocumentError(500, 'invalid_revision', '固定版本的文档身份不一致。')
+  return document
 }
 
 async function versionContents(db: Queryable, artifactId: string, hashes: string[]) {

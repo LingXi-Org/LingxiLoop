@@ -1,4 +1,4 @@
-import type { NativeDocumentSnapshot } from './native-document.js'
+import type { NativeDocumentSnapshot, readNativePageSnapshot } from './native-document.js'
 
 /** Keep the overview bounded: page content and its CAS tokens are read at a fixed sequence separately. */
 export function agentDocumentSummary(snapshot: NativeDocumentSnapshot) {
@@ -21,4 +21,9 @@ export function agentDocumentSummary(snapshot: NativeDocumentSnapshot) {
       }])),
     },
   }
+}
+
+/** Pinned identity precedes page content; operation preparation owns CAS counters. */
+export function agentPageSummary(snapshot: NonNullable<Awaited<ReturnType<typeof readNativePageSnapshot>>>) {
+  return { seq: snapshot.seq, version: snapshot.version, versions: snapshot.versions, page: snapshot.page }
 }

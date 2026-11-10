@@ -21,7 +21,7 @@ import { startNativeEventWorker } from '../agents/native-event-worker.js'
 import { createNativeMessage, nativeText } from '../im/message-types.js'
 import { createNode, createPage } from '../../../shared/artifact-document.js'
 import { applyOperations, prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
-import { readNativeDocument, nativeOperationReceipt } from '../modules/artifacts/native-document.js'
+import { readNativeDocument, nativeOperationReceipt, submitNativeOperations } from '../modules/artifacts/native-document.js'
 import { artifactSkills } from '../modules/artifacts/skills.js'
 import { artifactEditorRouter } from '../modules/artifacts/editor-router.js'
 import { createArtifactTools, createArtifactRuntime, loadArtifactRunContext, completeArtifactWork, createSlides } from '../modules/artifacts/index.js'
@@ -86,6 +86,10 @@ function work(agentId: string, conversationId: string, id = randomUUID()): Omit<
     triggerRef: `message-${id}`, fence: 1, homeEpoch: 1, createdAt: new Date().toISOString(), meta: { conversationId } } as unknown as Omit<WorkItem, 'leaseToken'>
 }
 const tools = createArtifactTools('slides', lingxiOSControl)
+async function seedNativeBatch(current: Omit<WorkItem, 'leaseToken'>, input: { artifactId: string } & ReturnType<typeof prepareBatch>) {
+  const { artifactId, ...batch } = input
+  return withTransaction(pool, db => submitNativeOperations(db, { artifactId, companyId, actorId: current.agentId, actorKind: 'agent', request: batch }))
+}
 async function invoke(current: Omit<WorkItem, 'leaseToken'>, name: string, input: unknown) {
   const tool = tools.find(item => item.action === `slides.${name}`)!
   const args = tool.parse(input)
@@ -173,7 +177,7 @@ test('authenticated Slides cooperation keeps source provenance and completes in 
   const path = 'project/pages/page-1.json'
   const initial = (await readNativeDocument(pool, deck.id))!.document
   const heading = createNode('text', 'heading'); heading.text = 'Verified title'
-  await invoke(builder, 'apply_ops', { artifactId: deck.id, ...prepareBatch(initial, [{ type: 'node.insert', pageId: 'page-1', node: heading }], randomUUID()) })
+  await seedNativeBatch(builder, { artifactId: deck.id, ...prepareBatch(initial, [{ type: 'node.insert', pageId: 'page-1', node: heading }], randomUUID()) })
   assert.equal((await readNativeDocument(pool, deck.id))!.document.pages['page-1'].nodes.heading.text, 'Verified title')
   assert.equal(createArtifactTools('slides', lingxiOSControl).some(tool => ['slides.write_files', 'slides.edit_file'].includes(tool.action)), false)
 
@@ -240,7 +244,7 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
   const path = 'project/pages/page-1.json', original = 'Original title', revised = 'Saved by the native Slides tool'
   const initial = (await readNativeDocument(pool, deck.id))!.document
   const heading = createNode('text', 'heading'); heading.text = original
-  await invoke(work(workspace.agentId, workspace.conversationId), 'apply_ops', { artifactId: deck.id,
+  await seedNativeBatch(work(workspace.agentId, workspace.conversationId), { artifactId: deck.id,
     ...prepareBatch(initial, [{ type: 'node.insert', pageId: 'page-1', node: heading }], randomUUID()),
   })
   const snapshot = (await readNativeDocument(pool, deck.id))!, hash = snapshot.pageVersions['page-1']
@@ -324,22 +328,21 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
     return batch
   })
   const stale = prepareBatch(snapshot.document, [textOperation('page-1', 'Must not be saved')], randomUUID())
-  stale.expectedVersions['node/page-1/heading/field/text'] = 999
   const calls = [
     { name: 'design__plan_explanation', args: { delivery: 'other' } },
     { name: 'skills__load', args: { name, version, hash: skillHash } },
     { name: 'slides__read_document', args: { artifactId: deck.id } },
     { name: 'slides__read_page', args: { artifactId: deck.id, pageId: 'page-1', version: hash, atSeq: snapshot.document.seq } },
-    ...(mode === 'conflict' ? [{ name: 'slides__apply_ops', args: { artifactId: deck.id, ...stale } }] : []),
-    ...batches.map(batch => ({ name: 'slides__apply_ops', args: { artifactId: deck.id, ...batch } })),
+    ...(mode === 'conflict' ? [{ name: 'slides__prepare_ops', args: { artifactId: deck.id, baseSeq: stale.baseSeq, operations: stale.operations } }, { name: 'slides__apply_ops', args: { artifactId: deck.id } }, { name: 'slides__read_document', args: { artifactId: deck.id } }, { name: 'slides__read_page', args: { artifactId: deck.id, pageId: 'page-1' } }] : []),
+    ...batches.flatMap(batch => [{ name: 'slides__prepare_ops', args: { artifactId: deck.id, baseSeq: batch.baseSeq, operations: batch.operations } }, { name: 'slides__apply_ops', args: { artifactId: deck.id } }, ...(mode === 'single' ? [{ name: 'slides__apply_ops', args: { artifactId: deck.id } }] : [])]),
     { name: 'slides__read_page', args: { artifactId: deck.id, pageId: 'page-1' } },
     { name: 'slides__current', args: { artifactId: deck.id } },
     ...(commentId ? [{name:'slides__comment_reply',args:{artifactId:deck.id,commentId,text:'已保存并重新读取标题。',resolve:false}}] : []),
     { name: 'task__check_resource', args: { action: 'slides.current', args: { artifactId: deck.id }, expected: { title: 'Model flow', slideCount: chained ? 13 : 1 } } },
-    { name: 'public_answer', args: { operation: { kind: 'append', supersedes: [] }, commentary: '',
+    { name: 'public-content', args: { operation: { kind: 'append', supersedes: [] }, commentary: '',
       answer: '已保存并重新读取选中页面的标题。', outcome: { status: 'satisfied', gaps: [] } } },
   ]
-  let issued = 0
+  let issued = 0, commitsIssued = 0
   const providerErrors: string[] = []
   const provider = createServer(async (req, res) => {
     try {
@@ -347,22 +350,33 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
       const input = JSON.parse(raw), step = calls[issued++]
       assert.ok(step, 'worker must stop after the verified public answer')
       if (issued === 1) assert.equal(input.tool_choice?.function?.name, 'design__plan_explanation', 'the explicit Slides operation chooses another deliverable through the semantic decision')
-      assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === step.name), `missing tool ${step.name}`)
+      if (step.name !== 'public-content') assert.ok(input.tools.some((tool: { function: { name: string } }) => tool.function.name === step.name), `missing tool ${step.name}`)
       const prompt = JSON.stringify(input.messages)
       assert.ok(prompt.includes('Original title'), 'persisted editor selection/source must reach the actual model request')
       if (step.name === 'slides__apply_ops') assert.ok(prompt.includes(hash), 'the model must receive the pinned page read receipt')
-      if (mode === 'conflict' && step.name === 'slides__apply_ops' && 'operationId' in step.args && step.args.operationId === batches[0].operationId) {
-        assert.ok(prompt.includes('version_conflict'),'model must receive the supported conflict code')
-        assert.ok(prompt.includes('refresh'),'model must receive refresh recovery guidance')
-        const beforeRecovery = (await readNativeDocument(pool, deck.id))!.document
-        assert.equal(beforeRecovery.pages['page-1'].nodes.heading.text, original, 'rejected CAS must leave the human content intact before recovery')
+      const args: Record<string, unknown> = { ...step.args }
+      if (step.name === 'slides__prepare_ops' && mode === 'conflict' && commitsIssued > 0) args.baseSeq = (await readNativeDocument(pool, deck.id))!.document.seq
+      if (step.name === 'slides__apply_ops') {
+        const outputs = input.messages.filter((message: { role: string }) => message.role === 'tool').map((message: { content: string }) => JSON.parse(message.content))
+        args.planId = outputs.findLast((output: { receipt?: { action?: string } }) => output.receipt?.action === 'slides.prepare_ops')?.receipt?.idempotencyKey
+        assert.equal(typeof args.planId, 'string')
+        commitsIssued++
+        if (mode === 'conflict' && commitsIssued === 1) await seedNativeBatch(work(workspace.agentId, workspace.conversationId), {
+          artifactId: deck.id, ...prepareBatch(snapshot.document, [textOperation('page-1', '人的并发修改')], 'human-concurrent') })
+        if (mode === 'conflict' && commitsIssued === 2) {
+          assert.ok(prompt.includes('version_conflict')); assert.ok(prompt.includes('refresh'))
+          assert.equal((await readNativeDocument(pool, deck.id))!.document.pages['page-1'].nodes.heading.text, '人的并发修改', 'the rejected plan must preserve the concurrent author')
+        }
       }
       if (step.name === 'slides__current') assert.ok(prompt.includes(revised), 'read-back must reach the model before completion')
-      const call = { id: `slides-model-${issued}`, type: 'function', function: { name: step.name, arguments: JSON.stringify(step.args) } }
+      const call = { id: `slides-model-${issued}`, type: 'function', function: { name: step.name, arguments: JSON.stringify(args) } }
+      const message = step.name === 'public-content' ? { content: JSON.stringify(step.args) } : { tool_calls: [call] }
+      const delta = step.name === 'public-content' ? message : { tool_calls: [{ index: 0, ...call }] }
+      const finish = step.name === 'public-content' ? 'stop' : 'tool_calls'
       const usage = { prompt_tokens: 10, completion_tokens: 12 }
       res.writeHead(200, { 'content-type': input.stream ? 'text/event-stream' : 'application/json' })
-      res.end(input.stream ? `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', tool_calls: [{ index: 0, ...call }] }, finish_reason: 'tool_calls' }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`
-        : JSON.stringify({ choices: [{ message: { role: 'assistant', tool_calls: [call] }, finish_reason: 'tool_calls' }], usage }))
+      res.end(input.stream ? `data: ${JSON.stringify({ choices: [{ index: 0, delta: { role: 'assistant', ...delta }, finish_reason: finish }] })}\n\ndata: ${JSON.stringify({ choices: [], usage })}\n\ndata: [DONE]\n\n`
+        : JSON.stringify({ choices: [{ message: { role: 'assistant', ...message }, finish_reason: finish }], usage }))
     } catch (error) { providerErrors.push(error instanceof Error ? error.message : 'provider fixture failed'); res.writeHead(500); res.end('{}') }
   })
   await new Promise<void>(resolve => provider.listen(0, '127.0.0.1', resolve))
@@ -410,10 +424,17 @@ for (const mode of ['single','chained','conflict','comment']) test(mode === 'com
       assert.equal(failed.rows[0].result.diagnostics.category,'version')
       assert.equal(failed.rows[0].result.diagnostics.recovery,'refresh')
     }
+    if (mode === 'single') {
+      const applied = (await pool.query("SELECT ledger.result->'value'->'result' AS value FROM lingxios.agent_action_intents intent JOIN lingxios.agent_action_ledger ledger USING(idempotency_key) WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='slides.apply_ops' ORDER BY intent.recorded_at,intent.idempotency_key", [run.runId])).rows
+      assert.equal(applied.length, 2); assert.equal(applied[0].value.deduplicated, false); assert.equal(applied[1].value.deduplicated, true)
+      assert.equal(applied[0].value.operationId, applied[1].value.operationId)
+      assert.equal((await pool.query('SELECT count(*)::int AS count FROM artifact_operations WHERE artifact_id=$1 AND operation_id=$2', [deck.id, applied[0].value.operationId])).rows[0].count, 1)
+    }
     if (chained) {
-      const receipts = await pool.query("SELECT jsonb_array_length(intent.intent->'action'->'args'->'operations') AS count FROM lingxios.agent_action_intents intent WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='slides.apply_ops' ORDER BY intent.recorded_at,intent.idempotency_key", [run.runId])
+      const receipts = await pool.query("SELECT jsonb_array_length(intent.intent->'action'->'args'->'operations') AS count FROM lingxios.agent_action_intents intent WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='slides.prepare_ops' ORDER BY intent.recorded_at,intent.idempotency_key", [run.runId])
       assert.deepEqual(receipts.rows.map(row => row.count), [14, 10, 1, 1, 1])
-      for (const batch of batches) {
+      const plans = (await pool.query("SELECT ledger.result->'value'->'batch' AS batch FROM lingxios.agent_action_intents intent JOIN lingxios.agent_action_ledger ledger USING(idempotency_key) WHERE intent.intent->>'workId'=$1 AND intent.intent->'action'->>'action'='slides.prepare_ops' ORDER BY intent.recorded_at,intent.idempotency_key", [run.runId])).rows
+      for (const { batch } of plans) {
         const receipt = await nativeOperationReceipt(pool, deck.id, batch.operationId)
         assert.ok(receipt, 'every superseded batch retains its immutable commit receipt')
         assert.equal(receipt.seq, batch.baseSeq + 1)

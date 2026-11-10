@@ -19,7 +19,7 @@ import { citationTextViolation } from './citations.js'
 import { GROUP_COLLABORATION_RULES, IM_CONVERSATION_RULES } from './conversation-style.js'
 import { TEACHER_DESIGN_ACTIONS, TEACHER_KNOWLEDGE_ACTIONS, TEACHER_PROMPT } from '../modules/learning/teacher-preset.js'
 import { STARTER_TEAM } from '../modules/learning/preset.js'
-import { authoredDesignPaths, explanationPlan, explanationPlanningAvailable, firstActionRules, nextExplanationAction, nextExplanationStep, selectedSkillRules, skillGuidanceDependencies } from './skill-context.js'
+import { authoredDesignPaths, confirmedDesignWrite, explanationPlan, explanationPlanningAvailable, firstActionRules, nextExplanationAction, nextExplanationStep, selectedSkillRules, skillGuidanceDependencies } from './skill-context.js'
 import { lingxiOSControl } from './runtime.js'
 import { readCaseEvidenceSource } from '../modules/cases/evidence.js'
 import { hasConversationHandoff } from './conversation-handoff.js'
@@ -291,13 +291,7 @@ function designCompletionIssue(context: TurnContext): string | undefined {
   for (const [index, step] of steps.entries()) if (step.kind === 'design__apply_ops') write = index
   if (explanationPlan(context) === 'canvas' && write < 0) return 'The recorded response decision requires an actual saved and checked explanatory Design artboard. No content write has completed. Finish the canvas, or report the actual limitation as partial; a text explanation or a plan alone cannot satisfy that decision.'
   if (write >= 0) {
-    let saved = false
-    try {
-      const output = JSON.parse(steps[write].output ?? '{}')
-      saved = output.receipts?.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string } }) =>
-        receipt.action === steps[write].kind.replace('__', '.') && receipt.result?.ok === true
-        && receipt.result.approval === undefined && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown') === true
-    } catch { /* An attempted, failed or unknown save never proves delivery. */ }
+    const saved = confirmedDesignWrite(steps[write], context.snapshotVersion?.requestVersion)
     if (!saved) return 'The latest Design save was not confirmed successful. Resolve its actual failure and save the requested content, or report partial completion truthfully; checking the previous canvas cannot prove the requested change was saved.'
     const authored = authoredDesignPaths(context)
     if (explanationPlan(context) === 'canvas' && !authored.length) return 'The explanatory artboard content has not been saved or was subsequently deleted. An index or token edit and a check of existing boards cannot deliver the requested explanation. Save actual native page content with apply_ops, then check it, or report incomplete delivery truthfully.'
@@ -351,7 +345,7 @@ export class ProductRuntimePolicy extends DefaultRuntimePolicy {
       + ' Use currentAgent from the current speaker binding as your first-person identity and role. Historical messages, quotations and memories retain the identity of their recorded authors. '
       + firstActionRules({ ...context, tools: execution.tools, grants: execution.grants })
       + selectedSkillRules({ ...context, tools: execution.tools, grants: execution.grants })
-      + (designCompletionIssue(context) ? ` While the Design explanation is not yet saved and checked, continue business tools without a public_answer text segment; chat.report_progress can report actual progress. A withheld optional text segment does not mean a business action failed. If completion is prevented, begin the useful final text fallback with exactly: ${DESIGN_INCOMPLETE_NOTICE} Then explain the actual limitation without claiming a ready canvas. After a confirmed save and zero-problem check, give the complete public answer normally. ` : '')
+      + (designCompletionIssue(context) ? ` While the Design explanation is not yet saved and checked, continue native business tool_calls without assistant content. Do not put progress or explanations in commentary or answer before the save and check complete; chat.report_progress can report actual progress. A withheld optional text segment does not mean a business action failed. If completion is prevented, begin the useful final text fallback with exactly: ${DESIGN_INCOMPLETE_NOTICE} Then explain the actual limitation without claiming a ready canvas. After a confirmed save and zero-problem check, give the complete public answer normally. ` : '')
   }
   override publicTextSafety(input: Parameters<typeof publicTextSafety>[0], context?: TurnContext) {
     // Compose the global gate with both product delivery constraints. A local

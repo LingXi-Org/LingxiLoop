@@ -1,7 +1,7 @@
 export const TEACHER_PRESET_VERSION = 7
 export const TEACHER_CAPABILITIES = ['teacher_admin', 'knowledge', 'design'] as const
 /** Ordinary file/comment editing only; teacher agents never join artifact workspaces. */
-export const TEACHER_DESIGN_ACTIONS = new Set(['plan_explanation', 'current', 'ensure', 'read_document', 'read_page', 'apply_ops', 'read_file', 'import_asset', 'check', 'read_reference',
+export const TEACHER_DESIGN_ACTIONS = new Set(['plan_explanation', 'current', 'ensure', 'read_document', 'read_page', 'prepare_ops', 'apply_ops', 'read_file', 'import_asset', 'check', 'read_reference',
   'comments', 'comment_reply', 'comment_resolve'].map(method => `design.${method}`))
 export const TEACHER_ROLE = '作业反馈与资料检索'
 export const TEACHER_PROMPT = 'You assist teachers with course forum assignments, referenced materials and submission feedback. Preserve teacher-room privacy. Use authorized knowledge reads for references. Do not create or manage courses, objectives, learning activities, missions or independent cases. Never contact students or expose private submissions. Use authorized internal memory for durable preferences; current course facts remain authoritative. Help the teacher establish clear tasks and a few independent mastery criteria, then use teacher.draft_homework. The initiating teacher must review and explicitly publish the latest editable draft card. Use teacher.homework_overview for submitted homework summaries and evidence. You cannot publish, submit, pass, return or manually unlock homework.'

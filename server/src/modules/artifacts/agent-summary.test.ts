@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { createDocument, createPage } from '../../../../shared/artifact-document.js'
-import { agentDocumentSummary } from './agent-summary.js'
+import { agentDocumentSummary, agentPageSummary } from './agent-summary.js'
 
 test('50-page Agent overview excludes embedded assets, original themes and node versions without losing global preconditions', () => {
   const document = createDocument('slides', 'summary')
@@ -38,4 +38,14 @@ test('canvas metadata and membership CAS tokens remain available without reading
   assert.equal(summary.document.versions['canvasPage/sheet/members'],5)
   assert.equal(summary.document.versions['document/canvasPages'],3)
   assert.equal(summary.document.versions['page/board/field/canvasPageId'],undefined)
+})
+
+
+test('page reads keep pinned identity before content without changing counters', () => {
+  const page = createPage('p'); page.notes = 'x'.repeat(20_000)
+  const snapshot = { page, seq: 7, version: 'a'.repeat(64), versions: { 'page/p/field/title': 7 } }
+  const summary = agentPageSummary(snapshot)
+  assert.equal(summary.seq, 7); assert.equal(summary.version, snapshot.version)
+  assert.deepEqual(summary.versions, { 'page/p/field/title': 7 })
+  assert.ok(JSON.stringify(summary).indexOf('page/p/field/title') < JSON.stringify(summary).indexOf(page.notes))
 })

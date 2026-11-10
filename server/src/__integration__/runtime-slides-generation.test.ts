@@ -23,8 +23,8 @@ const strategy = process.env.SLIDES_SAVE_STRATEGY ?? 'incremental'
 assert.ok(['incremental','whole'].includes(strategy))
 const content = '请制作一份可编辑的6页Slides演示文稿，主题是“TCP怎样可靠传输数据”。对象是计算机专业一年级学生。6页依次讲：1目标与不保证的边界；2序号与字节流；3确认与累计确认；4超时重传和重复确认；5滑动窗口与流量控制；6完整传输小例子与总结。每页一个明确标题、2到3条简洁要点，可用一个简单图示帮助理解；不要封面凑页数，不用外部图片或视频，不需要网络检索。采用内置默认设计风格。必须保存实际页面并运行Slides格式检查，最后如实告诉我保存和检查结果。'
 const policy = strategy === 'incremental'
-  ? '保存策略：先读取 native-model.md、read_document 和需要修改的 read_page，用带版本校验的 apply_ops 填充初始空白页；之后每批最多新增2页，pageOrder 只包含已完成页面，最终正好6页。保留已保存内容，不要整稿重写。'
-  : '保存策略：先读取 native-model.md、read_document 和初始页的 read_page，准备完整6页的原生节点，再在同一次 apply_ops 中填充初始页并创建另外5页，最终 pageOrder 正好6页。保留默认主题及观察到的目标版本。'
+  ? '保存策略：先读取 native-model.md、read_document 和需要修改的 read_page，先用prepare_ops准备固定快照计划，再用返回的planId调用apply_ops 填充初始空白页；之后每批最多新增2页，pageOrder 只包含已完成页面，最终正好6页。保留已保存内容，不要整稿重写。'
+  : '保存策略：先读取 native-model.md、read_document 和初始页的 read_page，准备完整6页的原生节点，再在同一份prepare_ops计划及apply_ops提交中填充初始页并创建另外5页，最终 pageOrder 正好6页。保留默认主题及观察到的目标版本。'
 after(async()=>{await teardownAll()})
 
 test(`real-provider Slides ${strategy} generation and measured native delivery`,{skip:!live,timeout:540_000},async()=>{
@@ -104,7 +104,7 @@ test(`real-provider Slides ${strategy} generation and measured native delivery`,
     const operationEvent=events.find(row=>row.kind==='public.text.operation'&&row.data.purpose==='answer')
     const assistantText=im.messages.filter(message=>message.payload.role==='assistant').map(message=>nativeText(message.payload)).filter(Boolean)
     const evidence={sampleId:process.env.SLIDES_SAMPLE_ID??'pilot',strategy,runtime:releaseVersions.runtime,model:env.OPENAI_MODEL,
-      provider:new URL(env.OPENAI_BASE_URL).hostname,binding:model.publicAnswerTool,maxOutputTokens:model.maxOutputTokens,
+      provider:new URL(env.OPENAI_BASE_URL).hostname,binding:model.publicAnswerTool??'purpose-json-v3-content',maxOutputTokens:model.maxOutputTokens,
       budget,canonicalModelCalls:budgetCalls.length,modelLedgerComplete:calls.length===budgetCalls.length,
       requestSha256:createHash('sha256').update(request).digest('hex'),contentRequest:content,savePolicy:policy,
       measurement:'first saved revision matched to post-write tool.completed event; not browser first paint',createdAt:work.created_at,
@@ -116,9 +116,9 @@ test(`real-provider Slides ${strategy} generation and measured native delivery`,
       calls:calls.map(row=>({model:row.model,inputTokens:row.input_tokens,cachedInputTokens:row.cached_input_tokens,outputTokens:row.output_tokens,latencyMs:row.latency_ms,status:row.status,operation:row.extras.operation??null,firstContentMs:row.extras.firstContentMs??null,
         failure:row.extras.failure?{category:row.extras.failure.category,retryable:row.extras.failure.retryable,status:row.extras.failure.status??null}:null})),
       actions:receipts.map(row=>({action:row.action,ok:row.result?.ok??false,code:row.result?.code??null,elapsedMs:elapsed(row.recorded_at),
-        ...(row.action==='slides.apply_ops'?{operationId:row.args.operationId,operationCount:row.args.operations?.length??0,changedPages:[...new Set((row.args.operations??[]).map((operation:{pageId?:string;page?:{id:string}})=>operation.pageId??operation.page?.id).filter(Boolean))].length}: {})})),
+        ...(row.action==='slides.prepare_ops'?{operationId:row.result.value?.batch?.operationId,operationCount:row.args.operations?.length??0,changedPages:[...new Set((row.args.operations??[]).map((operation:{pageId?:string;page?:{id:string}})=>operation.pageId??operation.page?.id).filter(Boolean))].length}: {})})),
       failures:failures.map(row=>({action:row.action,code:row.result?.code??null,executionState:row.result?.executionState??null,diagnostics:row.result?.diagnostics??null,
-        ...(row.action==='slides.apply_ops'?{operationId:row.args.operationId,operationCount:row.args.operations?.length??0}: {})})),
+        ...(row.action==='slides.prepare_ops'?{operationId:row.result.value?.batch?.operationId,operationCount:row.args.operations?.length??0}: {})})),
       formatProblems:checked?.problems??null,pageCount:order.length,files:files.map(row=>({path:row.path,sha256:row.sha256})),
       assistantText,runError,browserValidated:false,productionRequestCovered:false,
       accepted:!runError&&failures.length===0&&work.status==='succeeded'&&state?.run.goalOutcome?.status==='satisfied'

@@ -141,17 +141,50 @@ export function explanationPlanningAvailable(context: TurnContext): boolean {
       && (!grant.methods || grant.methods.includes('plan_explanation')))
 }
 
+/** Atomic Design writes have one successful SDK receipt. Large receipts use
+ * its ledger-derived observation reference; preview text never proves a save. */
+export function confirmedDesignWrite(step: NonNullable<TurnContext['executionSteps']>[number] | undefined, requestVersion: number | undefined): boolean {
+  if (!step || step.kind !== 'design__apply_ops' || step.requestVersion !== requestVersion) return false
+  try {
+    const output = JSON.parse(step.output ?? '{}')
+    if (Array.isArray(output.receipts)) return output.receipts.some((receipt: { action?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string } }) =>
+      receipt.action === 'design.apply_ops' && receipt.result?.ok === true && receipt.result.approval === undefined
+      && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown')
+    const references = output.observations
+    return output.truncated === true && (output.omittedReferences ?? 0) === 0 && Array.isArray(references) && references.length === 1
+      && typeof references[0]?.actionKey === 'string' && references[0].actionKey.trim().length > 0 && typeof references[0].sha256 === 'string' && /^[a-f0-9]{64}$/.test(references[0].sha256)
+  } catch { return false }
+}
+
+/** A plan is identified by its native ledger key, including when its body is bounded. */
+function preparedDesignKey(step: NonNullable<TurnContext['executionSteps']>[number], requestVersion: number | undefined): string | undefined {
+  if (step.kind !== 'design__prepare_ops' || step.requestVersion !== requestVersion) return undefined
+  try {
+    const output = JSON.parse(step.output ?? '{}')
+    if (Array.isArray(output.receipts)) return output.receipts.find((receipt: { action?: string; idempotencyKey?: string; result?: { ok?: boolean; approval?: unknown; directive?: unknown; executionState?: string } }) =>
+      receipt.action === 'design.prepare_ops' && receipt.result?.ok === true && !receipt.result.approval && !receipt.result.directive
+      && receipt.result.executionState !== 'unknown')?.idempotencyKey
+    const refs = output.observations
+    if (output.truncated === true && (output.omittedReferences ?? 0) === 0 && Array.isArray(refs) && refs.length === 1
+      && typeof refs[0]?.actionKey === 'string' && refs[0].actionKey.trim() && typeof refs[0].sha256 === 'string' && /^[a-f0-9]{64}$/.test(refs[0].sha256)) return refs[0].actionKey
+  } catch { /* A missing or failed preparation has no executable identity. */ }
+  return undefined
+}
+
+function preparedDesignOperations(context: TurnContext, write: NonNullable<TurnContext['executionSteps']>[number]) {
+  const steps = context.executionSteps ?? [], planId = JSON.parse(String(write.input.arguments)).planId
+  if (typeof planId !== 'string') return []
+  const source = steps.slice(0, steps.indexOf(write)).reverse().find(step => preparedDesignKey(step, context.snapshotVersion?.requestVersion) === planId)
+  return source ? JSON.parse(String(source.input.arguments)).operations ?? [] : []
+}
+
 /** Successful authored files still present after this request's later deletes. */
 export function authoredDesignPaths(context:TurnContext):string[] {
   const paths = new Set<string>()
   for (const step of context.executionSteps ?? []) {
-    if (step.requestVersion !== context.snapshotVersion?.requestVersion || step.kind !== 'design__apply_ops') continue
+    if (!confirmedDesignWrite(step, context.snapshotVersion?.requestVersion)) continue
     try {
-      const output = JSON.parse(step.output ?? '{}'), args = JSON.parse(String(step.input.arguments))
-      if (!output.receipts?.some((receipt:{action?:string;result?:{ok?:boolean;approval?:unknown;directive?:unknown;executionState?:string}}) =>
-        receipt.action === step.kind.replace('__','.') && receipt.result?.ok === true && receipt.result.approval === undefined
-        && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown')) continue
-      for (const operation of args.operations ?? []) {
+      for (const operation of preparedDesignOperations(context, step)) {
         const pageId = operation.type === 'page.insert' ? operation.page?.id : operation.pageId
         if (typeof pageId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(pageId)) continue
         const path = `project/pages/${pageId}.json`
@@ -201,6 +234,7 @@ export function nextExplanationStep(context: TurnContext): {action:string;args?:
         receipt.action === action && receipt.result?.ok === true && receipt.result.approval === undefined
         && receipt.result.directive === undefined && receipt.result.executionState !== 'unknown')?.result
       if (result) return result
+      if (action === 'design.apply_ops' && confirmedDesignWrite(step, context.snapshotVersion?.requestVersion)) return { ok: true }
       // The native host replaces successful large reads with a ledger-derived
       // observation reference. Preview text never establishes success or value.
       if (['design.read_reference','design.read_file','design.read_document','design.read_page'].includes(action) && output.truncated === true && output.observations?.length === 1
@@ -233,16 +267,19 @@ export function nextExplanationStep(context: TurnContext): {action:string;args?:
       action: 'design.read_page', args: { pageId: firstPage, ...(observation.pageVersions?.[firstPage] ? { version: observation.pageVersions[firstPage], atSeq: observation.document.seq } : observation.sourceVersion ? { sourceVersion: observation.sourceVersion } : {}) },
     }
   }
+  const preparations = steps.filter(step => step.kind === 'design__prepare_ops'), pendingPreparation = preparations.at(-1)
+  const planId = pendingPreparation && preparedDesignKey(pendingPreparation, context.snapshotVersion?.requestVersion)
   const writes = steps.filter(step => step.kind === 'design__apply_ops')
-  if (!writes.length) return {action:'design.apply_ops'}
+  if (planId && !writes.some(step => { try { return JSON.parse(String(step.input.arguments)).planId === planId } catch { return false } })) return { action: 'design.apply_ops', args: { planId } }
+  if (!writes.length) return preparations.length ? undefined : { action: 'design.prepare_ops', args: { baseSeq: observation.document.seq, ...(observation.sourceVersion ? { sourceVersion: observation.sourceVersion } : {}) } }
   const last = writes.at(-1)!, action = last.kind.replace('__','.')
   if (!confirmed(last,action)) return undefined
   const paths = authoredDesignPaths(context)
-  if (!paths.length) return writes.length < 3 ? {action:'design.apply_ops'} : undefined
+  if (!paths.length) return writes.length < 3 ? { action: 'design.prepare_ops' } : undefined
   const after = steps.slice(steps.indexOf(last)+1), checks = after.filter(step => step.kind === 'design__check')
   if (!checks.length) return {action:'design.check',args:{paths:paths.slice(0,32)}}
   const checked = confirmed(checks.at(-1),'design.check')
-  return (checked?.value?.problems > 0 || checked?.value?.problems === 0 && !(checked.value.checkedBoardPaths as string[]|undefined)?.some(path=>paths.includes(path))) && writes.length < 3 ? {action:'design.apply_ops'} : undefined
+  return (checked?.value?.problems > 0 || checked?.value?.problems === 0 && !(checked.value.checkedBoardPaths as string[]|undefined)?.some(path=>paths.includes(path))) && writes.length < 3 ? { action: 'design.prepare_ops' } : undefined
 }
 
 export function nextExplanationAction(context:TurnContext):string|undefined { return nextExplanationStep(context)?.action }

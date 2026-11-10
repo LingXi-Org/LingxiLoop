@@ -25,5 +25,5 @@ test('model sees the actual shallow resource contract and bounded incremental au
   assert.match(skill, /not_observed/)
   assert.match(skill, /first editable slide/i)
   assert.match(skill, /Preserve saved content and original files/i)
-  assert.match(skill, /slides\.apply_ops.*expectedVersions/)
+  assert.match(skill, /slides\.prepare_ops.*baseSeq/)
 })

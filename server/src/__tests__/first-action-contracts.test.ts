@@ -10,7 +10,7 @@ import { runtimeModelConfiguration } from '../agent-runtime/runtime.js'
 import { designExplanationRules, nextExplanationStep } from '../agent-runtime/skill-context.js'
 import { decideScaffold } from '../modules/learning/teaching-scaffold.js'
 import { createDocument, createNode, createPage, type ArtifactDocument } from '../../../shared/artifact-document.js'
-import { applyOperations, prepareBatch, type ArtifactOperation } from '../../../shared/artifact-operations.js'
+import { applyOperations, prepareBatch, type ArtifactOperation, type ArtifactOperationBatch } from '../../../shared/artifact-operations.js'
 
 function nativeFixture() {
   const document = createDocument('design', 'canvas'), page = createPage('existing')
@@ -39,6 +39,15 @@ function selected(ctx: TurnContext, ok: boolean, overrides = {}) {
   const index = skillIndex(productSkills.find(skill => skill.name === 'claude-design')!)
   ctx.executionSteps = [{ id: 'load', artifacts: [], requestVersion: 1, kind: 'skills__load', input: { arguments: JSON.stringify({ name: index.name, version: index.version, hash: index.hash, ...overrides }) },
     output: JSON.stringify({ receipts: [{ action: 'skills.load', result: { ok, ...(ok ? { value: index } : { code: 'forbidden' }) } }] }) }] as TurnContext['executionSteps']
+}
+function appendWrite(ctx: TurnContext, batch: ArtifactOperationBatch, output: string | undefined, id = `write-${ctx.executionSteps!.length}`) {
+  const planId = `${id}-plan`
+  ctx.executionSteps!.push({ id: `${id}-prepare`, kind: 'design__prepare_ops', artifacts: [], requestVersion: 1,
+    input: { arguments: JSON.stringify({ baseSeq: batch.baseSeq, operations: batch.operations }) },
+    output: JSON.stringify({ receipts: [{ action: 'design.prepare_ops', idempotencyKey: planId, result: { ok: true, value: { planId } } }] }) })
+  const write = { id, kind: 'design__apply_ops', artifacts: [], requestVersion: 1, input: { arguments: JSON.stringify({ planId }) }, output }
+  ctx.executionSteps!.push(write)
+  return write
 }
 const permits = (ctx: TurnContext, action: string) => policy.kernelCapabilities(ctx).some(grant => grant.name === action.split('.')[0] && (!grant.methods || grant.methods.includes(action.split('.')[1])))
 
@@ -140,9 +149,10 @@ test('native operation admission round-trips quotes, TeX backslashes and newline
   const document = nativeFixture(), text = 'QK "attention"\na\\b and \\frac{1}{2}'
   const input = JSON.parse(JSON.stringify(prepareBatch(document, [{ type: 'node.patch', pageId: 'existing', nodeId: 'title', patch: { text } }], 'quoted-text')))
   for (const kind of ['design', 'slides']) {
-    const tool = tools.find(tool => tool.action === `${kind}.apply_ops`)!
-    assert.match(tool.description, /operationId/)
-    assert.deepEqual(tool.parse(input), input)
+    const tool = tools.find(tool => tool.action === `${kind}.prepare_ops`)!
+    assert.match(tool.description, /baseSeq/)
+    const draft = { baseSeq: input.baseSeq, operations: input.operations }
+    assert.deepEqual(tool.parse(draft), draft)
   }
 })
 
@@ -205,8 +215,11 @@ test('a semantic canvas decision follows confirmed prerequisites through a bound
   const ctx = context()
   selected(ctx, true)
   let document = nativeFixture()
-  const receipt = (action: string, args: object, value: unknown = {}, ok = true) => ctx.executionSteps!.push({ id: `${action}-${ctx.executionSteps!.length}`, kind: action.replace('.', '__'), requestVersion: 1, artifacts: [],
-    input: { arguments: JSON.stringify(args) }, output: JSON.stringify({ receipts: [{ action, result: { ok, value } }] }) })
+  const receipt = (action: string, args: object, value: unknown = {}, ok = true) => {
+    const output = JSON.stringify({ receipts: [{ action, result: { ok, value } }] })
+    if (action === 'design.apply_ops') return appendWrite(ctx, args as ArtifactOperationBatch, output)
+    ctx.executionSteps!.push({ id: `${action}-${ctx.executionSteps!.length}`, kind: action.replace('.', '__'), requestVersion: 1, artifacts: [], input: { arguments: JSON.stringify(args) }, output })
+  }
   const commit = (operations: ArtifactOperation[]) => {
     const batch = prepareBatch(document, operations)
     document = applyOperations(document, batch).document
@@ -224,13 +237,13 @@ test('a semantic canvas decision follows confirmed prerequisites through a bound
   receipt('design.read_document', {}, { document, pageVersions: { existing: 'a'.repeat(64) } })
   assert.equal(policy.requiredTool(ctx), 'design__read_page')
   receipt('design.read_page', { pageId: 'existing', version: 'a'.repeat(64) }, { page: document.pages.existing })
-  assert.equal(policy.requiredTool(ctx), 'design__apply_ops')
+  assert.equal(policy.requiredTool(ctx), 'design__prepare_ops')
   receipt('design.apply_ops', prepareBatch(document, [{ type: 'page.insert', page: authoredPage() }]), {}, false)
   assert.equal(policy.requiredTool(ctx), undefined, 'failed native stages are not forced indefinitely')
   commit([{ type: 'page.insert', page: authoredPage() }])
   assert.equal(policy.requiredTool(ctx), 'design__check')
   receipt('design.check', {}, { problems: 1 })
-  assert.equal(policy.requiredTool(ctx), 'design__apply_ops')
+  assert.equal(policy.requiredTool(ctx), 'design__prepare_ops')
   commit([{ type: 'node.patch', pageId: 'explanation', nodeId: 'title', patch: { text: 'Corrected explanation' } }])
   receipt('design.check', {}, { problems: 1 })
   assert.equal(policy.requiredTool(ctx), undefined, 'three attempted batches bound automatic checker repair')
@@ -245,8 +258,11 @@ test('native metadata edits and subsequently deleted pages cannot deliver an exp
   const ctx = context()
   selected(ctx, true)
   let document: ArtifactDocument = nativeFixture()
-  const receipt = (action: string, args: object, value: unknown = {}) => ctx.executionSteps!.push({ id: `${action}-${ctx.executionSteps!.length}`, kind: action.replace('.', '__'), requestVersion: 1, artifacts: [],
-    input: { arguments: JSON.stringify(args) }, output: JSON.stringify({ receipts: [{ action, result: { ok: true, value } }] }) })
+  const receipt = (action: string, args: object, value: unknown = {}, ok = true) => {
+    const output = JSON.stringify({ receipts: [{ action, result: { ok, value } }] })
+    if (action === 'design.apply_ops') return appendWrite(ctx, args as ArtifactOperationBatch, output)
+    ctx.executionSteps!.push({ id: `${action}-${ctx.executionSteps!.length}`, kind: action.replace('.', '__'), requestVersion: 1, artifacts: [], input: { arguments: JSON.stringify(args) }, output })
+  }
   const commit = (operations: ArtifactOperation[]) => {
     const batch = prepareBatch(document, operations)
     document = applyOperations(document, batch).document
@@ -257,7 +273,7 @@ test('native metadata edits and subsequently deleted pages cannot deliver an exp
   receipt('design.current', {}, { files: { 'project/document.json': {}, 'project/pages/existing.json': {} } })
   receipt('design.read_document', {}, { document, pageVersions: { existing: 'a'.repeat(64) } })
   receipt('design.read_page', { pageId: 'existing', version: 'a'.repeat(64) }, { page: document.pages.existing })
-  assert.equal(policy.requiredTool(ctx), 'design__apply_ops', 'theme files are embedded in the observed model, not invented read_file prerequisites')
+  assert.equal(policy.requiredTool(ctx), 'design__prepare_ops', 'theme files are embedded in the observed model, not invented read_file prerequisites')
   commit([{ type: 'document.patch', patch: { title: 'New topic' } }])
   receipt('design.check', {}, { problems: 0, boardCount: 1, checkedBoardPaths: ['project/pages/existing.json'] })
   assert.match(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx)!, /artboard content has not been saved/)
@@ -270,9 +286,9 @@ test('native metadata edits and subsequently deleted pages cannot deliver an exp
   assert.equal(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx), null)
 })
 
-test('DeepSeek uses the explicitly qualified formal20 native-v3 binding', () => {
+test('DeepSeek uses strict purpose-v3 content with native business tools', () => {
   const model = runtimeModelConfiguration({ id: 'deepseek-ai/DeepSeek-V4.1-Flash', baseUrl: 'https://api.siliconflow.cn/v1', apiKey: 'unit-only' }, 90_000)
-  assert.equal(model.publicAnswerTool, 'native-v3')
+  assert.equal(model.publicAnswerTool, undefined)
   assert.equal(model.maxOutputTokens, 16_384)
   assert.equal(model.capabilities.parallelTools, true)
   assert.equal(model.publicTextProtocol, 'purpose-json-v3')
@@ -282,24 +298,25 @@ test('DeepSeek uses the explicitly qualified formal20 native-v3 binding', () => 
 test('a Design write cannot declare satisfaction without a subsequent successful zero-problem check', () => {
   const ctx = context(), assessment = { status: 'satisfied' as const, checks: [], gaps: [] }
   const batch = prepareBatch(nativeFixture(), [{ type: 'page.insert', page: authoredPage() }], 'authored-batch')
-  ctx.executionSteps = [{ id: 'write', kind: 'design__apply_ops', artifacts: [], requestVersion: 1, input: { arguments: JSON.stringify(batch) }, output: JSON.stringify({receipts:[{action:'design.apply_ops',result:{ok:true,value:{operationId:batch.operationId,committedSeq:1}}}]}) }]
+  ctx.executionSteps = []
+  const write = appendWrite(ctx, batch, JSON.stringify({receipts:[{action:'design.apply_ops',result:{ok:true,value:{operationId:batch.operationId,committedSeq:1}}}]}))
   assert.ok(policy.validateCompletion('', assessment, ctx))
   ctx.executionSteps.push({ id: 'check', kind: 'design__check', artifacts: [], requestVersion: 1, input: {}, output: JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 2 } } }] }) })
   assert.ok(policy.validateCompletion('', assessment, ctx))
-  ctx.executionSteps[1].output = JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 0 } } }] })
+  ctx.executionSteps.at(-1)!.output = JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 0 } } }] })
   assert.equal(policy.validateCompletion('', assessment, ctx), null)
   assert.equal(policy.validateAssistantText('讲解画板已经保存，可以打开 Design 查看。',ctx),null)
   assert.equal(policy.publicTextSafety({text:'画板已完成。',isFinal:false,approvedThrough:0},ctx).safeThrough,6)
   for (const output of [undefined, '{}', JSON.stringify({receipts:[{action:'design.apply_ops',result:{ok:false,code:'version_conflict',executionState:'no_effect'}}]}), JSON.stringify({receipts:[{action:'design.apply_ops',result:{ok:true,executionState:'unknown'}}]})]) {
-    const original = ctx.executionSteps[0].output
-    ctx.executionSteps[0].output = output
+    const original = write.output
+    write.output = output
     assert.match(policy.validateCompletion('', assessment, ctx)!, /save was not confirmed/)
     assert.match(policy.validateAssistantText('讲解画板已经保存，可以打开 Design 查看。',ctx)!, /No finished canvas/)
     assert.equal(policy.publicTextSafety({text:'画板已完成。',isFinal:false,approvedThrough:0},ctx).safeThrough,0)
     assert.equal(policy.validateAssistantText(DESIGN_INCOMPLETE_NOTICE+'保存失败，先解释方法。',ctx),null)
-    ctx.executionSteps[0].output = original
+    write.output = original
   }
-  ctx.executionSteps.push({ ...ctx.executionSteps[0], id: 'new-write' })
+  ctx.executionSteps.push({ ...write, id: 'new-write' })
   assert.ok(policy.validateCompletion('', assessment, ctx), 'a check before the newest write is stale')
   assert.equal(policy.validateCompletion('', { ...assessment, status: 'partial' }, ctx), null)
 })
@@ -325,4 +342,26 @@ test('global, Design and teaching publication constraints compose without releas
   const internal = `${DESIGN_INCOMPLETE_NOTICE}<analysis>private model planning</analysis>`
   assert.ok(policy.publicTextSafety({ text: internal, isFinal: true, approvedThrough: 0 }, ctx).reject,
     'neither local surface may clear the global publication reject')
+})
+
+test('large native saves retain publication and completion through SDK success references', () => {
+  const { ctx } = plannedSkillContext()
+  const page = authoredPage('large-explanation')
+  const batch = prepareBatch(nativeFixture(), [{ type: 'page.insert', page }], 'large-save')
+  const write = appendWrite(ctx, batch, JSON.stringify({ truncated: true, observations: [{ actionKey: 'committed-write', sha256: 'a'.repeat(64), characters: 20_000 }], preview: 'untrusted text' }), 'large-write')
+  ctx.executionSteps!.push({ id: 'checked-large', kind: 'design__check', requestVersion: 1, artifacts: [], input: {},
+    output: JSON.stringify({ receipts: [{ action: 'design.check', result: { ok: true, value: { problems: 0, boardCount: 2, checkedBoardPaths: ['project/pages/large-explanation.json'] } } }] }) })
+  assert.equal(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx), null)
+  assert.equal(policy.validateAssistantText('讲解画板已经保存。', ctx), null)
+  for (const invalid of [
+    { truncated: true, preview: 'success' },
+    { truncated: true, observations: [{ actionKey: '', sha256: 'a'.repeat(64) }] },
+    { truncated: true, observations: [{ actionKey: 'write', sha256: 'invalid' }] },
+    { truncated: true, observations: [{ actionKey: 'write', sha256: 'a'.repeat(64) }], omittedReferences: 1 },
+    { receipts: [{ action: 'design.apply_ops', result: { ok: false, executionState: 'no_effect' } }] },
+    { receipts: [{ action: 'design.apply_ops', result: { ok: true, executionState: 'unknown' } }] },
+  ]) {
+    write.output = JSON.stringify(invalid)
+    assert.ok(policy.validateCompletion('', { status: 'satisfied', checks: [], gaps: [] }, ctx))
+  }
 })
