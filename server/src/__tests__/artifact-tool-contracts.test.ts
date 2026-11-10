@@ -4,6 +4,7 @@ import { createProductHarness } from '../agent-runtime/harness.js'
 import { createProductTools } from '../agent-runtime/tools.js'
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { TEACHER_DESIGN_ACTIONS } from '../modules/learning/teacher-preset.js'
 import { createArtifactTools } from '../modules/artifacts/agent-tools.js'
 import { createDocument, createNode, createPage } from '../../../shared/artifact-document.js'
 import { prepareBatch } from '../../../shared/artifact-operations.js'
@@ -174,4 +175,12 @@ test('Agent prepares pinned native operations before committing an immutable pla
     assert.throws(() => apply.parse({ ...input, operationId: 'manual', expectedVersions: {} }))
     assert.equal(prepare.effect, 'read'); assert.equal(apply.effect, 'transaction')
   }
+})
+
+
+test('managed teacher Design exposes the complete native preparation and commit flow', () => {
+  const exposed = design.filter(tool => TEACHER_DESIGN_ACTIONS.has(tool.action))
+  assert.ok(exposed.some(tool => tool.action === 'design.prepare_ops'))
+  assert.ok(exposed.some(tool => tool.action === 'design.apply_ops'))
+  assert.ok(exposed.every(tool => !['design.start_workspace', 'design.submit_report'].includes(tool.action)))
 })

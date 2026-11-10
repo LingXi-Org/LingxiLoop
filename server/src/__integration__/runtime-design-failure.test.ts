@@ -31,7 +31,7 @@ function annotateFixtureFailure(error: unknown, calls: number) {
 }
 
 test('failed native Design save rejects false partial completion before publication and preserves truthful text and existing files', { timeout: 40_000 }, async context => {
-  let calls = 0, finished = false
+  let calls = 0, finished = false, humanTitleVersion = 0
   context.signal.addEventListener('abort', () => { if (!finished) annotateFixtureFailure(undefined, calls) }, { once: true })
   try {
   await ensureSchemaOnce(); await resetAllTables()
@@ -74,8 +74,9 @@ test('failed native Design save rejects false partial completion before publicat
         const outputs = input.messages.filter((message: { role: string }) => message.role === 'tool').map((message: { content: string }) => JSON.parse(message.content))
         const planId = outputs.findLast((output: { receipt?: { action?: string } }) => output.receipt?.action === 'design.prepare_ops')?.receipt?.idempotencyKey
         assert.equal(typeof planId, 'string')
-        await withTransaction(pool, db => submitNativeOperations(db, { artifactId: canvas.id, companyId, actorId: userId, actorKind: 'user',
+        const human = await withTransaction(pool, db => submitNativeOperations(db, { artifactId: canvas.id, companyId, actorId: userId, actorKind: 'user',
           request: prepareBatch(snapshot.document, [{ type: 'page.patch', pageId, patch: { title: '人的并发修改' } }], 'human-concurrent') }))
+        humanTitleVersion = human.document.versions[titleVersion]
         original = (await pool.query('SELECT path,body,sha256 FROM artifact_files WHERE artifact_id=$1 ORDER BY path', [canvas.id])).rows
         business.push({ name: 'design__apply_ops', args: { planId } })
       }
@@ -87,7 +88,7 @@ test('failed native Design save rejects false partial completion before publicat
       if (calls === 9) {
         const outputs = input.messages.filter((message: { role: string }) => message.role === 'tool').map((message: { content: string }) => JSON.parse(message.content))
         const rejected = outputs.find((output: { receipt?: { action?: string }; ok?: boolean }) => output.receipt?.action === 'design.apply_ops' && output.ok === false)
-        assert.deepEqual(rejected?.value?.conflicts, [{ key: titleVersion, expected: 0, actual: 1 }], 'the SDK must receive structured conflict fields after sanitizing exception text')
+        assert.deepEqual(rejected?.value?.conflicts, [{ key: titleVersion, expected: snapshot.document.versions[titleVersion] ?? 0, actual: humanTitleVersion }], 'the SDK must receive structured conflict fields after sanitizing exception text')
         assert.equal(rejected.diagnostics?.recovery, 'refresh')
         assert.ok(JSON.stringify(input.messages).includes('version_conflict'),'model must receive the supported conflict code')
         assert.ok(JSON.stringify(input.messages).includes('refresh'),'model must receive refresh recovery guidance')
