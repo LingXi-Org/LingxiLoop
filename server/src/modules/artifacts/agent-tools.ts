@@ -24,7 +24,7 @@ import { slidesSummary } from './slides-observation.js'
 import { slideEditingContext } from './slides-workspace.js'
 import { ensureNativeDocument, NativeDocumentError, nativeOperationReceipt, readNativeDocument, readNativePageSnapshot, submitNativeOperations } from './native-document.js'
 import { prepareBatch } from '../../../../shared/artifact-operations.js'
-import { agentDocumentSummary } from './agent-summary.js'
+import { agentDocumentSummary, agentPageSummary } from './agent-summary.js'
 
 type Control = Parameters<typeof createArtifactExecution>[0]
 const reportMethods = { submit_report: 'specialist', submit_verification: 'verifier' } as const
@@ -183,7 +183,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
       },
     }),
     nativeTool(`${kind}.read_page`, agentArtifactSchemas.read_page, {
-      description: `Read one page, its nodes and scoped field versions. For native documents supply version=pageVersions[pageId] and atSeq=document.seq from read_document. For an unconverted legacy document supply sourceVersion from read_document instead. Use returned field versions as operation preconditions.`,
+      description: `Read one page, its nodes and scoped field versions. For native documents supply version=pageVersions[pageId] and atSeq=document.seq from read_document. For an unconverted legacy document supply sourceVersion from read_document instead. Use returned field versions as operation preconditions. 初始对象的版本计数也是0；不要根据对象存在或schemaVersion=1推断版本为1。`,
       effect: 'read', approval: false, authorize,
       async execute(context, input) {
         const artifact = await required(context, input), db = context.database as Queryable
@@ -205,7 +205,7 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
           }
         }
         if (!pageSnapshot) throw new NoEffectError('Page or requested page version does not exist', 'not_found')
-        return { ok: true, value: { ...pageSnapshot, ...(sourceVersion ? { sourceVersion } : {}) } }
+        return { ok: true, value: { ...agentPageSummary(pageSnapshot), ...(sourceVersion ? { sourceVersion } : {}) } }
       },
     }),
     nativeTool(`${kind}.apply_ops`, agentArtifactSchemas.apply_ops, {
