@@ -54,7 +54,7 @@ const output='artifacts/course-onboarding'; await mkdir(output,{recursive:true})
 const receipts=[]
 try {
   await vite.listen()
-  for(const [label,viewport,dark] of [['desktop',{width:1440,height:900},false],['mobile',{width:390,height:844},true]]){
+  for(const [label,viewport,dark] of [['desktop',{width:1440,height:900},false],['mobile',{width:390,height:844},true],['short-mobile',{width:390,height:568},true]]){
     await seed()
     const context=await browser.newContext({viewport,reducedMotion:'reduce'})
     const page=await context.newPage()
@@ -63,6 +63,7 @@ try {
     await page.goto(`http://127.0.0.1:5199/__course-check?${dark?'dark=1':''}`)
     await page.getByRole('heading',{name:'先创建一门课程'}).waitFor({timeout:60000}).catch(async error=>{await page.screenshot({path:`${output}/${label}-failure.png`});console.log('body:',(await page.locator('body').innerText()).slice(0,600));throw error})
     assert.equal(await page.locator('[data-slot="skeleton"]').count(),0)
+    assert.ok(await page.getByRole('main').evaluate(element=>element.clientHeight<=innerHeight),'setup stays inside viewport with its own scroll host')
     await page.reload() // Existing administrator returning later receives the same guide.
     await page.getByRole('heading',{name:'先创建一门课程'}).waitFor()
     await page.screenshot({path:`${output}/${label}-setup.png`,fullPage:true})

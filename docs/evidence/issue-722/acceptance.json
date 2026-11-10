@@ -41,5 +41,12 @@
       "Browser fixture injects synthetic identity and fake IM; does not exercise production login or a model call",
       "Existing user production data was not modified; dynamic guidance requires the updated page to load"
     ]
+  },
+  "viewportFollowup": {
+    "issue": 724,
+    "regressionBeforeFix": "390x568: setup exceeds viewport and is clipped by body overflow:hidden",
+    "fix": "Use h-dvh with overflow-y-auto for a bounded scroll container",
+    "afterFix": "Desktop 1440x900, mobile 390x844 and short mobile 390x568 each complete real course creation and teacher assignment",
+    "review": "Read-only follow-up verified the bounded height preserves document order and allows the form submit action to scroll into view"
   }
 }
