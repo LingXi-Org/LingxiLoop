@@ -276,7 +276,7 @@ for (const {recoveredLength,repairSkill} of live ? [{recoveredLength:false,repai
         ...(row.action === 'design.read_reference' ? { page: row.args.page } : {}) })),
       preconditionFailures: failures.filter(row => row.result.code === 'version_conflict').map(row => {
         let conflicts: Array<{ key: string; expected: number | null; actual: number }> = []
-        try { conflicts = JSON.parse(String(row.result.error).split(' Conflicting targets: ')[1]) } catch { /* no structured conflicts */ }
+        if (Array.isArray(row.result.value?.conflicts)) conflicts = row.result.value.conflicts
         return { action: row.action, conflicts: conflicts.slice(0, 64).map(item => ({
           keyKind: /^(document)\/(pageOrder|canvasPages|title|themeId|seq)$/.test(item.key) ? `document.${item.key.split('/')[1]}`
             : /^page\/[^/]+\/(exists|nodeOrder)$/.test(item.key) ? `page.${item.key.split('/')[2]}`

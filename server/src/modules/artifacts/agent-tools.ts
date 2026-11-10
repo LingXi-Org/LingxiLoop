@@ -1,5 +1,5 @@
 import { productConversationId } from '../../agent-runtime/identity.js'
-import { NoEffectError, type ActionContext, type ToolDefinition } from '@lingxi-org/lingxios'
+import { NoEffectError, classifyToolFailure, type ActionContext, type ToolDefinition } from '@lingxi-org/lingxios'
 import { z } from 'zod'
 import type { Queryable } from '../../db/queryable.js'
 import { nativeTool, compareResource } from '../../agents/tools.js'
@@ -112,11 +112,17 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
   }
 
   async function applyNative(context: ActionContext, artifact: ArtifactRow, request: unknown) {
-    try { return await submitNativeOperations(context.database as Queryable, { artifactId: artifact.id, ...actor(context), request }) }
+    try { return { ok: true as const, value: await submitNativeOperations(context.database as Queryable, { artifactId: artifact.id, ...actor(context), request }) } }
     catch (error) {
       if (error instanceof NativeDocumentError && error.status >= 400 && error.status < 500) {
-        const conflicts = error.details && typeof error.details === 'object' && 'conflicts' in error.details ? error.details.conflicts : undefined
-        throw new NoEffectError(error.message + (conflicts ? ` Conflicting targets: ${JSON.stringify(conflicts)}` : ''), error.code)
+        if (error.code === 'version_conflict' && error.details && typeof error.details === 'object' && 'conflicts' in error.details) {
+          const failure = classifyToolFailure(error, 'transaction')
+          // The SDK redacts thrown exception text. A settled failure preserves
+          // these authorized CAS fields while its transaction still rolls back.
+          return { ok: false as const, executionState: 'no_effect' as const, code: failure.code,
+            error: '文档版本已变化，修改尚未保存。请重新读取冲突目标后再提交。', diagnostics: failure.diagnostics, value: { conflicts: error.details.conflicts } }
+        }
+        throw new NoEffectError(error.message, error.code)
       }
       throw error
     }
@@ -212,7 +218,9 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
           artifactId: artifact.id, companyId: context.work.tenantId, actorId: context.work.agentId, write: true, expectedSourceVersion: input.sourceVersion,
         })
         const { artifactId: _target, sourceVersion: _source, ...request } = input
-        const committed = await applyNative(context, artifact, request)
+        const applied = await applyNative(context, artifact, request)
+        if (!applied.ok) return applied
+        const committed = applied.value
         if (!committed.deduplicated) await queueNativeEvents(context, [{ type: 'artifact.changed', kind: 'files.changed',
           companyId: context.work.tenantId, artifactId: artifact.id, artifactKind: kind, timestamp: new Date().toISOString(),
           paths: ['project/document.json', ...committed.changedPageIds.map(id => `project/pages/${id}.json`)], ver: String(committed.seq),
@@ -371,7 +379,9 @@ export function createArtifactTools(kind: ArtifactKind, control: Control): ToolD
         const request = prepareBatch(snapshot.document, [{ type: 'theme.set', theme: { id: input.namespace, name: input.title, tokens,
           originalTokens: z.json().parse(raw), resources: input.files, source: { namespace: input.namespace, variant: 'default', url: input.source, ...(input.version ? { version: input.version } : {}) },
         } }], sha256(Buffer.from(context.action.idempotencyKey)))
-        const committed = await applyNative(context, artifact, request)
+        const applied = await applyNative(context, artifact, request)
+        if (!applied.ok) return applied
+        const committed = applied.value
         if (!committed.deduplicated) await queueNativeEvents(context, [{ type: 'artifact.changed', kind: 'files.changed', companyId: context.work.tenantId,
           artifactId: artifact.id, artifactKind: 'slides', timestamp: new Date().toISOString(), paths: ['project/document.json'], ver: String(committed.seq) }])
         return { ok: true, value: { artifactId: artifact.id, result: { operationId: committed.operationId, committedSeq: committed.committedSeq, seq: committed.seq, themeId: input.namespace } } }
