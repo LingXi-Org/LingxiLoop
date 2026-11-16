@@ -50,7 +50,7 @@ jobs:
       - name: Build and verify candidate from exact production source
         working-directory: eval/harness-improvement/.state/candidate
         run: |
-          git apply ../../lingxios.patch
+          git apply --index ../../lingxios.patch
           npm ci --ignore-scripts --no-audit --no-fund
           npm run build
           npm run typecheck
