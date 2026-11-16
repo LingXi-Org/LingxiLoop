@@ -45,7 +45,7 @@ jobs:
         run: |
           node with-secrets.mjs smoke .state/smoke.json
           python3 compare.py score .state/smoke.json > .state/smoke-metrics.json
-      - name: Verify production and official model using existing Sigillo secrets
+      - name: Verify production and pinned model using existing Sigillo secrets
         env:
           SIGILLO_TOKEN: ${{ secrets.SIGILLO_TOKEN }}
           SIGILLO_API_URL: https://sigillo.lingxilearn.cn

@@ -14,9 +14,9 @@ const compare = fileURLToPath(new URL('./compare.py', import.meta.url))
 const [mode, outputArg] = process.argv.slice(2)
 assert.ok(['--smoke', '--live'].includes(mode) && outputArg, 'Usage: node run.mjs --smoke|--live OUTPUT.json')
 const live = mode === '--live'
-const key = live ? process.env.DEEPSEEK_API_KEY?.trim() : undefined
+const key = live ? process.env.HARNESS_MODEL_API_KEY?.trim() : undefined
 if (live) {
-  assert.ok(key, 'DEEPSEEK_API_KEY is required for live evaluation')
+  assert.ok(key, 'HARNESS_MODEL_API_KEY is required for live evaluation')
   const locks = new URL('./node_modules/.package-lock.json', import.meta.url)
   const lock = JSON.parse(await readFile(locks, 'utf8'))
   const exact = lock.packages['node_modules/@lingxi-org/lingxios']

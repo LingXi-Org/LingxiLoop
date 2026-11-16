@@ -19,8 +19,8 @@ assert.ok(production.ok, `Production metadata HTTP ${production.status}`)
 const meta = await production.json()
 assert.equal(meta.reasoningRuntime?.runtime, protocol.runtimes.lingxios.version, 'Production runtime changed')
 assert.equal(meta.commitSha, protocol.runtimes.lingxios.commit, 'Production commit changed; review the frozen protocol')
-const models = await fetch(new URL('/models', protocol.model.baseUrl), {
-  headers: { authorization: `Bearer ${env.DEEPSEEK_API_KEY}` },
+const models = await fetch(new URL('models', protocol.model.baseUrl), {
+  headers: { authorization: `Bearer ${env.HARNESS_MODEL_API_KEY}` },
   redirect: 'error', signal: AbortSignal.timeout(20000),
 })
 assert.ok(models.ok, `Provider model discovery HTTP ${models.status}`)
@@ -38,4 +38,4 @@ await writeFile(new URL('./.state/provenance.json', import.meta.url), JSON.strin
   evaluationCommit: process.env.GITHUB_SHA ?? null,
   actionsRunId: process.env.GITHUB_RUN_ID ?? null, sha256,
 }, null, 2) + '\n', { mode: 0o600 })
-console.log('Production version and official provider model verified; no secret values retained')
+console.log('Production version and pinned provider model verified; no secret values retained')

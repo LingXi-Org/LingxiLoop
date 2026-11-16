@@ -91,18 +91,18 @@ export async function openGateway({ manifest, task, tools, executeTool, key }) {
       // Both adapters reach the same provider with identical public schemas and model controls.
       // LingxiOS's internal task helpers may exist locally, but are excluded from the advertised catalog.
       const { tools: _nativeTools, tool_choice: _choice, parallel_tool_calls: _parallel, reasoning_effort: _effort,
-        max_completion_tokens: _completionLimit, ...body } = input
+        max_completion_tokens: _completionLimit, thinking: _thinking, enable_thinking: _enableThinking, ...body } = input
       Object.assign(body, {
         max_tokens: manifest.model.maxTokens,
         temperature: manifest.model.temperature,
-        thinking: { type: manifest.model.thinking },
+        enable_thinking: manifest.model.thinking !== 'disabled',
         ...(expectedCatalog.length ? { tools: expectedCatalog, tool_choice: 'auto',
           parallel_tool_calls: manifest.model.parallelToolCalls } : {}),
       })
       if (body.stream) body.stream_options = { include_usage: true }
       catalogs.push(tools.map(tool => tool.name))
       usageIndex = providerUsage.push(null) - 1
-      const upstream = key ? await fetch(new URL('/chat/completions', manifest.model.baseUrl), {
+      const upstream = key ? await fetch(new URL('chat/completions', manifest.model.baseUrl), {
         method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' },
         body: JSON.stringify(body), signal, redirect: 'error',
       }) : smokeReply(task, usageIndex, manifest.model.id, body.stream)

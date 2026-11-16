@@ -110,7 +110,7 @@ def rate(numerator, denominator):
 
 
 def priced_usage(requests):
-    prices = PROTOCOL["pricesUsdPerMillion"]
+    prices = PROTOCOL["pricesCnyPerMillion"]
     total = 0
     for request in requests:
         if request is None:
@@ -153,12 +153,12 @@ def score(row, task):
             "status": status, "passed": passed, "attempts": len(attempts),
             "correctCalls": matched, "requiredCalls": len(task["expectedCalls"]),
             "unauthorizedAttempts": unauthorized, "latencyMs": elapsed,
-            "normalizedCostUsd": priced_usage(requests)}
+            "normalizedCostCny": priced_usage(requests)}
 
 
 def summarize(results):
     count = len(results)
-    costs = [row["normalizedCostUsd"] for row in results if row["normalizedCostUsd"] is not None]
+    costs = [row["normalizedCostCny"] for row in results if row["normalizedCostCny"] is not None]
     latencies = [row["latencyMs"] for row in results]
     calls = sum(row["correctCalls"] for row in results)
     passed = sum(row["passed"] for row in results)
@@ -168,7 +168,7 @@ def summarize(results):
         "requiredToolCallRecall": rate(calls, sum(row["requiredCalls"] for row in results)),
         "unauthorizedAttempts": sum(row["unauthorizedAttempts"] for row in results),
         "latencyMs": {"p50": percentile(latencies, .50), "p95": percentile(latencies, .95)},
-        "costCoverage": len(costs), "normalizedCostUsd": {
+        "costCoverage": len(costs), "normalizedCostCny": {
             "knownTotal": sum(costs), "knownMean": rate(sum(costs), len(costs)),
             "allRunsTotal": sum(costs) if len(costs) == count else None,
         },
@@ -191,7 +191,7 @@ def markdown(summary, mode):
         ("必要调用召回率", [format_value(m["requiredToolCallRecall"], ".1%") for m in metrics]),
         ("延迟 p50（ms）", [format_value(m["latencyMs"]["p50"], ".0f") for m in metrics]),
         ("延迟 p95（ms）", [format_value(m["latencyMs"]["p95"], ".0f") for m in metrics]),
-        ("归一化总成本（USD）", [format_value(m["normalizedCostUsd"]["allRunsTotal"], ".6f") for m in metrics]),
+        ("归一化总成本（CNY）", [format_value(m["normalizedCostCny"]["allRunsTotal"], ".6f") for m in metrics]),
         ("可计成本的样本", [f"{m['costCoverage']}/{m['runs']}" for m in metrics]),
         ("未授权工具尝试", [str(m["unauthorizedAttempts"]) for m in metrics]),
     ]

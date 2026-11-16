@@ -12,9 +12,9 @@
 
 优先复用已保存的云端环境或 Sigillo，不再要求手工创建密钥文件。已核实 GitHub 仓库存在 `SIGILLO_TOKEN` 和 `LINGXIOS_PACKAGES_TOKEN`，现有部署工作流使用 `https://sigillo.lingxilearn.cn` 的项目 `01M1TZH9C21C1A9PFAR8E41553`、环境 `prod`。GitHub Secrets 不支持读回，只能在授权的 Actions 任务内注入。
 
-新增 [隔离评估工作流](../../.github/workflows/harness-comparison.yml) 仅在 `eval/harness-comparison-*` 分支运行，不部署、不合并主分支。发布包使用既有包读取 token，真实评估通过 Sigillo 在内存中注入已有配置。入口只允许官方 `DEEPSEEK_API_KEY`，或 base URL 确认为官方 DeepSeek 的 `OPENAI_API_KEY`；其他供应商配置不能冒充原冻结模型。密钥匹配失败会终止，不索求新变量、不静默更换供应商。
+新增 [隔离评估工作流](../../.github/workflows/harness-comparison.yml) 仅在 `eval/harness-comparison-*` 分支运行，不部署、不合并主分支。发布包使用既有包读取 token，真实评估通过 Sigillo 在内存中注入已有配置。已核实已有 `OPENAI_API_KEY`、`OPENAI_BASE_URL` 和 `OPENAI_MODEL`。v2 协议在首次真实调用前固定为 SiliconFlow 的 `deepseek-ai/DeepSeek-V4.1-Flash`，入口严格核对域名、路径和模型名称后才使用密钥；匹配失败即停止。原官方 DeepSeek v1 协议保存在 `protocol-official-deepseek-v1.json`，未产生真实样本，不与 v2 混合。
 
-工作流完成 72 次替身检查后，核对生产版本和官方模型目录，再执行 72 次真实采集。工件保存 `live.json`、逐条日志、`metrics.json`、`report.md` 与包含代码哈希的 `provenance.json`。失败只保留已有记录，不生成完整对照结果。
+工作流完成 72 次替身检查后，核对生产版本和固定供应商模型目录，再执行 72 次真实采集。工件保存 `live.json`、逐条日志、`metrics.json`、`report.md` 与包含代码哈希的 `provenance.json`。失败只保留已有记录，不生成完整对照结果。
 
 已有云端环境可直接运行 `node with-secrets.mjs install` 和 `node with-secrets.mjs live .state/live.json`。已有 Sigillo 登录或 token 的环境可用：
 
@@ -56,7 +56,7 @@ python3 compare.py report .state/live.json > .state/report.md
 
 ## 固定条件
 
-- 两边都走官方 DeepSeek Chat Completions，模型 `deepseek-flash`。备案版本为 DeepSeek-V4.1-Flash-1017，重跑前核对模型映射。关闭思考和并行工具调用，temperature 0，输出最多 1536 tokens。这个选择固定了两个 Harness 的共同模型，生产配置的主模型可能不同。[模型和价格](https://api-docs.deepseek.com/quick_start/pricing/)
+- 两边都走 SiliconFlow Chat Completions，模型 `deepseek-ai/DeepSeek-V4.1-Flash`，复用 Sigillo 已有生产配置。供应商未公开不可变权重版本，重跑时核对目录并保留日期。通过 `enable_thinking: false` 关闭思考，并关闭并行工具调用，temperature 0，输出最多 1536 tokens。这个选择固定了两个 Harness 的共同模型，生产配置的主模型可能不同。[模型和价格](https://www.siliconflow.cn/pricing)
 - 12 个任务，每个重复 3 次，每次对两边使用相同用户输入、共享指令和新会话。每对串行执行，36 对中各有 18 对先跑对应的 Harness。每样本总时限 90 秒，最多 8 次模型请求、8 次工具尝试。
 - 任务涵盖读取、带版本写入和读回校验、一次可复现的并发冲突、只读用户提出写入请求、以及无需工具的直接回答。每个样本使用新的内存文档状态。写入权限、资源 ID、schema、结果和并发事件相同。
 - 目标是比较两个固定版本的运行循环及其原生提示词、工具验证和恢复行为。使用生产发布的 LingxiOS 包，业务工具换成同一组合成文档工具。评估范围是这些共同任务。真实业务数据库、外部工具、浏览器、终端、记忆和委派均不在范围内。
@@ -88,6 +88,6 @@ python3 eval/harness-comparison/compare.py score /tmp/harness-capture.json > /tm
 | `toolAttempts` | 按序记录 `tool`、原始 `args` 和 `outcome`。正常响应、权限拒绝和参数拒绝分别记为 `ok`、`denied` 和 `invalid`，并发写入冲突记为 `conflict`。 |
 | `providerUsage` | 按请求记录供应商返回的 `cacheHit`、`cacheMiss`、`output` token 数。任何已发请求的用量缺失时该项记为 `null`。只有确认未发请求才记空数组。 |
 
-通过率使用全部 36 次作为每边分母。工具准确率按正确的名称、参数和顺序计算，分母包括重复、错误和越权尝试。另报必要调用召回率，避免漏调提高准确率。延迟含失败样本，报告 p50/p95。成本按统一峰时 USD 单价归一化，分别计缓存命中、未命中和输出 tokens，涵盖重试用量。成本覆盖率随结果一起给出，缺失用量时全量总成本为空。该价格口径用于横向比较，供应商的实际扣款取决于请求时段。[官方计价](https://api-docs.deepseek.com/quick_start/pricing/)
+通过率使用全部 36 次作为每边分母。工具准确率按正确的名称、参数和顺序计算，分母包括重复、错误和越权尝试。另报必要调用召回率，避免漏调提高准确率。延迟含失败样本，报告 p50/p95。成本按统一人民币常规时段单价归一化（每百万 token：缓存命中 0.04 元、未命中 2 元、输出 8 元），分别计缓存命中、未命中和输出 tokens，涵盖重试用量。成本覆盖率随结果一起给出，缺失用量时全量总成本为空。该价格口径用于横向比较，供应商的实际扣款取决于请求时段。[供应商计价](https://www.siliconflow.cn/pricing)
 
 已用本地模型替身和离线记录验证评分路径，包括重复调用、越权、超时、用量缺失及缺行拒绝。正式发布包的安装和真实供应商的采集由上述 Actions 工作流使用现有 Secrets 验证。
