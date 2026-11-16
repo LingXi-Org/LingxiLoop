@@ -59,6 +59,7 @@ for runtime in capture['runtimes']:
         'ledgerFailures': dict(collections.Counter(d['failure']['category'] for d in ledger if d.get('failure'))),
         'modelPermitWaitMs': sum(t.get('modelPermitWaitMs', 0) for t in timings),
         'outputCallbackWaitMs': sum(t.get('outputCallbackWaitMs', 0) for t in timings),
+        'completedStreamCleanupErrors': sum(d.get('error') == 'AbortError' and d.get('doneMarkerMs') is not None and d.get('usagePresent') is True for d in requests),
         'gatewayErrors': dict(collections.Counter(e for r in rows for e in r['gatewayFailures'])),
         'failedSamples': [{'task':s['task'], 'repeat':s['repeat'], 'status':s['status']} for s in incorrect],
         'longTailSamples': [{
@@ -101,6 +102,7 @@ for runtime, d in out['diagnostics'].items():
     print(f"- **{runtime}**：样本总耗时 {d['totalLatencyMs']/1000:.3f} 秒；模型请求区间并集占 {d['requestUnionShare']:.1%}，区间外共 {d['outsideRequestIntervalsMs']/1000:.3f} 秒。")
     print(f"  单请求响应头 p50/p95：{headers['p50']:.1f}/{headers['p95']:.1f} ms；首次内容 p50/p95：{first['p50']:.1f}/{first['p95']:.1f} ms。")
     print(f"  原生 ledger 重试 {d['ledgerRetries']} 次，失败分类 `{d['ledgerFailures']}`；网关异常 `{d['gatewayErrors']}`。")
+    print(f"  其中已收到结束标记及完整用量后的连接收尾 AbortError：{d['completedStreamCleanupErrors']} 次；不计为模型失败。")
     print(f"  原生模型配额等待累计 {d['modelPermitWaitMs']:.1f} ms，输出回调等待累计 {d['outputCallbackWaitMs']:.1f} ms。DeepSeek 没有采集其内部 ledger，不能将零计数解读为不存在内部开销。")
 print('\n请求区间包含网络、供应商排队/推理/传输，以及可能重叠的客户端处理，不等于服务端纯推理时间。区间外包含数据库、工具和运行时处理，不能称为纯 CPU。原生阶段计时相互嵌套，不能再与请求并集相加。\n')
 print('| 组别 | 最慢任务 | 耗时 ms | 模型请求区间 ms | 请求数 | 失败类别 |\n| --- | --- | ---: | ---: | ---: | --- |')
@@ -117,8 +119,8 @@ print('\n未通过样本：\n')
 for runtime, d in out['diagnostics'].items():
     print(f"- {runtime}：" + ('；'.join(f"{r['task']} #{r['repeat']} ({r['status']})" for r in d['failedSamples']) or '无') + '。')
 print('\n## 修复与复现\n')
-print('`lingxios.patch` 修改通用执行提示词和当前请求的呈现：动作前检查禁止条件与条件分支；能力从目录与授权判断，不通过读取内容探测缺失的写权限；回执和 verifier 不替代显式写后读回。当前人类请求以带来源的原文 user 消息呈现，其他信任级别仍保留数据封装。未加入任务 ID、文档内容、答案或模型专用分支，授权与持久化核验不变。')
+print('`lingxios.patch` 修改通用执行提示词和当前请求的呈现：动作前检查禁止条件与条件分支；精简重复规则并将运行时授权明确为完整 allowlist，能力从目录与授权判断，不通过读取内容探测缺失的写权限；回执和 verifier 不替代显式写后读回。当前人类请求以带来源的原文 user 消息呈现，其他信任级别仍保留数据封装。未加入任务 ID、文档内容、答案或模型专用分支，授权与持久化核验不变。')
 print(f"\n原始采集 SHA-256：`{hashlib.sha256(Path(filename).read_bytes()).hexdigest()}`。协议摘要：`{capture['protocolSha256']}`。候选源码和编译输出指纹见 `provenance.json`，补丁来自固定 4.0.0 源码提交。\n")
 round_path = 'results/' + Path(filename).parent.name
-print(f'```sh\npython3 compare.py score {round_path}/live.json\npython3 diagnose.py json {round_path}/live.json {round_path}/provenance.json\npython3 diagnose.py report {round_path}/live.json {round_path}/provenance.json\n```\n')
+print(f'```sh\npython3 {round_path}/source/compare.py score {round_path}/live.json\npython3 {round_path}/source/diagnose.py json {round_path}/live.json {round_path}/provenance.json\npython3 {round_path}/source/diagnose.py report {round_path}/live.json {round_path}/provenance.json\n```\n')
 print('结果只覆盖这 12 个合成任务；三次重复不是独立任务总体。共享供应商缓存与负载仍会波动。候选只是语义行为修复，不是对任意自然语言的确定性约束解析；生产部署和完整业务回归不在本轮范围。')

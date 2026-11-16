@@ -1,0 +1,12 @@
+{
+  "name": "lingxios-harness-comparison",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24.9.0" },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.2.2-rc.3",
+    "@deepseek-ai/dsh-tools": "0.2.2-rc.3",
+    "@lingxi-org/lingxios": "4.0.0",
+    "pg": "8.20.0"
+  }
+}
