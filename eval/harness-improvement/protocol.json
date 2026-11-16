@@ -1,5 +1,5 @@
 {
-  "id": "lingxiloop-dsh-improvement-v6",
+  "id": "lingxiloop-dsh-improvement-v7",
   "runtimes": {
     "lingxios-baseline": {
       "version": "4.0.0",
@@ -10,7 +10,7 @@
       "version": "4.0.0",
       "runtimeSourceCommit": "6f709b4e41993cf0eb65c40679bc22bc9a67012b",
       "commit": "a26905990ebae50e20b19c013a77bd35db4348c3",
-      "candidatePatchSha256": "09aa4d2e8237afdcf36cd85130350bb34d87827829a4ed9009862a0adcc8de11",
+      "candidatePatchSha256": "6572eba70fd86d075d65dd2bc0a578c5cc5b07e45aad1c0e39ccfcab1fc30393",
       "build": "unpublished source patch over exact 4.0.0 tag"
     },
     "deepseek-harness": {

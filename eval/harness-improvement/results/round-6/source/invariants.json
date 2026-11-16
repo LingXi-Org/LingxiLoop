@@ -1,0 +1,23 @@
+{
+  "scoringAndFixtureAstUnchanged": {
+    "suite": "fcdc9026b0b1793a04b6cbdf2122365521d6c5b82f77370dbff54a1d5008afa6",
+    "fixture": "10a396fc4121c4bc4cf26c17b4b016091412cf011870919f49d424ea1693a3d3",
+    "score": "2f58a7bb477b19502060847e44508cc21cd24b638b00328782f8674e519f26ad",
+    "priced_usage": "c947d196c1f5a4af84f4dee27e48e9dd24b34c5e0e56ff526f1809ceca9089d9",
+    "summarize": "a86c28d365c9da891023969c73c31df66c96cf171b505c5d7ed8076f2914a5bc",
+    "percentile": "3f1fe22fcbfcef1cbd40d4bdbc2f106625b60f5ea338b7469390e466e44a394e",
+    "rate": "c8ea399d3aabdd2205934b18836d94b91e8b7d3e5ff04d42f351ccef3dc25028"
+  },
+  "unchangedProtocolFields": [
+    "model",
+    "tools",
+    "documents",
+    "repeats",
+    "timeoutMs",
+    "maxModelRequests",
+    "maxToolAttempts",
+    "pricesCnyPerMillion",
+    "instruction"
+  ],
+  "baselineCapture": "../harness-comparison/results/2026-11-16/live.json"
+}

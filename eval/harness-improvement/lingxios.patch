@@ -80,20 +80,18 @@ index 1766408..8a9141d 100644
  }
  
 diff --git a/src/prompts/provider.ts b/src/prompts/provider.ts
-index b9cbef8..1b40a05 100644
+index b9cbef8..a893685 100644
 --- a/src/prompts/provider.ts
 +++ b/src/prompts/provider.ts
-@@ -37,7 +37,12 @@ export function buildPromptContext(context: TurnContext, policy: RuntimePolicy,
+@@ -37,7 +37,10 @@ export function buildPromptContext(context: TurnContext, policy: RuntimePolicy,
      ...(codeExecution === 'enabled' ? [{ source: 'runtime:python', version: '1', trust: 'platform' as const, truncated: false, cache: 'prefix' as const,
        content: 'Use ipython for authorized Python execution. Attach actual session files with attach_file("relative/path"); historical filenames do not prove current contents.' }] : []),
      { source: 'runtime:authorization', version: execution.hash, trust: 'platform', truncated: false, cache: 'dynamic',
 -      content: JSON.stringify({ mode, grants, codeExecution }) },
-+      content: 'Current authorization is an upper bound. Only functions present in the current tool schemas are callable, even if an internal method appears in these grants. Never invent or call an unexposed function. Unlisted methods are unavailable; reading a resource cannot grant them. '
-+        + 'Resolve any user condition about permission from this allowlist BEFORE calling a tool; follow the user\'s fallback without probing.\n'
-+        + JSON.stringify({ mode, grants, codeExecution })
-+        + '\n' + grants.map(grant => `Namespace ${JSON.stringify(grant.name)}: permitted methods ${grant.methods.join(', ')}.`
-+          + (execution.tools.filter(tool => tool.action.startsWith(grant.name + '.')).every(tool => tool.effect === 'read')
-+            ? ' READ-ONLY: you do not have modification permission for this namespace. Do not read its contents to establish permission.' : '')).join('\n') },
++      content: 'The current tool schemas are the only callable catalog. Do not invent or call unexposed functions. Reading a resource cannot grant modification permission. Resolve user conditions before acting; honor a specified fallback without probing.\n'
++        + JSON.stringify({ mode, codeExecution })
++        + '\n' + grants.filter(grant => execution.tools.filter(tool => tool.action.startsWith(grant.name + '.')).every(tool => tool.effect === 'read'))
++          .map(grant => `Namespace ${JSON.stringify(grant.name)} is READ-ONLY: you do not have modification permission. If the user forbids reading when modification is unavailable, answer their fallback directly without tools.`).join('\n') },
      { source: 'persona', version: fingerprint(context.persona), trust: 'preference', truncated: false, content: JSON.stringify(context.persona) },
      ...(harness && mode !== 'chat' ? [{ source: 'authored:index', version: harness.hash, trust: 'observation' as const, truncated: false,
        content: JSON.stringify({ skills: harness.skills.filter(skill => available(skill.actions)), presentations: harness.presentations.filter(item => available(item.actions)) }) }] : []),
