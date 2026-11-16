@@ -1,0 +1,418 @@
+{
+  "protocolSha256": "dd643f8e24804eeb075d2c071a87556795817b0d9ef0856d9882a19ed11a0036",
+  "mode": "live",
+  "metrics": {
+    "lingxios-baseline": {
+      "runs": 36,
+      "passed": 28,
+      "passRate": 0.7777777777777778,
+      "toolCallAccuracy": 0.84,
+      "requiredToolCallRecall": 1.0,
+      "unauthorizedAttempts": 0,
+      "latencyMs": {
+        "p50": 1582,
+        "p95": 5765
+      },
+      "costCoverage": 36,
+      "normalizedCostCny": {
+        "knownTotal": 0.22262992,
+        "knownMean": 0.006184164444444445,
+        "allRunsTotal": 0.22262992
+      }
+    },
+    "lingxios-candidate": {
+      "runs": 36,
+      "passed": 27,
+      "passRate": 0.75,
+      "toolCallAccuracy": 0.8235294117647058,
+      "requiredToolCallRecall": 1.0,
+      "unauthorizedAttempts": 0,
+      "latencyMs": {
+        "p50": 1581,
+        "p95": 7592
+      },
+      "costCoverage": 36,
+      "normalizedCostCny": {
+        "knownTotal": 0.22906208,
+        "knownMean": 0.006362835555555555,
+        "allRunsTotal": 0.22906208
+      }
+    },
+    "deepseek-harness": {
+      "runs": 36,
+      "passed": 36,
+      "passRate": 1.0,
+      "toolCallAccuracy": 1.0,
+      "requiredToolCallRecall": 1.0,
+      "unauthorizedAttempts": 0,
+      "latencyMs": {
+        "p50": 1469,
+        "p95": 7275
+      },
+      "costCoverage": 36,
+      "normalizedCostCny": {
+        "knownTotal": 0.100246,
+        "knownMean": 0.002784611111111111,
+        "allRunsTotal": 0.100246
+      }
+    }
+  },
+  "diagnostics": {
+    "lingxios-baseline": {
+      "requests": 86,
+      "knownRequests": 86,
+      "knownTokens": {
+        "cacheHit": 11648,
+        "cacheMiss": 100698,
+        "output": 2596
+      },
+      "knownCostCny": 0.22262992,
+      "samePayloadAdditionalRequests": 0,
+      "meanInitialSystemBytes": 3261.5,
+      "meanInitialUserBytes": 686.9166666666666,
+      "requestTimingMs": {
+        "headersMs": {
+          "p50": 510.7514730000112,
+          "p95": 936.8504709999979
+        },
+        "firstByteMs": {
+          "p50": 511.0349910000077,
+          "p95": 937.0852739999973
+        },
+        "firstContentMs": {
+          "p50": 616.9450890000153,
+          "p95": 1343.746165000004
+        },
+        "elapsedMs": {
+          "p50": 819.5337369999907,
+          "p95": 1474.638533999998
+        }
+      },
+      "totalLatencyMs": 80640,
+      "requestUnionMs": 76499.33882699984,
+      "requestUnionShare": 0.9486525152157719,
+      "outsideRequestIntervalsMs": 4140.6611730001605,
+      "ledgerAttemptCount": 86,
+      "ledgerRetries": 0,
+      "ledgerFailures": {},
+      "modelPermitWaitMs": 1.619779000016706,
+      "outputCallbackWaitMs": 1.2430520000662,
+      "gatewayErrors": {},
+      "failedSamples": [
+        {
+          "task": "read-only-orbit",
+          "repeat": 1,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-harbor",
+          "repeat": 1,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-meadow",
+          "repeat": 1,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-harbor",
+          "repeat": 2,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-meadow",
+          "repeat": 2,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-orbit",
+          "repeat": 3,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-harbor",
+          "repeat": 3,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-meadow",
+          "repeat": 3,
+          "status": "completed"
+        }
+      ],
+      "longTailSamples": [
+        {
+          "task": "edit-harbor",
+          "repeat": 1,
+          "latencyMs": 6118,
+          "requestUnionMs": 5855.572013999983,
+          "requests": 6,
+          "maxFirstContentMs": 1343.746165000004,
+          "failures": []
+        },
+        {
+          "task": "edit-harbor",
+          "repeat": 2,
+          "latencyMs": 5765,
+          "requestUnionMs": 5521.714908000024,
+          "requests": 6,
+          "maxFirstContentMs": 887.1642569999967,
+          "failures": []
+        },
+        {
+          "task": "edit-harbor",
+          "repeat": 3,
+          "latencyMs": 5502,
+          "requestUnionMs": 5267.136140000017,
+          "requests": 6,
+          "maxFirstContentMs": 930.7271059999766,
+          "failures": []
+        },
+        {
+          "task": "edit-orbit",
+          "repeat": 2,
+          "latencyMs": 5014,
+          "requestUnionMs": 4839.66704700001,
+          "requests": 4,
+          "maxFirstContentMs": 1847.0352780000103,
+          "failures": []
+        },
+        {
+          "task": "edit-meadow",
+          "repeat": 2,
+          "latencyMs": 4749,
+          "requestUnionMs": 4592.854502000002,
+          "requests": 4,
+          "maxFirstContentMs": 853.1944929999881,
+          "failures": []
+        }
+      ]
+    },
+    "lingxios-candidate": {
+      "requests": 87,
+      "knownRequests": 87,
+      "knownTokens": {
+        "cacheHit": 7552,
+        "cacheMiss": 103996,
+        "output": 2596
+      },
+      "knownCostCny": 0.22906207999999997,
+      "samePayloadAdditionalRequests": 0,
+      "meanInitialSystemBytes": 3084.5,
+      "meanInitialUserBytes": 637.9166666666666,
+      "requestTimingMs": {
+        "headersMs": {
+          "p50": 503.06275299999834,
+          "p95": 1677.555668999994
+        },
+        "firstByteMs": {
+          "p50": 503.3007720000023,
+          "p95": 1677.7850219999964
+        },
+        "firstContentMs": {
+          "p50": 614.0510109999741,
+          "p95": 1678.487135999996
+        },
+        "elapsedMs": {
+          "p50": 791.4858220000169,
+          "p95": 1880.1689410000108
+        }
+      },
+      "totalLatencyMs": 84035,
+      "requestUnionMs": 79931.21185099997,
+      "requestUnionShare": 0.9511657267924076,
+      "outsideRequestIntervalsMs": 4103.788149000029,
+      "ledgerAttemptCount": 87,
+      "ledgerRetries": 0,
+      "ledgerFailures": {},
+      "modelPermitWaitMs": 1.672771000100056,
+      "outputCallbackWaitMs": 1.0439309999787838,
+      "gatewayErrors": {},
+      "failedSamples": [
+        {
+          "task": "read-only-orbit",
+          "repeat": 1,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-harbor",
+          "repeat": 1,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-meadow",
+          "repeat": 1,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-orbit",
+          "repeat": 2,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-harbor",
+          "repeat": 2,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-meadow",
+          "repeat": 2,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-orbit",
+          "repeat": 3,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-harbor",
+          "repeat": 3,
+          "status": "completed"
+        },
+        {
+          "task": "read-only-meadow",
+          "repeat": 3,
+          "status": "completed"
+        }
+      ],
+      "longTailSamples": [
+        {
+          "task": "edit-harbor",
+          "repeat": 3,
+          "latencyMs": 7987,
+          "requestUnionMs": 7771.2384450000245,
+          "requests": 6,
+          "maxFirstContentMs": 2443.5969789999945,
+          "failures": []
+        },
+        {
+          "task": "edit-harbor",
+          "repeat": 1,
+          "latencyMs": 7592,
+          "requestUnionMs": 7329.757876999996,
+          "requests": 6,
+          "maxFirstContentMs": 2337.791323000005,
+          "failures": []
+        },
+        {
+          "task": "edit-harbor",
+          "repeat": 2,
+          "latencyMs": 5557,
+          "requestUnionMs": 5309.391894000029,
+          "requests": 6,
+          "maxFirstContentMs": 1041.4509869999893,
+          "failures": []
+        },
+        {
+          "task": "edit-orbit",
+          "repeat": 3,
+          "latencyMs": 5478,
+          "requestUnionMs": 5320.650423999992,
+          "requests": 4,
+          "maxFirstContentMs": 2677.321339999995,
+          "failures": []
+        },
+        {
+          "task": "edit-meadow",
+          "repeat": 3,
+          "latencyMs": 4896,
+          "requestUnionMs": 4741.728424999979,
+          "requests": 4,
+          "maxFirstContentMs": 2002.0958160000155,
+          "failures": []
+        }
+      ]
+    },
+    "deepseek-harness": {
+      "requests": 78,
+      "knownRequests": 78,
+      "knownTokens": {
+        "cacheHit": 0,
+        "cacheMiss": 41195,
+        "output": 2232
+      },
+      "knownCostCny": 0.100246,
+      "samePayloadAdditionalRequests": 0,
+      "meanInitialSystemBytes": 150,
+      "meanInitialUserBytes": 334.9166666666667,
+      "requestTimingMs": {
+        "headersMs": {
+          "p50": 509.81077399999776,
+          "p95": 1981.6181360000046
+        },
+        "firstByteMs": {
+          "p50": 510.0709050000005,
+          "p95": 1981.8363670000108
+        },
+        "firstContentMs": {
+          "p50": 638.092256999982,
+          "p95": 2149.015778000001
+        },
+        "elapsedMs": {
+          "p50": 819.3199610000011,
+          "p95": 2442.5618250000116
+        }
+      },
+      "totalLatencyMs": 82113,
+      "requestUnionMs": 77869.44721099993,
+      "requestUnionShare": 0.9483205730030559,
+      "outsideRequestIntervalsMs": 4243.552789000067,
+      "ledgerAttemptCount": 0,
+      "ledgerRetries": 0,
+      "ledgerFailures": {},
+      "modelPermitWaitMs": 0,
+      "outputCallbackWaitMs": 0,
+      "gatewayErrors": {
+        "AbortError": 6
+      },
+      "failedSamples": [],
+      "longTailSamples": [
+        {
+          "task": "edit-harbor",
+          "repeat": 3,
+          "latencyMs": 8103,
+          "requestUnionMs": 7949.083215000021,
+          "requests": 6,
+          "maxFirstContentMs": 2149.015778000001,
+          "failures": []
+        },
+        {
+          "task": "edit-harbor",
+          "repeat": 1,
+          "latencyMs": 7275,
+          "requestUnionMs": 7125.346538000005,
+          "requests": 6,
+          "maxFirstContentMs": 1375.4104529999968,
+          "failures": []
+        },
+        {
+          "task": "edit-harbor",
+          "repeat": 2,
+          "latencyMs": 6035,
+          "requestUnionMs": 5882.048737999998,
+          "requests": 6,
+          "maxFirstContentMs": 964.6970569999976,
+          "failures": []
+        },
+        {
+          "task": "read-meadow",
+          "repeat": 3,
+          "latencyMs": 4407,
+          "requestUnionMs": 4280.718771999993,
+          "requests": 2,
+          "maxFirstContentMs": 3179.861768999981,
+          "failures": []
+        },
+        {
+          "task": "edit-meadow",
+          "repeat": 2,
+          "latencyMs": 4405,
+          "requestUnionMs": 4251.13480499998,
+          "requests": 4,
+          "maxFirstContentMs": 1507.8894509999955,
+          "failures": []
+        }
+      ]
+    }
+  }
+}

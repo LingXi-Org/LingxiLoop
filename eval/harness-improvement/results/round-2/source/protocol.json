@@ -1,0 +1,115 @@
+{
+  "id": "lingxiloop-dsh-improvement-v2",
+  "runtimes": {
+    "lingxios-baseline": {
+      "version": "4.0.0",
+      "runtimeSourceCommit": "6f709b4e41993cf0eb65c40679bc22bc9a67012b",
+      "commit": "a26905990ebae50e20b19c013a77bd35db4348c3"
+    },
+    "lingxios-candidate": {
+      "version": "4.0.0",
+      "runtimeSourceCommit": "6f709b4e41993cf0eb65c40679bc22bc9a67012b",
+      "commit": "a26905990ebae50e20b19c013a77bd35db4348c3",
+      "candidatePatchSha256": "a7a42397dff7beb2352be9009405e1271a9f30328b34c6fbf9f55c3fe795c2c2",
+      "build": "unpublished source patch over exact 4.0.0 tag"
+    },
+    "deepseek-harness": {
+      "version": "0.2.2-rc.3",
+      "commit": "39163dd30f703a79079e2d2446545cff3c453738"
+    }
+  },
+  "model": {
+    "baseUrl": "https://api.siliconflow.cn/v1/",
+    "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "providerVersion": "SiliconFlow DeepSeek-V4.1-Flash (provider alias; immutable weights revision not exposed)",
+    "format": "chat-completions",
+    "thinking": "disabled",
+    "temperature": 0,
+    "maxTokens": 1536,
+    "parallelToolCalls": false,
+    "provider": "siliconflow"
+  },
+  "repeats": 3,
+  "timeoutMs": 90000,
+  "maxModelRequests": 8,
+  "maxToolAttempts": 8,
+  "instruction": "按用户要求使用可用工具。最终回复仅用指定格式，不加 Markdown。工具和权限由会话提供。",
+  "tools": [
+    {
+      "name": "document__read",
+      "description": "读取当前授权文档，返回内容和版本。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "document__edit",
+      "description": "以读到的当前版本写入完整内容。版本过期时返回冲突，不提交写入。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "integer"
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "content"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "documents": [
+    {
+      "id": "orbit",
+      "content": "材料截止：周三",
+      "replacement": "材料截止：周五",
+      "peerSuffix": "；版本由同事复核",
+      "revision": 7,
+      "directQuestion": "17 加 25",
+      "directAnswer": "42"
+    },
+    {
+      "id": "harbor",
+      "content": "答疑开始：14:30",
+      "replacement": "答疑开始：15:00",
+      "peerSuffix": "；请提前到场",
+      "revision": 12,
+      "directQuestion": "9 乘 8",
+      "directAnswer": "72"
+    },
+    {
+      "id": "meadow",
+      "content": "报名人数：18",
+      "replacement": "报名人数：20",
+      "peerSuffix": "；名额已核对",
+      "revision": 4,
+      "directQuestion": "100 减 37",
+      "directAnswer": "63"
+    }
+  ],
+  "pricesCnyPerMillion": {
+    "cacheHit": 0.04,
+    "cacheMiss": 2,
+    "output": 8
+  },
+  "pricingSource": "https://www.siliconflow.cn/pricing",
+  "pricingBasis": "CNY list price at 00:00-02:00 and 08:00-24:00 Asia/Shanghai; no account discount; off-peak is half"
+}

@@ -117,7 +117,8 @@ print('\n未通过样本：\n')
 for runtime, d in out['diagnostics'].items():
     print(f"- {runtime}：" + ('；'.join(f"{r['task']} #{r['repeat']} ({r['status']})" for r in d['failedSamples']) or '无') + '。')
 print('\n## 修复与复现\n')
-print('`lingxios.patch` 只修改通用提示词：动作前检查禁止条件和条件分支；授权不代表必须调用；回执和 verifier 不替代显式写后读回；每次最终回复检查所有要求，并精简重复说明。未加入任务 ID、文档内容、答案或模型专用分支，授权与持久化核验不变。')
+print('`lingxios.patch` 修改通用执行提示词和当前请求的呈现：动作前检查禁止条件与条件分支；能力从目录与授权判断，不通过读取内容探测缺失的写权限；回执和 verifier 不替代显式写后读回。当前人类请求以带来源的原文 user 消息呈现，其他信任级别仍保留数据封装。未加入任务 ID、文档内容、答案或模型专用分支，授权与持久化核验不变。')
 print(f"\n原始采集 SHA-256：`{hashlib.sha256(Path(filename).read_bytes()).hexdigest()}`。协议摘要：`{capture['protocolSha256']}`。候选源码和编译输出指纹见 `provenance.json`，补丁来自固定 4.0.0 源码提交。\n")
-print('```sh\npython3 compare.py score results/round-1/live.json\npython3 diagnose.py json results/round-1/live.json results/round-1/provenance.json\npython3 diagnose.py report results/round-1/live.json results/round-1/provenance.json\n```\n')
+round_path = 'results/' + Path(filename).parent.name
+print(f'```sh\npython3 compare.py score {round_path}/live.json\npython3 diagnose.py json {round_path}/live.json {round_path}/provenance.json\npython3 diagnose.py report {round_path}/live.json {round_path}/provenance.json\n```\n')
 print('结果只覆盖这 12 个合成任务；三次重复不是独立任务总体。共享供应商缓存与负载仍会波动。候选只是语义行为修复，不是对任意自然语言的确定性约束解析；生产部署和完整业务回归不在本轮范围。')
