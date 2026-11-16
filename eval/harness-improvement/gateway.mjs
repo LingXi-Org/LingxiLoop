@@ -111,6 +111,11 @@ export async function openGateway({ manifest, task, tools, executeTool, key }) {
       if (body.stream) body.stream_options = { include_usage: true }
       catalogs.push(tools.map(tool => tool.name))
       usageIndex = providerUsage.push(null) - 1
+      if (!key && task.competingChange && usageIndex === 2 && nativeCatalog.has('task__inspect')) {
+        assert.ok((body.messages ?? []).some(message => message.role === 'tool' &&
+          typeof message.content === 'string' && message.content.includes('version_conflict')),
+          'Native conflict diagnostics must survive the adapter')
+      }
       began = performance.now()
       const messageBytesByRole = {}
       for (const message of body.messages ?? []) {

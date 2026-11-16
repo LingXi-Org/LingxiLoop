@@ -100,9 +100,11 @@
 原始采集 SHA-256：`f8d0487d3ce08c3f9d505999e5304e6e806757e2ba8d612b84884de8973ca4d7`。协议摘要：`dd643f8e24804eeb075d2c071a87556795817b0d9ef0856d9882a19ed11a0036`。候选源码和编译输出指纹见 `provenance.json`，补丁来自固定 4.0.0 源码提交。
 
 ```sh
-python3 compare.py score results/round-2/live.json
-python3 diagnose.py json results/round-2/live.json results/round-2/provenance.json
-python3 diagnose.py report results/round-2/live.json results/round-2/provenance.json
+python3 results/round-2/source/compare.py score results/round-2/live.json
+python3 results/round-2/source/diagnose.py json results/round-2/live.json results/round-2/provenance.json
+python3 results/round-2/source/diagnose.py report results/round-2/live.json results/round-2/provenance.json
 ```
 
 结果只覆盖这 12 个合成任务；三次重复不是独立任务总体。共享供应商缓存与负载仍会波动。候选只是语义行为修复，不是对任意自然语言的确定性约束解析；生产部署和完整业务回归不在本轮范围。
+
+本轮候选仍为 27/36，未接受；第二轮 6 次 DeepSeek 网关 AbortError 均在完整结束标记及 usage 之后，是连接收尾而非模型失败。

@@ -12,7 +12,7 @@
 
 ## 修复范围
 
-补丁修改 LingxiOS `src/prompts/sections.ts` 与请求消息渲染 `src/context/compiler.ts`，不修改模型、评分器、授权或运行循环。通用规则要求逐动作核对用户的禁止条件和 fallback，明确工具可用并不表示应该调用，以及写入回执/运行时 verifier 不替代用户要求的显式读回。将完成前检查覆盖到每次最终回复，精简重复说明并更正过时的身份版本文案。当前人类请求以带来源的原文 user 消息呈现，避免 JSON 转义封装；代理修订、观察和偏好仍作为带信任标签的数据。新增信任边界回归检查。没有文档 ID、任务答案或 benchmark 特判。
+补丁修改 LingxiOS `src/prompts/sections.ts`、授权说明 `src/prompts/provider.ts` 与请求消息渲染 `src/context/compiler.ts`，不修改模型、评分器、授权或运行循环。通用规则要求逐动作核对用户的禁止条件和 fallback，明确工具可用并不表示应该调用，以及写入回执/运行时 verifier 不替代用户要求的显式读回。将完成前检查覆盖到每次最终回复，精简重复说明并更正过时的身份版本文案。当前人类请求以带来源的原文 user 消息呈现，避免 JSON 转义封装；代理修订、观察和偏好仍作为带信任标签的数据。按真实工具 effect 标明各 namespace 的只读状态，同时明确 grants 是授权上界、只有当前 provider schema 中暴露的函数可调用。新增信任边界回归检查。没有文档 ID、任务答案或 benchmark 特判。
 
 这是提示词层面的语义修复，不是对任意自然语言指令的确定性强制执行。真实模型结果决定是否达到本轮回归要求。
 
@@ -30,10 +30,14 @@ LingxiOS 另外从隔离库采集模型 ledger 的白名单字段（尝试号、
 
 ```sh
 python3 compare.py manifest
-python3 compare.py score results/round-1/live.json
-python3 compare.py report results/round-1/live.json
+python3 results/round-1/source/compare.py score results/round-1/live.json
+python3 results/round-1/source/compare.py report results/round-1/live.json
 ```
 
 工件包含原始采集、逐行 journal、指标、替身结果，以及记录源码/补丁/依赖/编译输出哈希的 provenance。保留所有真实尝试，不通过补跑替换失败样本。
 
-第一候选未通过（27/36），结果与源码快照完整保留在 `results/round-1`；第二候选包含请求呈现修正，不覆盖第一轮。
+所有迭代分别保留在 `results/round-N`，每轮附带 `source/` 快照。重算历史轮次必须使用其快照中的 `compare.py` 和 `diagnose.py`，不能套用最新协议。最终汇总见 [REPORT.md](REPORT.md)。
+
+## 适配器错误语义修正
+
+第六轮起，两组 LingxiOS 的 `conflict / denied / invalid` 分别通过公开 `NoEffectError` 映射为 `version_conflict / forbidden / invalid_arguments`。此前统一使用 `native_rejected`，会丢失版本冲突语义、产生未知失败诊断。前五轮保留但不能作为完全语义对等的冲突恢复比较。业务工具 schema、权限、fixture、评分器和模型均未改变。替身 E2E 新增冲突后原生模型观察必须包含 `version_conflict` 的断言。

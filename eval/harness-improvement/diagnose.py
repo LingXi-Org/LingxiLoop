@@ -119,7 +119,7 @@ print('\n未通过样本：\n')
 for runtime, d in out['diagnostics'].items():
     print(f"- {runtime}：" + ('；'.join(f"{r['task']} #{r['repeat']} ({r['status']})" for r in d['failedSamples']) or '无') + '。')
 print('\n## 修复与复现\n')
-print('`lingxios.patch` 修改通用执行提示词和当前请求的呈现：动作前检查禁止条件与条件分支；精简重复规则并将运行时授权明确为完整 allowlist，能力从目录与授权判断，不通过读取内容探测缺失的写权限；回执和 verifier 不替代显式写后读回。当前人类请求以带来源的原文 user 消息呈现，其他信任级别仍保留数据封装。未加入任务 ID、文档内容、答案或模型专用分支，授权与持久化核验不变。')
+print('`lingxios.patch` 修改通用执行提示词和当前请求的呈现：动作前检查禁止条件与条件分支；精简重复规则并区分运行时授权上界与实际可调用目录，并显式标明各命名空间的只读状态，能力从目录与授权判断，不通过读取内容探测缺失的写权限；回执和 verifier 不替代显式写后读回。当前人类请求以带来源的原文 user 消息呈现，其他信任级别仍保留数据封装。未加入任务 ID、文档内容、答案或模型专用分支，授权与持久化核验不变。')
 print(f"\n原始采集 SHA-256：`{hashlib.sha256(Path(filename).read_bytes()).hexdigest()}`。协议摘要：`{capture['protocolSha256']}`。候选源码和编译输出指纹见 `provenance.json`，补丁来自固定 4.0.0 源码提交。\n")
 round_path = 'results/' + Path(filename).parent.name
 print(f'```sh\npython3 {round_path}/source/compare.py score {round_path}/live.json\npython3 {round_path}/source/diagnose.py json {round_path}/live.json {round_path}/provenance.json\npython3 {round_path}/source/diagnose.py report {round_path}/live.json {round_path}/provenance.json\n```\n')

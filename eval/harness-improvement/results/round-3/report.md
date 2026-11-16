@@ -109,3 +109,5 @@ python3 results/round-3/source/diagnose.py report results/round-3/live.json resu
 ```
 
 结果只覆盖这 12 个合成任务；三次重复不是独立任务总体。共享供应商缓存与负载仍会波动。候选只是语义行为修复，不是对任意自然语言的确定性约束解析；生产部署和完整业务回归不在本轮范围。
+
+本轮有改善，但仍有 5 次多余读取，未判定完成修复。

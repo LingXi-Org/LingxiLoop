@@ -100,9 +100,11 @@
 原始采集 SHA-256：`82e7a1972d88af93e1a126833362e15cf16c14ec77e202717067c0e6eab0cc60`。协议摘要：`a9243c875e170540892e75ce6f90fe79328a195ba452a7f0c4ce8ee77564441b`。候选源码和编译输出指纹见 `provenance.json`，补丁来自固定 4.0.0 源码提交。
 
 ```sh
-python3 compare.py score results/round-1/live.json
-python3 diagnose.py json results/round-1/live.json results/round-1/provenance.json
-python3 diagnose.py report results/round-1/live.json results/round-1/provenance.json
+python3 results/round-1/source/compare.py score results/round-1/live.json
+python3 results/round-1/source/diagnose.py json results/round-1/live.json results/round-1/provenance.json
+python3 results/round-1/source/diagnose.py report results/round-1/live.json results/round-1/provenance.json
 ```
 
 结果只覆盖这 12 个合成任务；三次重复不是独立任务总体。共享供应商缓存与负载仍会波动。候选只是语义行为修复，不是对任意自然语言的确定性约束解析；生产部署和完整业务回归不在本轮范围。
+
+本轮候选未达到回归要求（27/36），未接受。后续轮次不覆盖本轮。

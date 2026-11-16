@@ -55,7 +55,8 @@ export async function openLingxiOS({ pool, root, manifest, task, tools, executeT
       },
       async execute(_context, args) {
         const result = await executeTool(name, args)
-        if (result.outcome !== 'ok') throw new NoEffectError(JSON.stringify(result), 'native_rejected')
+        if (result.outcome !== 'ok') throw new NoEffectError(JSON.stringify(result),
+          { conflict: 'version_conflict', denied: 'forbidden', invalid: 'invalid_arguments' }[result.outcome] ?? 'native_rejected')
         return { ok: true, value: result }
       },
       ...(name === 'document__edit' ? { async verify(_context, _input, receipt) {
