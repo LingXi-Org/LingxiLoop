@@ -1,0 +1,16 @@
+{
+  "actionsRunId": "43897103735",
+  "completedAttempt": 2,
+  "attempts": [
+    {
+      "attempt": 1,
+      "result": "production metadata request timed out before real-model capture",
+      "realSamples": 0
+    },
+    {
+      "attempt": 2,
+      "result": "success",
+      "realSamples": 108
+    }
+  ]
+}

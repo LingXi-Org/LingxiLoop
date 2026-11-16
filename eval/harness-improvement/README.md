@@ -1,6 +1,6 @@
 # LingxiOS 工具约束修复与同期三组评估
 
-本轮在上轮已授权的独立评估分支执行，继续使用仓库现有 GitHub Secrets 与 Sigillo，不读回或落盘密钥。生产依赖与部署不变。
+本轮在上轮已授权的独立评估分支执行，继续使用仓库现有 GitHub Secrets 与 Sigillo，密钥仅注入 CI 进程，不输出或落盘。生产依赖与部署不变。
 
 ## 固定协议
 
@@ -12,7 +12,7 @@
 
 ## 修复范围
 
-补丁修改 LingxiOS `src/prompts/sections.ts`、授权说明 `src/prompts/provider.ts` 与请求消息渲染 `src/context/compiler.ts`，不修改模型、评分器、授权或运行循环。通用规则要求逐动作核对用户的禁止条件和 fallback，明确工具可用并不表示应该调用，以及写入回执/运行时 verifier 不替代用户要求的显式读回。将完成前检查覆盖到每次最终回复，精简重复说明并更正过时的身份版本文案。当前人类请求以带来源的原文 user 消息呈现，避免 JSON 转义封装；代理修订、观察和偏好仍作为带信任标签的数据。按真实工具 effect 标明各 namespace 的只读状态，同时明确 grants 是授权上界、只有当前 provider schema 中暴露的函数可调用。新增信任边界回归检查。没有文档 ID、任务答案或 benchmark 特判。
+补丁修改 LingxiOS `src/prompts/sections.ts`、授权说明 `src/prompts/provider.ts` 与请求消息渲染 `src/context/compiler.ts`，不修改模型、评分器、授权或运行循环。通用规则要求逐动作核对用户的禁止条件和 fallback，明确工具可用并不表示应该调用，以及写入回执/运行时 verifier 不替代用户要求的显式读回。将完成前检查覆盖到每次最终回复，精简重复说明并更正过时的身份版本文案。当前人类请求以带来源的原文 user 消息呈现，避免 JSON 转义封装；代理修订、观察和偏好仍作为带信任标签的数据。按真实工具 effect 标明各 namespace 的只读状态，去掉与 schema 重复的内部方法清单，只从当前 provider schema 选择函数；内部 grants 和实际权限检查保持不变。新增信任边界回归检查。没有文档 ID、任务答案或 benchmark 特判。
 
 这是提示词层面的语义修复，不是对任意自然语言指令的确定性强制执行。真实模型结果决定是否达到本轮回归要求。
 
