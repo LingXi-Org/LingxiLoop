@@ -1,0 +1,92 @@
+name: Harness improvement
+
+# A dedicated evaluation branch can run without changing the default branch.
+on:
+  push:
+    branches: ['eval/harness-comparison-*']
+    paths: ['eval/harness-improvement/**', '.github/workflows/harness-improvement.yml']
+  workflow_dispatch:
+
+permissions: { contents: read, packages: read }
+concurrency:
+  group: harness-improvement-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    if: startsWith(github.ref, 'refs/heads/eval/harness-comparison-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 210
+    services:
+      postgres:
+        image: postgres:16.13@sha256:5d143123fdf80462d1778cd4f24b9f7ca13c87174bca19141fb194c5a1ebca59
+        env:
+          POSTGRES_USER: harness_eval
+          POSTGRES_PASSWORD: harness-eval-local-only
+          POSTGRES_DB: harness_eval
+        ports: ['127.0.0.1:55438:5432']
+        options: --health-cmd "pg_isready -U harness_eval -d harness_eval" --health-interval 2s --health-retries 20
+    defaults:
+      run:
+        working-directory: eval/harness-improvement
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v5
+        with: { node-version: '24.11.1' }
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - name: Install pinned published runtimes
+        run: node with-secrets.mjs install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.LINGXIOS_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v5
+        with:
+          repository: LingXi-Org/LingxiOS
+          ref: 6f709b4e41993cf0eb65c40679bc22bc9a67012b
+          path: eval/harness-improvement/.state/candidate
+          persist-credentials: false
+      - name: Build and verify candidate from exact production source
+        working-directory: eval/harness-improvement/.state/candidate
+        run: |
+          git apply ../../lingxios.patch
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+          npm run typecheck
+          node --test scripts/test-*.mjs
+          node ../../candidate.mjs
+      - name: Verify all 108 observations with the local model substitute
+        run: |
+          node with-secrets.mjs smoke .state/smoke.json
+          python3 compare.py score .state/smoke.json > .state/smoke-metrics.json
+      - name: Verify production and pinned model using existing Sigillo secrets
+        env:
+          SIGILLO_TOKEN: ${{ secrets.SIGILLO_TOKEN }}
+          SIGILLO_API_URL: https://sigillo.lingxilearn.cn
+        run: npm exec --yes --package=sigillo@0.14.2 -- sigillo run -p 01M1TZH9C21C1A9PFAR8E41553 -c prod -- node preflight.mjs
+      - name: Run all 108 real-model observations
+        env:
+          SIGILLO_TOKEN: ${{ secrets.SIGILLO_TOKEN }}
+          SIGILLO_API_URL: https://sigillo.lingxilearn.cn
+        run: npm exec --yes --package=sigillo@0.14.2 -- sigillo run -p 01M1TZH9C21C1A9PFAR8E41553 -c prod -- node with-secrets.mjs live .state/live.json
+      - name: Score complete paired observations
+        run: |
+          python3 compare.py score .state/live.json > .state/metrics.json
+          python3 compare.py report .state/live.json > .state/report.md
+          cat .state/report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain evaluation evidence, including partial captures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: harness-improvement-${{ github.run_id }}-${{ github.run_attempt }}
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            eval/harness-improvement/.state/provenance.json
+            eval/harness-improvement/.state/smoke-metrics.json
+            eval/harness-improvement/.state/live.json
+            eval/harness-improvement/.state/live.json.jsonl
+            eval/harness-improvement/.state/metrics.json
+            eval/harness-improvement/.state/report.md
