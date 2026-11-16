@@ -4,6 +4,13 @@ import { readFile, mkdir, writeFile } from 'node:fs/promises'
 import { childEnvironment } from './with-secrets.mjs'
 
 const protocol = JSON.parse(await readFile(new URL('./protocol.json', import.meta.url)))
+// Configuration metadata only: never print values of keys, tokens or connection strings.
+const configured = process.env.OPENAI_BASE_URL ? new URL(process.env.OPENAI_BASE_URL.trim()) : null
+console.log(JSON.stringify({
+  modelVariableNames: Object.keys(process.env).filter(name => /DEEPSEEK|SILICONFLOW|OPENAI|MODEL/.test(name)).sort(),
+  configuredProviderHost: configured?.hostname ?? null,
+  configuredModel: /^[a-zA-Z0-9_./:-]{1,160}$/.test(process.env.OPENAI_MODEL ?? '') ? process.env.OPENAI_MODEL : null,
+}))
 const env = childEnvironment(process.env, 'live')
 const production = await fetch('https://loop.lingxilearn.cn/api/meta', {
   redirect: 'error', signal: AbortSignal.timeout(20000),
