@@ -58,7 +58,7 @@ jobs:
       - name: Score complete paired observations
         run: |
           python3 compare.py score .state/live.json > .state/metrics.json
-          python3 compare.py report .state/live.json > .state/report.md
+          python3 build-report.py .state/live.json .state/provenance.json > .state/report.md
           cat .state/report.md >> "$GITHUB_STEP_SUMMARY"
       - name: Retain evaluation evidence, including partial captures
         if: always()

@@ -1,0 +1,3583 @@
+{
+  "protocolSha256": "a2d4b6d184f739469a4dcaa96349b245f41f32f40692e1767d0bbe16c5f5e049",
+  "runtimes": {
+    "lingxios": {
+      "version": "4.0.0",
+      "runtimeSourceCommit": "6f709b4e41993cf0eb65c40679bc22bc9a67012b",
+      "commit": "a26905990ebae50e20b19c013a77bd35db4348c3"
+    },
+    "deepseek-harness": {
+      "version": "0.2.2-rc.3",
+      "commit": "39163dd30f703a79079e2d2446545cff3c453738"
+    }
+  },
+  "model": {
+    "baseUrl": "https://api.siliconflow.cn/v1/",
+    "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "providerVersion": "SiliconFlow DeepSeek-V4.1-Flash (provider alias; immutable weights revision not exposed)",
+    "format": "chat-completions",
+    "thinking": "disabled",
+    "temperature": 0,
+    "maxTokens": 1536,
+    "parallelToolCalls": false,
+    "provider": "siliconflow"
+  },
+  "mode": "live",
+  "rows": [
+    {
+      "task": "read-orbit",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "材料截止：周三",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 2283,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 992,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1177,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-orbit",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "材料截止：周三",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 19238,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 348,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 416,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-orbit",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "材料截止：周五",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 19702,
+      "finalState": {
+        "content": "材料截止：周五",
+        "revision": 8
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "orbit",
+            "revision": 7,
+            "content": "材料截止：周五"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 481,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 549,
+          "output": 74
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 652,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 719,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-orbit",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "材料截止：周五",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 43944,
+      "finalState": {
+        "content": "材料截止：周五",
+        "revision": 8
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "orbit",
+            "revision": 7,
+            "content": "材料截止：周五"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1125,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1308,
+          "output": 74
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1531,
+          "output": 38
+        },
+        {
+          "cacheHit": 1280,
+          "cacheMiss": 439,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-orbit",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 615,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1011,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-orbit",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 747,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 366,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-orbit",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "42",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 1789,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 449,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-orbit",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "42",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1114,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1094,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-harbor",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "答疑开始：14:30",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 3525,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 994,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1180,
+          "output": 6
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-harbor",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "答疑开始：14:30",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 2126,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 347,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 419,
+          "output": 6
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-harbor",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "答疑开始：15:00；请提前到场",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 5329,
+      "finalState": {
+        "content": "答疑开始：15:00；请提前到场",
+        "revision": 14
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "harbor",
+            "revision": 12,
+            "content": "答疑开始：15:00"
+          },
+          "outcome": "conflict"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "harbor",
+            "revision": 13,
+            "content": "答疑开始：15:00；请提前到场"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 484,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 556,
+          "output": 78
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 653,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 728,
+          "output": 82
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 845,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 920,
+          "output": 10
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": [
+        "AbortError"
+      ]
+    },
+    {
+      "task": "edit-harbor",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "答疑开始：15:00；请提前到场",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 8175,
+      "finalState": {
+        "content": "答疑开始：15:00；请提前到场",
+        "revision": 14
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "harbor",
+            "revision": 12,
+            "content": "答疑开始：15:00"
+          },
+          "outcome": "conflict"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "content": "答疑开始：15:00；请提前到场",
+            "id": "harbor",
+            "revision": 13
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1130,
+          "output": 46
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1324,
+          "output": 78
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1676,
+          "output": 40
+        },
+        {
+          "cacheHit": 1280,
+          "cacheMiss": 474,
+          "output": 82
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1994,
+          "output": 40
+        },
+        {
+          "cacheHit": 1792,
+          "cacheMiss": 399,
+          "output": 10
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-harbor",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1662,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1011,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1192,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-harbor",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 675,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 369,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-harbor",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "72",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 1255,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 448,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-harbor",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "72",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1337,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1095,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-meadow",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "报名人数：18",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1946,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 991,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1170,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-meadow",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "报名人数：18",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 10615,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 348,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 417,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-meadow",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "报名人数：20",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 3633,
+      "finalState": {
+        "content": "报名人数：20",
+        "revision": 5
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "meadow",
+            "revision": 4,
+            "content": "报名人数：20"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 480,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 549,
+          "output": 75
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 653,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 721,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": [
+        "AbortError"
+      ]
+    },
+    {
+      "task": "edit-meadow",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "报名人数：20",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 4635,
+      "finalState": {
+        "content": "报名人数：20",
+        "revision": 5
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "meadow",
+            "revision": 4,
+            "content": "报名人数：20"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 1024,
+          "cacheMiss": 106,
+          "output": 45
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1327,
+          "output": 75
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1554,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1748,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-meadow",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1519,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1011,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1192,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-meadow",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 6831,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 368,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 437,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-meadow",
+      "repeat": 1,
+      "runtime": "deepseek-harness",
+      "answer": "63",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 4422,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 449,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-meadow",
+      "repeat": 1,
+      "runtime": "lingxios",
+      "answer": "63",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 977,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1098,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-orbit",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "材料截止：周三",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 5585,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 346,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 414,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": [
+        "AbortError"
+      ]
+    },
+    {
+      "task": "read-orbit",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "材料截止：周三",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 2072,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 995,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1182,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-orbit",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "材料截止：周五",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 12298,
+      "finalState": {
+        "content": "材料截止：周五",
+        "revision": 8
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "orbit",
+            "revision": 7,
+            "content": "材料截止：周五"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1124,
+          "output": 45
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1316,
+          "output": 74
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1536,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1722,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-orbit",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "材料截止：周五",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 12369,
+      "finalState": {
+        "content": "材料截止：周五",
+        "revision": 8
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "orbit",
+            "revision": 7,
+            "content": "材料截止：周五"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 479,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 547,
+          "output": 74
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 650,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 717,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-orbit",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 25210,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 366,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 434,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-orbit",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 694,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1010,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-orbit",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "42",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 793,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1100,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-orbit",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "42",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 680,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 449,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-harbor",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "答疑开始：14:30",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 14410,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 347,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 419,
+          "output": 6
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-harbor",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "答疑开始：14:30",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1415,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 989,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1172,
+          "output": 6
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-harbor",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "答疑开始：15:00；请提前到场",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 58231,
+      "finalState": {
+        "content": "答疑开始：15:00；请提前到场",
+        "revision": 14
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "harbor",
+            "revision": 12,
+            "content": "答疑开始：15:00"
+          },
+          "outcome": "conflict"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "content": "答疑开始：15:00；请提前到场",
+            "id": "harbor",
+            "revision": 13
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        null,
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1129,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1314,
+          "output": 78
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1664,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1740,
+          "output": 82
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1977,
+          "output": 10
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-harbor",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "答疑开始：15:00；请提前到场",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 5643,
+      "finalState": {
+        "content": "答疑开始：15:00；请提前到场",
+        "revision": 14
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "harbor",
+            "revision": 12,
+            "content": "答疑开始：15:00"
+          },
+          "outcome": "conflict"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "content": "答疑开始：15:00；请提前到场",
+            "id": "harbor",
+            "revision": 13
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 483,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 555,
+          "output": 78
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 652,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 727,
+          "output": 82
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 844,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 919,
+          "output": 10
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-harbor",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 1195,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 369,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-harbor",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1399,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1014,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1194,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-harbor",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "72",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 7412,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1094,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-harbor",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "72",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 663,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 450,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-meadow",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "报名人数：18",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 1551,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 348,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 417,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-meadow",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "报名人数：18",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 2049,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 988,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1168,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-meadow",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "报名人数：20",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 4116,
+      "finalState": {
+        "content": "报名人数：20",
+        "revision": 5
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "meadow",
+            "revision": 4,
+            "content": "报名人数：20"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1124,
+          "output": 46
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1310,
+          "output": 75
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1532,
+          "output": 39
+        },
+        {
+          "cacheHit": 1280,
+          "cacheMiss": 440,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-meadow",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "报名人数：20",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 3765,
+      "finalState": {
+        "content": "报名人数：20",
+        "revision": 5
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "meadow",
+            "revision": 4,
+            "content": "报名人数：20"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 479,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 548,
+          "output": 75
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 652,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 720,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-meadow",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 1424,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 367,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 436,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-meadow",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 2429,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1009,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1193,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-meadow",
+      "repeat": 2,
+      "runtime": "lingxios",
+      "answer": "63",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 616,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1097,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-meadow",
+      "repeat": 2,
+      "runtime": "deepseek-harness",
+      "answer": "63",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 859,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 450,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-orbit",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "材料截止：周三",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1962,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 988,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1166,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-orbit",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "材料截止：周三",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 1958,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 348,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 416,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-orbit",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "材料截止：周五",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 4039,
+      "finalState": {
+        "content": "材料截止：周五",
+        "revision": 8
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "orbit",
+            "revision": 7,
+            "content": "材料截止：周五"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 480,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 548,
+          "output": 74
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 651,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 718,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-orbit",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "材料截止：周五",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 4726,
+      "finalState": {
+        "content": "材料截止：周五",
+        "revision": 8
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "orbit",
+            "revision": 7,
+            "content": "材料截止：周五"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "orbit"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1124,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1308,
+          "output": 74
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1528,
+          "output": 38
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1712,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-orbit",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 1183,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1010,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-orbit",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 2918,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 367,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-orbit",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "42",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 792,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 451,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-orbit",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "42",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 757,
+      "finalState": {
+        "revision": 7,
+        "content": "材料截止：周三"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1101,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-harbor",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "答疑开始：14:30",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 4844,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 988,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1168,
+          "output": 6
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-harbor",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "答疑开始：14:30",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 1640,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 349,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 421,
+          "output": 6
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-harbor",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "答疑开始：15:00；请提前到场",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 27521,
+      "finalState": {
+        "content": "答疑开始：15:00；请提前到场",
+        "revision": 14
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "harbor",
+            "revision": 12,
+            "content": "答疑开始：15:00"
+          },
+          "outcome": "conflict"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "content": "答疑开始：15:00；请提前到场",
+            "id": "harbor",
+            "revision": 13
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 484,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 556,
+          "output": 78
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 653,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 728,
+          "output": 82
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 845,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 920,
+          "output": 10
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-harbor",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "答疑开始：15:00；请提前到场",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 23558,
+      "finalState": {
+        "content": "答疑开始：15:00；请提前到场",
+        "revision": 14
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "harbor",
+            "revision": 12,
+            "content": "答疑开始：15:00"
+          },
+          "outcome": "conflict"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "content": "答疑开始：15:00；请提前到场",
+            "id": "harbor",
+            "revision": 13
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1132,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1318,
+          "output": 78
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1679,
+          "output": 40
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1759,
+          "output": 82
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 2000,
+          "output": 10
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-harbor",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 32922,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "harbor"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1015,
+          "output": 40
+        },
+        null,
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1206,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": [
+        "AbortError"
+      ]
+    },
+    {
+      "task": "read-only-harbor",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 704,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 369,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-harbor",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "72",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 617,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 449,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-harbor",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "72",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 3174,
+      "finalState": {
+        "revision": 12,
+        "content": "答疑开始：14:30"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 1024,
+          "cacheMiss": 71,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-meadow",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "报名人数：18",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 4606,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 995,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1180,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-meadow",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "报名人数：18",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 16370,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 347,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 416,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-meadow",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "报名人数：20",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 3728,
+      "finalState": {
+        "content": "报名人数：20",
+        "revision": 5
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "meadow",
+            "revision": 4,
+            "content": "报名人数：20"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 480,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 549,
+          "output": 75
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 653,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 721,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "edit-meadow",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "报名人数：20",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 4606,
+      "finalState": {
+        "content": "报名人数：20",
+        "revision": 5
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__edit",
+          "args": {
+            "id": "meadow",
+            "revision": 4,
+            "content": "报名人数：20"
+          },
+          "outcome": "ok"
+        },
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1126,
+          "output": 45
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1316,
+          "output": 75
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1542,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1731,
+          "output": 4
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ],
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-meadow",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "无修改权限",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 20438,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [
+        {
+          "tool": "document__read",
+          "args": {
+            "id": "meadow"
+          },
+          "outcome": "ok"
+        }
+      ],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1016,
+          "output": 39
+        },
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1201,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ],
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "read-only-meadow",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "无修改权限",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 889,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 367,
+          "output": 3
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-meadow",
+      "repeat": 3,
+      "runtime": "deepseek-harness",
+      "answer": "63",
+      "runtimeStatus": "completed",
+      "status": "completed",
+      "latencyMs": 20174,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 451,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    },
+    {
+      "task": "direct-meadow",
+      "repeat": 3,
+      "runtime": "lingxios",
+      "answer": "63",
+      "status": "completed",
+      "runtimeStatus": "succeeded",
+      "runtimeGaps": [],
+      "latencyMs": 967,
+      "finalState": {
+        "revision": 4,
+        "content": "报名人数：18"
+      },
+      "toolAttempts": [],
+      "providerUsage": [
+        {
+          "cacheHit": 0,
+          "cacheMiss": 1099,
+          "output": 1
+        }
+      ],
+      "catalogs": [
+        [
+          "document__read",
+          "document__edit"
+        ]
+      ],
+      "gatewayFailures": []
+    }
+  ]
+}

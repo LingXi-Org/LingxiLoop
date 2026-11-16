@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-11-16T13:35:14.010Z",
+  "productionCommit": "a26905990ebae50e20b19c013a77bd35db4348c3",
+  "runtimeVersion": "4.0.0",
+  "model": {
+    "baseUrl": "https://api.siliconflow.cn/v1/",
+    "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+    "providerVersion": "SiliconFlow DeepSeek-V4.1-Flash (provider alias; immutable weights revision not exposed)",
+    "format": "chat-completions",
+    "thinking": "disabled",
+    "temperature": 0,
+    "maxTokens": 1536,
+    "parallelToolCalls": false,
+    "provider": "siliconflow"
+  },
+  "node": "v24.11.1",
+  "platform": "linux",
+  "architecture": "x64",
+  "evaluationCommit": "1e9cc9613aa784cf69f2b6e44edb0a9c338b4f67",
+  "actionsRunId": "43876938057",
+  "sha256": {
+    "protocol.json": "18a01cabccfe4826791e7348276c84234723fa129f92bd6d54c0ed77228e44eb",
+    "compare.py": "89f9f0e3046386423d16ad3f0c395b7f607840e69a8274fc3bb5def957cd8972",
+    "run.mjs": "c7847c07bdf1e6c50367ec4fa91e7f6e24c282ed4c5a97d7384d1e1b3b97b4d2",
+    "gateway.mjs": "c6d396f7cbaf64f13aa6ff079fd5370683f30167b99908e5cecd6668ca1003d1",
+    "runtimes.mjs": "78afb44d52ae7769733cd3568aab47dcb05a45c1a91de18e6406e5abcca86e3b",
+    "dsh-tools.mjs": "7f3dcae8ea72e125d53c739c14cc3eb55ab0f57e42cde7922a9ae3efdcc5745f",
+    "package-lock.json": "7aa80ed1a858f83a5f789a4f29e614fe2087ead426ec0031ca3c3f36433564ba",
+    "with-secrets.mjs": "5625a433be8f0e6039a39da626c8477c1d4ae882b801c2d2cb8cfbfe8e4e67d6",
+    "preflight.mjs": "ab48d4f0165012317275f951b73544f1cd9e331b97fd1e76d191ccb15132092c"
+  }
+}

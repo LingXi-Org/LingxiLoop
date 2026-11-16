@@ -4,7 +4,11 @@
 
 已启动独立的 Colima profile `harness-eval`。PostgreSQL 16.13 容器 `harness-eval-postgres` 健康，监听 `127.0.0.1:55438`。评估入口只连接该库，首次运行用 LingxiOS 包内的公开 schema 初始化。
 
-两边的原生运行入口通过 **72/72** 次本地模型替身检查，覆盖任务分配、工具权限、冲突恢复、完成状态、采集时钟和用量字段。LingxiOS 的检查用 v4.0.0 官方标签源码构建，DeepSeek 使用发布版 CLI。替身结果仅用于验证采集链路。真实模型运行仍为 **0/72**；已有 Secrets 的隔离 Actions 入口已准备，待执行。[冒烟验证记录](smoke-verification.json)
+**已完成 72/72 次真实模型采集与完整评分**，且此前正式发布包的 72/72 次替身检查通过。[完整报告](results/2026-11-16/report.md) · [原始记录](results/2026-11-16/live.json) · [指标](results/2026-11-16/metrics.json) · [成功运行](https://github.com/LingXi-Org/LingxiLoop/actions/runs/43876938057)。
+
+LingxiOS 任务通过 28/36，DeepSeek Harness 33/36；工具调用准确率分别为 87.0% 和 93.3%。双方最终回答与文档终态均正确，差异来自多余读取和漏做读回校验。LingxiOS 的两次请求用量缺失，完整总成本不可确定；已知请求的归一化成本下界为 ¥0.215585，DeepSeek Harness 为 ¥0.103768。报告保留这项限制，没有补跑替换样本。
+
+本轮运行在 GitHub Actions 的独立 PostgreSQL 中，使用现有 GitHub Secrets 和 Sigillo 注入；本机 Colima 用于入口复验。模型在第一次真实调用前冻结为 Sigillo 已配置的 SiliconFlow DeepSeek-V4.1-Flash。九项代码与依赖哈希已与采集来源逐项一致核对，本地重新评分与 CI 指标完全一致。
 
 线上 [版本端点](https://loop.lingxilearn.cn/api/meta) 返回 LingxiLoop 提交 `a26905990ebae50e20b19c013a77bd35db4348c3` 和 LingxiOS 4.0.0。安装锁引用该 [生产提交的包地址及校验值](https://github.com/LingXi-Org/LingxiLoop/blob/a26905990ebae50e20b19c013a77bd35db4348c3/server/package-lock.json)。DeepSeek Harness 固定为 [0.2.2-rc.3 的官方源码提交](https://github.com/deepseek-ai/deepseek-harness/tree/39163dd30f703a79079e2d2446545cff3c453738)。
 

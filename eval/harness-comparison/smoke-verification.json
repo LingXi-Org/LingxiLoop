@@ -2,17 +2,20 @@
   "date": "2026-11-16",
   "mode": "smoke",
   "provider": "local-canned-chat-completions",
-  "lingxiosSource": "6f709b4e41993cf0eb65c40679bc22bc9a67012b",
+  "lingxios": "4.0.0 published GitHub Packages build",
   "deepseekCli": "0.2.2-rc.3",
   "postgres": "16.13",
-  "protocolSha256": "ffd44794b10e69c95b44bad10454d7a7f9989bcb24cca64bdd3229578778e963",
+  "actionsRunId": "43876938057",
+  "protocolSha256": "a2d4b6d184f739469a4dcaa96349b245f41f32f40692e1767d0bbe16c5f5e049",
   "captures": {
     "lingxios": {
-      "completed": 36,
+      "passed": 36,
+      "runs": 36,
       "usagePresent": 36
     },
     "deepseek-harness": {
-      "completed": 36,
+      "passed": 36,
+      "runs": 36,
       "usagePresent": 36
     }
   }
